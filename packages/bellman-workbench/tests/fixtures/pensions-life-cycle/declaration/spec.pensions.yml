@@ -10,8 +10,8 @@
 # contribution and the allocation in the working years, the payout at 65.
 trellis: trellis.pensions.yml
 stages:
-  shocks: {stage: stages/shocks/shocks.bl, calibration: {all: [calibration/shocks]}, settings: {all: [$shocks_settings]}, methods: {all: [stages/shocks/methods.bl]}}
-  survival: {stage: stages/survival/survival.bl, calibration: {all: [calibration/survival]}, settings: {all: [$survival_settings]}, methods: {all: [stages/survival/methods.bl]}, periods: [1, 83]}
+  shocks: {stage: stages/shocks/shocks.bl, calibration: {all: [calibration/pension_age_profiles, calibration/shocks]}, settings: {all: [$shocks_settings]}, methods: {all: [stages/shocks/methods.bl]}}
+  survival: {stage: stages/survival/survival.bl, calibration: {all: [calibration/pension_age_profiles]}, settings: {all: [$survival_settings]}, methods: {all: [stages/survival/methods.bl]}, periods: [1, 83]}
   tenure_pa: {stage: stages/tenure_pa/tenure_pa.bl, calibration: {all: [$tenure_pa_calibration]}, settings: {all: [$tenure_pa_settings]}, methods: {all: [stages/tenure_pa/methods.bl]}, periods: [1, 84]}
   renter_cons: {stage: stages/renter_cons/renter_cons.bl, calibration: {all: [calibration/renter_cons]}, settings: {all: [settings/renter_cons]}, methods: {all: [stages/renter_cons/methods.bl]}, periods: [1, 84]}
   keeper_cons_pa: {stage: stages/keeper_cons_pa/keeper_cons_pa.bl, calibration: {all: [calibration/renter_cons]}, settings: {all: [$keeper_cons_pa_settings]}, methods: {all: [stages/keeper_cons_pa/methods.bl]}, periods: [1, 84]}

@@ -103,6 +103,7 @@ from bellman.stage.defining_expressions import (
     observable_set_rule,
     operator_expression,
     section_identity,
+    term_by_reference,
     wire_expression,
     wire_name,
     wire_residual_rules,
@@ -1374,6 +1375,11 @@ def _local_abbreviations(stage, box, row, referenced=()):
             answering = answering_row(stage, identity)
             if answering is not None:
                 add(law_outputs_read(stage, answering))
+                if row.derivatives:
+                    for producer, producer_inputs, producer_outputs in _producers_of_inputs(
+                        stage, answering
+                    ):
+                        abbreviations(producer, producer_outputs, producer_inputs)
     abbreviations(row, outputs, inputs)
     for producer, producer_inputs, producer_outputs in _producers_of_inputs(stage, row):
         abbreviations(producer, producer_outputs, producer_inputs)
@@ -1409,22 +1415,29 @@ def _local_abbreviations(stage, box, row, referenced=()):
 def section_denoted(stage, row, label):
     """The law of motion read at one label, stated once under `where`:
     `𝑔_keep≻ : X∼ → X_keep, 𝑔_keep≻(a_d, h_d, z_d) = 𝑔≻(a_d, h_d, z_d, keep)`,
-    the label in roman."""
+    the label in roman. A section that omits an unused constant is defined
+    by the retained equations of its branch."""
     ctx = StageNames(stage)
     identity = section_identity(ctx, row.builder, label)
-    spec = law_of_motion_kernel(stage, row.definition)
-    states = tuple(i for i in spec.index if not ctx.labels(i))
-    fields = dict(
-        branches_of(stage, block_box(stage, row.definition.address))
-    )[label]
-    point, points = bound_point(ctx, identity, states)
-    arguments = tuple(points.get(i, T.Sym(T.Constant(label))) for i in spec.index)
-    expression = S.Lambda(point, S.Apply(reference_term(row.definition), (tuple_term(arguments),)))
+    whole = law_of_motion_kernel(stage, row.definition)
+    section = law_of_motion_kernel(stage, row.definition, label=label)
+    coordinates = tuple(section.index)
+    fields = dict(branches_of(stage, block_box(stage, row.definition.address)))[label]
+    point, points = bound_point(ctx, identity, coordinates)
+    if any(i not in points and not ctx.labels(i) for i in whole.index):
+        body = tuple_term(
+            term_by_reference(ctx, term, identity, section.builder, points, declared=True)
+            for term in section.terms
+        )
+    else:
+        arguments = tuple(points.get(i, T.Sym(T.Constant(label))) for i in whole.index)
+        body = S.Apply(reference_term(row.definition), (tuple_term(arguments),))
+    expression = S.Lambda(point, body)
     carrier = S.MeasurableMapSet(
-        coordinate_domain(ctx, states, identity), coordinate_domain(ctx, fields, identity)
+        coordinate_domain(ctx, coordinates, identity), coordinate_domain(ctx, fields, identity)
     )
     mathematical_type = WireType(
-        ("measurable", None, states, carrier.domain, carrier.codomain), carrier, ()
+        ("measurable", None, coordinates, carrier.domain, carrier.codomain), carrier, ()
     )
     return Denoted(
         symbol=identity.field,
@@ -1885,7 +1898,7 @@ def _distribution_denoted(stage, definition):
     subjects = tuple(law.subjects)
     symbol = (
         distribution_symbol(subjects, given)
-        if given
+        if given or isinstance(law, T.ParameterizedLaw)
         else subjects[0]
         if len(subjects) == 1
         else "(" + ", ".join(subjects) + ")"
@@ -2026,6 +2039,10 @@ def supporting_definitions(stage, answer):
             reached = _reached(stage, identity)
             found.extend(reached.denoted)
             parts.extend(reached.terms)
+
+    kernel = getattr(answer, "kernel", None)
+    if kernel is not None and getattr(kernel.identity, "kind", None) == "g":
+        reach((kernel.identity,))
 
     # the multiplier each line under `declarations` declares, a line the card
     # prints in its `source` block: its record, found by the line's address,

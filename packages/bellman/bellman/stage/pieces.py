@@ -66,6 +66,7 @@ import dataclasses
 import keyword
 import unicodedata
 from collections.abc import Mapping
+from types import MappingProxyType
 
 from discopy.frobenius import Bubble
 
@@ -77,9 +78,18 @@ from bellman.display.printed_records import (
     NamedListing,
     PieceKernel,
 )
-from bellman.fold.wire_terms import term_nodes
+from bellman.distributions.conditionals import conditioning_shocks
+from bellman.fold.conditions import numerical_law
+from bellman.fold.stage_fold import stage_blocks_of
+from bellman.fold.wire_terms import (
+    guarded_term_nodes,
+    is_wire_symbol,
+    symbol_occurrences,
+    term_nodes,
+)
 from bellman.native.hypergraphs import BellmanHypergraph
 from bellman.native.labels import is_wiring
+from bellman.native.predicates import And
 from bellman.native.versions import store, stored
 from bellman.refusals import ConstructionError, NotConstructed
 from bellman.stage.boxes import (
@@ -122,28 +132,44 @@ from bellman.stage.denotations import (
 )
 from bellman.stage.grains import (
     DIRECTIONS,
+    block_id_of,
     derived_graph_at_grain,
     graph_of,
     is_relation,
     kind_of,
     wire_table,
 )
-from bellman.stage.grids import realized_grids
+from bellman.stage.grids import grid_records
+from bellman.stage.input_requirements import supplied_constants
 from bellman.stage.inventory import definitions_listing
-from bellman.stage.kernels import compile_kernel, derivative_pieces, kernel
+from bellman.stage.kernel_records import derivative_kernel
+from bellman.stage.kernels import (
+    _NamedPiece,
+    compile_guards,
+    compile_kernel,
+    conditioning,
+    derivative_piece,
+    derivative_piece_kernel,
+    derivative_pieces,
+    integrated_shocks,
+    kernel,
+    piece_output_kernels,
+)
 from bellman.stage.places import places_by_address
 from bellman.stage.stage_answers import (
     UNBOUND,
+    _add_primitive_guard,
     obligations,
     parameter_rows,
     parameters_of,
+    primitive_guards,
     setting_rows,
     settings_of,
     settings_readers,
 )
 from bellman.syntax import terms as T
 from bellman.syntax.source import to_source
-from bellman.syntax.vocabulary import ARRIVAL, CONTINUATION, DECISION, PERCH_WORD
+from bellman.syntax.vocabulary import ARRIVAL, CONTINUATION, DECISION, PERCH_WORD, SHCK
 
 # --- the three stored attributes of a stage ---
 
@@ -1009,7 +1035,7 @@ class BubbleHandle(_Handle):
         See `docs/Bellman-Sym/API/stage/04-builder.md` §1."""
         return box_signature(self.version, self.box)
 
-    def kernels(self):
+    def kernels(self, *, inputs=None):
         """The kernels of this builder as one `BuilderKernels` record, from
         which a numerical operator is constructed with no stage in hand: for
         each primitive operator in order of application, the function its
@@ -1018,11 +1044,14 @@ class BubbleHandle(_Handle):
         binds, the wires it reads and writes and its printed kernel, and for
         a row with no explicit function its printed relation in place of a
         function; then the builder's parameters with their values and the
-        sets its pieces are read on. A block of an initial diagram applies no
-        kernel and is refused; its builder answers.
+        sets its pieces are read on. With `inputs`, the mapping of authored
+        continuation names to supplied values, the builder checks the
+        declared inputs and constructs grids and laws at its constants.
+        A block of an initial diagram applies no kernel and is refused;
+        its builder answers.
 
         See `docs/Bellman-Sym/API/stage/04-builder.md` §5."""
-        return builder_kernels(self.version, self)
+        return builder_kernels(self.version, self, inputs=inputs)
 
     def state_choice_measure(self):
         """The joint measure of state and choice for a forward
@@ -1181,7 +1210,7 @@ class LineHandle(_Handle):
 # --- the kernels of a builder ---
 
 
-def builder_kernels(stage, builder):
+def builder_kernels(stage, builder, *, inputs=None):
     """The `BuilderKernels` record of one builder or sub-builder handle of
     `stage`, which its `kernels()` answers. The pieces are the primitive
     operators its `list()` numbers, in that order, each read through its own
@@ -1192,7 +1221,7 @@ def builder_kernels(stage, builder):
     The parameters of the record are those its pieces read, in the order the
     stage declares them (`parameters_of`), with the values the pieces are
     called with. Its grids are the realized grid of each place within the
-    builder that types a grid, at the bound settings (`grids.realized_grids`).
+    builder that types a grid, at the bound settings (`grids.grid_records`).
     Nothing is stored on the stage, and the record refers to no object of the
     stage."""
     if is_block(builder.box):
@@ -1201,25 +1230,82 @@ def builder_kernels(stage, builder):
             "which applies no kernel; the builder of the same name in stage.builder.bwd or "
             "stage.builder.fwd answers kernels()"
         )
+    if inputs is not None:
+        stage.check_inputs(inputs)
+    constants = supplied_constants(stage, inputs)
+    block = block_id_of(builder.box)
+    native_guards = primitive_guards(stage, block)
     pieces, arguments = [], []
+    laws, guards, outputs = {}, {}, {}
+    plan = None
     for entry in builder.list().entries:
         if entry.kind != "primitive":
             continue
-        piece, declared = _piece_kernel(stage, entry.key, builder[entry.key], builder.box.name)
+        handle = builder[entry.key]
+        piece, declared = _piece_kernel(stage, entry.key, handle, builder.box.name)
+        row = row_of(stage, handle.box)
+        if row.kind in ("Expectation", "DistributionExtension"):
+            if plan is None:
+                plan = stage_blocks_of(stage)
+            integrated = integrated_shocks(stage, row) if row.kind == "Expectation" else None
+            given = conditioning(stage, row) if integrated is not None else ()
+            law = numerical_law(
+                stage, builder=row.builder, integrated=integrated, given=given,
+                inputs=inputs, plan=plan,
+            )
+            if law is not None:
+                laws[piece.key] = law
+        if row.identity in native_guards:
+            guards[piece.key] = compile_guards(
+                stage, handle.box, row.builder, native_guards[row.identity]
+            )
+        outputs[piece.key] = piece_output_kernels(stage, handle.box, row, piece)
         pieces.append(piece)
         arguments.extend(declared)
+
     for address in derivative_pieces(stage, builder.box.name):
-        piece, declared = _derivative_piece_kernel(stage, address)
-        pieces.append(piece)
-        arguments.extend(declared)
+        owner, entry, aggregation = derivative_piece(stage, address)
+        scope = derivative_kernel(stage, owner, entry, aggregation)
+        gathered = {}
+        for part in (*scope.expectations, scope):
+            extracted = part is not scope
+            target = str(part.segment) if extracted else address
+            kind = "Expectation" if extracted else "Derivative"
+            holder = (
+                address.split(".", 1)[-1]
+                if extracted and part.segment.address != entry[2] else None
+            )
+            piece = derivative_piece_kernel(stage, target, part, kind=kind, holder=holder)
+            if piece.integrated:
+                if plan is None:
+                    plan = stage_blocks_of(stage)
+                given, history = _derivative_conditioning(plan, part, gathered)
+                laws[piece.key] = numerical_law(
+                    stage, builder=owner.builder, integrated=piece.integrated,
+                    given=given, inputs=inputs, plan=plan,
+                )
+                if extracted:
+                    result = dataclasses.replace(part.segment, mark="result")
+                    gathered[result] = (given or (), history | set(piece.integrated))
+            selected = _derivative_guards(owner, entry, part, native_guards, extracted=extracted)
+            if selected:
+                guards[piece.key] = compile_guards(
+                    stage, _NamedPiece(target), owner.builder, selected, scope=part
+                )
+            outputs[piece.key] = MappingProxyType({})
+            pieces.append(piece)
+            arguments.extend(zip(part.names, part.argument_sets))
+
+    manifest = (*pieces, *(guard for records in guards.values() for guard in records))
     bound, unbound = {}, set()
-    for piece in pieces:
+    for piece in manifest:
         if piece.parameter_values is None:
             unbound.update(piece.parameters)
         else:
             bound.update(zip(piece.parameters, piece.parameter_values))
-    read = {name for piece in pieces for name in piece.parameters}
+    read = {name for piece in manifest for name in piece.parameters}
     names = tuple(name for name in parameters_of(stage) if name in read)
+    grids, factors = grid_records(stage, builder.box.name, constants=constants)
     return BuilderKernels(
         builder=builder.box.name,
         inputs=tuple(wire_name(stage, sort) for sort in builder.box.dom.inside),
@@ -1228,7 +1314,66 @@ def builder_kernels(stage, builder):
         parameters=names,
         parameter_values=None if unbound else tuple(bound[name] for name in names),
         sets=_declared_sets(stage, arguments),
-        grids=realized_grids(stage, builder.box.name),
+        grids=grids,
+        grid_factors=factors,
+        laws=MappingProxyType(laws),
+        guards=MappingProxyType(guards),
+        output_kernels=MappingProxyType(outputs),
+    )
+
+
+def _derivative_conditioning(plan, scope, gathered):
+    """Available shocks and completed inner integrations of an integrand."""
+    integrated = set(scope.integrated)
+    edge = next((edge for edge in plan.edges.values() if integrated <= set(edge.shocks)), None)
+    active = {key.field for key in scope.index if key.perch == SHCK}
+    references = set(scope.index)
+    if scope.activation is not None:
+        for name, side in symbol_occurrences(scope.activation):
+            if isinstance(name, str):
+                identity = plan.ctx.resolve(name, scope.builder, side)
+                if identity.perch == SHCK:
+                    active.add(identity.field)
+        references.update(
+            node.symbol.name for node in term_nodes(scope.activation) if is_wire_symbol(node)
+        )
+    history = set()
+    for child in references & gathered.keys():
+        given, integrated_child = gathered[child]
+        active.update(given)
+        history.update(integrated_child)
+    return (
+        None if edge is None else conditioning_shocks(edge, scope.integrated, active, history),
+        history,
+    )
+
+
+def _derivative_guards(owner, entry, scope, native_guards, *, extracted):
+    """Activation of the derivative, expectation or continuation reads."""
+    value = entry[4]
+    active = next(
+        (
+            (output, predicate)
+            for output, predicate in native_guards.get(owner.identity, ())
+            if output.field == value.field and output.perch == value.perch
+        ),
+        None,
+    )
+    guard = None if active is None else active[1]
+    selected = () if active is None else (active,)
+    if extracted:
+        activation = scope.activation
+        if activation is not None:
+            guard = activation if guard is None or guard == activation else And(guard, activation)
+        selected = () if guard is None else ((scope.segment, guard),)
+    needed = {}
+    for node, predicate in guarded_term_nodes(scope.terms[0], guard):
+        if is_wire_symbol(node):
+            identity = node.symbol.name
+            if identity.kind == "function" and identity.perch == CONTINUATION:
+                _add_primitive_guard(needed, identity, predicate)
+    return selected + tuple(
+        (identity, predicate) for identity, predicate in needed.items() if predicate is not None
     )
 
 
@@ -1262,38 +1407,6 @@ def _piece_kernel(stage, key, piece, holder):
         kernel=str(record),
         relation=str(record) if function is None and is_relation(row_of(stage, box)) else None,
         python=None if function is None else record.python,
-    )
-    return made, record.arguments
-
-
-def _derivative_piece_kernel(stage, address):
-    """The `PieceKernel` of one derivative piece of a builder, the stated
-    derivative of a value builder compiled from the author's right side
-    (AMD-MB-001 §4.3; decision MB-A14), read by the address of its line,
-    `<line address>:Derivative:1`, so that two builders whose derivative
-    lines have the same id each hold their own, and named relative to its
-    builder, `<line id>:Derivative:1`; and the pairs of argument name and
-    declared set of its kernel. Its function is None where the right side
-    holds a form the text cannot write."""
-    record = kernel(stage, address)
-    function = None if record.python is None else compile_kernel(stage, address)
-    name = address.split(".", 1)[-1]
-    made = PieceKernel(
-        key=name,
-        relative_name=name,
-        name=name,
-        kind="Derivative",
-        function=function,
-        arguments=tuple(argument for argument, _ in record.arguments),
-        outputs=tuple(record.outputs),
-        parameters=tuple(record.parameters),
-        parameter_values=record.parameter_values,
-        reads=tuple(argument for argument, _ in record.arguments),
-        writes=tuple(record.outputs),
-        kernel=str(record),
-        relation=None,
-        python=record.python,
-        integrated=record.integrated,
     )
     return made, record.arguments
 

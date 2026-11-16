@@ -65,7 +65,13 @@ from bellman.distributions.families import (
     TRUNCATED_LOGNORMAL,
     product_law,
 )
-from bellman.fold.block_lines import fields_of, perches_of
+from bellman.fold.block_lines import (
+    blocks_in_file_order,
+    fields_of,
+    marked_inputs_of,
+    perches_of,
+)
+from bellman.fold.conditions import distribution_formal_fields
 from bellman.fold.stage_names import StageNames, branches_of
 from bellman.fold.wire_terms import (
     defined_field,
@@ -109,8 +115,10 @@ from bellman.stage.grains import (
 )
 from bellman.stage.kernel_records import (
     aggregator_kernel,
+    derivative_term_of_field,
     distribution_arguments,
     law_of_motion_kernel,
+    spelling,
     stems_of,
 )
 from bellman.stage.places import block_box
@@ -127,7 +135,7 @@ from bellman.stage.term_operations import (
     tuple_term,
 )
 from bellman.syntax import terms as T
-from bellman.syntax.vocabulary import CONTINUATION, PERCH_MARK, SHCK
+from bellman.syntax.vocabulary import CONTINUATION, PERCH_MARK, SHCK, VALUE_ROLES
 from bellman.typing import typed_expressions as S
 from bellman.typing.line_unknowns import maximand
 from bellman.typing.primitive_definitions import (
@@ -456,7 +464,7 @@ def _pullback_components(ctx, row, inputs, outputs, types, references):
     bodies, guards = [], []
     for n, output in enumerate(outputs):
         source = inputs[n]
-        g = _law_map_at_policy(ctx, row, output.coordinates, source.coordinates)
+        g = _law_map_at_policy(ctx, row, output.coordinates, source.coordinates, references)
         body, guard = _instantiate(
             "Pullback",
             {
@@ -480,13 +488,13 @@ def _pullback_components(ctx, row, inputs, outputs, types, references):
             and isinstance(g.body.function, T.Sym)
         ):
             forward, law_outputs = _law_outputs(ctx, row, row.section)
-            inner = (
-                reference_term(section_identity(ctx, row.builder, row.section))
-                if row.section is not None
-                else g
-                if row.policy
-                else reference_term(row.definition)
-            )
+            if row.policy or len(inputs) > len(outputs):
+                inner = g
+            else:
+                inner = reference_term(
+                    row.definition if row.section is None
+                    else section_identity(ctx, row.builder, row.section)
+                )
             body = compose(references[source.identity], inner, law_outputs)
         bodies.append(body)
         guards.append(guard)
@@ -652,48 +660,77 @@ def _forward_components(ctx, row, inputs, outputs, references):
 # --- a pullback: the law of motion at the point ---
 
 
-def _law_map_at_policy(ctx, row, source_coordinates, target_coordinates):
-    """The map a row composes with, from the source coordinates to the
-    target coordinates, at the policy the row is held at: the law of motion
-    applied by reference to the point, `m_d ↦ 𝑔≻(m_d, 𝑐(m_d))`, where the
-    target coordinates are the outputs the law writes in their order; where
-    they are not, the outputs bound by their names and read in the target's
-    order, `((a, h, z) ↦ (h, a))(𝑔≻(m, z_d, c, h_choice))`. No projection of
-    the image is written (AMD-SG-034 §4 item 6). A row that composes with
-    the law's section at a label applies the section to the point,
-    `(a_d, h_d, z_d) ↦ 𝑔_keep≻(a_d, h_d, z_d)`."""
-    if row.section is not None:
-        point, points = bound_point(ctx, row.identity, source_coordinates)
-        return S.Lambda(
-            point,
-            S.Apply(
-                reference_term(section_identity(ctx, row.builder, row.section)),
-                (tuple_term(points[i] for i in source_coordinates),),
-            ),
-        )
-    spec = law_of_motion_kernel(ctx.stage_object, row.definition)
+def _law_map_at_policy(ctx, row, source_coordinates, target_coordinates, references):
+    """The law of motion applied at the point and read in the target order.
+
+    The point binds state and shock coordinates. Controls may be read at
+    their policies, and the law reads each constant from its incoming wire.
+    """
     point, points = bound_point(ctx, row.identity, source_coordinates)
-    points = points_at_policy(ctx, row, points)
-    if any(identity not in points for identity in spec.index):
-        return S.Unresolved(row.identity, "law-of-motion coordinate adaptation")
-    image = S.Apply(
-        reference_term(row.definition), (tuple_term(points[identity] for identity in spec.index),)
+    image = _law_image(
+        ctx, row.definition, points_at_policy(ctx, row, points), row.identity,
+        label=row.section, references=references,
     )
+    if isinstance(image, S.Unresolved):
+        components = _law_components(
+            ctx, row, points_at_policy(ctx, row, points), target_coordinates
+        )
+        return image if components is None else S.Lambda(point, components)
     forward, outputs = _law_outputs(ctx, row)
     if forward is None:
         return S.Unresolved(row.identity, "forward-owned law-of-motion outputs")
+    written = _law_coordinates(ctx, forward, row.section)
     target = tuple(target_coordinates)
-    if target == tuple(forward.outputs):
+    if target == written:
         return S.Lambda(point, image)
     produced = {
         identity: reference_term(variable.identity)
-        for identity, (variable, _) in zip(forward.outputs, outputs)
+        for identity, (variable, _) in zip(written, outputs)
     }
     combined = {**points, **produced}
     if any(identity not in combined for identity in target):
         return S.Unresolved(row.identity, "law-of-motion output projection")
     read = S.Lambda(outputs, tuple_term(combined[identity] for identity in target))
     return S.Lambda(point, S.Apply(read, (image,)))
+
+
+def _law_components(ctx, row, points, target):
+    """The components of the law for the target coordinates, written from
+    their retained equations, where those equations read the point alone."""
+    spec = law_of_motion_kernel(ctx.stage_object, row.definition, label=row.section)
+    names = tuple(wire_spelling(identity) for identity in target)
+    if not names or any(name not in spec.outputs for name in names):
+        return None
+    local = {**points, **{identity.field: value for identity, value in points.items()}}
+    terms = tuple(
+        term_by_reference(
+            ctx, spec.terms[spec.outputs.index(name)], row.identity, spec.builder, local,
+            declared=True,
+        )
+        for name in names
+    )
+    if any(isinstance(node, S.Unresolved) for term in terms for node in _walk(term)):
+        return None
+    return tuple_term(terms)
+
+
+def _law_image(ctx, law, points, owner, *, label=None, references=None):
+    """The full law, or its section, at its ordered source arguments."""
+    spec = law_of_motion_kernel(ctx.stage_object, law, label=label)
+    values = dict(points)
+    for identity in spec.index:
+        if identity in values:
+            continue
+        sort = ctx.ports.get(identity)
+        if sort is None or not sort.constant:
+            return S.Unresolved(owner, "law-of-motion coordinate adaptation")
+        wire = ctx.function_wire(identity)
+        if references is not None and wire not in references:
+            return S.Unresolved(owner, "law-of-motion constant input " + identity.field)
+        reference = reference_term(wire) if references is None else references[wire]
+        values[identity] = _at(sort, reference, {})
+    function = law if label is None else section_identity(ctx, owner.block, label)
+    return S.Apply(reference_term(function), (tuple_term(values[i] for i in spec.index),))
 
 
 # the base of the variables a law of motion's outputs are bound as
@@ -724,14 +761,17 @@ def _law_outputs(ctx, row, label=None):
     forward = _law_forward(ctx, row.definition)
     if forward is None:
         return None, ()
-    outputs = tuple(forward.outputs)
-    label = label or row.section
-    if label is not None:
-        written = dict(
-            branches_of(ctx.stage_object, block_box(ctx.stage_object, forward.builder))
-        )[label]
-        outputs = tuple(o for o in outputs if o in written)
+    outputs = _law_coordinates(ctx, forward, label or row.section)
     return forward, coordinate_bindings(ctx, outputs, row.identity, LAW_OUTPUTS)
+
+
+def _law_coordinates(ctx, forward, label):
+    """The forward coordinates, restricted to one section when given."""
+    outputs = tuple(forward.outputs)
+    if label is None:
+        return outputs
+    written = dict(branches_of(ctx.stage_object, block_box(ctx.stage_object, forward.builder)))[label]
+    return tuple(output for output in outputs if output in written)
 
 
 def law_outputs_rule(ctx, row, source_coordinates, label=None):
@@ -748,21 +788,12 @@ def law_outputs_rule(ctx, row, source_coordinates, label=None):
     forward, outputs = _law_outputs(ctx, row, label)
     if forward is None or len(outputs) <= 1:
         return None
-    point, points = bound_point(ctx, row.identity, source_coordinates)
-    if label is not None:
-        applied = S.Apply(
-            reference_term(section_identity(ctx, row.builder, label)),
-            (tuple_term(points[i] for i in source_coordinates if not ctx.labels(i)),),
-        )
-    else:
-        spec = law_of_motion_kernel(ctx.stage_object, row.definition)
-        points = points_at_policy(ctx, row, points)
-        if any(identity not in points for identity in spec.index):
-            return None
-        applied = S.Apply(
-            reference_term(row.definition),
-            (tuple_term(points[identity] for identity in spec.index),),
-        )
+    _, points = bound_point(ctx, row.identity, source_coordinates)
+    applied = _law_image(
+        ctx, row.definition, points_at_policy(ctx, row, points), row.identity, label=label
+    )
+    if isinstance(applied, S.Unresolved):
+        return None
     return Rule(
         Compare(
             tuple_term(reference_term(variable.identity) for variable, _ in outputs), "=", applied
@@ -776,8 +807,12 @@ def law_outputs_rule(ctx, row, source_coordinates, label=None):
 def _aggregate(ctx, row, inputs, output, references):
     """The Aggregation rule instantiated pointwise on the coordinates the row
     reads."""
-    kernel, carrier, point, points, used = _aggregator_kernel_and_carrier(ctx, row, inputs, output)
+    kernel, carrier, point, points, used = _aggregator_kernel_and_carrier(
+        ctx, row, inputs, output, references=references
+    )
     domain = coordinate_domain(ctx, output.coordinates, row.identity)
+    if len(kernel.bindings) == len(point):
+        return kernel, Member(kernel, S.MeasurableMapSet(domain, carrier.codomain))
     joined = S.Lambda(
         point, tuple_term(_at(sort, references[sort.identity], points) for sort in used)
     )
@@ -795,34 +830,48 @@ def _aggregate(ctx, row, inputs, output, references):
     )
 
 
-def _aggregator_kernel_and_carrier(ctx, row, inputs, output):
+def _aggregator_kernel_and_carrier(ctx, row, inputs, output, *, references=None):
     """The policy-specialized scalar kernel and its exact
     restricted carrier."""
     point, points = bound_point(ctx, row.identity, output.coordinates)
     domain = coordinate_domain(ctx, output.coordinates, row.identity)
     points = points_at_policy(ctx, row, points)
+    # a state that the forward block keeps has one name at the two perches:
+    # a kept field's coordinate there is read at the point's state of that name
+    for sort in inputs:
+        for coordinate in sort.coordinates:
+            if coordinate in points or ctx.role(coordinate) != "state":
+                continue
+            held = next(
+                (
+                    identity
+                    for identity in output.coordinates
+                    if identity.field == coordinate.field and ctx.role(identity) == "state"
+                ),
+                None,
+            )
+            if held is not None:
+                points = {**points, coordinate: points[held]}
     spec = aggregator_kernel(ctx.stage_object, row)
     position = tuple(row.outputs).index(output.identity)
-    mentioned = {
-        term.symbol.name
-        for term in _walk(spec.terms[position])
-        if isinstance(term, T.Sym) and is_wire_symbol(term)
-    }
-    # the value a derivative term differentiates is read by the row as well,
-    # though the kernel takes the derivative as one argument (MB-A16, MB-A19)
-    mentioned |= {
-        term.symbol.name
-        for node, _ in spec.derivative_terms
-        for term in _walk(node)
-        if isinstance(term, T.Sym) and is_wire_symbol(term)
-    }
+    term = spec.terms[position]
+    mentioned = set(wires_read(term))
+    # A derivative's value wire is an input even when its derivative is a
+    # formal argument of the numerical kernel.
+    mentioned.update(wire for node, _ in spec.derivative_terms for wire in wires_read(node))
     used = tuple(sort for sort in inputs if sort.identity in mentioned)
-    ranges = tuple(wire_type(ctx.stage_object, sort).sort[4] for sort in used)
-    value = bound_variable(row.identity, "r", product(ranges), 110)
-    scalar_values = {
-        sort.identity: component(reference_term(value.variable.identity), n, len(used))
-        for n, sort in enumerate(used)
-    }
+    conditional = references is not None and any(isinstance(node, T.Conditional) for node in _walk(term))
+    if conditional:
+        scalar_values = {
+            sort.identity: _at(sort, references[sort.identity], points) for sort in used
+        }
+    else:
+        ranges = tuple(wire_type(ctx.stage_object, sort).sort[4] for sort in used)
+        value = bound_variable(row.identity, "r", product(ranges), 110)
+        scalar_values = {
+            sort.identity: component(reference_term(value.variable.identity), n, len(used))
+            for n, sort in enumerate(used)
+        }
     local = dict(points)
     local.update({identity.field: value for identity, value in points.items()})
     local.update(scalar_values)
@@ -835,8 +884,10 @@ def _aggregator_kernel_and_carrier(ctx, row, inputs, output):
             node.subs,
             (term_by_reference(ctx, node.args[0], row.identity, row.builder, local),),
         )
-    scalar = term_by_reference(ctx, spec.terms[position], row.identity, row.builder, local)
+    scalar = term_by_reference(ctx, term, row.identity, row.builder, local)
     result = wire_type(ctx.stage_object, output).sort[4]
+    if conditional:
+        return S.Lambda(point, scalar), S.FunctionSet(domain, result), point, points, used
     # The carrier's domain is the pack of the value inputs and the point. That
     # the aggregator's value lies in the declared set of its output is the
     # arithmetic-definedness the obligations record, not a restriction of the
@@ -896,16 +947,9 @@ def _forward_measure(ctx, row, source, output, reference):
             # the label coordinate: the policy's value at the state for a
             # choice, the drawn coordinate of the extended measure for a draw
             key = next(identity for identity in chosen if ctx.labels(identity))
-            image = S.Apply(
-                reference_term(section_identity(ctx, row.builder, label)),
-                (
-                    tuple_term(
-                        names[identity]
-                        for identity in source.coordinates
-                        if not ctx.labels(identity)
-                    ),
-                ),
-            )
+            image = _law_image(ctx, row.definition, chosen, owner, label=label)
+            if isinstance(image, S.Unresolved):
+                return image, None
             preimage = restrict(
                 source.coordinates,
                 source_domain,
@@ -914,13 +958,9 @@ def _forward_measure(ctx, row, source, output, reference):
             return S.Measure(target_domain, event, S.Apply(reference, (preimage,))), None
         # at the policy the law is written out, each control read as its
         # policy at the source point, `𝑔≻(m_d, 𝑐(m_d))` (RL14)
-        index = law_of_motion_kernel(ctx.stage_object, row.definition).index
-        values = points_at_policy(ctx, row, names)
-        if any(identity not in values for identity in index):
-            return S.Unresolved(owner, "law-of-motion coordinate adaptation"), None
-        image = S.Apply(
-            reference_term(row.definition), (tuple_term(values[identity] for identity in index),)
-        )
+        image = _law_image(ctx, row.definition, points_at_policy(ctx, row, names), owner)
+        if isinstance(image, S.Unresolved):
+            return image, None
         preimage = restrict(source.coordinates, source_domain, (Member(image, B),))
         return S.Measure(target_domain, event, S.Apply(reference, (preimage,))), None
     if row.kind == "PolicyInsertion":
@@ -958,9 +998,9 @@ def _forward_measure(ctx, row, source, output, reference):
 
 def _declared_law(ctx, row, values):
     """The declared law an extension draws its shocks under, by reference to
-    its declaration and, where the file conditions it, applied at the
-    coordinates it reads, `P_{Ψ|ν}(ν)`; `values` holds each coordinate's
-    reference, the controls read as the policy."""
+    its declaration, applied at the supplied constant fields and at the
+    coordinates it conditions on. `values` holds the coordinates, with
+    controls read at the policy."""
     table = ctx.stage_object.definitions
     laws = [
         table[reference]
@@ -970,16 +1010,17 @@ def _declared_law(ctx, row, values):
     if len(laws) != 1:
         return S.Unresolved(row.identity, "one declared distribution for the extension")
     definition = laws[0]
-    given = tuple(name for name, _ in definition.coordinates)
-    if not given:
-        return reference_term(definition.identity)
-    arguments = []
-    for name in given:
+    arguments = [
+        _at(ctx.ports[field], reference_term(ctx.function_wire(field)), {})
+        for _, field in distribution_formal_fields(ctx.stage_object, definition)
+    ]
+    for name, _ in definition.coordinates:
         identity = next((held for held in values if held.field == name), None)
         if identity is None:
             return S.Unresolved(row.identity, "distribution conditioning coordinate " + name)
         arguments.append(values[identity])
-    return S.Apply(reference_term(definition.identity), (tuple_term(arguments),))
+    law = reference_term(definition.identity)
+    return S.Apply(law, (tuple_term(arguments),)) if arguments else law
 
 
 def points_at_policy(ctx, row, points):
@@ -1611,8 +1652,7 @@ def _law_named_reads(stage, ctx, row, points):
     if held is None:
         return {}
     law, outputs, bindings = held
-    spec = law_of_motion_kernel(stage, law)
-    if any(identity not in points for identity in spec.index):
+    if isinstance(_law_image(ctx, law, points, row.identity), S.Unresolved):
         return {}
     names = {
         identity: reference_term(variable.identity)
@@ -1629,7 +1669,7 @@ def _law_named_reads(stage, ctx, row, points):
             or other.section is not None
         ):
             continue
-        for source, identity in zip(other.inputs, other.outputs):
+        for source, identity in zip(other.inputs[:len(other.outputs)], other.outputs):
             coordinates = rendering.sort_of(source).coordinates
             if not coordinates or any(i not in names for i in coordinates):
                 continue
@@ -1689,12 +1729,9 @@ def _outputs_read(stage, row):
         _, arguments = bound_point(ctx, row.identity, coordinates)
     else:
         return None
-    spec = law_of_motion_kernel(stage, law)
-    if any(identity not in arguments for identity in spec.index):
+    applied = _law_image(ctx, law, arguments, row.identity)
+    if isinstance(applied, S.Unresolved):
         return None
-    applied = S.Apply(
-        reference_term(law), (tuple_term(arguments[identity] for identity in spec.index),)
-    )
     names = tuple_term(reference_term(variable.identity) for variable, _ in bindings)
     return Rule(Compare(names, "=", applied))
 
@@ -1881,7 +1918,7 @@ def _stated_derivative_rule(stage, ctx, row, output, coordinate, right_side):
         right_side,
         producer.identity,
         producer.builder,
-        _row_scope(stage, producer, right_side),
+        _row_scope(stage, producer, right_side, output.coordinates, name_law_outputs=True),
         declared=True,
     )
     return Rule(Compare(left, "=", right))
@@ -1998,6 +2035,15 @@ def _aggregation_rules(stage, row, output):
             _row_scope(stage, row, core.rhs),
             declared=True,
         )
+        if any(
+            isinstance(term, S.Unresolved)
+            and isinstance(term.identity, Identity)
+            and ctx.alias_body(term.identity.field, row.builder) is not None
+            for term in _walk(right)
+        ):
+            expanded = apply_at(wire_expression(stage, output, expand=True), x)
+            if any(isinstance(term, T.Conditional) for term in _walk(expanded)):
+                right = expanded
     else:
         right = apply_at(wire_expression(stage, output, expand=True), x)
     if region is None:
@@ -2350,9 +2396,20 @@ def definition_expression(stage, definition, row=None):
     a collection is the joint normal of its convention and is no product."""
     ctx = StageNames(stage)
     if definition.kind == "distribution":
-        coordinates = definition_type(stage, definition).sort[2]
+        formals = distribution_formal_fields(stage, definition)
+        coordinates = definition_type(stage, definition).sort[2][len(formals):]
         point, points = bound_point(ctx, definition.identity, coordinates)
         local = {**points, **{i.field: value for i, value in points.items()}}
+        arguments = tuple(
+            bound_variable(
+                definition.identity, name, declared_set_of(ctx, actual), position,
+            )
+            for position, (name, actual) in enumerate(formals)
+        )
+        local.update(
+            (binding.variable.identity.field, reference_term(binding.variable.identity))
+            for binding in arguments
+        )
         declaration = definition.equations[0]
         law = term_by_reference(
             ctx, declaration.law, definition.identity, definition.address, local, declared=True
@@ -2368,7 +2425,7 @@ def definition_expression(stage, definition, row=None):
                 _PRODUCT_INDEX,
             )
             law = S.ProductMeasure(variable, law)
-        return S.Lambda(point, law) if coordinates else law
+        return S.Lambda(arguments + point, law) if arguments or point else law
     spec = (
         law_of_motion_kernel(stage, definition.identity)
         if definition.kind == "g"
@@ -2586,7 +2643,6 @@ def line_at_point(ctx, definition, unknowns, points, *, owner=None, by_name=Fals
     bare = (
         targets and all(isinstance(name, T.Sym) for name in names) and len(names) == len(targets)
     )
-    x = tuple_term(points.values())
     local = {**points, **{identity.field: value for identity, value in points.items()}}
     right = equation.rhs
     maximisation = isinstance(right, T.Operator) and right.head == "argmax"
@@ -2609,12 +2665,9 @@ def line_at_point(ctx, definition, unknowns, points, *, owner=None, by_name=Fals
     shocks = _bound_shocks(ctx, right, block, definition.identity)
     law = _law_reading(ctx, controls)
     if law is not None:
-        spec = law_of_motion_kernel(stage, law)
         arguments = {**points, **binders, **shocks}
-        if all(identity in arguments for identity in spec.index):
-            image = S.Apply(
-                reference_term(law), (tuple_term(arguments[identity] for identity in spec.index),)
-            )
+        image = _law_image(ctx, law, arguments, definition.identity)
+        if not isinstance(image, S.Unresolved):
             forward = _law_forward(ctx, law)
             outputs = tuple(forward.outputs) if forward is not None else ()
             written = (
@@ -2635,18 +2688,19 @@ def line_at_point(ctx, definition, unknowns, points, *, owner=None, by_name=Fals
                 wire: op.section
                 for op in wire_table(stage).table.primitive_rows
                 if op.builder == block and op.kind == "Pullback" and op.section
-                for wire in op.inputs
+                for wire in op.inputs[:len(op.outputs)]
             }
             for identity in ctx.mentioned((right, clause), block):
                 if (
                     identity in ctx.ports
                     and identity.perch == CONTINUATION
                     and identity not in arguments
+                    and not ctx.ports[identity].constant
                 ):
                     label = sections.get(ctx.function_wire(identity))
                     function = wire_table(stage).sort_of(ctx.function_wire(identity))
                     read = (
-                        S.Apply(reference_term(section_identity(ctx, block, label)), (x,))
+                        _law_image(ctx, law, arguments, definition.identity, label=label)
                         if label is not None
                         else tuple_term(named[i] for i in function.coordinates)
                         if named and all(i in named for i in function.coordinates)
@@ -2741,7 +2795,7 @@ def spelled_condition(stage, row, predicate):
     )
 
 
-def _row_scope(stage, row, term, coordinates=None):
+def _row_scope(stage, row, term, coordinates=None, *, name_law_outputs=False):
     """The scope a row's line is read in, so that a source term of the line
     is spelled as the record spells it: the row's
     coordinates as the variables of its point, a control the row is not
@@ -2752,7 +2806,8 @@ def _row_scope(stage, row, term, coordinates=None):
     `𝐶𝐸(m_d, ν)`; an earlier output of a merged row by its name at the
     point, `𝑐≻(a)`. The point is that of the row's first output unless
     `coordinates` names another, the decision states and the unknowns of a
-    solve's residuals."""
+    solve's residuals. A derivative rule can read the named law outputs
+    where its point is the point of the pullback's law."""
     ctx = StageNames(stage)
     rendering = wire_table(stage)
     if coordinates is None:
@@ -2775,13 +2830,33 @@ def _row_scope(stage, row, term, coordinates=None):
     def port_of(identity):
         return Identity("field", stage=ctx.stage_name, perch=identity.perch, field=identity.field)
 
+    # the inputs that the block's header writes with a mark, `W[>]`
+    held = next((b for b in blocks_in_file_order(stage) if b.name == row.builder), None)
+    marked = () if held is None else marked_inputs_of(held)
+
     for other in rendering.table.primitive_rows:
         # the identification, a Pullback whose output is its own unknown,
         # composes with no law of motion and is read as no composite
         if other.builder == row.builder and other.kind == "Pullback" and not is_relation(other):
-            for identity in other.outputs:
+            named = {}
+            if name_law_outputs and other.section is None:
+                source_coordinates = tuple(rendering.sort_of(other.outputs[0]).coordinates)
+                if (
+                    tuple(coordinates) == source_coordinates
+                    and law_outputs_rule(ctx, other, source_coordinates) is not None
+                ):
+                    forward, bindings = _law_outputs(ctx, other)
+                    named = {
+                        coordinate: reference_term(variable.identity)
+                        for coordinate, (variable, _) in zip(forward.outputs, bindings)
+                    }
+            for source, identity in zip(other.inputs, other.outputs):
                 sort = rendering.sort_of(identity)
-                value = at(sort, wire_expression(stage, sort, expand=True))
+                arguments = rendering.sort_of(source).coordinates
+                if identity in row.inputs and named and all(i in named for i in arguments):
+                    value = _at(rendering.sort_of(source), reference_term(source), named)
+                else:
+                    value = at(sort, wire_expression(stage, sort, expand=True))
                 if value is None:
                     continue
                 # a Pullback's output is read as the composite at the point,
@@ -2826,6 +2901,10 @@ def _row_scope(stage, row, term, coordinates=None):
             continue
         if identity.perch is not None:
             local.setdefault(port_of(identity), value)
+            if port_of(identity) in marked:
+                # the header writes this input with a mark, `W[>]`: the bare
+                # name `W` is another field of the block
+                continue
         local.setdefault(identity.field, value)
     return local
 
@@ -2838,13 +2917,13 @@ def identity_input_of(stage, identity):
     return _passed(held[0], identity) if held is not None else None
 
 
-def matching_term(row, node):
+def matching_term(row, node, *, terms=None):
     """The sub-term of a row's own terms that is `node` of its line, a wire
     standing for the sub-term it replaced, `w^((1 − ρ)/(1 − η))` for the
     line's `E_{ν}[…]^((1 − ρ)/(1 − η))`; None where the row holds none. A
     condition on the node is formed over this term, so that it reads the
     row's inputs by reference."""
-    terms = tuple(row.maps) or tuple(row.equations)
+    terms = (tuple(row.maps) or tuple(row.equations)) if terms is None else terms
     return next(
         (
             held
@@ -2857,6 +2936,8 @@ def matching_term(row, node):
 
 
 def _same_term(source, held):
+    if isinstance(source, T.Call) and isinstance(held, T.Call) and isinstance(held.fun, Identity):
+        return source.fun == held.fun.field and _same_term(source.args, held.args)
     if is_wire_symbol(held):
         return True
     if source == held:
@@ -3032,6 +3113,8 @@ def _resolved_symbol(ctx, term, block, local):
         return local[identity]
     if not qualified and symbol.name in ctx.functions:
         return reference_term(ctx.functions[symbol.name].identity)
+    if not qualified and symbol.name in ctx.set_terms:
+        return reference_term(Identity("set", stage=ctx.stage_name, field=symbol.name))
     if identity in ctx.sets:
         return reference_term(identity)
     return S.Unresolved(identity, "free mathematical reference")
@@ -3046,6 +3129,11 @@ def _resolved_call(ctx, term, owner, block, local, *, active, declared):
         term_by_reference(ctx, a, owner, block, local, active=active, declared=declared)
         for a in term.args
     )
+    identity = term.fun if isinstance(term.fun, Identity) else ctx.resolve(term.fun, block)
+    if ctx.role(identity) in VALUE_ROLES or identity.kind == "function":
+        wire = ctx.function_wire(identity) if identity.kind == "field" else identity
+        function = local.get(identity, local.get(wire, reference_term(wire)))
+        return S.Apply(function, arguments)
     definition = ctx.functions.get(term.fun)
     if definition is not None:
         if definition.identity in active:
@@ -3061,6 +3149,22 @@ def _resolved_call(ctx, term, owner, block, local, *, active, declared):
     if term.fun in ("exp", "log") and len(arguments) != 1:
         return S.Unresolved(owner, "one argument for " + term.fun)
     if term.fun in ("max", "min"):
+        if len(term.args) == 1:
+            original = term.args[0]
+            if isinstance(original, T.Tuple):
+                arguments = tuple(arguments[0].items)
+            elif isinstance(original, T.Sym):
+                name = original.symbol.name
+                # a field read through its wire has the declared set of the
+                # field that the wire carries
+                carried = (
+                    function_field(name) if is_wire_symbol(original) else ctx.resolve(name, block)
+                )
+                sort = ctx.sets.get(carried)
+                domain = defined(sort, ctx.set_terms)
+                if isinstance(domain, T.Product):
+                    arguments = tuple(component(arguments[0], n, len(domain.factors))
+                                      for n in range(len(domain.factors)))
         return _finite_extremum(owner, term.fun, arguments)
     if term.fun == MIXTURE and not declared:
         return _finite_mixture(owner, arguments)
@@ -3164,6 +3268,13 @@ def _resolved_derivative(ctx, term, owner, block, local, *, active):
         return T.Operator(
             "D", (T.Var(name),), (term_by_reference(ctx, argument, owner, block, local, active=active),)
         )
+    if derivative_term_of_field(term):
+        field, side = spelling(argument)
+        if ctx.role(ctx.resolve(field, block, side)) in VALUE_ROLES:
+            value = _resolved_symbol(ctx, argument, block, local)
+            # The supplied partial is evaluated at the function's argument.
+            # The law which supplies that argument is outside the derivative.
+            return T.Operator("D", (T.Var(name),), (value,))
     defined = ctx.functions.get(argument.symbol.name) if isinstance(argument, T.Sym) else None
     if defined is not None:
         domain = definition_type(ctx.stage_object, defined).sort[3]
@@ -3205,6 +3316,8 @@ def _resolved_key(ctx, term, block, local):
     argument of a declared law, stays the name the author wrote
     (AMD-SG-034 §4 item 2)."""
     value = local.get(ctx.resolve(term.at, block), local.get(term.at))
+    if term.at.startswith("_") and _bound_variable(value) is not None:
+        return T.Key(value)
     return term if value is None or isinstance(value, T.Sym) else T.Key(value)
 
 

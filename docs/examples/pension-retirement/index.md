@@ -9,7 +9,7 @@ A worker holds financial and pension assets and receives uncertain earnings. The
 
 ## 1 The decision sequence
 
-The declaration separates three [stages](../../wiki/stage.md), each stating one decision problem. `worker_saving` writes consumption and contributions; `retire_choice` writes the choice of next period's employment status; `retiree_saving` writes consumption and saving after retirement. A terminal stage specifies the end of the horizon.
+The declaration separates three [stages](../../wiki/stage.md), each stating one decision problem. `worker_saving` writes consumption and contributions; `retire_choice` writes the choice of next period's employment status; `retiree_saving` writes consumption and saving after retirement. A terminal stage specifies the final decision or bequest calculation. The user still supplies every terminal backward field it reads when realizing the model; the trellis file supplies none.
 
 The retirement-choice stage passes financial and pension balances to the work or retire branch. The connections between periods determine which saving stage follows. This makes the order of saving and retirement decisions available for inspection separately from any numerical method.
 

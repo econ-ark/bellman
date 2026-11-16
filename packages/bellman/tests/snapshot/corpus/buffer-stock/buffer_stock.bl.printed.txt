@@ -1,0 +1,1162 @@
+BELLMAN-SYM / STAGE buffer_stock                          [VERSION = SYMBOLIC]
+a stage occurrence of
+applications/buffer-stock/declaration/stages/buffer_stock/buffer_stock.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        k≺ state, V≺ value, L≺ value
+  ∼ decision       m state, c control, V value, L value
+  ≻ continuation   a≻ state, V≻ value, L≻ value
+  ≺ → ∼            ψ, ξ drawn after arrival, before decision
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           k≺ at arrival, m at decision, a≻ at continuation
+  controls         c at decision
+  values           V at every perch; L at every perch
+  shocks           ψ, ξ, drawn between arrival and decision
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → arvl_to_dcsn   (k≺, ψ, ξ) : !arvl -> (m) : !dcsn
+  → dcsn_to_cntn   (m) : !dcsn, at c -> (a≻) : !cntn
+  ← cntn_to_dcsn   (V≻, L≻) : !cntn, at c -> (V, L) : !dcsn
+  ← dcsn_to_arvl   (V, L) : !dcsn -> (V≺, L≺) : !arvl
+  ← policy         (V≻, L≻) : !cntn -> (c) : !dcsn
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  sets                     2   Xm := ℝ, Xa := ℝ
+  distributions            2   ψ, ξ
+  parameters               7   β : (0, 1); ρ : (1, inf); R : ℝ₊₊; Γ : ℝ₊₊;
+                               σ_ψ : ℝ₊; σ_ξ : ℝ₊; p_zero : (0, 1)
+  derived parameters       1   μ_ξ := -log(1 - p_zero) - σ_ξ^2/2
+  functions                3   𝑢, 𝑑𝑢, 𝑑𝑢𝑖𝑛𝑣 on ℝ₊₊
+  correspondences          1   Γ_c : Xm ⇉ ℝ₊₊
+  laws of motion           2   m = R*k/(Γ*ψ) + ξ; a = m - c
+  value aggregators        3   V = 𝑢(c) + β*V[>]; dcsn_to_arvl, two kernels;
+                               c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])
+  block lines              6   arvl_to_dcsn.market_resources,
+                               dcsn_to_cntn.savings, cntn_to_dcsn.value,
+                               dcsn_to_arvl.value,
+                               dcsn_to_arvl.borrowing_bound, policy.optimality
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   (𝑉≻, 𝐿≻) ↦ 𝑉≺, 𝐿≺, 𝑐(m)
+                    forward    μ≺ ↦ μ≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ≺ k≺  → ψ, ξ drawn →  ∼ m  →  ≻ a≻
+  backward   ≺ V≺, L≺  ←  ∼ V, L  ←  ≻ V≻, L≻
+  policy     ∼ c  ←  ≻ V≻, L≻
+
+==== stage ====
+STAGE buffer_stock
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑉≻  : Xa → ℝ
+         𝐿≻  : {()} → (−∞, 0]
+         ──────────────────────────────────────────
+    out  𝑉≺  : Xa → ℝ
+         𝐿≺  : {()} → (−∞, 0]
+         𝑐   : Xm → ℝ₊₊,  𝑐(m) ∈ Γ_c(m)
+  forward
+    in   μ≺  : finite measure on Xa
+         ──────────────────────────────────────────
+    out  μ≻  : finite measure on Xa
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉≻, 𝐿≻                       out: 𝑉, 𝐿
+
+    2  dcsn_to_arvl
+       in: 𝑉, 𝐿                         out: 𝑉≺, 𝐿≺
+
+    3  policy
+       in: 𝑉≻, 𝐿≻                       out: 𝑐
+
+  forward
+    1  arvl_to_dcsn
+       in: μ≺                           out: μ
+
+    2  dcsn_to_cntn
+       in: μ                            out: μ≻
+
+Conditions
+  cntn_to_dcsn:Aggregation  𝑉(m) ∈ ℝ
+  cntn_to_dcsn:Aggregation  𝐿 ∈ (−∞, 0]
+  dcsn_to_arvl:Aggregation  𝑉≺(k) ∈ ℝ
+  dcsn_to_arvl:Aggregation  𝐿≺ ∈ (−∞, 0]
+  dcsn_to_arvl:Aggregation  𝐿≺(k) ∈ (−∞, 0]
+  μ_ξ                       μ_ξ ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  16  ψ ~ LogNormal(-(σ_ψ^2)/2, σ_ψ)
+  18  ξ ~ Mixture((p_zero, 0), (1 - p_zero, LogNormal(μ_ξ, σ_ξ)))
+  27  m = R*k/(Γ*ψ) + ξ                         :: [id=market_resources]
+  31  a = m - c                                 :: [id=savings]
+  35  V = 𝑢(c) + β*V[>]                         :: [id=value]
+  39  V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)           :: [id=value]
+  40  L[<] = if σ_ψ > 0 then 0 else Γ*L/R       :: [id=borrowing_bound]
+  44  c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xm    buffer_stock:set:Xm
+  Xa    buffer_stock:set:Xa
+  μ_ξ   buffer_stock:derived:μ_ξ
+  Γ_c   buffer_stock:correspondence:Γ_c
+
+File
+  applications/buffer-stock/declaration/stages/buffer_stock/buffer_stock.bl
+
+Perches
+  ≺  arrival, written [<]
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE buffer_stock / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻, L≻}
+       L≻  : {L≻}
+       ──────────────
+  out  V   : {V, L}
+       L   : {L}
+
+Conditions
+  𝑉(m) ∈ ℝ
+  𝐿 ∈ (−∞, 0]
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  35  V = 𝑢(c) + β*V[>]  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward dcsn_to_arvl ====
+STAGE buffer_stock / BACKWARD BLOCK dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V   : {V, L}
+       L   : {L}
+       ──────────────
+  out  V≺  : {V≺, L≺}
+       L≺  : {L≺}
+
+Conditions
+  𝑉≺(k) ∈ ℝ
+  𝐿≺ ∈ (−∞, 0]
+  𝐿≺(k) ∈ (−∞, 0]
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  39  V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)      :: [id=value]
+  40  L[<] = if σ_ψ > 0 then 0 else Γ*L/R  :: [id=borrowing_bound]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward policy ====
+STAGE buffer_stock / POLICY BLOCK policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻, L≻}
+       L≻  : {L≻}
+       ──────────────
+  out  c   : {c}
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  44  c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])  :: [id=optimality]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward arvl_to_dcsn ====
+STAGE buffer_stock / FORWARD BLOCK arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   k≺  : {k≺}
+       ψ   : {ψ}
+       ξ   : {ψ, ξ}
+       ────────────
+  out  m   : {m}
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  27  m = R*k/(Γ*ψ) + ξ  :: [id=market_resources]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE buffer_stock / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   m   : {m}
+       ──────────
+  out  a≻  : {a≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  31  a = m - c  :: [id=savings]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE buffer_stock / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xa → ℝ
+       𝐿≻  : {()} → (−∞, 0]
+       ───────────────────────────────────────────────────
+  out  𝑉   : Xm → ℝ
+       𝐿   : {()} → (−∞, 0]
+
+At
+  𝑐  : Xm → ℝ₊₊,  𝑐(m) ∈ Γ_c(m)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻(·, 𝑐)
+     ─────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻(·, 𝑐))(m) = 𝑉≻(𝑔≻(m, 𝑐(m)))
+
+  2  Aggregation
+     in: (1), 𝐿≻                        out: 𝑉, 𝐿
+     ─────────────────────────────────────────────────────
+     rule: 𝑉(m) = 𝑢(𝑐(m)) + β · 𝑉≻(𝑔≻(m, 𝑐(m)))
+           𝐿(m) = 𝐿≻()
+
+  3  Evaluation
+     in: 𝑉, 𝐿                           out: 𝑉, 𝐿
+     ─────────────────────────────────────────────────────
+     rule: 𝑉 : Xm → ℝ
+           𝐿 : {()} → (−∞, 0]
+
+Conditions
+  Aggregation  𝑉(m) ∈ ℝ
+  Aggregation  𝐿 ∈ (−∞, 0]
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  35  V = 𝑢(c) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  Xm    buffer_stock:set:Xm
+  Xa    buffer_stock:set:Xa
+  β     buffer_stock:parameter:β
+  𝑢     buffer_stock:function:𝑢
+  Γ_c   buffer_stock:correspondence:Γ_c
+  𝑔≻    buffer_stock:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback ====
+STAGE buffer_stock / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xa → ℝ
+       ─────────────
+  out  𝑉≻ ∘ 𝑔≻(·, 𝑐)
+           : Xm → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻(·, 𝑐))(m) = 𝑉≻(𝑔≻(m, 𝑐(m)))
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  31  a = m - c  :: [id=savings]
+
+Definitions referenced
+  Xm    buffer_stock:set:Xm
+  Xa    buffer_stock:set:Xa
+  𝑔≻    buffer_stock:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE buffer_stock / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻(·, 𝑐)
+           : Xm → ℝ
+       𝐿≻  : {()} → (−∞, 0]
+       ────────────────────
+  out  𝑉   : Xm → ℝ
+       𝐿   : Xm → (−∞, 0]
+
+Rule
+  𝑉(m) = 𝑢(𝑐(m)) + β · 𝑉≻(𝑔≻(m, 𝑐(m)))
+  𝐿(m) = 𝐿≻()
+
+Conditions
+  𝑉(m) ∈ ℝ
+  𝐿 ∈ (−∞, 0]
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  35  V = 𝑢(c) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  Xm    buffer_stock:set:Xm
+  β     buffer_stock:parameter:β
+  𝑢     buffer_stock:function:𝑢
+  𝑔≻    buffer_stock:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE buffer_stock / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : Xm → ℝ
+       𝐿  : Xm → (−∞, 0]
+       ───────────────────
+  out  𝑉  : Xm → ℝ
+       𝐿  : {()} → (−∞, 0]
+
+Rule
+  𝑉(m) = 𝑢(𝑐(m)) + β · 𝑉≻(𝑔≻(m, 𝑐(m)))
+  𝑉 : Xm → ℝ
+  𝐿(m) = 𝐿≻()
+  𝐿 : {()} → (−∞, 0]
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xm    buffer_stock:set:Xm
+  β     buffer_stock:parameter:β
+  𝑢     buffer_stock:function:𝑢
+  𝑔≻    buffer_stock:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl ====
+STAGE buffer_stock / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉   : Xm → ℝ
+       𝐿   : {()} → (−∞, 0]
+       ────────────────────────────────────────────────────────────────
+  out  𝑉≺  : Xa → ℝ
+       𝐿≺  : {()} → (−∞, 0]
+
+Operations
+  1  Pullback
+     in: 𝑉                              out: 𝑉 ∘ 𝑔≺
+     ──────────────────────────────────────────────────────────────────
+     rule: (𝑉 ∘ 𝑔≺)(k, ψ, ξ) = 𝑉(𝑔≺(k, ψ, ξ))
+
+  2  value:Aggregation:1
+     in: (1)
+     out: (k, ψ, ξ) ↦ (Γ · ψ)^(1 − ρ) · 𝑉(𝑔≺(k, ψ, ξ))
+     ──────────────────────────────────────────────────────────────────
+     rule: (k, ψ, ξ) ↦ (Γ · ψ)^(1 − ρ) · 𝑉(𝑔≺(k, ψ, ξ))
+
+  3  value:Expectation:1
+     in: (2)                            out: k ↦ E_{ψ, ξ}[(2)(k, ψ, ξ)]
+     ──────────────────────────────────────────────────────────────────
+     rule: (3)(k) = E_{ψ, ξ}[(2)(k, ψ, ξ)]
+
+  4  Aggregation
+     in: 𝐿, (3)                         out: 𝑉≺, 𝐿≺
+     ──────────────────────────────────────────────────────────────────
+     rule: 𝑉≺(k) = E_{ψ, ξ}[(Γ · ψ)^(1 − ρ) · 𝑉(𝑔≺(k, ψ, ξ))]
+           𝐿≺(k) = (if σ_ψ > 0 then 0 else Γ · 𝐿/R)
+
+  5  Evaluation
+     in: 𝑉≺, 𝐿≺                         out: 𝑉≺, 𝐿≺
+     ──────────────────────────────────────────────────────────────────
+     rule: 𝑉≺ : Xa → ℝ
+           𝐿≺ : {()} → (−∞, 0]
+
+Conditions
+  Aggregation  𝑉≺(k) ∈ ℝ
+  Aggregation  𝐿≺ ∈ (−∞, 0]
+  Aggregation  𝐿≺(k) ∈ (−∞, 0]
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  39  V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)      :: [id=value]
+  40  L[<] = if σ_ψ > 0 then 0 else Γ*L/R  :: [id=borrowing_bound]
+
+Definitions referenced
+  Xm    buffer_stock:set:Xm
+  Xa    buffer_stock:set:Xa
+  ρ     buffer_stock:parameter:ρ
+  R     buffer_stock:parameter:R
+  Γ     buffer_stock:parameter:Γ
+  σ_ψ   buffer_stock:parameter:σ_ψ
+  ψ     buffer_stock:distribution:ψ
+  ξ     buffer_stock:distribution:ξ
+  𝑔≺    buffer_stock:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Pullback ====
+STAGE buffer_stock / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : Xm → ℝ
+       ──────────────────────
+  out  𝑉 ∘ 𝑔≺
+          : Xa × ℝ₊₊ × ℝ₊ → ℝ
+
+Rule
+  (𝑉 ∘ 𝑔≺)(k, ψ, ξ) = 𝑉(𝑔≺(k, ψ, ξ))
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  27  m = R*k/(Γ*ψ) + ξ  :: [id=market_resources]
+
+Definitions referenced
+  Xm    buffer_stock:set:Xm
+  Xa    buffer_stock:set:Xa
+  ψ     buffer_stock:distribution:ψ
+  ξ     buffer_stock:distribution:ξ
+  𝑔≺    buffer_stock:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / value:Aggregation:1 ====
+STAGE buffer_stock / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+  / value:Aggregation:1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉 ∘ 𝑔≺
+         : Xa × ℝ₊₊ × ℝ₊ → ℝ
+       ────────────────────────────────────────────
+  out  (k, ψ, ξ) ↦ (Γ · ψ)^(1 − ρ) · 𝑉(𝑔≺(k, ψ, ξ))
+         : Xa × ℝ₊₊ × ℝ₊ → ℝ
+
+Rule
+  (k, ψ, ξ) ↦ (Γ · ψ)^(1 − ρ) · 𝑉(𝑔≺(k, ψ, ξ))
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  39  V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)  :: [id=value]
+
+Definitions referenced
+  Xa    buffer_stock:set:Xa
+  ρ     buffer_stock:parameter:ρ
+  Γ     buffer_stock:parameter:Γ
+  ψ     buffer_stock:distribution:ψ
+  ξ     buffer_stock:distribution:ξ
+  𝑔≺    buffer_stock:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / value:Expectation:1 ====
+STAGE buffer_stock / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+  / value:Expectation:1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (k, ψ, ξ) ↦ (Γ · ψ)^(1 − ρ) · 𝑉(𝑔≺(k, ψ, ξ))
+         : Xa × ℝ₊₊ × ℝ₊ → ℝ
+       ────────────────────────────────────────────
+  out  k ↦ E_{ψ, ξ}[value:Aggregation:1(k, ψ, ξ)]
+         : Xa → ℝ
+
+Rule
+  value:Expectation:1(k) = E_{ψ, ξ}[value:Aggregation:1(k, ψ, ξ)]
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  16  ψ ~ LogNormal(-(σ_ψ^2)/2, σ_ψ)
+  18  ξ ~ Mixture((p_zero, 0), (1 - p_zero, LogNormal(μ_ξ, σ_ξ)))
+  39  V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)  :: [id=value]
+
+Definitions referenced
+  Xa    buffer_stock:set:Xa
+  ρ     buffer_stock:parameter:ρ
+  Γ     buffer_stock:parameter:Γ
+  ψ     buffer_stock:distribution:ψ
+  ξ     buffer_stock:distribution:ξ
+  𝑔≺    buffer_stock:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Aggregation ====
+STAGE buffer_stock / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝐿   : {()} → (−∞, 0]
+       k ↦ E_{ψ, ξ}[value:Aggregation:1(k, ψ, ξ)]
+           : Xa → ℝ
+       ──────────────────────────────────────────
+  out  𝑉≺  : Xa → ℝ
+       𝐿≺  : Xa → (−∞, 0]
+
+Rule
+  𝑉≺(k) = E_{ψ, ξ}[(Γ · ψ)^(1 − ρ) · 𝑉(𝑔≺(k, ψ, ξ))]
+  𝐿≺(k) = (if σ_ψ > 0 then 0 else Γ · 𝐿/R)
+
+Conditions
+  𝑉≺(k) ∈ ℝ
+  𝐿≺ ∈ (−∞, 0]
+  𝐿≺(k) ∈ (−∞, 0]
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  39  V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)      :: [id=value]
+  40  L[<] = if σ_ψ > 0 then 0 else Γ*L/R  :: [id=borrowing_bound]
+
+Definitions referenced
+  Xa    buffer_stock:set:Xa
+  ρ     buffer_stock:parameter:ρ
+  R     buffer_stock:parameter:R
+  Γ     buffer_stock:parameter:Γ
+  σ_ψ   buffer_stock:parameter:σ_ψ
+  ψ     buffer_stock:distribution:ψ
+  ξ     buffer_stock:distribution:ξ
+  𝑔≺    buffer_stock:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Evaluation ====
+STAGE buffer_stock / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≺  : Xa → ℝ
+       𝐿≺  : Xa → (−∞, 0]
+       ────────────────────
+  out  𝑉≺  : Xa → ℝ
+       𝐿≺  : {()} → (−∞, 0]
+
+Rule
+  𝑉≺(k) = E_{ψ, ξ}[(Γ · ψ)^(1 − ρ) · 𝑉(𝑔≺(k, ψ, ξ))]
+  𝑉≺ : Xa → ℝ
+  𝐿≺(k) = (if σ_ψ > 0 then 0 else Γ · 𝐿/R)
+  𝐿≺ : {()} → (−∞, 0]
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xa    buffer_stock:set:Xa
+  ρ     buffer_stock:parameter:ρ
+  R     buffer_stock:parameter:R
+  Γ     buffer_stock:parameter:Γ
+  σ_ψ   buffer_stock:parameter:σ_ψ
+  ψ     buffer_stock:distribution:ψ
+  ξ     buffer_stock:distribution:ξ
+  𝑔≺    buffer_stock:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy ====
+STAGE buffer_stock / POLICY BUILDER policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xa → ℝ
+       𝐿≻  : {()} → (−∞, 0]
+       ──────────────────────────────────────────────────────────────────────
+  out  𝑐   : Xm → ℝ₊₊,  𝑐(m) ∈ Γ_c(m)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻
+     ────────────────────────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻)(m, c) = 𝑉≻(𝑔≻(m, c))
+
+  2  optimality:Aggregation
+     in: (1)                            out: (m, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(m, c))
+     ────────────────────────────────────────────────────────────────────────
+     rule: (m, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(m, c))
+
+  3  optimality:Argmax
+     in: (2)                            out: 𝑐
+     ────────────────────────────────────────────────────────────────────────
+     rule: 𝑐(m) ∈ argmax_{cp ∈ Γ_c(m)} [𝑢(cp) + β · 𝑉≻(𝑔≻(m, cp))]
+
+  4  Evaluation
+     in: 𝑐                              out: 𝑐
+     ────────────────────────────────────────────────────────────────────────
+     rule: 𝑐 : Xm → ℝ₊₊,  𝑐(m) ∈ Γ_c(m)
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  44  c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xm    buffer_stock:set:Xm
+  Xa    buffer_stock:set:Xa
+  β     buffer_stock:parameter:β
+  𝑢     buffer_stock:function:𝑢
+  Γ_c   buffer_stock:correspondence:Γ_c
+  𝑔≻    buffer_stock:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback ====
+STAGE buffer_stock / POLICY BUILDER policy / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xa → ℝ
+       ────────────────────────────────────────
+  out  𝑉≻ ∘ 𝑔≻
+           : {m, c ∈ Xm × ℝ₊₊ | c ∈ Γ_c(m)} → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻)(m, c) = 𝑉≻(𝑔≻(m, c))
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  31  a = m - c  :: [id=savings]
+
+Definitions referenced
+  Xm    buffer_stock:set:Xm
+  Xa    buffer_stock:set:Xa
+  Γ_c   buffer_stock:correspondence:Γ_c
+  𝑔≻    buffer_stock:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / optimality:Aggregation ====
+STAGE buffer_stock / POLICY BUILDER policy / optimality:Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻
+         : {m, c ∈ Xm × ℝ₊₊ | c ∈ Γ_c(m)} → ℝ
+       ──────────────────────────────────────
+  out  (m, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(m, c))
+         : {m, c ∈ Xm × ℝ₊₊ | c ∈ Γ_c(m)} → ℝ
+
+Rule
+  (m, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(m, c))
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  44  c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xm    buffer_stock:set:Xm
+  β     buffer_stock:parameter:β
+  𝑢     buffer_stock:function:𝑢
+  Γ_c   buffer_stock:correspondence:Γ_c
+  𝑔≻    buffer_stock:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / optimality:Argmax ====
+STAGE buffer_stock / POLICY BUILDER policy / optimality:Argmax
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (m, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(m, c))
+          : {m, c ∈ Xm × ℝ₊₊ | c ∈ Γ_c(m)} → ℝ
+       ───────────────────────────────────────
+  out  𝑐  : Xm → ℝ₊₊,  𝑐(m) ∈ Γ_c(m)
+
+Rule
+  𝑐(m) ∈ argmax_{cp ∈ Γ_c(m)} [𝑢(cp) + β · 𝑉≻(𝑔≻(m, cp))]
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  44  c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xm    buffer_stock:set:Xm
+  β     buffer_stock:parameter:β
+  𝑢     buffer_stock:function:𝑢
+  Γ_c   buffer_stock:correspondence:Γ_c
+  𝑔≻    buffer_stock:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Evaluation ====
+STAGE buffer_stock / POLICY BUILDER policy / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑐  : Xm → ℝ₊₊,  𝑐(m) ∈ Γ_c(m)
+       ─────────────────────────────
+  out  𝑐  : Xm → ℝ₊₊,  𝑐(m) ∈ Γ_c(m)
+
+Rule
+  𝑐(m) ∈ argmax_{cp ∈ Γ_c(m)} [𝑢(cp) + β · 𝑉≻(𝑔≻(m, cp))]
+  𝑐 : Xm → ℝ₊₊,  𝑐(m) ∈ Γ_c(m)
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xm    buffer_stock:set:Xm
+  β     buffer_stock:parameter:β
+  𝑢     buffer_stock:function:𝑢
+  Γ_c   buffer_stock:correspondence:Γ_c
+  𝑔≻    buffer_stock:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn ====
+STAGE buffer_stock / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Xa
+       ────────────────────────────────────────────────
+  out  μ   : finite measure on Xm
+
+Operations
+  1  DistributionExtension:ψ
+     in: μ≺                             out: μ≺⊗P_ψ
+     ──────────────────────────────────────────────────
+     rule: μ≺⊗P_ψ(B) = ∫_{k ∈ Xa} [P_ψ({ψ ∈ ℝ₊₊ | (k, ψ) ∈ B})] μ≺(dk)
+
+  2  DistributionExtension:ξ
+     in: (1)                            out: μ≺⊗P_ψ⊗P_ξ
+     ──────────────────────────────────────────────────
+     rule: μ≺⊗P_ψ⊗P_ξ(B)
+             = ∫_{(k, ψ) ∈ Xa × ℝ₊₊} [P_ξ({ξ ∈ ℝ₊ | (k, ψ, ξ) ∈ B})]
+               μ≺⊗P_ψ(d(k, ψ))
+
+  3  Pushforward
+     in: (2)                            out: μ
+     ──────────────────────────────────────────────────
+     rule: μ(B) = μ≺⊗P_ψ⊗P_ξ({k≺, ψ, ξ ∈ Xa × ℝ₊₊ × ℝ₊ | 𝑔≺(k≺, ψ, ξ) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  27  m = R*k/(Γ*ψ) + ξ  :: [id=market_resources]
+
+Definitions referenced
+  Xm    buffer_stock:set:Xm
+  Xa    buffer_stock:set:Xa
+  ψ     buffer_stock:distribution:ψ
+  P_ψ   buffer_stock:distribution:ψ
+  ξ     buffer_stock:distribution:ξ
+  P_ξ   buffer_stock:distribution:ξ
+  𝑔≺    buffer_stock:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / DistributionExtension:ψ ====
+STAGE buffer_stock / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+  / DistributionExtension:ψ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Xa
+       ────────────────────────────────
+  out  μ≺⊗P_ψ
+           : finite measure on Xa × ℝ₊₊
+
+Rule
+  μ≺⊗P_ψ(B) = ∫_{k ∈ Xa} [P_ψ({ψ ∈ ℝ₊₊ | (k, ψ) ∈ B})] μ≺(dk)
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  16  ψ ~ LogNormal(-(σ_ψ^2)/2, σ_ψ)
+
+Definitions referenced
+  Xa    buffer_stock:set:Xa
+  ψ     buffer_stock:distribution:ψ
+  P_ψ   buffer_stock:distribution:ψ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / DistributionExtension:ξ ====
+STAGE buffer_stock / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+  / DistributionExtension:ξ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺⊗P_ψ
+         : finite measure on Xa × ℝ₊₊
+       ───────────────────────────────────
+  out  μ≺⊗P_ψ⊗P_ξ
+         : finite measure on Xa × ℝ₊₊ × ℝ₊
+
+Rule
+  μ≺⊗P_ψ⊗P_ξ(B)
+    = ∫_{(k, ψ) ∈ Xa × ℝ₊₊} [P_ξ({ξ ∈ ℝ₊ | (k, ψ, ξ) ∈ B})] μ≺⊗P_ψ(d(k, ψ))
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  18  ξ ~ Mixture((p_zero, 0), (1 - p_zero, LogNormal(μ_ξ, σ_ξ)))
+
+Definitions referenced
+  Xa    buffer_stock:set:Xa
+  ψ     buffer_stock:distribution:ψ
+  P_ψ   buffer_stock:distribution:ψ
+  ξ     buffer_stock:distribution:ξ
+  P_ξ   buffer_stock:distribution:ξ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / Pushforward ====
+STAGE buffer_stock / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺⊗P_ψ⊗P_ξ
+          : finite measure on Xa × ℝ₊₊ × ℝ₊
+       ────────────────────────────────────
+  out  μ  : finite measure on Xm
+
+Rule
+  μ(B) = μ≺⊗P_ψ⊗P_ξ({k≺, ψ, ξ ∈ Xa × ℝ₊₊ × ℝ₊ | 𝑔≺(k≺, ψ, ξ) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  27  m = R*k/(Γ*ψ) + ξ  :: [id=market_resources]
+
+Definitions referenced
+  Xm    buffer_stock:set:Xm
+  Xa    buffer_stock:set:Xa
+  ψ     buffer_stock:distribution:ψ
+  P_ψ   buffer_stock:distribution:ψ
+  ξ     buffer_stock:distribution:ξ
+  P_ξ   buffer_stock:distribution:ξ
+  𝑔≺    buffer_stock:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE buffer_stock / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on Xm
+       ────────────────────────────────────────
+  out  μ≻  : finite measure on Xa
+
+At
+  𝑐  : Xm → ℝ₊₊,  𝑐(m) ∈ Γ_c(m)
+
+Operations
+  1  Pushforward
+     in: μ                              out: μ≻
+     ──────────────────────────────────────────
+     rule: μ≻(B) = μ({m ∈ Xm | 𝑔≻(m, 𝑐(m)) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  31  a = m - c  :: [id=savings]
+
+Definitions referenced
+  Xm    buffer_stock:set:Xm
+  Xa    buffer_stock:set:Xa
+  Γ_c   buffer_stock:correspondence:Γ_c
+  𝑔≻    buffer_stock:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE buffer_stock / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on Xm
+       ──────────────────────────
+  out  μ≻  : finite measure on Xa
+
+Rule
+  μ≻(B) = μ({m ∈ Xm | 𝑔≻(m, 𝑐(m)) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  31  a = m - c  :: [id=savings]
+
+Definitions referenced
+  Xm    buffer_stock:set:Xm
+  Xa    buffer_stock:set:Xa
+  𝑔≻    buffer_stock:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== buffer_stock:set:Xm ====
+STAGE buffer_stock / SET Xm
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xm  = ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  3  Xm := ℝ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== buffer_stock:set:Xa ====
+STAGE buffer_stock / SET Xa
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xa  = ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  4  Xa := ℝ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== buffer_stock:parameter:β ====
+STAGE buffer_stock / PARAMETER β
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  β  ∈ (0, 1)
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  6  β : (0,1)  :: ["discount factor"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== buffer_stock:parameter:ρ ====
+STAGE buffer_stock / PARAMETER ρ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  ρ  ∈ (1, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  7  ρ : (1, inf)
+       :: ["coefficient of relative risk aversion, greater than one"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== buffer_stock:parameter:R ====
+STAGE buffer_stock / PARAMETER R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  R  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  8  R : ℝ₊₊  :: ["gross interest rate"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== buffer_stock:parameter:Γ ====
+STAGE buffer_stock / PARAMETER Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Γ  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  9  Γ : ℝ₊₊  :: ["deterministic permanent income growth factor"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== buffer_stock:parameter:σ_ψ ====
+STAGE buffer_stock / PARAMETER σ_ψ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  σ_ψ  ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  10  σ_ψ : ℝ₊  :: ["standard deviation of the log permanent shock"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== buffer_stock:parameter:σ_ξ ====
+STAGE buffer_stock / PARAMETER σ_ξ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  σ_ξ  ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  11  σ_ξ : ℝ₊
+        :: ["standard deviation of the log transitory shock, conditional on a
+        positive draw"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== buffer_stock:parameter:p_zero ====
+STAGE buffer_stock / PARAMETER p_zero
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  p_zero  ∈ (0, 1)
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  12  p_zero : (0,1)  :: ["probability ℘ of a zero transitory draw"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== buffer_stock:derived:μ_ξ ====
+STAGE buffer_stock / DERIVED PARAMETER μ_ξ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  μ_ξ  := −log(1 − p_zero) − σ_ξ²/2
+
+Conditions
+  μ_ξ ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  13  μ_ξ := -log(1 - p_zero) - σ_ξ^2/2
+        :: ["log-mean of the positive transitory draw, at which E[ξ] = 1"]
+
+Definitions referenced
+  σ_ξ     buffer_stock:parameter:σ_ξ
+  p_zero  buffer_stock:parameter:p_zero
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== buffer_stock:distribution:ψ ====
+STAGE buffer_stock / DISTRIBUTION ψ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  ψ    ~ LogNormal(−σ_ψ²/2, σ_ψ)
+  P_ψ  = measure on (0, ∞) given by
+           B
+             ↦ ∫_{z ∈ {z ∈ ℝ | exp(−σ_ψ²/2 + σ_ψ · z) ∈ B}}
+                 [exp(−z²/2)/(2 · pi)^(1/2)] Lebesgue(dz)
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  16  ψ ~ LogNormal(-(σ_ψ^2)/2, σ_ψ)
+
+Definitions referenced
+  σ_ψ   buffer_stock:parameter:σ_ψ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== buffer_stock:distribution:ξ ====
+STAGE buffer_stock / DISTRIBUTION ξ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  ξ  ~ Mixture((p_zero, 0), (1 − p_zero, LogNormal(μ_ξ, σ_ξ)))
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  18  ξ ~ Mixture((p_zero, 0), (1 - p_zero, LogNormal(μ_ξ, σ_ξ)))
+
+Definitions referenced
+  σ_ξ     buffer_stock:parameter:σ_ξ
+  p_zero  buffer_stock:parameter:p_zero
+  μ_ξ     buffer_stock:derived:μ_ξ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== buffer_stock:function:𝑢 ====
+STAGE buffer_stock / FUNCTION 𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑢  : ℝ₊₊ → (−∞, 0),  c ↦ c^(1 − ρ)/(1 − ρ)
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  20  𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)  :: [id=util]
+
+Definitions referenced
+  ρ     buffer_stock:parameter:ρ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== buffer_stock:function:𝑑𝑢 ====
+STAGE buffer_stock / FUNCTION 𝑑𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑑𝑢  : ℝ₊₊ → ℝ₊₊,  c ↦ c^(−ρ)
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  21  𝑑𝑢(c : ℝ₊₊) := c^(-ρ)  :: [id=marg_util]
+
+Definitions referenced
+  ρ     buffer_stock:parameter:ρ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== buffer_stock:function:𝑑𝑢𝑖𝑛𝑣 ====
+STAGE buffer_stock / FUNCTION 𝑑𝑢𝑖𝑛𝑣
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑑𝑢𝑖𝑛𝑣  : ℝ₊₊ → ℝ₊₊,  v ↦ v^(−1/ρ)
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  22  𝑑𝑢𝑖𝑛𝑣(v : ℝ₊₊) := v^(-1/ρ)  :: [id=inv_marg_util]
+
+Definitions referenced
+  ρ     buffer_stock:parameter:ρ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== buffer_stock:correspondence:Γ_c ====
+STAGE buffer_stock / CORRESPONDENCE Γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Γ_c  : Xm ⇉ ℝ₊₊,  x ↦ {c ∈ ℝ₊₊ | c < x − L}
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  24  Γ_c(x : Xm) := {c : ℝ₊₊ | c < x - L}  :: [id=feasible_consumption]
+
+Definitions referenced
+  Xm    buffer_stock:set:Xm
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.market_resources ====
+STAGE buffer_stock / FORWARD BLOCK arvl_to_dcsn / market_resources
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  buffer_stock.bl
+  27  m = R*k/(Γ*ψ) + ξ  :: [id=market_resources]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.savings ====
+STAGE buffer_stock / FORWARD BLOCK dcsn_to_cntn / savings
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  buffer_stock.bl
+  31  a = m - c  :: [id=savings]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.value ====
+STAGE buffer_stock / BACKWARD BLOCK cntn_to_dcsn / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(m) ∈ ℝ
+  𝐿 ∈ (−∞, 0]
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  35  V = 𝑢(c) + β*V[>]  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.value ====
+STAGE buffer_stock / BACKWARD BLOCK dcsn_to_arvl / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉≺(k) ∈ ℝ
+  𝐿≺ ∈ (−∞, 0]
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  39  V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.borrowing_bound ====
+STAGE buffer_stock / BACKWARD BLOCK dcsn_to_arvl / borrowing_bound
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉≺(k) ∈ ℝ
+  𝐿≺ ∈ (−∞, 0]
+  𝐿≺(k) ∈ (−∞, 0]
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  40  L[<] = if σ_ψ > 0 then 0 else Γ*L/R  :: [id=borrowing_bound]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== policy.optimality ====
+STAGE buffer_stock / POLICY BLOCK policy / optimality
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  buffer_stock.bl
+  44  c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])  :: [id=optimality]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== buffer_stock:g:arvl_to_dcsn ====
+STAGE buffer_stock / LAW OF MOTION arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≺  : Xa × ℝ₊₊ × ℝ₊ → Xm,  (k, ψ, ξ) ↦ R · k/(Γ · ψ) + ξ
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  27  m = R*k/(Γ*ψ) + ξ  :: [id=market_resources]
+
+Definitions referenced
+  Xm    buffer_stock:set:Xm
+  Xa    buffer_stock:set:Xa
+  R     buffer_stock:parameter:R
+  Γ     buffer_stock:parameter:Γ
+  ψ     buffer_stock:distribution:ψ
+  ξ     buffer_stock:distribution:ξ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== buffer_stock:g:dcsn_to_cntn ====
+STAGE buffer_stock / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : {m, c ∈ Xm × ℝ₊₊ | c ∈ Γ_c(m)} → Xa,  (m, c) ↦ m − c
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  31  a = m - c  :: [id=savings]
+
+Definitions referenced
+  Xm    buffer_stock:set:Xm
+  Xa    buffer_stock:set:Xa
+  Γ_c   buffer_stock:correspondence:Γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== buffer_stock:G:cntn_to_dcsn ====
+STAGE buffer_stock / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, L≻, m, c ∈ ℝ × (−∞, 0] × Xm × ℝ₊₊ | c ∈ Γ_c(m)} → ℝ × (−∞, 0],
+        (V≻, L, m, c) ↦ (𝑢(c) + β · V≻, L)
+
+Conditions
+  𝑉(m) ∈ ℝ
+  𝐿 ∈ (−∞, 0]
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  35  V = 𝑢(c) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  Xm    buffer_stock:set:Xm
+  β     buffer_stock:parameter:β
+  𝑢     buffer_stock:function:𝑢
+  Γ_c   buffer_stock:correspondence:Γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== buffer_stock:G:dcsn_to_arvl ====
+STAGE buffer_stock / VALUE AGGREGATOR dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺_value≺  : ℝ × Xa × ℝ₊₊ × ℝ₊ → UNRESOLVED[𝐺; result set],
+              (V, k, ψ, ξ) ↦ (Γ · ψ)^(1 − ρ) · V
+  𝐺_value≺  : (−∞, 0] × ℝ × Xa → ℝ × (−∞, 0],
+              (L, w, k) ↦ (w, if σ_ψ > 0 then 0 else Γ · L/R)
+
+Conditions
+  𝑉≺(k) ∈ ℝ
+  𝐿≺ ∈ (−∞, 0]
+  𝐿≺(k) ∈ (−∞, 0]
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  39  V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)      :: [id=value]
+  40  L[<] = if σ_ψ > 0 then 0 else Γ*L/R  :: [id=borrowing_bound]
+
+Definitions referenced
+  Xa    buffer_stock:set:Xa
+  ρ     buffer_stock:parameter:ρ
+  R     buffer_stock:parameter:R
+  Γ     buffer_stock:parameter:Γ
+  σ_ψ   buffer_stock:parameter:σ_ψ
+  ψ     buffer_stock:distribution:ψ
+  ξ     buffer_stock:distribution:ξ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== buffer_stock:G:policy ====
+STAGE buffer_stock / VALUE AGGREGATOR policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, m, c ∈ ℝ × Xm × ℝ₊₊ | c ∈ Γ_c(m)} → ℝ,
+        (V≻, m, c) ↦ 𝑢(c) + β · V≻
+──────────────────────────────────────────────────────────────────────────────
+Source  buffer_stock.bl
+  44  c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xm    buffer_stock:set:Xm
+  β     buffer_stock:parameter:β
+  𝑢     buffer_stock:function:𝑢
+  Γ_c   buffer_stock:correspondence:Γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

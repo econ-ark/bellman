@@ -1,0 +1,27 @@
+@stage: ret_choice
+# The retirement choice of applications/retirement-choice, entered at its
+# decision perch: the two arrival builders of ret_choice.bl are left out, and
+# the block dcsn_to_cntn gives the decision state a_d its set, ℝ₊.
+
+δ : ℝ₊₊          :: ["utility cost of working, charged in the period whose wage it earns"]
+# the parameters of the bequest that the addition pension_choice.bl writes,
+# declared here in the stage file, since what a methods file declares is a
+# setting; ρ is the coefficient of relative risk aversion that the saving
+# stages of the period declare
+s : (0,1]        :: ["probability of surviving to the retirement decision"]
+θ : ℝ₊₊          :: ["weight of the bequest in utility"]
+K : ℝ₊₊          :: ["shift of the bequest utility"]
+ρ : (1, inf)     :: ["curvature of the bequest utility, the period's coefficient of relative risk aversion that the saving stages declare"]
+
+[id=dcsn_to_cntn, (a_d : ℝ₊, d : !ctrl @ {work, retire}) : !dcsn -> ()] {
+    [label=work,   () -> (a_w : ℝ₊) : !cntn] { a_w = a_d }
+    [label=retire, () -> (a_r : ℝ₊) : !cntn] { a_r = a_d }
+}
+
+[id=cntn_to_dcsn, (V_w[>] : [-inf, inf) @ !vlu, V_r[>] : [-inf, inf) @ !vlu, d) : !cntn -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+    V = (V_w[>] - δ, V_r[>])[d]                   :: [id=choice_value]
+}
+
+[id=policy, (V_w[>], V_r[>]) : !cntn -> (d : {work, retire} @ !ctrl) : !dcsn] {
+    d = argmax_{d}(V_w[>] - δ, V_r[>])        :: [id=choice]
+}

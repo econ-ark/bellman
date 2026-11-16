@@ -1,0 +1,452 @@
+==== wires ====
+Sort('cons_savings_iid:cntn:V', 'field', perch='cntn', role='value', domain='ℝ', coordinates=('cons_savings_iid:cntn:a',), derivatives=())
+Sort('cons_savings_iid:dcsn:V', 'field', perch='dcsn', role='value', domain='ℝ', coordinates=('cons_savings_iid:dcsn:w',), derivatives=())
+Sort('cons_savings_iid:arvl:V', 'field', perch='arvl', role='value', domain='ℝ', coordinates=('cons_savings_iid:arvl:b',), derivatives=())
+Sort('cons_savings_iid:dcsn:c', 'field', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=(), derivatives=())
+Sort('cons_savings_iid:dcsn:w', 'field', perch='dcsn', role='state', domain='ℝ₊', coordinates=(), derivatives=())
+Sort('cons_savings_iid:arvl:b', 'field', perch='arvl', role='state', domain='ℝ₊', coordinates=(), derivatives=())
+Sort('cons_savings_iid:shck:y', 'field', perch='shck', role='shock', domain='Y', coordinates=(), derivatives=())
+Sort('cons_savings_iid:cntn:a', 'field', perch='cntn', role='state', domain='ℝ₊', coordinates=(), derivatives=())
+Sort('cons_savings_iid:function:cntn:V', 'function', perch='cntn', role='value', domain='ℝ', coordinates=('cons_savings_iid:cntn:a',), derivatives=())
+Sort('cons_savings_iid:function:dcsn:V', 'function', perch='dcsn', role='value', domain='ℝ', coordinates=('cons_savings_iid:dcsn:w',), derivatives=())
+Sort('cons_savings_iid:function:arvl:V', 'function', perch='arvl', role='value', domain='ℝ', coordinates=('cons_savings_iid:arvl:b',), derivatives=())
+Sort('policy:Evaluation:c:result', 'function', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=('cons_savings_iid:dcsn:w',), derivatives=())
+Sort('cons_savings_iid:function:cntn:V:g', 'function', perch='cntn', role='value', domain='ℝ', coordinates=('cons_savings_iid:dcsn:w',), derivatives=())
+Sort('cntn_to_dcsn:Aggregation:V:result', 'function', perch=None, role='value', domain=None, coordinates=('cons_savings_iid:dcsn:w',), derivatives=())
+Sort('cons_savings_iid:function:dcsn:V:g', 'function', perch='dcsn', role='value', domain='ℝ', coordinates=('cons_savings_iid:arvl:b', 'cons_savings_iid:shck:y'), derivatives=())
+Sort('dcsn_to_arvl.value:Expectation:1:result', 'function', perch=None, role='value', domain=None, coordinates=('cons_savings_iid:arvl:b',), derivatives=())
+Sort('dcsn_to_arvl:Aggregation:V:result', 'function', perch=None, role='value', domain=None, coordinates=('cons_savings_iid:arvl:b',), derivatives=())
+Sort('cons_savings_iid:function:cntn:V:g:policy', 'function', perch='cntn', role='value', domain='ℝ', coordinates=('cons_savings_iid:dcsn:w', 'cons_savings_iid:dcsn:c'), derivatives=())
+Sort('policy.optimality:Aggregation:result', 'function', perch=None, role='value', domain=None, coordinates=('cons_savings_iid:dcsn:w', 'cons_savings_iid:dcsn:c'), derivatives=())
+Sort('policy.optimality:Argmax:c:result', 'function', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=('cons_savings_iid:dcsn:w',), derivatives=())
+Sort('cons_savings_iid:measure:arvl', 'measure', perch='arvl', role='measure', domain=None, coordinates=('cons_savings_iid:arvl:b',), derivatives=())
+Sort('cons_savings_iid:measure:dcsn', 'measure', perch='dcsn', role='measure', domain=None, coordinates=('cons_savings_iid:dcsn:w',), derivatives=())
+Sort('cons_savings_iid:measure:cntn', 'measure', perch='cntn', role='measure', domain=None, coordinates=('cons_savings_iid:cntn:a',), derivatives=())
+Sort('cons_savings_iid:measure:arvl:with-distribution:y', 'measure', perch='arvl', role='measure', domain=None, coordinates=('cons_savings_iid:arvl:b', 'cons_savings_iid:shck:y'), derivatives=())
+
+==== conditions of the stage ====
+distribution-weights-are-a-probability-vector (required): cons_savings_iid:distribution:y
+    the weights (p_zero, 1 - p_zero) of the Mixture declaration cons_savings_iid:distribution:y of y each lie in [0, 1] and sum to one
+joint-distribution-factorization (required): cons_savings_iid:distribution:y; arvl_to_dcsn
+    The joint distribution for arvl_to_dcsn is assumed to be the product of the declared conditional distributions given their named parents and the source coordinates: y given (b) by cons_savings_iid:distribution:y.
+aggregation-admissibility (required): cntn_to_dcsn:Aggregation; cntn_to_dcsn.value; cntn_to_dcsn:Aggregation:V:result; V(w) ∈ ℝ
+    The equations at cntn_to_dcsn.value must define cntn_to_dcsn:Aggregation on its declared inputs with values in its declared output sets.
+expectation-integrability (required): dcsn_to_arvl.value:Expectation:1; dcsn_to_arvl.value; V; cons_savings_iid:distribution:y
+    The integrand V at dcsn_to_arvl.value must be integrable for dcsn_to_arvl.value:Expectation:1 under cons_savings_iid:distribution:y.
+aggregation-admissibility (required): dcsn_to_arvl:Aggregation; dcsn_to_arvl.value; dcsn_to_arvl:Aggregation:V:result; V≺(b) ∈ ℝ
+    The equations at dcsn_to_arvl.value must define dcsn_to_arvl:Aggregation on its declared inputs with values in its declared output sets.
+range-compatibility (established): dcsn_to_cntn.1; ℝ₊; ℝ₊; w − c(w) ∈ ℝ₊
+    The restricted law of motion takes values in its declared output set.
+law-support (required): cons_savings_iid:shck:y
+    The distribution of y gives probability only to values in the declared shock set.
+inverse-function-domain (required): cons_savings_iid:function:𝑑𝑢𝑖𝑛𝑣; cons_savings_iid:function:𝑑𝑢
+    The function cons_savings_iid:function:𝑑𝑢 inverted at cons_savings_iid:function:𝑑𝑢𝑖𝑛𝑣 must be one-to-one on its domain, and the arguments of the inverse must lie in its image.
+continuation-input (required): cons_savings_iid:cntn:V; ℝ; cons_savings_iid:cntn:a
+    The representing function for V[>] must be measurable on its declared domain, depend only on (a) in that order, and take values in ℝ.
+
+==== initial backward: conditions ====
+distribution-weights-are-a-probability-vector (required): cons_savings_iid:distribution:y
+    the weights (p_zero, 1 - p_zero) of the Mixture declaration cons_savings_iid:distribution:y of y each lie in [0, 1] and sum to one
+joint-distribution-factorization (required): cons_savings_iid:distribution:y; arvl_to_dcsn
+    The joint distribution for arvl_to_dcsn is assumed to be the product of the declared conditional distributions given their named parents and the source coordinates: y given (b) by cons_savings_iid:distribution:y.
+aggregation-admissibility (required): cntn_to_dcsn:Aggregation; cntn_to_dcsn.value; cntn_to_dcsn:Aggregation:V:result; V(w) ∈ ℝ
+    The equations at cntn_to_dcsn.value must define cntn_to_dcsn:Aggregation on its declared inputs with values in its declared output sets.
+expectation-integrability (required): dcsn_to_arvl.value:Expectation:1; dcsn_to_arvl.value; V; cons_savings_iid:distribution:y
+    The integrand V at dcsn_to_arvl.value must be integrable for dcsn_to_arvl.value:Expectation:1 under cons_savings_iid:distribution:y.
+aggregation-admissibility (required): dcsn_to_arvl:Aggregation; dcsn_to_arvl.value; dcsn_to_arvl:Aggregation:V:result; V≺(b) ∈ ℝ
+    The equations at dcsn_to_arvl.value must define dcsn_to_arvl:Aggregation on its declared inputs with values in its declared output sets.
+law-support (required): cons_savings_iid:shck:y
+    The distribution of y gives probability only to values in the declared shock set.
+inverse-function-domain (required): cons_savings_iid:function:𝑑𝑢𝑖𝑛𝑣; cons_savings_iid:function:𝑑𝑢
+    The function cons_savings_iid:function:𝑑𝑢 inverted at cons_savings_iid:function:𝑑𝑢𝑖𝑛𝑣 must be one-to-one on its domain, and the arguments of the inverse must lie in its image.
+continuation-input (required): cons_savings_iid:cntn:V; ℝ; cons_savings_iid:cntn:a
+    The representing function for V[>] must be measurable on its declared domain, depend only on (a) in that order, and take values in ℝ.
+
+==== initial backward builder: listing ====
+cntn_to_dcsn
+  cntn_to_dcsn.value
+dcsn_to_arvl
+  dcsn_to_arvl.value
+policy
+  policy.optimality
+
+==== initial backward builder: wiring ====
+inputs: cons_savings_iid:cntn:V
+outputs: cons_savings_iid:arvl:V, cons_savings_iid:dcsn:c
+cntn_to_dcsn
+    reads: cons_savings_iid:cntn:V
+    writes: cons_savings_iid:dcsn:V
+    declares: cons_savings_iid:cntn:V, cons_savings_iid:dcsn:c
+    inside:
+        inputs: cons_savings_iid:cntn:V
+        outputs: cons_savings_iid:dcsn:V
+        cntn_to_dcsn.value
+            reads: cons_savings_iid:cntn:V
+            writes: cons_savings_iid:dcsn:V
+dcsn_to_arvl
+    reads: cons_savings_iid:dcsn:V
+    writes: cons_savings_iid:arvl:V
+    declares: cons_savings_iid:dcsn:V
+    inside:
+        inputs: cons_savings_iid:dcsn:V
+        outputs: cons_savings_iid:arvl:V
+        dcsn_to_arvl.value
+            reads: cons_savings_iid:dcsn:V
+            writes: cons_savings_iid:arvl:V
+policy
+    reads: cons_savings_iid:cntn:V
+    writes: cons_savings_iid:dcsn:c
+    declares: cons_savings_iid:cntn:V
+    inside:
+        inputs: cons_savings_iid:cntn:V
+        outputs: cons_savings_iid:dcsn:c
+        policy.optimality
+            reads: cons_savings_iid:cntn:V, cons_savings_iid:dcsn:w
+            writes: cons_savings_iid:dcsn:c
+
+==== initial backward sub-builder: listing ====
+cntn_to_dcsn.value
+dcsn_to_arvl.value
+policy.optimality
+
+==== initial backward sub-builder: wiring ====
+inputs: cons_savings_iid:cntn:V
+outputs: cons_savings_iid:arvl:V, cons_savings_iid:dcsn:c
+cntn_to_dcsn.value
+    reads: cons_savings_iid:cntn:V
+    writes: cons_savings_iid:dcsn:V
+dcsn_to_arvl.value
+    reads: cons_savings_iid:dcsn:V
+    writes: cons_savings_iid:arvl:V
+policy.optimality
+    reads: cons_savings_iid:cntn:V, cons_savings_iid:dcsn:w
+    writes: cons_savings_iid:dcsn:c
+
+==== initial backward primitive: listing ====
+the same as initial backward sub-builder: listing
+
+==== initial backward primitive: wiring ====
+the same as initial backward sub-builder: wiring
+
+==== initial backward combined: listing ====
+the same as initial backward sub-builder: listing
+
+==== initial backward combined: wiring ====
+the same as initial backward sub-builder: wiring
+
+==== initial backward factored: listing ====
+the same as initial backward sub-builder: listing
+
+==== initial backward factored: wiring ====
+the same as initial backward sub-builder: wiring
+
+==== initial forward: conditions ====
+distribution-weights-are-a-probability-vector (required): cons_savings_iid:distribution:y
+    the weights (p_zero, 1 - p_zero) of the Mixture declaration cons_savings_iid:distribution:y of y each lie in [0, 1] and sum to one
+joint-distribution-factorization (required): cons_savings_iid:distribution:y; arvl_to_dcsn
+    The joint distribution for arvl_to_dcsn is assumed to be the product of the declared conditional distributions given their named parents and the source coordinates: y given (b) by cons_savings_iid:distribution:y.
+range-compatibility (established): dcsn_to_cntn.1; ℝ₊; ℝ₊; w − c(w) ∈ ℝ₊
+    The restricted law of motion takes values in its declared output set.
+law-support (required): cons_savings_iid:shck:y
+    The distribution of y gives probability only to values in the declared shock set.
+inverse-function-domain (required): cons_savings_iid:function:𝑑𝑢𝑖𝑛𝑣; cons_savings_iid:function:𝑑𝑢
+    The function cons_savings_iid:function:𝑑𝑢 inverted at cons_savings_iid:function:𝑑𝑢𝑖𝑛𝑣 must be one-to-one on its domain, and the arguments of the inverse must lie in its image.
+continuation-input (required): cons_savings_iid:cntn:V; ℝ; cons_savings_iid:cntn:a
+    The representing function for V[>] must be measurable on its declared domain, depend only on (a) in that order, and take values in ℝ.
+
+==== initial forward builder: listing ====
+arvl_to_dcsn
+  arvl_to_dcsn.cash_on_hand
+dcsn_to_cntn
+  dcsn_to_cntn.1
+
+==== initial forward builder: wiring ====
+inputs: cons_savings_iid:arvl:b, cons_savings_iid:shck:y
+outputs: cons_savings_iid:cntn:a
+arvl_to_dcsn
+    reads: cons_savings_iid:arvl:b, cons_savings_iid:shck:y
+    writes: cons_savings_iid:dcsn:w
+    declares: cons_savings_iid:arvl:b, cons_savings_iid:shck:y
+    inside:
+        inputs: cons_savings_iid:arvl:b, cons_savings_iid:shck:y
+        outputs: cons_savings_iid:dcsn:w
+        arvl_to_dcsn.cash_on_hand
+            reads: cons_savings_iid:shck:y, cons_savings_iid:arvl:b
+            writes: cons_savings_iid:dcsn:w
+dcsn_to_cntn
+    reads: cons_savings_iid:dcsn:w
+    writes: cons_savings_iid:cntn:a
+    declares: cons_savings_iid:dcsn:w, cons_savings_iid:dcsn:c
+    inside:
+        inputs: cons_savings_iid:dcsn:w
+        outputs: cons_savings_iid:cntn:a
+        dcsn_to_cntn.1
+            reads: cons_savings_iid:dcsn:w
+            writes: cons_savings_iid:cntn:a
+
+==== initial forward sub-builder: listing ====
+arvl_to_dcsn.cash_on_hand
+dcsn_to_cntn.1
+
+==== initial forward sub-builder: wiring ====
+inputs: cons_savings_iid:arvl:b, cons_savings_iid:shck:y
+outputs: cons_savings_iid:cntn:a
+arvl_to_dcsn.cash_on_hand
+    reads: cons_savings_iid:shck:y, cons_savings_iid:arvl:b
+    writes: cons_savings_iid:dcsn:w
+dcsn_to_cntn.1
+    reads: cons_savings_iid:dcsn:w
+    writes: cons_savings_iid:cntn:a
+
+==== initial forward primitive: listing ====
+the same as initial forward sub-builder: listing
+
+==== initial forward primitive: wiring ====
+the same as initial forward sub-builder: wiring
+
+==== initial forward combined: listing ====
+the same as initial forward sub-builder: listing
+
+==== initial forward combined: wiring ====
+the same as initial forward sub-builder: wiring
+
+==== initial forward factored: listing ====
+the same as initial forward sub-builder: listing
+
+==== initial forward factored: wiring ====
+the same as initial forward sub-builder: wiring
+
+==== builders backward: conditions ====
+the same as initial backward: conditions
+
+==== builders backward builder: listing ====
+cntn_to_dcsn
+  Pullback of 𝑉≻ along 𝑔 at 𝑐
+  Value aggregation 𝐺
+  Evaluation of 𝑉
+dcsn_to_arvl
+  Pullback of 𝑉 along the law of motion 𝑔
+  Expectation of the statement value under the distribution of y
+  Value aggregation 𝐺
+  Evaluation of 𝑉≺
+policy
+  Pullback of 𝑉≻ along the law of motion 𝑔
+  Apply 𝐺 of the statement optimality
+  Argmax of the statement optimality
+  Evaluation of 𝑐
+
+==== builders backward builder: wiring ====
+inputs: cons_savings_iid:function:cntn:V
+outputs: cons_savings_iid:function:arvl:V, policy:Evaluation:c:result
+cntn_to_dcsn
+    reads: cons_savings_iid:function:cntn:V
+    writes: cons_savings_iid:function:dcsn:V
+    inside:
+        inputs: cons_savings_iid:function:cntn:V
+        outputs: cons_savings_iid:function:dcsn:V
+        cntn_to_dcsn:Pullback [Pullback]
+            reads: cons_savings_iid:function:cntn:V
+            writes: cons_savings_iid:function:cntn:V:g
+            refers to: cons_savings_iid:g:dcsn_to_cntn, cons_savings_iid:function:dcsn:c
+        cntn_to_dcsn:Aggregation [Aggregation]
+            reads: cons_savings_iid:function:cntn:V:g
+            writes: cntn_to_dcsn:Aggregation:V:result
+            refers to: cons_savings_iid:G:cntn_to_dcsn, cons_savings_iid:function:dcsn:c
+        cntn_to_dcsn:Evaluation [Evaluation]
+            reads: cntn_to_dcsn:Aggregation:V:result
+            writes: cons_savings_iid:function:dcsn:V
+dcsn_to_arvl
+    reads: cons_savings_iid:function:dcsn:V
+    writes: cons_savings_iid:function:arvl:V
+    inside:
+        inputs: cons_savings_iid:function:dcsn:V
+        outputs: cons_savings_iid:function:arvl:V
+        dcsn_to_arvl:Pullback [Pullback]
+            reads: cons_savings_iid:function:dcsn:V
+            writes: cons_savings_iid:function:dcsn:V:g
+            refers to: cons_savings_iid:g:arvl_to_dcsn
+        dcsn_to_arvl.value:Expectation:1 [Expectation]
+            reads: cons_savings_iid:function:dcsn:V:g
+            writes: dcsn_to_arvl.value:Expectation:1:result
+            refers to: cons_savings_iid:distribution:y
+        dcsn_to_arvl:Aggregation [Aggregation]
+            reads: dcsn_to_arvl.value:Expectation:1:result
+            writes: dcsn_to_arvl:Aggregation:V:result
+            refers to: cons_savings_iid:G:dcsn_to_arvl
+        dcsn_to_arvl:Evaluation [Evaluation]
+            reads: dcsn_to_arvl:Aggregation:V:result
+            writes: cons_savings_iid:function:arvl:V
+policy
+    reads: cons_savings_iid:function:cntn:V
+    writes: policy:Evaluation:c:result
+    inside:
+        inputs: cons_savings_iid:function:cntn:V
+        outputs: policy:Evaluation:c:result
+        policy:Pullback [Pullback]
+            reads: cons_savings_iid:function:cntn:V
+            writes: cons_savings_iid:function:cntn:V:g:policy
+            refers to: cons_savings_iid:g:dcsn_to_cntn
+        policy.optimality:Aggregation [Aggregation]
+            reads: cons_savings_iid:function:cntn:V:g:policy
+            writes: policy.optimality:Aggregation:result
+            refers to: cons_savings_iid:G:policy
+        policy.optimality:Argmax [Argmax]
+            reads: policy.optimality:Aggregation:result
+            writes: policy.optimality:Argmax:c:result
+            refers to: policy.optimality
+        policy:Evaluation [Evaluation]
+            reads: policy.optimality:Argmax:c:result
+            writes: policy:Evaluation:c:result
+
+==== builders backward sub-builder: listing ====
+Pullback of 𝑉≻ along 𝑔 at 𝑐
+Value aggregation 𝐺
+Evaluation of 𝑉
+Pullback of 𝑉 along the law of motion 𝑔
+Expectation of the statement value under the distribution of y
+Value aggregation 𝐺
+Evaluation of 𝑉≺
+Pullback of 𝑉≻ along the law of motion 𝑔
+Apply 𝐺 of the statement optimality
+Argmax of the statement optimality
+Evaluation of 𝑐
+
+==== builders backward sub-builder: wiring ====
+inputs: cons_savings_iid:function:cntn:V
+outputs: cons_savings_iid:function:arvl:V, policy:Evaluation:c:result
+cntn_to_dcsn:Pullback [Pullback]
+    reads: cons_savings_iid:function:cntn:V
+    writes: cons_savings_iid:function:cntn:V:g
+    refers to: cons_savings_iid:g:dcsn_to_cntn, cons_savings_iid:function:dcsn:c
+cntn_to_dcsn:Aggregation [Aggregation]
+    reads: cons_savings_iid:function:cntn:V:g
+    writes: cntn_to_dcsn:Aggregation:V:result
+    refers to: cons_savings_iid:G:cntn_to_dcsn, cons_savings_iid:function:dcsn:c
+cntn_to_dcsn:Evaluation [Evaluation]
+    reads: cntn_to_dcsn:Aggregation:V:result
+    writes: cons_savings_iid:function:dcsn:V
+dcsn_to_arvl:Pullback [Pullback]
+    reads: cons_savings_iid:function:dcsn:V
+    writes: cons_savings_iid:function:dcsn:V:g
+    refers to: cons_savings_iid:g:arvl_to_dcsn
+dcsn_to_arvl.value:Expectation:1 [Expectation]
+    reads: cons_savings_iid:function:dcsn:V:g
+    writes: dcsn_to_arvl.value:Expectation:1:result
+    refers to: cons_savings_iid:distribution:y
+dcsn_to_arvl:Aggregation [Aggregation]
+    reads: dcsn_to_arvl.value:Expectation:1:result
+    writes: dcsn_to_arvl:Aggregation:V:result
+    refers to: cons_savings_iid:G:dcsn_to_arvl
+dcsn_to_arvl:Evaluation [Evaluation]
+    reads: dcsn_to_arvl:Aggregation:V:result
+    writes: cons_savings_iid:function:arvl:V
+policy:Pullback [Pullback]
+    reads: cons_savings_iid:function:cntn:V
+    writes: cons_savings_iid:function:cntn:V:g:policy
+    refers to: cons_savings_iid:g:dcsn_to_cntn
+policy.optimality:Aggregation [Aggregation]
+    reads: cons_savings_iid:function:cntn:V:g:policy
+    writes: policy.optimality:Aggregation:result
+    refers to: cons_savings_iid:G:policy
+policy.optimality:Argmax [Argmax]
+    reads: policy.optimality:Aggregation:result
+    writes: policy.optimality:Argmax:c:result
+    refers to: policy.optimality
+policy:Evaluation [Evaluation]
+    reads: policy.optimality:Argmax:c:result
+    writes: policy:Evaluation:c:result
+
+==== builders backward primitive: listing ====
+the same as builders backward sub-builder: listing
+
+==== builders backward primitive: wiring ====
+the same as builders backward sub-builder: wiring
+
+==== builders backward combined: listing ====
+the same as builders backward sub-builder: listing
+
+==== builders backward combined: wiring ====
+the same as builders backward sub-builder: wiring
+
+==== builders backward factored: listing ====
+the same as builders backward sub-builder: listing
+
+==== builders backward factored: wiring ====
+the same as builders backward sub-builder: wiring
+
+==== builders forward: conditions ====
+the same as initial forward: conditions
+
+==== builders forward builder: listing ====
+arvl_to_dcsn
+  Extension of the measure by the distribution of y
+  Push-forward through the law of motion 𝑔
+dcsn_to_cntn
+  Push-forward through 𝑔 at 𝑐
+
+==== builders forward builder: wiring ====
+inputs: cons_savings_iid:measure:arvl
+outputs: cons_savings_iid:measure:cntn
+arvl_to_dcsn
+    reads: cons_savings_iid:measure:arvl
+    writes: cons_savings_iid:measure:dcsn
+    inside:
+        inputs: cons_savings_iid:measure:arvl
+        outputs: cons_savings_iid:measure:dcsn
+        arvl_to_dcsn:DistributionExtension:y [DistributionExtension]
+            reads: cons_savings_iid:measure:arvl
+            writes: cons_savings_iid:measure:arvl:with-distribution:y
+            refers to: cons_savings_iid:distribution:y
+        arvl_to_dcsn:Pushforward [Pushforward]
+            reads: cons_savings_iid:measure:arvl:with-distribution:y
+            writes: cons_savings_iid:measure:dcsn
+            refers to: cons_savings_iid:g:arvl_to_dcsn
+dcsn_to_cntn
+    reads: cons_savings_iid:measure:dcsn
+    writes: cons_savings_iid:measure:cntn
+    inside:
+        inputs: cons_savings_iid:measure:dcsn
+        outputs: cons_savings_iid:measure:cntn
+        dcsn_to_cntn:Pushforward [Pushforward]
+            reads: cons_savings_iid:measure:dcsn
+            writes: cons_savings_iid:measure:cntn
+            refers to: cons_savings_iid:g:dcsn_to_cntn, cons_savings_iid:function:dcsn:c
+
+==== builders forward sub-builder: listing ====
+Extension of the measure by the distribution of y
+Push-forward through the law of motion 𝑔
+Push-forward through 𝑔 at 𝑐
+
+==== builders forward sub-builder: wiring ====
+inputs: cons_savings_iid:measure:arvl
+outputs: cons_savings_iid:measure:cntn
+arvl_to_dcsn:DistributionExtension:y [DistributionExtension]
+    reads: cons_savings_iid:measure:arvl
+    writes: cons_savings_iid:measure:arvl:with-distribution:y
+    refers to: cons_savings_iid:distribution:y
+arvl_to_dcsn:Pushforward [Pushforward]
+    reads: cons_savings_iid:measure:arvl:with-distribution:y
+    writes: cons_savings_iid:measure:dcsn
+    refers to: cons_savings_iid:g:arvl_to_dcsn
+dcsn_to_cntn:Pushforward [Pushforward]
+    reads: cons_savings_iid:measure:dcsn
+    writes: cons_savings_iid:measure:cntn
+    refers to: cons_savings_iid:g:dcsn_to_cntn, cons_savings_iid:function:dcsn:c
+
+==== builders forward primitive: listing ====
+the same as builders forward sub-builder: listing
+
+==== builders forward primitive: wiring ====
+the same as builders forward sub-builder: wiring
+
+==== builders forward combined: listing ====
+the same as builders forward sub-builder: listing
+
+==== builders forward combined: wiring ====
+the same as builders forward sub-builder: wiring
+
+==== builders forward factored: listing ====
+the same as builders forward sub-builder: listing
+
+==== builders forward factored: wiring ====
+the same as builders forward sub-builder: wiring

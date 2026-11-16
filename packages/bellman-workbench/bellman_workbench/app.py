@@ -401,7 +401,7 @@ CSS class names the tests rely on:
                      row .bl-removal-buttons after it;
                      .bl-panel-head (.bl-panel-word, the kind of a period
                      or a builder after its identifier; .bl-panel-place, a
-                     stage occurrence's period and age, or a join wire's
+                     stage occurrence's position, or a join wire's
                      two occurrences;
                      for a box .bl-panel-kind, its kind, and the second
                      line .bl-panel-under, its identifier with
@@ -806,9 +806,9 @@ TERMS = {
     "statement": "one line of the block, as the file writes it",
     "edge": "the perches the field is carried between, in the direction of the diagram",
     "set": "the set the field takes its values in, as the file declares it",
-    "trellis": "the model over its periods, each a frame of its stage occurrences",
-    "occurrence": "one use of a stage file at one position of the trellis",
-    "period": "one date of the model, numbered from the terminal period, periods[0]",
+    "trellis": "the author's diagram of periods and their connections",
+    "occurrence": "one use of a stage at an address in the trellis diagram",
+    "period": "stages joined by their fields, at one position in the trellis",
     "join": "a continuation field of one occurrence joined to an arrival field of another",
     "paired by": "the rule that paired a backward join's wire with the wire that supplies it",
     "outside": "the occurrence at the other end of a join, outside the view",
@@ -11157,8 +11157,8 @@ def PanelHead(
     `Period`, `Builder` or `Sub-builder`, in Small in ink-3,
     `.bl-panel-word` (design pass 13 §3; the fix wave Q3b, item 19, C1,
     C12); where one is given, its place, `.bl-panel-place`, a stage
-    occurrence's period and the period's age (design pass §2), in Code
-    small, a text or its parts (`place_children`); where one is given, a
+    occurrence's position in the trellis (design pass §2), in Code
+    small; where one is given, a
     box's kind, `.bl-panel-kind`, carrying the definition of `kind`, in Code
     small; its graph's direction in Small, in sentence case as the graph
     bar's select prints it, `Backward` (design pass 13 §3); and where
@@ -11184,19 +11184,6 @@ def PanelHead(
             rv.Html(tag="div", class_="bl-panel-under bl-code-small", children=list(under))
         )
     return rv.Html(tag="div", class_="bl-panel-head", children=children)
-
-
-def place_children(place: str) -> list:
-    """The parts of a stage occurrence's place as its head prints them
-    (`PanelHead`): `periods[2] · age 68` gives the period and the number of
-    the place in its Code small, and the page's word `age` between them in
-    Small, `.bl-small` (design pass 13 §3; the fix wave Q3b, item 19, C8);
-    a place with no age is the period alone. The text of the parts is the
-    place's; no place gives no parts."""
-    period, separator, age = place.partition(" · age ")
-    if not separator:
-        return [place] if place else []
-    return [f"{period} · ", rv.Html(tag="span", class_="bl-small", children=["age"]), f" {age}"]
 
 
 def DetailRow(key: str, children: list):
@@ -11983,8 +11970,8 @@ def TrellisRefusal(refusal: model.Diagnostic):
 def OccurrenceDetails(subject):
     """In Details, the stage occurrence selected in the trellis view (design
     pass §2, "A stage occurrence"; unit K, K-D2), in
-    `div.bl-occurrence-details`: the head, the stage's key, its period with
-    the period's age, and the graph's direction word (`PanelHead`); the
+    `div.bl-occurrence-details`: the head, the stage's key, its period's
+    position, and the graph's direction word (`PanelHead`); the
     rows `trellis.occurrence_rows` answers (`DetailsRows`), with the
     refusal of the trellis's last reading and the folder's recipes; and
     the text buttons (design pass 8 §§5.3 and 6) `Head`, which makes it the
@@ -11995,8 +11982,7 @@ def OccurrenceDetails(subject):
     stand last in Details, after the fold `Legend`, which `TrellisPanel`
     places (`RemovalButtons`; unit N, Task 5; design pass 10 §7; design
     pass 13 §5, Q-D15; the fix wave Q3b, item 17, D24). The head prints
-    the period's word `age` in Small among the place's Code small (design
-    pass 13 §3; the fix wave Q3b, item 19, C8). The rows
+    the position in Code small. The rows
     are read again when the occurrence, the trellis held, the folder's
     recipes or that refusal change."""
     held = trellis_shown.value
@@ -12016,7 +12002,7 @@ def OccurrenceDetails(subject):
         [subject, held, recipes, refusal],
     )
     with rv.Html(tag="div", class_="bl-occurrence-details"):
-        PanelHead(details.key, subject.graph, place_children(details.place), code=True)
+        PanelHead(details.key, subject.graph, [details.place], code=True)
         DetailsRows(details.rows)
         with rv.Html(tag="div", class_="bl-piece-buttons"):
             TextButton(

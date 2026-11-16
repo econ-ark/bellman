@@ -50,7 +50,7 @@ import math
 from itertools import zip_longest
 
 from bellman.syntax import terms as T
-from bellman.syntax.vocabulary import EXTENDED_REAL, PRIMITIVE_SETS
+from bellman.syntax.vocabulary import CONSTANCY_WORD, EXTENDED_REAL, PRIMITIVE_SETS
 
 # The precedence levels of the grammar's expression ladder, lowest first: a
 # position that requires at least a product parenthesizes a sum, and so on.
@@ -104,6 +104,8 @@ def to_source(term) -> str:
         return _word(term.m)
     if isinstance(term, T.Grid):
         return _grid(term.g)
+    if isinstance(term, T.Constancy):
+        return f"!{CONSTANCY_WORD}"
     raise NotImplementedError(
         f"to_source prints an expression, a set expression, a block "
         f"statement, a bound, a declared multiplier, or a part of a typing entry; a "
@@ -137,7 +139,7 @@ def _keyword(keyword) -> str:
 
 def _argument(value) -> str:
     """The value of a keyword argument: a name, a number, a quoted string, a
-    tuple of values, or a nested word with its own arguments."""
+    tuple of values, a nested word with its own arguments, or a sum for a grid."""
     if isinstance(value, T.Name):
         return value.name
     if isinstance(value, T.Literal):
@@ -148,6 +150,8 @@ def _argument(value) -> str:
         return "(" + ", ".join(_argument(item) for item in value.items) + ")"
     if isinstance(value, T.Nested):
         return _word(value.word)
+    if isinstance(value, T.ExpressionArgument):
+        return _expr(value.value, _SUM)
     raise NotImplementedError(
         f"to_source has no rule for the argument constructor {type(value).__name__}"
     )
@@ -220,6 +224,13 @@ def _statement(statement) -> str:
         return _statement(statement.core) + _slack_clause(statement)
     if isinstance(statement, T.Law):
         return f"{distribution_subject_text(statement.subjects)} ~ {_expr(statement.law, _SUM)}"
+    if isinstance(statement, T.ParameterizedLaw):
+        if len(statement.subjects) != 1 or not statement.arguments:
+            raise NotImplementedError(
+                "A parameterized law is written for one shock with at least one argument"
+            )
+        arguments = ", ".join(statement.arguments)
+        return f"{statement.subjects[0]}({arguments}) ~ {_expr(statement.law, _SUM)}"
     if isinstance(statement, T.FuncDef):
         return f"{statement.name}({_parameters(statement)}) := {_expr(statement.body, _SUM)}"
     if isinstance(statement, T.CorrDef):
@@ -475,8 +486,8 @@ def _expr(expression, need: int) -> str:
 
 def _level(expression) -> int:
     if isinstance(expression, T.Conditional):
-        # a conditional stands after `:=` and as a branch of another alone,
-        # so that it is parenthesized in no position of a formula
+        # A conditional is the whole right side of a definition or equation,
+        # or a branch of another conditional.
         return _ATOM
     if isinstance(expression, (T.Add, T.Sub, T.Neg)):
         return _SUM

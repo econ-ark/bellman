@@ -6,15 +6,11 @@
 # another addition named after it in the list, as
 # `stages/adjuster_cons/methods.adjuster_method.bl` may be. The bequest's
 # addition writes the derivative lines of its two value builders, and it is
-# active in the terminal period alone, `periods: [0, 0]`. The income level Y
-# and the retirement income y_R of tenure vary with age and are written per
-# period by wage_schedule.py after every load_recipe, since a recipe holds the
-# values common to every period.
+# active in the terminal period alone, `periods: [0, 0]`. Tenure reads the income tables at
+# the age each continuation supplies.
 trellis: trellis.yml
 stages:
-  tenure:        {stage: stages/tenure/tenure.bl,               calibration: {all: [calibration/durables, $fill]}, settings: {all: [settings/durables, $fill]}, methods: {all: [stages/tenure/methods.bl]}}
+  tenure:        {stage: stages/tenure/tenure.bl,               calibration: {all: [calibration/durables, calibration/wage_schedule, $fill]}, settings: {all: [settings/durables, $fill]}, methods: {all: [stages/tenure/methods.bl]}}
   keeper_cons:   {stage: stages/keeper_cons/keeper_cons.bl,     calibration: {all: [calibration/durables, $fill]}, settings: {all: [settings/durables, $fill]}, methods: {all: [stages/keeper_cons/methods.bl]}}
   adjuster_cons: {stage: stages/adjuster_cons/adjuster_cons.bl, calibration: {all: [calibration/durables, $fill]}, settings: {all: [settings/durables, $fill]}, methods: {all: [stages/adjuster_cons/methods.bl]}}
   bequest:       {stage: stages/bequest/bequest.bl,             calibration: {all: [calibration/durables, $fill]}, methods: {all: [stages/bequest/methods.bl]}, periods: [0, 0]}
-registry:
-  calibration: [calibration/wage_schedule]

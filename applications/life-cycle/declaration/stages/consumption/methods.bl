@@ -1,0 +1,9 @@
+@methods: consumption
+
+[id=policy, method : !egm, (V[>]) : !cntn -> (c) : !dcsn
+    | handler : "life-cycle:egm"
+    | grid : !Cartesian(z_4=Z, a_4=savings_grid)] {
+    c[>] <= (β*D_{a_4}V[>])^(-1/ρ) ⟂ a_4 >= 0            :: [id=inverse_euler]
+    m[>] = a_4 + c[>]                                  :: [id=endogenous_grid]
+    c = c[>]                                          :: [id=identification]
+}

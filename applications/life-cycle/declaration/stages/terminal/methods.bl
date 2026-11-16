@@ -1,0 +1,6 @@
+@methods: terminal
+
+savings_grid : {1, …, 40} → ℝ₊
+
+dcsn_to_arvl.evaluate[V[<]].method : !Linear
+dcsn_to_arvl.evaluate[V[<]].grid : !Cartesian(z_4=Z, a_4=savings_grid)

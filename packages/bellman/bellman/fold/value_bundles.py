@@ -382,10 +382,17 @@ def _combined(group, identity):
     components' wires in order, each keeping its identity, and the authored
     statements, references, conditions and parameters of every member, in the
     order the members stand."""
+    inputs = _joined_field(group, "inputs")
+    if group[0].kind == "Pullback":
+        # A pullback lists each transformed function before its constant inputs.
+        functions = tuple(dict.fromkeys(
+            wire for row in group for wire in row.inputs[:len(row.outputs)]
+        ))
+        inputs = functions + tuple(wire for wire in inputs if wire not in functions)
     return dataclasses.replace(
         group[0],
         identity=identity,
-        inputs=_joined_field(group, "inputs"),
+        inputs=inputs,
         outputs=_joined_field(group, "outputs"),
         statements=_joined_field(group, "statements"),
         references=_joined_field(group, "references"),

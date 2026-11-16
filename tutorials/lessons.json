@@ -1,7 +1,7 @@
 {
   "getting-started/01-the-stage": {
     "path": "tutorials/getting-started/01-the-stage.ipynb",
-    "sha256": "9480dddc2b5dac1f5b88c903bb8182d0661823db49ae3d29e9e6e69052641468",
+    "sha256": "a5696a9c32821f9f54578b47c5f8eebabc9440d30dab01b7452d1e2d195795d7",
     "status": "completed",
     "failures": [],
     "inputs": {
@@ -11,7 +11,7 @@
   },
   "getting-started/02-value-functions": {
     "path": "tutorials/getting-started/02-value-functions.ipynb",
-    "sha256": "e3839e2ea1a257c6eafa835126d0f4c55b4af25e01569b43ff4a5f1c79c68ce0",
+    "sha256": "8e21c3f96adab04bb3544d989b49758ae5bbf56c058e0b9bd86076e9c155c38c",
     "status": "completed",
     "failures": [],
     "inputs": {
@@ -46,7 +46,7 @@
   },
   "getting-started/05-periods-and-trellises": {
     "path": "tutorials/getting-started/05-periods-and-trellises.ipynb",
-    "sha256": "dcabdf4500276d57d6a679e37d9221792c650d128e28b594bb26689433d594c8",
+    "sha256": "15b10e4d47190483ba0cd734dafec60c29445866d343dad5b5e2b06ec1268eba",
     "status": "completed",
     "failures": [],
     "inputs": {
@@ -70,24 +70,18 @@
   },
   "models/benhabib-2019/the-factory-on-benhabib": {
     "path": "tutorials/models/benhabib-2019/the-factory-on-benhabib.ipynb",
-    "sha256": "f4a69cc4826e4cf19e2a4da70b6b3494247c2a2f6e2805f39791c325100d6517",
+    "sha256": "252f4ef1b0f6a7e05acac6176f4431913681c34021f0ec7185a1decda4bd5427",
     "status": "completed",
     "failures": [],
     "inputs": {
-      "applications/benhabib-2019/declaration/spec.yml": "0dd408c1bf92b6be261222f594f1018bc022a0191b744eb1c55ba487d6ada5fa",
-      "applications/benhabib-2019/declaration/trellis.yml": "7fc868e8dff4c8dceea7ac259cb87b8bf2e7b2bfc0565ae362da760ab858f3c5",
+      "applications/benhabib-2019/declaration/spec.yml": "6fe3db43a42fd329d79c50e96c23604de56e282bf3afaf676dbb8a36ca43f549",
+      "applications/benhabib-2019/declaration/trellis.yml": "67203b8d30a22195d3252d868152ac541981743b47c83bcc99fbf541f0baaf01",
       "applications/benhabib-2019/declaration/period.yml": "2725d1a9cfe3634c4faadff7f5d2eefb591b41846ef3158fc5a2e2dfc90c3ea1",
-      "applications/benhabib-2019/declaration/stages/benhabib_bellman/benhabib_bellman.bl": "612cbae75f66fc2ceb403f6bdb66642b473222f43c9be5827cb7184f9464cfec",
-      "applications/benhabib-2019/declaration/stages/bequest/bequest.bl": "f40e2012498949118f94e6fe6abb5be0e0c4087f44631be914d6836b748666c6",
-      "applications/benhabib-2019/declaration/calibration/main.yml": "13c1ce12361f327a50c8655be6f07c7d4a77d18146e1f87147c68bdde92b9fca",
-      "applications/benhabib-2019/declaration/calibration/horizon.yml": "3bc1b77bb87837cfe30d88f9c786f76eab06d906ff5030a157aad99975f5b09b",
-      "applications/benhabib-2019/declaration/calibration/wage/bracket_1.yml": "0336c220724889a63900cf4545efd7b118db6bc03faa6cf93062ff824ddef46f",
-      "applications/benhabib-2019/declaration/calibration/wage/bracket_2.yml": "1193f77609a160da2a30e844a67f9bc301d08a604ee4a8fdd87054005f4a21e5",
-      "applications/benhabib-2019/declaration/calibration/wage/bracket_3.yml": "c8bcefac54f179c23240d3ff33479b08dc5a20d7024afaa52176c278d64efe5c",
-      "applications/benhabib-2019/declaration/calibration/wage/bracket_4.yml": "27408d1271ef9c91719e3a4795b33a0a3bd8094f79b4c7d1d1ac84c392545890",
-      "applications/benhabib-2019/declaration/calibration/wage/bracket_5.yml": "d73294cbd0707986198b00b9f7f1b438ae9f4cba8fbc928abeb8e541cf7ae804",
-      "applications/benhabib-2019/declaration/calibration/wage/bracket_6.yml": "3bfe364c45099000bbd63e97a5b721e7c1600ee9c1b9b14168534e66beb5bef1",
-      "applications/benhabib-2019/declaration/stages/benhabib_bellman/methods.bl": "06bbba1a8689a342403bd1b9d003fa97938e64b95763a9de56f1aecc982edd9a",
+      "applications/benhabib-2019/declaration/stages/benhabib_bellman/benhabib_bellman.bl": "2f770e968defd920292f448da187e0fea356ea4cda6c0673e9b832acfa324a32",
+      "applications/benhabib-2019/declaration/stages/bequest/bequest.bl": "d2d8165f8d8802a7a28748eacd082104f0d9dac139250aaee876c1ced0d5da6d",
+      "applications/benhabib-2019/declaration/calibration/main.yml": "ab4e255be2a4298fe9528d309da88b5ad7e0f106b21eb5ef4a13499f0355b221",
+      "applications/benhabib-2019/declaration/calibration/wage.yml": "f68fcd043743fe1335176bba1f58c49f65ddd7d70247ea2816cfdb083adefd68",
+      "applications/benhabib-2019/declaration/stages/benhabib_bellman/methods.bl": "05267d29ff770b929c36e04f9e8ee6db7e6d3edba4fdbbe3532d41369c7928a9",
       "applications/benhabib-2019/declaration/stages/bequest/methods.bl": "084aeec1ddbd83e9ab93d0e2ba724e649938d136bfbff7961ea45f2412027da0",
       "applications/benhabib-2019/declaration/settings/default.yml": "14fd75d14cbe30a87859fa65a11494b0c58aedeb2ce863cc3202767186c89f94",
       "tutorials/checkout.py": "b9efad275e0d457a6f53a6004c23d89dfaec62e8aa8bbf557a420b37eb666c2e"
@@ -95,7 +89,7 @@
   },
   "models/cons-port/01-two-stages-two-orders": {
     "path": "tutorials/models/cons-port/01-two-stages-two-orders.ipynb",
-    "sha256": "f2fe9d798ee74e8eba450896ff874f83580a43deacf5628de900819eb934f9d3",
+    "sha256": "5d7c098897a23aefdf3b27685b6d62488666f1bbb7651cac4e43864400fb69a5",
     "status": "completed",
     "failures": [],
     "inputs": {
@@ -108,7 +102,7 @@
   },
   "models/cons-port/02-a-life-cycle-built-backwards": {
     "path": "tutorials/models/cons-port/02-a-life-cycle-built-backwards.ipynb",
-    "sha256": "89eaa314284c9bb241d0efdefd347edd668a1d6c91d7985913605b5e81c4ec36",
+    "sha256": "572b3129cb8efa89dff614f921495548ad9c31d369cbb02c5acf7791f9d5e9e5",
     "status": "completed",
     "failures": [],
     "inputs": {
@@ -123,12 +117,13 @@
       "applications/cons-port/declaration/settings/port_wide.yml": "42a2d818d5399113b9673f1e3fc62698d2e8188fd49494abad38a37fd601bc59",
       "applications/cons-port/declaration/spec.port-cons.yml": "913b9599063d9f6e5dee69da5fe2dc34a5791bd6cc7d9b29977fffa7ceaed86f",
       "applications/cons-port/declaration/trellis.port-cons.yml": "b7437cc815212f0ba5728510e057caab365297ef5270486d74a880c189541c35",
+      "applications/cons-port/code/cons_port_tool.py": "ec64b96f97778467b4d4da577bc2280565578d85db97e40cf062abead0f84ebf",
       "tutorials/checkout.py": "b9efad275e0d457a6f53a6004c23d89dfaec62e8aa8bbf557a420b37eb666c2e"
     }
   },
   "models/cons-port/03-solving-the-two-orders": {
     "path": "tutorials/models/cons-port/03-solving-the-two-orders.ipynb",
-    "sha256": "ec2ab4a10b21b43a5f3484db88951e8747b023af9012749f586fd3a2881c2c34",
+    "sha256": "b3dc101a0af637b41448dd0292e2c44c530611e3fe92b451c0280359c3d744e5",
     "status": "completed",
     "failures": [],
     "inputs": {
@@ -148,42 +143,42 @@
       "applications/cons-port/declaration/settings/cons_wide.yml": "bdaf3b6673fac56b8de384da7435acfb62390b494df89370e360e4dd6ee07116",
       "applications/cons-port/declaration/settings/port_wide.yml": "42a2d818d5399113b9673f1e3fc62698d2e8188fd49494abad38a37fd601bc59",
       "applications/cons-port/declaration/settings/cons_vfi.yml": "a6d83aa9bb513aa582a50e8d23afd093f9c648e96fd7430195f2f9ec2c9427b8",
-      "applications/cons-port/code/cons_port_tool.py": "f9567a73ad6866deb06f692aab5c217d4f62b7a8b1d9056852dbd0f50361c527",
+      "applications/cons-port/code/cons_port_tool.py": "ec64b96f97778467b4d4da577bc2280565578d85db97e40cf062abead0f84ebf",
       "tutorials/checkout.py": "b9efad275e0d457a6f53a6004c23d89dfaec62e8aa8bbf557a420b37eb666c2e"
     }
   },
   "topics/branching": {
     "path": "tutorials/topics/branching.ipynb",
-    "sha256": "267f5a02ab98efd6649483e7e5d0f205e34c5185137c039f9838a681c28436f7",
+    "sha256": "1c6bb6532bd4bfa453a9b26411a561ae5b379aba842f5e47c9adc5abb411a7b9",
     "status": "completed",
     "failures": [],
     "inputs": {
-      "applications/durables/declaration/stages/tenure/tenure.bl": "7d2a6f77ee2efb14f66eb5bb1f47810e37e4002a859f9985d0164bde19400cee",
+      "applications/durables/declaration/stages/tenure/tenure.bl": "6a83d2e21c410237d9385ff73f0a6e9125f56fbf24189600501eeeba74044212",
       "applications/cagetti-denardi-2006/declaration/stages/retiree_death/retiree_death.bl": "f72666d71af214eb24101fda5a2d10b07ffa3dda5e1f4f801d86ba599078bdd5",
-      "applications/durables/declaration/spec.yml": "186424aef4ef7974bbfb1769978f2cfa737c8f0bd529c9f98eeb5ba43415fbd5",
-      "applications/durables/declaration/trellis.yml": "ebb33530a5028b3b8bc73fe74ab92678bd6d31254da5a9f9d82700b66888f8ea",
-      "applications/durables/declaration/period.yml": "1d61db882f4f806a39b6d7247bb694d50f214a1cb870c818f295d7a5616ee25d",
-      "applications/durables/declaration/stages/keeper_cons/keeper_cons.bl": "ecdf5a784b807744ea757dc9940a460acf5f357121e33b648642a77a94f3f47b",
-      "applications/durables/declaration/stages/adjuster_cons/adjuster_cons.bl": "3c216eb3cb57c0d6187d4e2a820822bed94eb34b748490e813179cd7de87885b",
-      "applications/durables/declaration/stages/bequest/bequest.bl": "ea87ef48a3b5d038bd77ec2a7eb4eb61772cb790c422d0cd0674061267e03dc1",
-      "applications/durables/declaration/calibration/durables.yml": "77a026308bd078082e963b0d3fe6aa2cf1f79900e9c0bd5a837698f86beb000b",
-      "applications/durables/declaration/calibration/wage_schedule.yml": "2df2fa204c74eca9de161c9b664a0da96bce810d24ef97dd26fe02fac47d606f",
+      "applications/durables/declaration/spec.yml": "bab67522407c662951bd61f4552393fd1d15d8024f839f15ec106799c551268b",
+      "applications/durables/declaration/trellis.yml": "fb7e8cafcd1ceeca0722bf49e82851183e431e6265cfaa4fea0dd53d0166dce9",
+      "applications/durables/declaration/period.yml": "3afd3a290c9011b4da0e83139d26dd14125f14f83390bd743c0909e95ef89d20",
+      "applications/durables/declaration/stages/keeper_cons/keeper_cons.bl": "fc9742b66159ee269f7126d006cb7ed444627864d46d71936283491a717dfbe5",
+      "applications/durables/declaration/stages/adjuster_cons/adjuster_cons.bl": "257bf5525247ea90fd0b10fab10fcd6d4a53e6b349ac69208bbfe07038c6d1fc",
+      "applications/durables/declaration/stages/bequest/bequest.bl": "b78488f1fc8f30294f7570307aa3deff4d790a7ae1b24a4276f9c2cd7707f613",
+      "applications/durables/declaration/calibration/durables.yml": "cbe754ceb5e8b38baf73268699c7e1f0f912aeecc62c0747cbfa628e442c5fea",
+      "applications/durables/declaration/calibration/wage_schedule.yml": "61730be14faa4ba4bceabece777bf6eb5955499c56d5eccef4206c060b70aaa9",
       "applications/durables/declaration/settings/durables.yml": "e176ae673908bfc8331b68a7aa671b1f7bf15bba445ce83e61b2e7d155e62e42",
       "applications/durables/declaration/stages/tenure/methods.bl": "750ebb81f76cfac2e5764d2bf72a8d4b5ccf598f9c5800b6649f9267c249a4c9",
       "applications/durables/declaration/stages/keeper_cons/methods.bl": "e6a0c8bc77bf2fd7440c10a6a323250d1eb381a197a81f4d915fec30e14ec340",
       "applications/durables/declaration/stages/adjuster_cons/methods.bl": "5201257dccd839cf4ad8bbe65c5c4d8ae7d4fcc54b1156e0e2aa78f29af8012a",
       "applications/durables/declaration/stages/bequest/methods.bl": "36203593a2c6d569eff9e0412da097033c3e10b6a8a520869db7b4cb2ef1ca6d",
-      "tutorials/topics/stages/plan_choice.bl": "dd8ca8342533bca221dec86c8dce3167c47e40509b2bb7660c9cdafafffbd068",
+      "tutorials/topics/stages/plan_choice.bl": "be7d4bcb63c7db3e7e42cbcdb9bbc41e2214b22615c35bd57c12f57af92862f8",
       "tutorials/checkout.py": "b9efad275e0d457a6f53a6004c23d89dfaec62e8aa8bbf557a420b37eb666c2e"
     }
   },
   "topics/expectations": {
     "path": "tutorials/topics/expectations.ipynb",
-    "sha256": "d18bc8f95d0dbcd2d75e09a7dc4133e07085c55813801d62d0e5f19209f8aa63",
+    "sha256": "5a19b7e9c9f4ca0f2695794c5195ede48a6eeb617a1533bb757805e744af1371",
     "status": "completed",
     "failures": [],
     "inputs": {
-      "applications/smooth-ambiguity-savings/declaration/stages/sa_savings/sa_savings.bl": "49d0a70d49d0b278497530fe7f84619ad96f56c0bedf1262c3812edf546d1e2b",
+      "applications/smooth-ambiguity-savings/declaration/stages/sa_savings/sa_savings.bl": "7c26cb938255c42142f5bb98568dc1170b773b418a36b6321742bc0b25aef906",
       "applications/portfolio-choice/declaration/stages/port/port.bl": "5a57b41870fc53e8dbaa461e5a1ec78bee04b125610b5c59d1c16ad964cc1697",
       "tutorials/checkout.py": "b9efad275e0d457a6f53a6004c23d89dfaec62e8aa8bbf557a420b37eb666c2e"
     }
@@ -201,7 +196,7 @@
   },
   "topics/the-native-mathematics": {
     "path": "tutorials/topics/the-native-mathematics.ipynb",
-    "sha256": "694077ec9603e89bab08960db53cad4878381b81c076a128ee512f610b15d1b9",
+    "sha256": "96ec4c51420fa444ce5c6d8f090dc2ed7792fa7d6c75e6cff26a99330433bcb9",
     "status": "completed",
     "failures": [],
     "inputs": {

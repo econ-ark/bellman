@@ -177,6 +177,7 @@ def _graph_json(stage, graph):
                         "kind": sort.kind,
                         "perch": sort.perch,
                         "role": sort.role,
+                        **({"constant": True} if sort.constant else {}),
                         "domain": to_json(sort.domain),
                         "coordinates": [str(name) for name in sort.coordinates],
                     },

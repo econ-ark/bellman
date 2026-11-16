@@ -21,7 +21,7 @@ a_max : Xa     :: ["upper bound of the savings grid"]
 [id=policy, method : !egm | handler : "dolo:egm_backward"
     | grid : !Cartesian(a=(a_min, a_max, n_a))] {
     c[>] = (β * R_vec[r_type] * D_{a}V[>])^(-1/σ)        :: [id=InvEuler, !node]
-    m[>] = c[>] + (a - wage_fn[tau]) / R_vec[r_type]     :: [id=inv_g_dcsn_to_cntn, !node]
+    m[>] = c[>] + (a - wage_fn[age[>]][tau]) / R_vec[r_type]     :: [id=inv_g_dcsn_to_cntn, !node]
     c    = c[>]                                          :: [id=cons_choice]
 }
 

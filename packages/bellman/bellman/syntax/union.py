@@ -740,7 +740,7 @@ def _defined_names(item):
             return (core.target.name,)
         if isinstance(core, (T.FuncDef, T.CorrDef)):
             return (core.name,)
-        if isinstance(core, T.Law):
+        if isinstance(core, (T.Law, T.ParameterizedLaw)):
             return (("law", core.subjects),)
     return ()
 

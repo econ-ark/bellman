@@ -140,6 +140,19 @@ class Slack(stmt):
     bound: object
 
 
+@dataclass(frozen=True, slots=True)
+class ParameterizedLaw(stmt):
+    subjects: tuple
+    arguments: tuple
+    law: object
+
+    def __post_init__(self):
+        for slot in ("subjects", "arguments",):
+            value = getattr(self, slot)
+            if type(value) is list:
+                object.__setattr__(self, slot, tuple(value))
+
+
 class range:
     __slots__ = ()
 
@@ -532,6 +545,11 @@ class Grid(classifier):
     g: object
 
 
+@dataclass(frozen=True, slots=True)
+class Constancy(classifier):
+    pass
+
+
 class word:
     __slots__ = ()
 
@@ -591,6 +609,11 @@ class Values(argument):
 @dataclass(frozen=True, slots=True)
 class Nested(argument):
     word: object
+
+
+@dataclass(frozen=True, slots=True)
+class ExpressionArgument(argument):
+    value: object
 
 
 class grid:

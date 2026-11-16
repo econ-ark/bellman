@@ -28,13 +28,23 @@ A **field** is a named quantity of a [[stage]] with a declared set: a state, a c
 
 A field name is local to its stage occurrence. The same spelling in another stage denotes another field, even when both stages stand in one [[period]]. An equation uses its own stage's declarations; a [[connector]] selects eligible continuation and arrival fields for composition without changing their names. All branches of one stage share that stage's field names, so distinct branch states require distinct names. A [[parameters|parameter]] follows a different rule: two stages in one period that declare the same parameter name share one period parameter.
 
-## 1 What the word replaces
+A **value-type field** is a field typed `!vlu`; age, human wealth and a borrowing bound may have this role alongside the value field. A **constant field**, typed `!cnst`, has the same value at every state of its perch. Its value may be a number, a table or a function on a continuous set. Its type records empty state dependence; it cannot read a state, shock or control. Age is therefore not an additional field role.
+
+A **representing function** is a measurable function into the field's declared set, from a measurable subset of the product of the declared sets of the states of its perch that the field depends on. That subset is its domain. A constant depends on no state, and its representing function is one element of its declared set. An effective domain, the points where the function is greater than −∞, is a further concept for a scalar field whose declared set admits −∞.
+
+In a [modular model](../bellman-calculus/APPX-H-MODULARITY.md), repeated declarations share their operators and calibration sources. Their supplied fields may differ, and methods and settings remain separate numerical choices. A stage occurrence's position is an address in the trellis, not an input to its equations.
+
+<a id="1-what-the-word-replaces"></a>
+
+## 1 The word variable
 
 The word "variable" does five jobs in a written economic model. It is a symbol in an equation; a coordinate of the state space; a random quantity whose value depends on the history of shocks; a realized number; and, once the model is solved, a function of the state such as $v(x)$. An economist moves between these readings without noticing, and in a paper that costs nothing. A [[stage|stage file]] cannot afford the ambiguity, because the checks the construction performs each ask a question that only one of the five readings can answer: is this quantity known at arrival or only at decision? is this the value or the value function? is the `w` on the output side of one [block](../Bellman-Sym/01-stage.md#3-builder-blocks) the same object as the `w[>]` on the input side of the next?
 
 "Field" names the declared quantity, which stands at a perch unless it is a shock. Under a stochastic interpretation it is a random quantity, and its perch is an information set. The other readings keep their own words: a **set** for the values a coordinate may take, a **realization** for a number, and a **representing function** for a function of state coordinates. The symbol is the field's name.
 
-## 2 Why the word is "field"
+<a id="2-why-the-word-is-field"></a>
+
+## 2 The word field
 
 In physics a field is a quantity attached to every point of a region: the temperature at each point of a room, the electric field at each point of space. Three features of that usage carry over. The field has a value at each point, and the value at a point is what an observer there can measure. The field is not any one of its values. And the field is not the law that determines it; Maxwell's equations relate the values of the electromagnetic field at neighboring points, but the field is the thing the equations are about, not the equations.
 
@@ -44,13 +54,17 @@ The probabilist's usage supplies one interpretation rather than the definition. 
 
 Economists already work with this object under another name. Stokey and Lucas define a plan as "a value $\pi_0 \in X$ and a sequence of measurable functions $\pi_t : Z^t \to X$" (Stokey and Lucas 1989, *Recursive Methods in Economic Dynamics*, chapter 9 §9.1): a choice that is a measurable function of the history of shocks observed so far. A field is that object, given a name and placed at an information set inside a [[period]] of the model's [[trellis]] rather than at a date.
 
-## 3 Two senses the word does not have
+<a id="3-two-senses-the-word-does-not-have"></a>
+
+## 3 Other meanings
 
 The word has no connection with the algebraic field, the structure that makes $\mathbb R$ a field. Nor does it mean the field of a record in a data structure, a named position holding a value.
 
-## 4 What the word buys
+<a id="4-what-the-word-buys"></a>
 
-Four things become statable and checkable.
+## 4 Consequences
+
+The distinction has four consequences.
 
 1. **Where a quantity is known.** A field other than a shock has one declared or inferred perch. A shock belongs to no perch: it is drawn between two perches and is known at the perch after its draw, according to the stage timing; a control is at decision wherever it is listed; a perch is never guessed ([Perch tagging rules](../Bellman-Sym/appendices/13-perch-tagging-rules.md)).
 2. **A field and its representing function are distinct objects.** Under the stochastic interpretation, the continuation value `V[>]` is a random variable measurable at continuation. A representing function $\mathrm v_\succ : \mathsf X_\succ \to \mathsf L$ satisfies $V_\succ = \mathrm v_\succ(X_\succ)$ almost surely, and it exists only when a version of the field is measurable with respect to the information generated by the state. The [[semgraph|initial diagrams]] are drawn on fields; the [[semgraph|builders graph]] of the [[backward_builder|backward builders]] is drawn on functions.

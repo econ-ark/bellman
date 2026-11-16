@@ -32,18 +32,18 @@ The methods of a stage are written in its methods file, the [[addition]] to the 
 @methods: buffer_stock
 
 n_a : ℕ              :: ["number of points of the savings grid"]
-a_min : Xa           :: ["lower bound of the savings grid"]
+extra_grid : ℝ₊     :: ["distance from the borrowing bound to the first savings point"]
 a_max : Xa           :: ["upper bound of the savings grid"]
 
-[id=policy, policy.method : !egm | policy.grid : !Cartesian(a=(a_min, a_max, n_a))
+[id=policy, policy.method : !egm | policy.grid : !Cartesian(a=(L + extra_grid, a_max, n_a))
     | evaluate.method : !Linear] {
-    c[>] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[>])       :: [id=InvEuler]
+    c[>] = (β*D_{a}V[>])^(-1/ρ)       :: [id=InvEuler]
     m[>] = a + c[>]                 :: [id=g_cntn_to_dcsn]
     c[~] = c[>]                     :: [id=cons_choice]
 }
 ```
 
-The method stands on the policy builder, `policy`: the block of the addition names the stage's block by its `id`, its entry `policy.method : !egm` types the builder's method component, its entry `policy.grid : !Cartesian(a=(a_min, a_max, n_a))` types the builder's [[grid]] component, the group `| evaluate.method : !Linear` types the Evaluation inside the block, and its three lines are the rows by which the method computes the policy at the operative level, the stage keeping the declared maximization in `stage.declared` ([[addition]] §3). `stage.methods["policy"]` answers the method by the place it binds at. A handler is written as a binding in the same form, `policy.handler : "cons-port:egm"`, with or without a method word. The settings the entries name are declared in the addition with their domains and valued in the settings file.
+The method stands on the policy builder, `policy`: the block of the addition names the stage's block by its `id`, its entry `policy.method : !egm` types the builder's method component, its entry `policy.grid : !Cartesian(a=(L + extra_grid, a_max, n_a))` types the builder's [[grid]] component, whose lower bound is the sum of the borrowing bound `L` that the stage takes in and the setting `extra_grid`, the group `| evaluate.method : !Linear` types the Evaluation inside the block, and its three lines are the rows by which the method computes the policy at the operative level, the stage keeping the declared maximization in `stage.declared` ([[addition]] §3). `stage.methods["policy"]` answers the method by the place it binds at. A handler is written as a binding in the same form, `policy.handler : "cons-port:egm"`, with or without a method word. The settings the entries name are declared in the addition with their domains and valued in the settings file.
 
 ## Where a method stands
 

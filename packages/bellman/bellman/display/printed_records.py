@@ -81,6 +81,8 @@ class Fields(_PrintedMapping):
         entries = []
         for identity, sort in self._entries.items():
             said = [self._at(identity, sort), sort.role or "no role"]
+            if sort.constant:
+                said.append("constant")
             if sort.domain is not None:
                 said.append(f"in {to_source(sort.domain)}")
             entries.append((identity, "  ".join(said)))
@@ -544,8 +546,8 @@ class PieceKernel(
     namedtuple(
         "PieceKernel",
         "key relative_name name kind function arguments outputs parameters "
-        "parameter_values reads writes kernel relation python integrated",
-        defaults=((),),
+        "parameter_values reads writes kernel relation python integrated fallback",
+        defaults=((), None),
     )
 ):
     """One primitive operator of a builder, as the record the builder's
@@ -577,8 +579,12 @@ class PieceKernel(
     a row that states a relation its output satisfies, the identification
     of the policy with its candidate among them, holds its printed relation
     in `relation`, which is None for every other piece; an Evaluation, an
-    expectation and a choice hold neither. Every piece holds its printed
-    kernel in `kernel`, the text its `kernel()` answers.
+    ordinary expectation and a choice hold neither. An extracted derivative
+    expectation holds its integrand as `function` and its shocks as
+    `integrated`. Its `writes` name the result after integration.
+    `fallback` is an explicit kernel for the region where the local
+    expectations are all inactive, or None where there is no such kernel.
+    Every piece holds its printed kernel in `kernel`.
 
     See `docs/Bellman-Sym/API/stage/04-builder.md` §5."""
 
@@ -590,11 +596,25 @@ class PieceKernel(
     __repr__ = __str__
 
 
+class KernelGuard(
+    namedtuple("KernelGuard", "subject predicate function arguments parameters parameter_values")
+):
+    """A predicate and callable selecting the points where a subject is needed.
+
+    The subject is a native output or a derivative piece's explicit argument.
+    The function takes the ordered arguments followed by the parameters and
+    returns Boolean values. No field holds the stage.
+    """
+
+    __slots__ = ()
+
+
 class BuilderKernels(
     namedtuple(
         "BuilderKernels",
-        "builder inputs outputs pieces parameters parameter_values sets grids",
-        defaults=(None,),
+        "builder inputs outputs pieces parameters parameter_values sets grids "
+        "laws guards output_kernels grid_factors",
+        defaults=(None, None, None, None, None),
     )
 ):
     """What a builder's `kernels()` answers: the record from which a
@@ -616,7 +636,12 @@ class BuilderKernels(
     `RealizedGrid` of `stage/grids.py` with its coordinates and its finite
     points, or, where the construction cannot establish its points and every
     property it requires, the `Refusal` that says why; None on a version with
-    no bound settings (AMD-MT-003 build contract §2).
+    no bound settings (AMD-MT-003 build contract §2). `laws` and `guards`
+    give the distribution records and conditional guards by piece key.
+    `output_kernels` maps each piece key to its explicit kernels by native
+    output identity. An empty inner mapping has no per-output explicit kernel.
+    `grid_factors` holds detached inputs for supported handler-owned grids
+    by place. The handler places their points and checks the result.
 
     The record holds strings, tuples, numbers and functions made from source
     text in a namespace that holds NumPy alone, and no stage: cloudpickle

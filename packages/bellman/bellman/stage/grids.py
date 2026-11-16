@@ -31,14 +31,14 @@ finite set of the place's shape. At configuration,
 requirement the bound values decide, by constructing the grid. A requirement
 or a feasibility condition the bound values do not decide, and a coordinate no
 factor names, remain obligations and refuse nothing there; the numerical
-construction (`realized_grid`) establishes them before the grid is used and
+construction (`grid_records`) establishes them before the grid is used and
 reports what it cannot establish, never supplying a default.
 
 The domain a grid discretizes is read from the stage (`grid_domain`): the
 coordinates of the function the place holds, or the continuation states for a
 word whose row names that perch, with the controls and the shocks of the
-stage. A builder's `kernels()` holds the realized grid of each place within it
-(`realized_grids`), and `same_grid` compares two realized grids exactly.
+stage. The builder's `kernels()` holds realized grids and handler inputs
+(`grid_records`), and `same_grid` compares two realized grids exactly.
 """
 
 from __future__ import annotations
@@ -59,8 +59,14 @@ from bellman.fold.block_lines import (
     setting_sets,
 )
 from bellman.fold.derived_parameters import derived_values
-from bellman.fold.stage_names import lines_of
-from bellman.fold.wire_terms import term_nodes
+from bellman.fold.stage_names import StageNames, lines_of
+from bellman.fold.wire_terms import (
+    spelled_with_mark,
+    symbol_occurrences,
+    term_nodes,
+    term_of_name,
+)
+from bellman.native.frozen import freeze
 from bellman.native.identity import Identity
 from bellman.native.records import (
     EntryText,
@@ -75,13 +81,23 @@ from bellman.native.records import (
 from bellman.refusals import ConstructionError
 from bellman.stage.boxes import builder_rows_of
 from bellman.stage.calibration_requirements import membership
+from bellman.stage.input_requirements import _checking_value, continuation_inputs
 from bellman.stage.method_rows import OUTPUT_PERCH
-from bellman.stage.places import components_by_place, typings
-from bellman.stage.representations import bound_row, supports_equal
+from bellman.stage.places import block_box, components_by_place, typings
+from bellman.stage.representations import _exact, bound_row, supports_equal
 from bellman.syntax import terms as T
 from bellman.syntax.source import GRID_WORDS, grid_word, to_source
-from bellman.syntax.vocabulary import CONTINUATION, CONTROL, SHOCK, STATE
+from bellman.syntax.vocabulary import (
+    CONTINUATION,
+    CONTROL,
+    EXTENDED_REAL,
+    INTEGER,
+    REAL,
+    SHOCK,
+    STATE,
+)
 from bellman.typing import sets
+from bellman.typing.ranges import substituted
 
 # --- the records of the grid constructors ---
 
@@ -815,6 +831,43 @@ def check_grid_at_binding(stage, place, held, row, record):
                 _check_declared_points(stage, place, record, grid, term, coordinates)
 
 
+def grid_sum_operands(stage, place, argument):
+    """A grid sum's constant and setting at its attachment place."""
+
+    if place.block is None or not isinstance(argument.value, T.Add):
+        return None
+    operands = tuple(symbol_occurrences(argument.value))
+    if len(operands) != 2:
+        return None
+    block = block_box(stage, place.block)
+    listed = dict(zip(block.data.input_spellings, header_of(block).inputs))
+    external = {sort.identity for sort in continuation_inputs(stage).values()}
+    declared = setting_sets(stage)
+    definitions = _set_definitions(stage)
+
+    def scalar(term):
+        term = sets.resolved(term, definitions)
+        primitive = sets.primitive_of(term)
+        return (
+            primitive is not None and primitive.kind == EXTENDED_REAL
+            or sets.numeric(term, definitions) is True
+            and sets.kind_without_numbers(term, definitions) is None
+        )
+
+    candidates = []
+    for setting, field in (operands, operands[::-1]):
+        name, side = setting
+        written = spelled_with_mark(field)
+        sort = listed.get(written)
+        if (
+            side is None and name in declared and scalar(declared[name])
+            and sort is not None and sort.constant and sort.identity in external
+            and scalar(sort.domain)
+        ):
+            candidates.append((written, sort.identity, name))
+    return candidates[0] if len(candidates) == 1 else None
+
+
 def _clause(sentence):
     """A record's sentence as a clause of a refusal: its first letter in
     lower case and its full stop removed."""
@@ -1341,7 +1394,7 @@ def _coordinate_nodes(stage, factor, declared, values, calibration):
         lower, upper, count = (
             _setting_value(part, values) for part in (factor.lower, factor.upper, factor.count)
         )
-        if not (_finite_real(lower) and _finite_real(upper) and lower < upper):
+        if not (sets.is_number(lower) and sets.is_number(upper) and lower < upper):
             raise _Unresolved(f"the bounds of its factor {to_source(factor)} are not in order")
         if type(count) is not int or count < 2:
             raise _Unresolved(f"the count of its factor {to_source(factor)} is below two")
@@ -1368,6 +1421,10 @@ def _setting_value(part, values):
     bind none."""
     if isinstance(part, T.Literal):
         return part.value
+    if isinstance(part, T.ExpressionArgument):
+        if part not in values:
+            raise _Unresolved(f"the sum {to_source(part)} needs a supplied continuation field")
+        return values[part]
     if part.name not in values:
         raise _Unresolved(f"the setting {part.name} has no value")
     return values[part.name]
@@ -1488,21 +1545,8 @@ def _feasible_interval(stage, name, states, domain):
     list of arguments that read the states alone; a set the stage defines
     has no parameters. A correspondence no choice applies is evaluated with
     its parameters read as the states of the same names."""
-    definition = next(
-        (
-            d
-            for d in stage.definitions.values()
-            if d.kind in ("correspondence", "set") and d.identity.field == name
-        ),
-        None,
-    )
-    if definition is None or not definition.equations:
-        raise _Unresolved(f"the feasible set {name} is no correspondence or set the stage defines")
-    if definition.kind == "set":
-        parameters, body = (), sets.defined(definition.equations[0], _set_definitions(stage))
-    else:
-        held = definition.equations[0]
-        parameters, body = tuple(parameter.stem for parameter in held.params), held.body
+    _, parameters, body = _feasible_definition(stage, name)
+    names = tuple(parameter.stem for parameter in parameters)
     bounds = body.bounds if isinstance(body, T.Interval) else None
     if not isinstance(bounds, T.Range) or bounds.left is None or bounds.right is None:
         raise _Unresolved(
@@ -1528,6 +1572,32 @@ def _feasible_interval(stage, name, states, domain):
                 "endpoints, an open interval needs an explicitly supplied finite node set or an "
                 "identified sampler, and no truncation bound is invented"
             )
+    arguments = _feasible_arguments(stage, name, names, states, domain)
+    return _Feasible(name, names, arguments, bounds)
+
+
+def _feasible_definition(stage, name):
+    """The declaration, formal parameters and formula of a feasible set."""
+    definition = next(
+        (
+            d
+            for d in stage.definitions.values()
+            if d.kind in ("correspondence", "set") and d.identity.field == name
+        ),
+        None,
+    )
+    if definition is None or not definition.equations:
+        raise _Unresolved(f"the feasible set {name} is no correspondence or set the stage defines")
+    if definition.kind == "set":
+        parameters, body = (), sets.defined(definition.equations[0], _set_definitions(stage))
+    else:
+        held = definition.equations[0]
+        parameters, body = held.params, held.body
+    return definition, parameters, body
+
+
+def _feasible_arguments(stage, name, parameters, states, domain):
+    """The authored arguments of a feasible set as applied at the grid."""
     arguments = _applied_arguments(stage, name, len(parameters))
     if arguments is None:
         missing = [parameter for parameter in parameters if parameter not in states]
@@ -1554,7 +1624,7 @@ def _feasible_interval(stage, name, states, domain):
             "restriction needs an identified joint sampler and membership check, so joint "
             "sampling is unsupported"
         )
-    return _Feasible(name, parameters, arguments, bounds)
+    return arguments
 
 
 def _infinite(end):
@@ -1823,20 +1893,310 @@ class RealizedGrid(NamedTuple):
     __repr__ = __str__
 
 
-def realized_grid(stage, place, held, row, record, values, calibration):
-    """The `RealizedGrid` of the grid typed at `place`, whose components are
-    `held`, its method's row `row` and its typing record `record`, at the
-    settings `values` and the parameter values `calibration`; or, where the
-    construction cannot establish its finite points and every required
-    property, the `Refusal` that says why, under the rule `grid-requirement`
-    and at the position of the entry. A place whose boxes hold functions of
-    different coordinates has no one grid."""
+class SpacedGridFactor(NamedTuple):
+    """Bound arguments of a spacing word applied by a handler."""
+
+    coordinate: str
+    domain: object
+    lower: Fraction
+    upper: Fraction
+    count: int
+    spacing: str
+    options: tuple
+    requirements: tuple
+
+
+class FeasibleGridFactor(NamedTuple):
+    """The control's feasible interval at the grid's state coordinates."""
+
+    coordinate: str
+    domain: object
+    count: int
+    correspondence: Identity
+    coordinates: tuple
+    arguments: tuple
+    argument_sets: tuple
+    interval: T.Interval
+    requirements: tuple
+
+
+def _bound_grid_term(term, values):
+    """A numerical term with its known finite subexpressions evaluated."""
+    bound = {}
+    for node in term_nodes(term):
+        if not isinstance(node, T.expr):
+            continue
+        value = sets.number_at(node, values).value
+        if value is not None:
+            bound[node] = T.Number(_exact(value))
+    return substituted(term, bound)
+
+
+def _grid_interval_bounds(interval, values):
+    """Endpoints and inclusion of an interval, when they are decided."""
+    bounds = interval.bounds if isinstance(interval, T.Interval) else None
+    if not isinstance(bounds, T.Range) or bounds.left is None or bounds.right is None:
+        return None
+
+    def endpoint(term):
+        if _infinite(term):
+            return -math.inf if isinstance(term, T.Neg) else math.inf
+        return sets.number_at(term, values).value
+
+    lower, upper = endpoint(bounds.lower), endpoint(bounds.upper)
+    if lower is None or upper is None:
+        return None
+    return sets.Bounds(
+        lower, isinstance(bounds.left, T.Closed), upper, isinstance(bounds.right, T.Closed)
+    )
+
+
+def _grid_member(value, domain):
+    """Decidable membership in a detached scalar grid domain."""
+    primitive = sets.primitive_of(domain)
+    if primitive is not None:
+        if primitive.kind == EXTENDED_REAL:
+            return True
+        if primitive.kind == INTEGER:
+            if value.denominator != 1:
+                return False
+            if primitive.glyph == "ℕ":
+                return None if value == 0 else value > 0
+            return True
+    bounds = (
+        sets.endpoints(domain) if primitive is not None and primitive.kind == REAL
+        else _grid_interval_bounds(domain, {})
+    )
+    if bounds is not None:
+        return _inside_bounds(value, bounds)
+    members = sets.finite_members(domain, {}, {})
+    if members is not None and not isinstance(domain, T.FiniteSet):
+        return value in members
+    return None
+
+
+def _inside_bounds(point, bounds):
+    lower = point >= bounds.lower if bounds.lower_closed else point > bounds.lower
+    upper = point <= bounds.upper if bounds.upper_closed else point < bounds.upper
+    return lower and upper
+
+
+def _require_grid_member(value, domain, name):
+    member = _grid_member(value, domain)
+    if member is not True:
+        relation = "lies outside" if member is False else "is not decidably inside"
+        raise ValueError(f"{name} = {value} {relation} the declared set {to_source(domain)}")
+
+
+def feasible_interval(factor, at):
+    """The exact feasible bounds at a handler's state point."""
+    values = {}
+    for name, domain in factor.coordinates:
+        if name not in at:
+            raise ValueError(f"the feasible grid requires the coordinate {name}")
+        value = _exact(at[name])
+        _require_grid_member(value, domain, name)
+        values[name] = value
+    for argument, domain in zip(factor.arguments, factor.argument_sets, strict=True):
+        value = sets.number_at(argument, values).value
+        if value is None:
+            raise ValueError(f"the feasible argument {to_source(argument)} is not decided")
+        _require_grid_member(_exact(value), domain, to_source(argument))
+    bounds = _grid_interval_bounds(factor.interval, values)
+    if bounds is None or not all(
+        sets.is_number(end) for end in (bounds.lower, bounds.upper)
+    ):
+        raise ValueError(
+            f"the feasible interval {to_source(factor.interval)} has no finite bounds"
+        )
+    if bounds.lower > bounds.upper or (
+        bounds.lower == bounds.upper and not (bounds.lower_closed and bounds.upper_closed)
+    ):
+        raise ValueError(f"the feasible interval {to_source(factor.interval)} is empty")
+    return bounds
+
+
+def check_grid_factor_points(factor, points, *, at=None):
+    """A finite grid after checking its shape, domains and requirements."""
+    values = tuple(_exact(point) for point in points)
+    if len(values) != factor.count:
+        raise ValueError(f"the grid on {factor.coordinate} requires count {factor.count}")
+    if any(left >= right for left, right in zip(values, values[1:])):
+        raise ValueError(f"the points on {factor.coordinate} must be strictly increasing")
+    if isinstance(factor, SpacedGridFactor):
+        bounds = sets.Bounds(factor.lower, True, factor.upper, True)
+        rejected = "lies outside the spacing bounds"
+    elif isinstance(factor, FeasibleGridFactor):
+        bounds = feasible_interval(factor, {} if at is None else at)
+        rejected = "is outside the feasible interval"
+    else:
+        raise TypeError(f"unsupported handler grid factor {type(factor).__name__}")
+    for value in values:
+        if not _inside_bounds(value, bounds):
+            raise ValueError(f"{factor.coordinate} = {value} {rejected}")
+        _require_grid_member(value, factor.domain, factor.coordinate)
+    coordinates = (factor.coordinate,)
+    rows = tuple((point,) for point in values)
+    for word in factor.requirements:
+        failure = _failure(word, coordinates, rows)
+        if failure is not None:
+            raise ValueError(f"the grid does not satisfy !{word}: {failure}")
+    return RealizedGrid("Cartesian", coordinates, rows)
+
+
+def _spacing_options(word, values):
+    """The bound values of a spacing word's ordered keywords."""
+    def bound(argument):
+        if isinstance(argument, T.Name):
+            return freeze(_setting_value(argument, values))
+        if isinstance(argument, T.Quoted):
+            return argument.text
+        if isinstance(argument, T.Values):
+            return tuple(bound(item) for item in argument.items)
+        if isinstance(argument, T.Nested):
+            return (argument.word.name, _spacing_options(argument.word, values))
+        return _setting_value(argument, values)
+
+    return tuple((keyword.key, bound(keyword.value)) for keyword in word.arguments)
+
+
+def _handler_grid_factor(stage, place, grid, domain, values, calibration, constants):
+    """The detached data a handler needs to place grid points."""
+    if not isinstance(grid, T.Cartesian) or len(grid.factors) != 1:
+        return None
+    (factor,) = grid.factors
+    if not isinstance(factor, T.Feasible) and (
+        not isinstance(factor, T.Spaced) or factor.spacing is None
+    ):
+        return None
+    definitions = _set_definitions(stage)
+
+    def declared(term):
+        resolved = _bound_grid_term(sets.resolved(term, definitions), calibration)
+        primitive = sets.primitive_of(resolved)
+        if _grid_interval_bounds(resolved, {}) is not None or (
+            primitive is not None and primitive.kind in (REAL, INTEGER, EXTENDED_REAL)
+        ) or isinstance(resolved, (T.IntegerRange, T.Points)) and (
+            sets.finite_members(resolved, {}, {}) is not None
+        ):
+            return resolved
+        raise _Unresolved("the handler factor's declared set is not a decided scalar set")
+
+    if isinstance(factor, T.Spaced) and factor.spacing is not None:
+        if tuple(domain.states) != (factor.coordinate,):
+            return None
+        lower, upper, count = (
+            _setting_value(part, values) for part in (factor.lower, factor.upper, factor.count)
+        )
+        if not (sets.is_number(lower) and sets.is_number(upper) and lower < upper):
+            raise _Unresolved(f"the bounds of its factor {to_source(factor)} are not in order")
+        if type(count) is not int or count < 2:
+            raise _Unresolved(f"the count of its factor {to_source(factor)} is below two")
+        held = declared(domain.states[factor.coordinate])
+        for endpoint in (lower, upper):
+            try:
+                _require_grid_member(_exact(endpoint), held, factor.coordinate)
+            except ValueError as error:
+                raise _Unresolved(str(error)) from None
+        return SpacedGridFactor(
+            factor.coordinate, held, _exact(lower), _exact(upper), count,
+            factor.spacing.name, _spacing_options(factor.spacing, values), grid.require,
+        )
+
+    count = _setting_value(factor.count, values)
+    if type(count) is not int or count < 2:
+        raise _Unresolved(f"the count of its factor {to_source(factor)} is below two")
+    definition, parameters, body = _feasible_definition(stage, factor.set)
+    if not isinstance(body, T.Interval) or not isinstance(body.bounds, T.Range):
+        raise _Unresolved(f"the feasible set {factor.set} is not a scalar interval")
+    if body.bounds.left is None or body.bounds.right is None:
+        raise _Unresolved(f"the feasible interval {factor.set} does not specify both endpoints")
+    if _infinite(body.bounds.lower) or _infinite(body.bounds.upper):
+        raise _Unresolved(f"the feasible interval {factor.set} has an infinite endpoint")
+    names = tuple(parameter.stem for parameter in parameters)
+    ctx = StageNames(stage)
+    supplied = {} if constants is None else constants
+
+    def at_stage(term, local=()):
+        replacements = {}
+        for name, side in symbol_occurrences(term):
+            if name in local or name in domain.states or name == "inf":
+                continue
+            identity = ctx.resolve(name, place.block, side)
+            if identity in supplied:
+                value = _checking_value(supplied[identity])
+            else:
+                value = calibration.get(name) if side is None else None
+            if not sets.is_number(value):
+                raise _Unresolved(
+                    f"the feasible interval {factor.set} needs a numerical value for {name}"
+                )
+            replacements[term_of_name(name, side)] = T.Number(_exact(value))
+        return _bound_grid_term(substituted(term, replacements), {})
+
+    arguments = tuple(
+        at_stage(term) for term in _feasible_arguments(
+            stage, factor.set, names, tuple(domain.states), domain
+        )
+    )
+    interval = substituted(
+        at_stage(body, names),
+        {term_of_name(name, None): argument for name, argument in zip(names, arguments)},
+    )
+    terms = (*arguments, interval.bounds.lower, interval.bounds.upper)
+    reads = tuple(sets.parameters_read(term) for term in terms)
+    if any(names is None for names in reads):
+        raise _Unresolved(f"the feasible interval {factor.set} needs unsupported arithmetic")
+    read = {name for names in reads for name in names}
+    if read - set(domain.states):
+        raise _Unresolved(f"the feasible interval {factor.set} reads an unresolved coordinate")
+    coordinates = tuple(
+        (name, declared(domain.states[name])) for name in domain.states if name in read
+    )
+    argument_sets = tuple(
+        declared(next(
+            (item.space for item in parameter.classifiers if isinstance(item, T.Domain)), None
+        ))
+        for parameter in parameters
+    )
+    return FeasibleGridFactor(
+        factor.coordinate, declared(domain.controls[factor.coordinate]), count,
+        definition.identity, coordinates, arguments, argument_sets, interval, grid.require,
+    )
+
+
+def _grid_records(stage, place, held, row, record, values, calibration, *, constants=None):
+    """A place's realized grid or refusal, and its detached handler inputs."""
     file, line, column = entry_position(record.address)
+    factor = None
     try:
         domains = [grid_domain(stage, box, place.block, row) for box in place.boxes]
         if any(tuple(domain.states) != tuple(domains[0].states) for domain in domains[1:]):
             raise _Unresolved("the place holds functions of different coordinates")
-        constructed = _construct(stage, held.grid, domains[0], values, calibration)
+        supplied = dict(values)
+        for part in term_nodes(held.grid):
+            if not isinstance(part, T.ExpressionArgument):
+                continue
+            operands = grid_sum_operands(stage, place, part)
+            if operands is None:
+                raise _Unresolved(f"the sum {to_source(part)} has no scalar field and setting")
+            field, identity, setting = operands
+            if constants is None or identity not in constants:
+                raise _Unresolved(
+                    f"the sum {to_source(part)} requires the continuation field {field}"
+                )
+            value, offset = _checking_value(constants[identity]), values[setting]
+            if not (sets.is_number(value) and sets.is_number(offset)):
+                raise _Unresolved(
+                    f"the sum {to_source(part)} needs finite numbers, and has "
+                    f"{field} = {value!r} and {setting} = {offset!r}"
+                )
+            total = Fraction(value) + Fraction(offset)
+            supplied[part] = int(total) if total.denominator == 1 else total
+        factor = _handler_grid_factor(
+            stage, place, held.grid, domains[0], supplied, calibration, constants
+        )
+        constructed = _construct(stage, held.grid, domains[0], supplied, calibration)
         failure = _requirement_failure(held.grid, constructed)
     except _Unresolved as unresolved:
         failure = (
@@ -1858,22 +2218,18 @@ def realized_grid(stage, place, held, row, record, values, calibration):
                 "line": line,
                 "column": column,
             },
-        )
-    return RealizedGrid(constructed.word, constructed.coordinates, constructed.points)
+        ), factor
+    return RealizedGrid(constructed.word, constructed.coordinates, constructed.points), factor
 
 
-def realized_grids(stage, builder):
-    """The realized grid of each place within the builder or the sub-builder
-    whose box is named `builder` that types a grid, by the place's address, a
-    read-only mapping in the order of the places, each a `RealizedGrid` or the
-    `Refusal` that says why construction cannot establish its points and
-    every required property (`realized_grid`); None on a version with no
-    bound settings. A sub-builder holds the places of its own node. A grid at
-    a declared function, outside every builder, has no entry. The row of a
-    place's method is the one the version reads (`representations.bound_row`),
-    so that a family removed after binding leaves the grid as it was bound."""
+def grid_records(stage, builder, *, constants=None):
+    """Read-only mappings of grid results and handler inputs by place.
+
+    Only places of the builder or sub-builder are included. Without bound
+    settings both mappings are None.
+    """
     if stage.bindings.settings is None:
-        return None
+        return None, None
     values = dict(stage.bindings.settings)
     calibration = calibration_values(stage)
     entries = {
@@ -1881,16 +2237,18 @@ def realized_grids(stage, builder):
         for typing in typings(stage)
         if typing.component == "grid" and _within(typing.place, builder)
     }
-    found = {}
+    found, factors = {}, {}
     for address, held in components_by_place(stage).items():
         typing = entries.get(address)
         if typing is None:
             continue
         row = bound_row(stage, held.method.name) if held.method is not None else None
-        found[address] = realized_grid(
-            stage, typing.place, held, row, typing.record, values, calibration
+        found[address], factor = _grid_records(
+            stage, typing.place, held, row, typing.record, values, calibration, constants=constants
         )
-    return MappingProxyType(found)
+        if factor is not None:
+            factors[address] = factor
+    return MappingProxyType(found), MappingProxyType(factors)
 
 
 def _within(place, builder):

@@ -26,13 +26,17 @@ The period selector above the graph filters what you see. Choose **all** or a pe
 
 See [Source order, slots and period ranges](../Bellman-Sym/08-bellman-factory.md#32-the-source-lists-and-the-merge) for the rules on merging sources.
 
+In a [modular model](../bellman-calculus/APPX-H-MODULARITY.md), repeated declarations keep their calibration sources. A fixed table or function gives an age profile, read at an age field supplied through the model. The recipe still permits positional calibration; methods and settings can vary independently of modularity.
+
+To change an existing table or matrix, follow its parameter-name source link in **Parameters**, edit the YAML in the source file, and save it. The value-entry control can add a missing list or matrix, but refuses to replace an existing entry with a list. Reopen the occurrence to inspect the bound result.
+
 ## 3 Create a variant
 
 1. In **Files**, choose **New variant**. It starts from `declaration/spec.yml`, even if another recipe is open. Save pending changes to the recipe, its trellis file, or a period template it uses before copying.
 2. Enter a **Name** such as `high-risk`, using letters, digits, and hyphens, and choose **Write the variant**. The Workbench creates `spec.high-risk.yml`, `trellis.high-risk.yml`, and copies of the period templates the base trellis names. It opens the new recipe and shows its trellis.
 3. Edit period lists or connectors through the variant's files. To vary a calibration, setting, or method independently, give the variant its own source file and choose that file in the variant recipe. To vary an equation, copy the stage declaration to a separate stage folder and point the variant's stage row to it.
 
-The copy shares the original stage files and the calibration, settings, methods, and registry sources they reference until you change those paths. Editing a shared source affects every recipe that names it. The **New variant** form lists the registry sources the copy keeps, such as an age schedule. Check those sources if the variant changes the periods they describe. [Variants in the model directory](../Bellman-Sym/reference/model-directory-layout.md#3-variants).
+The copy shares the original stage files and the calibration, settings, methods, and registry sources they reference until you change those paths. Editing a shared source affects every recipe that names it. The **New variant** form lists the registry sources the copy keeps, such as an age-profile table. Check its domain and the terminal data you supply if the variant changes the ages its recurrence reaches. [Variants in the model directory](../Bellman-Sym/reference/model-directory-layout.md#3-variants).
 
 ## 4 Give a variant its own calibration
 

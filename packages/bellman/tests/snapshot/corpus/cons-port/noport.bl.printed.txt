@@ -1,0 +1,456 @@
+BELLMAN-SYM / STAGE noport                                [VERSION = SYMBOLIC]
+a stage occurrence of
+applications/cons-port/declaration/stages/noport/noport.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        none
+  ∼ decision       k state, V value
+  ≻ continuation   m≻ state, V≻ value
+  ∼ → ≻            θ drawn after decision, before continuation
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           k at decision, m≻ at continuation
+  controls         none
+  values           V at the decision, continuation perches
+  shocks           θ, drawn between decision and continuation
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → dcsn_to_cntn   (k, θ) : !dcsn -> (m≻) : !cntn
+  ← cntn_to_dcsn   (V≻) : !cntn -> (V) : !dcsn
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  sets                     3   Xk := ℝ₊, Xm := ℝ₊₊, Θ := ℝ₊₊
+  distributions            1   θ
+  parameters               3   R : ℝ₊₊; μ_θ : ℝ; σ_θ : ℝ₊
+  laws of motion           1   m = k*R + θ
+  value aggregators        1   V = E_{θ}(V[>])
+  block lines              2   dcsn_to_cntn.1, cntn_to_dcsn.value
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   𝑉≻ ↦ 𝑉
+                    forward    μ ↦ μ≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ∼ k  → θ drawn →  ≻ m≻
+  backward   ∼ V  ←  ≻ V≻
+
+==== stage ====
+STAGE noport
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑉≻  : Xm → ℝ
+         ──────────────────────────────────────
+    out  𝑉   : Xk → ℝ
+  forward
+    in   μ   : finite measure on Xk
+         ──────────────────────────────────────
+    out  μ≻  : finite measure on Xm
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉≻                           out: 𝑉
+
+  forward
+    1  dcsn_to_cntn
+       in: μ                            out: μ≻
+
+Conditions
+  cntn_to_dcsn:Aggregation  𝑉(k) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  noport.bl
+  12  θ ~ LogNormal(μ_θ, σ_θ)
+  15  m = k*R + θ
+  19  V = E_{θ}(V[>])  :: [id=value]
+
+Definitions referenced
+  Xk    noport:set:Xk
+  Xm    noport:set:Xm
+
+File
+  applications/cons-port/declaration/stages/noport/noport.bl
+
+Perches
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE noport / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻}
+       ──────────
+  out  V   : {V}
+
+Conditions
+  𝑉(k) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  noport.bl
+  19  V = E_{θ}(V[>])  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE noport / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   k   : {k}
+       θ   : {θ}
+       ──────────
+  out  m≻  : {m≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  noport.bl
+  15  m = k*R + θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE noport / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xm → ℝ
+       ─────────────────────────────────────────────────────────────
+  out  𝑉   : Xk → ℝ
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻
+     ───────────────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻)(k, θ) = 𝑉≻(𝑔≻(k, θ))
+
+  2  value:Expectation:1
+     in: (1)                            out: k ↦ E_{θ}[𝑉≻(𝑔≻(k, θ))]
+     ───────────────────────────────────────────────────────────────
+     rule: (2)(k) = E_{θ}[𝑉≻(𝑔≻(k, θ))]
+
+  3  Aggregation
+     in: (2)                            out: 𝑉
+     ───────────────────────────────────────────────────────────────
+     rule: 𝑉(k) = E_{θ}[𝑉≻(𝑔≻(k, θ))]
+
+  4  Evaluation
+     in: 𝑉                              out: 𝑉
+     ───────────────────────────────────────────────────────────────
+     rule: 𝑉 : Xk → ℝ
+
+Conditions
+  Aggregation  𝑉(k) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  noport.bl
+  19  V = E_{θ}(V[>])  :: [id=value]
+
+Definitions referenced
+  Xk    noport:set:Xk
+  Xm    noport:set:Xm
+  θ     noport:distribution:θ
+  𝑔≻    noport:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback ====
+STAGE noport / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xm → ℝ
+       ────────────────
+  out  𝑉≻ ∘ 𝑔≻
+           : Xk × Θ → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻)(k, θ) = 𝑉≻(𝑔≻(k, θ))
+──────────────────────────────────────────────────────────────────────────────
+Source  noport.bl
+  15  m = k*R + θ
+
+Definitions referenced
+  Xk    noport:set:Xk
+  Xm    noport:set:Xm
+  Θ     noport:set:Θ
+  θ     noport:distribution:θ
+  𝑔≻    noport:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / value:Expectation:1 ====
+STAGE noport / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / value:Expectation:1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻
+         : Xk × Θ → ℝ
+       ───────────────────────
+  out  k ↦ E_{θ}[𝑉≻(𝑔≻(k, θ))]
+         : Xk → ℝ
+
+Rule
+  value:Expectation:1(k) = E_{θ}[𝑉≻(𝑔≻(k, θ))]
+──────────────────────────────────────────────────────────────────────────────
+Source  noport.bl
+  12  θ ~ LogNormal(μ_θ, σ_θ)
+  19  V = E_{θ}(V[>])  :: [id=value]
+
+Definitions referenced
+  Xk    noport:set:Xk
+  Θ     noport:set:Θ
+  θ     noport:distribution:θ
+  𝑔≻    noport:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE noport / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   k ↦ E_{θ}[𝑉≻(𝑔≻(k, θ))]
+          : Xk → ℝ
+       ───────────────────────
+  out  𝑉  : Xk → ℝ
+
+Rule
+  𝑉(k) = E_{θ}[𝑉≻(𝑔≻(k, θ))]
+
+Conditions
+  𝑉(k) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  noport.bl
+  19  V = E_{θ}(V[>])  :: [id=value]
+
+Definitions referenced
+  Xk    noport:set:Xk
+  θ     noport:distribution:θ
+  𝑔≻    noport:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE noport / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : Xk → ℝ
+       ───────────
+  out  𝑉  : Xk → ℝ
+
+Rule
+  𝑉(k) = E_{θ}[𝑉≻(𝑔≻(k, θ))]
+  𝑉 : Xk → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xk    noport:set:Xk
+  θ     noport:distribution:θ
+  𝑔≻    noport:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE noport / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on Xk
+       ───────────────────────────────────────────
+  out  μ≻  : finite measure on Xm
+
+Operations
+  1  DistributionExtension:θ
+     in: μ                              out: μ⊗P_θ
+     ─────────────────────────────────────────────
+     rule: μ⊗P_θ(B) = ∫_{k ∈ Xk} [P_θ({θ ∈ Θ | (k, θ) ∈ B})] μ(dk)
+
+  2  Pushforward
+     in: (1)                            out: μ≻
+     ─────────────────────────────────────────────
+     rule: μ≻(B) = μ⊗P_θ({k, θ ∈ Xk × Θ | 𝑔≻(k, θ) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  noport.bl
+  15  m = k*R + θ
+
+Definitions referenced
+  Xk    noport:set:Xk
+  Xm    noport:set:Xm
+  Θ     noport:set:Θ
+  θ     noport:distribution:θ
+  P_θ   noport:distribution:θ
+  𝑔≻    noport:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / DistributionExtension:θ ====
+STAGE noport / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+  / DistributionExtension:θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ  : finite measure on Xk
+       ─────────────────────────────
+  out  μ⊗P_θ
+          : finite measure on Xk × Θ
+
+Rule
+  μ⊗P_θ(B) = ∫_{k ∈ Xk} [P_θ({θ ∈ Θ | (k, θ) ∈ B})] μ(dk)
+──────────────────────────────────────────────────────────────────────────────
+Source  noport.bl
+  12  θ ~ LogNormal(μ_θ, σ_θ)
+
+Definitions referenced
+  Xk    noport:set:Xk
+  Θ     noport:set:Θ
+  θ     noport:distribution:θ
+  P_θ   noport:distribution:θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE noport / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ⊗P_θ
+           : finite measure on Xk × Θ
+       ──────────────────────────────
+  out  μ≻  : finite measure on Xm
+
+Rule
+  μ≻(B) = μ⊗P_θ({k, θ ∈ Xk × Θ | 𝑔≻(k, θ) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  noport.bl
+  15  m = k*R + θ
+
+Definitions referenced
+  Xk    noport:set:Xk
+  Xm    noport:set:Xm
+  Θ     noport:set:Θ
+  θ     noport:distribution:θ
+  P_θ   noport:distribution:θ
+  𝑔≻    noport:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== noport:set:Xk ====
+STAGE noport / SET Xk
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xk  = ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  noport.bl
+  3  Xk := ℝ₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== noport:set:Xm ====
+STAGE noport / SET Xm
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xm  = ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  noport.bl
+  4  Xm := ℝ₊₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== noport:set:Θ ====
+STAGE noport / SET Θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Θ  = ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  noport.bl
+  5  Θ  := ℝ₊₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== noport:parameter:R ====
+STAGE noport / PARAMETER R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  R  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  noport.bl
+  7  R   : ℝ₊₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== noport:parameter:μ_θ ====
+STAGE noport / PARAMETER μ_θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  μ_θ  ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  noport.bl
+  8  μ_θ : ℝ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== noport:parameter:σ_θ ====
+STAGE noport / PARAMETER σ_θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  σ_θ  ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  noport.bl
+  9  σ_θ : ℝ₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== noport:distribution:θ ====
+STAGE noport / DISTRIBUTION θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  θ    ~ LogNormal(μ_θ, σ_θ)
+  P_θ  = measure on (0, ∞) given by
+           B
+             ↦ ∫_{z ∈ {z ∈ ℝ | exp(μ_θ + σ_θ · z) ∈ B}}
+                 [exp(−z²/2)/(2 · pi)^(1/2)] Lebesgue(dz)
+──────────────────────────────────────────────────────────────────────────────
+Source  noport.bl
+  12  θ ~ LogNormal(μ_θ, σ_θ)
+
+Definitions referenced
+  μ_θ   noport:parameter:μ_θ
+  σ_θ   noport:parameter:σ_θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.1 ====
+STAGE noport / FORWARD BLOCK dcsn_to_cntn / 1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  noport.bl
+  15  m = k*R + θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.value ====
+STAGE noport / BACKWARD BLOCK cntn_to_dcsn / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(k) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  noport.bl
+  19  V = E_{θ}(V[>])  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== noport:g:dcsn_to_cntn ====
+STAGE noport / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : Xk × Θ → Xm,  (k, θ) ↦ k · R + θ
+──────────────────────────────────────────────────────────────────────────────
+Source  noport.bl
+  15  m = k*R + θ
+
+Definitions referenced
+  Xk    noport:set:Xk
+  Xm    noport:set:Xm
+  Θ     noport:set:Θ
+  R     noport:parameter:R
+  θ     noport:distribution:θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== noport:G:cntn_to_dcsn ====
+STAGE noport / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : ℝ × Xk → ℝ,  (w, k) ↦ w
+
+Conditions
+  𝑉(k) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  noport.bl
+  19  V = E_{θ}(V[>])  :: [id=value]
+
+Definitions referenced
+  Xk    noport:set:Xk
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

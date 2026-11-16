@@ -1,7 +1,7 @@
 @stage: buffer_stock
 
-Xm := ℝ₊₊
-Xa := ℝ₊₊
+Xm := ℝ
+Xa := ℝ
 
 β : (0,1)        :: ["discount factor"]
 ρ : (1, inf)     :: ["coefficient of relative risk aversion, greater than one"]
@@ -18,10 +18,10 @@ p_zero : (0,1)   :: ["probability ℘ of a zero transitory draw"]
 ξ ~ Mixture((p_zero, 0), (1 - p_zero, LogNormal(μ_ξ, σ_ξ)))
 
 𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)         :: [id=util]
-𝑑𝑢     := D_{c}(𝑢)                   :: [id=marg_util]
-𝑑𝑢𝑖𝑛𝑣 := Inv(𝑑𝑢)                    :: [id=inv_marg_util]
+𝑑𝑢(c : ℝ₊₊) := c^(-ρ)               :: [id=marg_util]
+𝑑𝑢𝑖𝑛𝑣(v : ℝ₊₊) := v^(-1/ρ)     :: [id=inv_marg_util]
 
-Γ_c(x : ℝ₊₊) := {c : ℝ₊₊ | c < x}   :: [id=feasible_consumption]
+Γ_c(x : Xm) := {c : ℝ₊₊ | c < x - L}   :: [id=feasible_consumption]
 
 [id=arvl_to_dcsn, (k : Xa, ψ, ξ) : !arvl -> (m : Xm) : !dcsn] {
     m = R*k/(Γ*ψ) + ξ               :: [id=market_resources]
@@ -31,14 +31,15 @@ p_zero : (0,1)   :: ["probability ℘ of a zero transitory draw"]
     a = m - c                       :: [id=savings]
 }
 
-[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, L : (-inf, 0] @ !vlu @ !cnst, c) : !cntn -> (V : ℝ @ !vlu, L) : !dcsn] {
     V = 𝑢(c) + β*V[>]               :: [id=value]
 }
 
-[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+[id=dcsn_to_arvl, (V, L) : !dcsn -> (V[<] : ℝ @ !vlu, L[<] : (-inf, 0] @ !vlu @ !cnst) : !arvl] {
     V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)     :: [id=value]
+    L[<] = if σ_ψ > 0 then 0 else Γ*L/R :: [id=borrowing_bound]
 }
 
-[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+[id=policy, (V[>] : ℝ @ !vlu, L) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
     c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])     :: [id=optimality]
 }

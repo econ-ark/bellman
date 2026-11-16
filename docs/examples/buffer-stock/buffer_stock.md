@@ -3,12 +3,10 @@ audience: user
 type: example
 topic: [applications]
 ---
-# Buffer Stock Consumption Model (Normalized)
+# Buffer-stock consumption
 
 > [!note] Source
 > Application folder: [`applications/buffer-stock/`](https://github.com/econ-ark/bellman/tree/main/applications/buffer-stock), which holds the model's stage file, `declaration/stages/buffer_stock/buffer_stock.bl`, beside it its methods file, `methods.bl`, an addition to the stage file, and its settings file, `declaration/settings/buffer_stock.yml`, in the layout of [Model directory layout](../../Bellman-Sym/reference/model-directory-layout.md). A related single-stage model, whose income is drawn independently each period and has no permanent component, is the application [`applications/consumption-savings-iid/`](https://github.com/econ-ark/bellman/tree/main/applications/consumption-savings-iid).
-
-**The canonical consumption-savings model with permanent and transitory income shocks, normalized by permanent income.**
 
 This example presents the buffer stock saving model (Carroll, 2024) in its normalized (ratio) form. Normalizing by permanent income reduces the state from two variables $(\mathbf{m}, \mathbf{P})$ to one $(m = \mathbf{m}/\mathbf{P})$, yielding a stationary single-stage problem suitable for EGM.
 
@@ -45,7 +43,7 @@ Variables (all normalized by permanent income $P_t$):
 - $m$ = market resources
 - $c$ = consumption
 - $a$ = end-of-period assets
-- $\psi$ = permanent income shock ($\mathbb{E}[\psi] = 1$, $\psi \in [\underline{\psi}, \bar{\psi}]$)
+- $\psi$ = permanent income shock ($\mathbb{E}[\psi] = 1$, $\psi > 0$)
 - $\xi$ = transitory income shock ($\mathbb{E}[\xi] = 1$; equals zero with probability $\wp > 0$)
 - $R$ = gross interest rate
 - $\Gamma$ = deterministic permanent income growth factor
@@ -78,13 +76,13 @@ A single stage per period: the arrival state $k$, the assets carried from the pr
 
 ## Stage File
 
-The stage file, `declaration/stages/buffer_stock/buffer_stock.bl`, states the model: the sets of resources and assets, the parameters with their descriptions, the log-mean of the positive transitory draw as a derived parameter, the two shocks and their laws, utility and the set of feasible consumption, the two forward blocks, the two value blocks and the policy block, whose line is the maximization alone.
+The stage file states the income laws, utility, feasible consumption and the forward and backward equations. The bound `L` is a constant continuation input. The policy block maximizes the stated decision value.
 
 ```bl
 @stage: buffer_stock
 
-Xm := ℝ₊₊
-Xa := ℝ₊₊
+Xm := ℝ
+Xa := ℝ
 
 β : (0,1)        :: ["discount factor"]
 ρ : (1, inf)     :: ["coefficient of relative risk aversion, greater than one"]
@@ -101,10 +99,10 @@ p_zero : (0,1)   :: ["probability ℘ of a zero transitory draw"]
 ξ ~ Mixture((p_zero, 0), (1 - p_zero, LogNormal(μ_ξ, σ_ξ)))
 
 𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)         :: [id=util]
-𝑑𝑢     := D_{c}(𝑢)                   :: [id=marg_util]
-𝑑𝑢𝑖𝑛𝑣 := Inv(𝑑𝑢)                    :: [id=inv_marg_util]
+𝑑𝑢(c : ℝ₊₊) := c^(-ρ)               :: [id=marg_util]
+𝑑𝑢𝑖𝑛𝑣(v : ℝ₊₊) := v^(-1/ρ)     :: [id=inv_marg_util]
 
-Γ_c(x : ℝ₊₊) := {c : ℝ₊₊ | c < x}   :: [id=feasible_consumption]
+Γ_c(x : Xm) := {c : ℝ₊₊ | c < x - L}   :: [id=feasible_consumption]
 
 [id=arvl_to_dcsn, (k : Xa, ψ, ξ) : !arvl -> (m : Xm) : !dcsn] {
     m = R*k/(Γ*ψ) + ξ               :: [id=market_resources]
@@ -114,15 +112,16 @@ p_zero : (0,1)   :: ["probability ℘ of a zero transitory draw"]
     a = m - c                       :: [id=savings]
 }
 
-[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, L : (-inf, 0] @ !vlu @ !cnst, c) : !cntn -> (V : ℝ @ !vlu, L) : !dcsn] {
     V = 𝑢(c) + β*V[>]               :: [id=value]
 }
 
-[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+[id=dcsn_to_arvl, (V, L) : !dcsn -> (V[<] : ℝ @ !vlu, L[<] : (-inf, 0] @ !vlu @ !cnst) : !arvl] {
     V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)     :: [id=value]
+    L[<] = if σ_ψ > 0 then 0 else Γ*L/R :: [id=borrowing_bound]
 }
 
-[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+[id=policy, (V[>] : ℝ @ !vlu, L) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
     c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])     :: [id=optimality]
 }
 ```
@@ -137,14 +136,20 @@ The arrival block `arvl_to_dcsn` writes $m = R\,k/(\Gamma\psi) + \xi$, which com
 ### Builders
 
 - `cntn_to_dcsn`, the decision value builder: $V = u(c) + \beta V^{>}$, at the consumption the policy chooses.
-- `policy`, the policy builder: the maximization of $u(c') + \beta V^{>}$ over consumption $c' < m$.
+- `policy`, the policy builder: the maximization of $u(c') + \beta V^{>}$ over consumption $0 < c' < m-L$, with incoming bound $L$.
 - `dcsn_to_arvl`, the arrival value builder: $V^{<} = \mathbb{E}_{\psi,\xi}[(\Gamma\psi)^{1-\rho}\, V]$, the decision value read at $m = R\,k/(\Gamma\psi) + \xi$.
 
-The stage file states no derivative and no numerical method: the methods file beside it states the derivatives and selects the methods, as the next section shows.
+The stage file authors marginal utility and its inverse in closed form. It states no value derivative and no numerical method: the methods file beside it states the derivatives and selects the methods, as the next section shows.
 
 ## Methods and Settings
 
-The methods file, `declaration/stages/buffer_stock/methods.bl`, stands beside the stage file and is an addition to it: a `.bl` file read by the same grammar, whose blocks name the stage's blocks by their ids and add to them, and which the package reads together with the stage file before it elaborates the stage ([Methodization](../../Bellman-Sym/04-methodization.md)). The addition names the endogenous grid method, `!egm`, as the policy builder's method, with the exogenous grid of savings, `!Cartesian(a=(a_min, a_max, n_a))`, as its grid, and appends the method's three lines to the policy block: the inverted Euler equation, the grid line that gives the resources at each saving, and the identification of consumption with its candidate. When the stage is solved, the three lines stand in place of the maximization, which remains the stage's statement of the choice. The consumption function is read by linear interpolation at the policy builder's [Evaluation](../../Bellman-Sym/reference/operations.md#evaluation), `policy.evaluate`, between the pairs the method computes; those pairs give its nodes, so the entry writes no grid there, and a grid written there is refused. Each value builder gains its derivative line: the envelope condition `D_{m}V = 𝑑𝑢(c)` of the decision value, and the derivative of the arrival value, whose weight $R\,(\Gamma\psi)^{-\rho}$ inside the expectation comes from the factor $R/(\Gamma\psi)$ of the law of motion and the normalization $(\Gamma\psi)^{1-\rho}$ of the value. At the arrival builder the expectation over the two shocks is taken by Gauss–Hermite quadrature, with one node count per shock, and the arrival value and its stated derivative are represented together, named once at that builder's Evaluation, by linear interpolation on the grid of assets, `!Cartesian(k=(k_min, k_max, n_k))`. The eight settings the entries read are declared at the top of the file with their sets, a count in ℕ and a bound a point of `Xa`; their values stand in the settings file.
+The methods file adds numerical choices and equations to the stage ([Methodization](../../Bellman-Sym/04-methodization.md)). It chooses the endogenous grid method, `!egm`, on `policy`. Its savings grid is `!Cartesian(a=(L + extra_grid, a_max, n_a))`.
+
+Three policy lines state the inverted Euler equation, the inverse transition and the chosen consumption. Linear interpolation at `policy.evaluate` uses the pairs computed by those lines. It takes no separate grid.
+
+Each value builder gains an authored derivative equation. At the decision, marginal value equals marginal utility. At arrival, the expectation has weight $R(\Gamma\psi)^{-\rho}$, from the forward transition and value normalization.
+
+Gauss–Hermite quadrature evaluates the income expectation with one node count per shock. Linear interpolation represents the arrival value and derivative on `!Cartesian(k=(k_min, k_max, n_k))`. The eight settings declare their counts, bounds and the nonnegative offset `extra_grid`; the settings file supplies their values.
 
 ```bl
 @methods: buffer_stock
@@ -167,18 +172,21 @@ The methods file, `declaration/stages/buffer_stock/methods.bl`, stands beside th
 # arrival value and its derivative are represented together, by linear
 # interpolation on the grid of assets k, named once at that builder's
 # Evaluation. The settings the entries read are declared first, with their
-# sets: a count in ℕ and a bound a point of Xa, the set the stage declares for
-# the savings and the assets. Their values are recorded in
+# sets: a count in ℕ, a bound a point of Xa, the set the stage declares for
+# the savings and the assets, and extra_grid in ℝ₊, the distance from the
+# bound L, the field the stage takes in, to the first savings point, so that
+# the savings grid starts at L + extra_grid. Their values are recorded in
 # declaration/settings/buffer_stock.yml and are those of the HARK solution of
 # this model in the QuantEcon community library
 # (projects/HARK/buffer-stock/tutorial.ipynb, HARK 0.17.1): seven nodes per
-# shock and 960 points from 0.001 to 20 for the savings and for the assets.
+# shock and 960 points from 0.001 to 20 for the assets and, where the bound
+# L is 0, for the savings.
 # HARK's seven values per shock are equiprobable conditional means and its
 # grid is exponentially nested; here the rule is Gauss-Hermite and each grid
 # is stated by its bounds and its count.
 
 n_a : ℕ              :: ["number of points of the savings grid"]
-a_min : Xa           :: ["lower bound of the savings grid"]
+extra_grid : ℝ₊     :: ["distance from the borrowing bound to the first savings point"]
 a_max : Xa           :: ["upper bound of the savings grid"]
 n_k : ℕ              :: ["number of points of the asset grid"]
 k_min : Xa           :: ["lower bound of the asset grid"]
@@ -186,9 +194,9 @@ k_max : Xa           :: ["upper bound of the asset grid"]
 n_ψ_nodes : ℕ        :: ["quadrature nodes of the permanent shock"]
 n_ξ_nodes : ℕ        :: ["quadrature nodes of the transitory shock"]
 
-[id=policy, policy.method : !egm | policy.grid : !Cartesian(a=(a_min, a_max, n_a))
+[id=policy, policy.method : !egm | policy.grid : !Cartesian(a=(L + extra_grid, a_max, n_a))
     | policy.evaluate.method : !Linear] {
-    c[>] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[>])       :: [id=InvEuler]
+    c[>] = (β*D_{a}V[>])^(-1/ρ)       :: [id=InvEuler]
     m[>] = a + c[>]                 :: [id=g_cntn_to_dcsn]
     c[~] = c[>]                     :: [id=cons_choice]
 }
@@ -220,43 +228,53 @@ settings:
   n_ψ_nodes: 7
   n_ξ_nodes: 7
   n_a: 960
-  a_min: 0.001
+  extra_grid: 0.001
   a_max: 20.0
   n_k: 960
   k_min: 0.001
   k_max: 20.0
 ```
 
-The folder holds no recipe, so `load_stage` is given the stage file and its addition together, and `configure` then binds the settings:
+The four construction steps are explicit. The continuation value and the bound are checked before the policy grid is constructed:
 
 ```python
-from bellman.stage import elaborate_stage, load_stage
+from pathlib import Path
+from bellman.stage import elaborate_text
 
-stage = elaborate_stage(load_stage(
-    "applications/buffer-stock/declaration/stages/buffer_stock/buffer_stock.bl",
-    ["applications/buffer-stock/declaration/stages/buffer_stock/methods.bl"],
-))
-configured = stage.configure("applications/buffer-stock/declaration/settings/buffer_stock.yml")
+application = Path("applications/buffer-stock")
+path = application / "declaration/stages/buffer_stock/buffer_stock.bl"
+stage = elaborate_text(path.read_text(), str(path))
+methodized = stage.methodize(path.with_name("methods.bl"))
+calibrated = methodized.calibrate({
+    "R": 1.03, "β": 0.96, "Γ": 1.03, "ρ": 2.0,
+    "σ_ψ": 0.1, "σ_ξ": 0.1, "p_zero": 0.005,
+})
+configured = calibrated.configure(application / "declaration/settings/buffer_stock.yml")
+inputs = {"V[>]": lambda a: -1 / (1 + a), "L": 0.0}
+conditions = configured.check_inputs(inputs)
+policy = configured.dcsn.builder.policy.kernels(inputs=inputs)
 print(configured.settings)
 ```
 
+The returned conditions retain any property of the supplied value function that the package cannot decide. The callable above is an illustrative continuation value, not a solved stationary value.
+
 ```text
-name       set  value  read at                by              grid
-n_a        ℕ    960    policy                 !egm            !Cartesian
-a_min      Xa   0.001  policy                 !egm            !Cartesian
-a_max      Xa   20.0   policy                 !egm            !Cartesian
-n_k        ℕ    960    dcsn_to_arvl.evaluate  !Linear         !Cartesian
-k_min      Xa   0.001  dcsn_to_arvl.evaluate  !Linear         !Cartesian
-k_max      Xa   20.0   dcsn_to_arvl.evaluate  !Linear         !Cartesian
-n_ψ_nodes  ℕ    7      dcsn_to_arvl.E_ψ_ξ     !gauss_hermite
-n_ξ_nodes  ℕ    7      dcsn_to_arvl.E_ψ_ξ     !gauss_hermite
+name        set  value  read at                by              grid
+n_a         ℕ    960    policy                 !egm            !Cartesian
+extra_grid  ℝ₊   0.001  policy                 !egm            !Cartesian
+a_max       Xa   20.0   policy                 !egm            !Cartesian
+n_k         ℕ    960    dcsn_to_arvl.evaluate  !Linear         !Cartesian
+k_min       Xa   0.001  dcsn_to_arvl.evaluate  !Linear         !Cartesian
+k_max       Xa   20.0   dcsn_to_arvl.evaluate  !Linear         !Cartesian
+n_ψ_nodes   ℕ    7      dcsn_to_arvl.E_ψ_ξ     !gauss_hermite
+n_ξ_nodes   ℕ    7      dcsn_to_arvl.E_ψ_ξ     !gauss_hermite
 ```
 
-## Period and Trellis
+## Period and trellis
 
-The model is stationary: every period holds the one stage with the same parameters, and the inter-period connector joins the end-of-period assets $a$ of one period to the arrival state $k$ of the next. The application holds no recipe and no trellis file; [Trellises](../../Bellman-Sym/07-trellis.md) states how a trellis is written.
+Each repeated period holds the same stage declaration and calibration sources. The inter-period connector joins the end-of-period assets $a$ to the next period's arrival assets $k$; the resulting trellis is a diagram of periods joined by connections. A stationary solution requires every backward field at its fixed point, including the bound `L` as well as the value field. The user supplies terminal data for a finite recursion when realizing it. The application holds no recipe and no trellis file; [Trellises](../../Bellman-Sym/07-trellis.md) states how a trellis is written.
 
-## Solution Method: EGM
+## Endogenous grid method
 
 The Endogenous Grid Method solves this model by inverting the Euler equation:
 
@@ -306,8 +324,16 @@ Dividing by $P_t$ (for quantities) and $P_t^{1-\rho}$ (for the value function) e
 
 ### Natural Borrowing Constraint
 
-The transitory shock $\xi$ has a point mass at zero (probability $\wp > 0$): the agent may receive zero income. This prevents the agent from choosing $c = m$ (which would risk zero consumption next period), generating a natural borrowing constraint without an explicit lower bound on assets.
+The transitory shock $\xi$ has a point mass at zero (probability $\wp > 0$): the agent may receive zero income. With terminal bound $L=0$, the backward transition preserves that bound, so positive consumption requires assets strictly above zero. The stage takes the bound as a constant field and writes feasibility as $0<c<m-L$. The declared state sets are ℝ; the bound restricts the admissible resources and assets.
 
 ### Weighted Expectations in the Arrival Builder
 
 The arrival builder `dcsn_to_arvl` writes the value, and its derivative line in the methods file states its derivative, each as a $(\Gamma\psi)$-weighted expectation. This weight is an artifact of the normalization, not an economic primitive: in the levels problem, the arrival builder would be a plain expectation $V^{<} = \mathbb{E}[V]$.
+
+## Borrowing-bound check
+
+For an incoming bound $L \le 0$, the arrival bound is the supremum of $\Gamma\psi(L-\xi)/R$ over the support of the authored income laws. If $\sigma_\psi>0$, positive permanent shocks approach zero and this supremum is zero. If $\sigma_\psi=0$, the permanent shock equals one and the zero transitory draw gives $\Gamma L/R$. The stage states these two cases explicitly.
+
+At `L = 0`, the default `extra_grid = 0.001` preserves all 960 original savings points. With `extra_grid = 0`, the first point is zero. The power written in the Euler line maps an infinite marginal value to consumption zero. Infinity arithmetic applies to block lines; the named inverse marginal utility retains its finite positive domain. The inverse transition gives resources zero. This point is an interpolation endpoint; it is not an admissible positive-consumption choice.
+
+The executed notebook `applications/buffer-stock/notebooks/borrowing-bound.ipynb` shows the four construction steps, the retained input conditions, both bound cases, and the endpoint calculation. It leaves space for the reader's observations.

@@ -32,6 +32,7 @@ from bellman.fold.block_lines import (
     forward_chain_reads,
     header_of,
     header_wire_sorts,
+    marked_inputs_of,
     multiplier_sorts,
     parameter_sets,
     setting_sets,
@@ -47,6 +48,7 @@ from bellman.fold.wire_terms import (
     defined_name,
     names_no_field,
     right_side,
+    stated_derivative,
     symbol_occurrences,
     term_of_name,
 )
@@ -90,6 +92,10 @@ class StageNames:
         # its own block (AMD-SG-017 §5.5), which the line above, keeping the
         # stage's name alone, does not reach
         self.stage_object, self.header_fields = stage, {}
+        # the inputs that each block's header writes with a perch mark, `W[>]`,
+        # read with the header: a bare name on a line of the block is the
+        # field that the header lists bare, and not the marked one
+        self.marked_inputs = {}
         # the body of each alias line, by block and by the bare name the line
         # writes: an alias has the set of its body (AMD-SG-017 §4), read once
         # per block
@@ -117,6 +123,13 @@ class StageNames:
             if isinstance(stage, StageVersion)
             else ()
         )
+        self.law_formals = {
+            name: definition.equations[0].arguments
+            for definition in definitions
+            if definition.kind == "distribution"
+            and isinstance(definition.equations[0], T.ParameterizedLaw)
+            for name in definition.equations[0].subjects
+        }
         # the record of each declared multiplier by the identity of its field,
         # empty on the working stage (AMD-SG-035 §5)
         self.multipliers = {
@@ -227,6 +240,10 @@ class StageNames:
         """The set a field or a parameter is declared in, or None."""
         return self.sets.get(identity)
 
+    def dependencies(self, identity):
+        """The coordinates of a declared value field's representing function."""
+        return self.ports[identity].coordinates
+
     def alias_body(self, name, block):
         """The right side of the alias or `!node` line of `block` whose left
         side writes the bare name `name`, or None where the block has no such
@@ -324,9 +341,11 @@ class StageNames:
         names the field by its identity, its stem and its perch together and
         not by its stem alone (AMD-SG-017 §5.5), so that on a stage where an
         arrival state and a continuation state share a stem the bare name of a
-        line of the arrival block is the arrival field; where the header of
-        that block names the stem at no perch, as in a policy block, whose
-        header lists the value functions alone, or at more than one, a bare
+        line of the arrival block is the arrival field; where the header
+        names the stem at more than one perch, as `W[>]` among its inputs and
+        `W` among its outputs, the field that the header lists bare, an input
+        before an output; where the header names the stem at no perch, as in
+        a policy block, whose header lists the value functions alone, a bare
         field at the decision perch when one exists, else the unique field of
         that name; parameters, functions and shocks by their kind."""
         if side is not None:
@@ -337,17 +356,29 @@ class StageNames:
         candidates = self.by_name.get(name, [])
         header = self.header_fields.get(block)
         if header is None:
-            header = ()
+            header, marked = (), ()
             for box in blocks_in_file_order(self.stage_object):
                 if box.name == block:
                     declared_in, declared_out = header_of(box)
                     header = tuple(sort.identity for sort in declared_in + declared_out)
+                    marked = marked_inputs_of(box)
                     break
             self.header_fields[block] = header
-        listed = [identity for identity in candidates if identity in header]
-        if len(listed) == 1:
-            return listed[0]
-        for identity in listed or candidates:
+            self.marked_inputs[block] = marked
+        listed = [identity for identity in header if identity in candidates]
+        bare = [identity for identity in listed if identity not in self.marked_inputs[block]]
+        if bare or listed:
+            return (bare or listed)[0]
+        if self.ports and any(self.role(i) == "state" for i in candidates):
+            box = next((b for b in blocks_in_file_order(self.stage_object) if b.name == block), None)
+            if box is not None:
+                _, outputs = header_of(box)
+                perch = next((sort.perch for sort in outputs if sort.role in VALUE_ROLES), None)
+                if perch is not None:
+                    for identity in candidates:
+                        if identity.perch == perch:
+                            return identity
+        for identity in candidates:
             if self.ports[identity].perch in ("dcsn", "shck"):
                 return identity
         if len(candidates) == 1:
@@ -371,10 +402,17 @@ class StageNames:
     def defined(self, core, block):
         """The identities of the fields a statement of `block` defines on its
         left side; `()` for a statement that names none."""
-        if names_no_field(core):
+        if names_no_field(core) or stated_derivative(core) is not None:
             return ()
         lhs = core.lhs if isinstance(core, (T.Equation, T.Inequality)) else core.core.lhs
-        return tuple(self.resolve(n, block, s) for n, s in symbol_occurrences(lhs))
+        box = next((b for b in blocks_in_file_order(self.stage_object) if b.name == block), None)
+        outputs = {
+            sort.identity.field: sort.identity for sort in header_of(box)[1]
+        } if box is not None else {}
+        return tuple(
+            outputs[n] if side is None and n in outputs else self.resolve(n, block, side)
+            for n, side in symbol_occurrences(lhs)
+        )
 
     def parameters(self, cores):
         """The identities of the parameters the terms name, each once in order
@@ -419,7 +457,9 @@ class StageNames:
                     setexpr = self.sets.get(self.resolve(name, block, side))
                 if setexpr is not None:
                     out.append(Member(term_of_name(name, side), setexpr))
-            for node, scope in arithmetic_nodes_with_scopes(core, self, block, local or {}):
+            for node, scope, guard in arithmetic_nodes_with_scopes(
+                core, self, block, local or {}, guards=True
+            ):
                 held = []
                 out.extend(
                     definedness_obligation(
@@ -428,6 +468,8 @@ class StageNames:
                         owner,
                         self,
                         lambda term: operand_set(term, self, block, domains),
+                        guard=guard,
+                        extended=block is not None,
                     )
                 )
                 # Equal predicates may occur both inside and outside a binder.
@@ -490,7 +532,7 @@ def _latent_shocks(stage, ports):
     }
 
 
-def family_term_arguments(term, ctx):
+def family_term_arguments(term, ctx, formals=()):
     """(name, identity) of every state, control and shock a distribution
     declaration's family term reads, in order of first occurrence; parameters
     and functions are not arguments (AMD-SG-009 §1).
@@ -503,7 +545,8 @@ def family_term_arguments(term, ctx):
     found = []
     for name, side in symbol_occurrences(term):
         if side is None and (
-            name in ctx.parameter_names or name in ctx.function_names or name in ("inf", "∞")
+            name in formals or name in ctx.parameter_names
+            or name in ctx.function_names or name in ("inf", "∞")
         ):
             continue
         identity = ctx.resolve(name, None, side)

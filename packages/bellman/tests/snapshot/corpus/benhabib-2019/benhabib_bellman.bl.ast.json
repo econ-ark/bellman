@@ -78,6 +78,31 @@
       "annot": null
     },
     {
+      "__class__": "Statement",
+      "core": {
+        "__class__": "Assignment",
+        "target": {
+          "__class__": "Constant",
+          "name": "Age"
+        },
+        "value": {
+          "__class__": "Space",
+          "set": {
+            "__class__": "IntegerRange",
+            "lower": {
+              "__class__": "Number",
+              "value": 25
+            },
+            "upper": {
+              "__class__": "Number",
+              "value": 61
+            }
+          }
+        }
+      },
+      "annot": null
+    },
+    {
       "__class__": "Declare",
       "declaration": {
         "__class__": "Declaration",
@@ -250,49 +275,24 @@
           {
             "__class__": "Domain",
             "space": {
-              "__class__": "Product",
-              "factors": [
-                {
-                  "__class__": "Named",
-                  "name": "ℝ₊"
-                },
-                {
-                  "__class__": "Named",
-                  "name": "ℝ₊"
-                },
-                {
-                  "__class__": "Named",
-                  "name": "ℝ₊"
-                },
-                {
-                  "__class__": "Named",
-                  "name": "ℝ₊"
-                },
-                {
-                  "__class__": "Named",
-                  "name": "ℝ₊"
-                },
-                {
-                  "__class__": "Named",
-                  "name": "ℝ₊"
-                },
-                {
-                  "__class__": "Named",
-                  "name": "ℝ₊"
-                },
-                {
-                  "__class__": "Named",
-                  "name": "ℝ₊"
-                },
-                {
-                  "__class__": "Named",
-                  "name": "ℝ₊"
-                },
-                {
-                  "__class__": "Named",
-                  "name": "ℝ₊"
-                }
-              ]
+              "__class__": "Functions",
+              "domain": {
+                "__class__": "Product",
+                "factors": [
+                  {
+                    "__class__": "Named",
+                    "name": "Age"
+                  },
+                  {
+                    "__class__": "Named",
+                    "name": "Tau"
+                  }
+                ]
+              },
+              "codomain": {
+                "__class__": "Named",
+                "name": "ℝ₊"
+              }
             }
           }
         ],
@@ -502,6 +502,17 @@
                         }
                       }
                     ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "age",
+                    "at": {
+                      "__class__": "At",
+                      "side": {
+                        "__class__": "Continuation"
+                      }
+                    },
+                    "classifiers": []
                   }
                 ]
               },
@@ -595,10 +606,30 @@
               "right": {
                 "__class__": "Select",
                 "family": {
-                  "__class__": "Sym",
-                  "symbol": {
-                    "__class__": "Constant",
-                    "name": "wage_fn"
+                  "__class__": "Select",
+                  "family": {
+                    "__class__": "Sym",
+                    "symbol": {
+                      "__class__": "Constant",
+                      "name": "wage_fn"
+                    }
+                  },
+                  "sel": {
+                    "__class__": "Term",
+                    "at": {
+                      "__class__": "Sym",
+                      "symbol": {
+                        "__class__": "Variable",
+                        "name": "age",
+                        "when": {
+                          "__class__": "At",
+                          "side": {
+                            "__class__": "Continuation"
+                          }
+                        },
+                        "shift": 0
+                      }
+                    }
                   }
                 },
                 "sel": {
@@ -666,6 +697,35 @@
                   },
                   {
                     "__class__": "Coordinate",
+                    "stem": "age",
+                    "at": {
+                      "__class__": "At",
+                      "side": {
+                        "__class__": "Continuation"
+                      }
+                    },
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "Age"
+                        }
+                      },
+                      {
+                        "__class__": "Role",
+                        "kind": {
+                          "__class__": "Value",
+                          "order": 0
+                        }
+                      },
+                      {
+                        "__class__": "Constancy"
+                      }
+                    ]
+                  },
+                  {
+                    "__class__": "Coordinate",
                     "stem": "c",
                     "at": null,
                     "classifiers": []
@@ -701,6 +761,30 @@
                           "__class__": "Value",
                           "order": 0
                         }
+                      }
+                    ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "age",
+                    "at": null,
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "Age"
+                        }
+                      },
+                      {
+                        "__class__": "Role",
+                        "kind": {
+                          "__class__": "Value",
+                          "order": 0
+                        }
+                      },
+                      {
+                        "__class__": "Constancy"
                       }
                     ]
                   }
@@ -809,6 +893,50 @@
               }
             ]
           }
+        },
+        {
+          "__class__": "Statement",
+          "core": {
+            "__class__": "Equation",
+            "lhs": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "age"
+              }
+            },
+            "rhs": {
+              "__class__": "Sub",
+              "left": {
+                "__class__": "Sym",
+                "symbol": {
+                  "__class__": "Variable",
+                  "name": "age",
+                  "when": {
+                    "__class__": "At",
+                    "side": {
+                      "__class__": "Continuation"
+                    }
+                  },
+                  "shift": 0
+                }
+              },
+              "right": {
+                "__class__": "Number",
+                "value": 1
+              }
+            }
+          },
+          "annot": {
+            "__class__": "Annotation",
+            "entries": [
+              {
+                "__class__": "KeyValue",
+                "key": "id",
+                "value": "age"
+              }
+            ]
+          }
         }
       ]
     },
@@ -854,6 +982,17 @@
                         }
                       }
                     ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "age",
+                    "at": {
+                      "__class__": "At",
+                      "side": {
+                        "__class__": "Continuation"
+                      }
+                    },
+                    "classifiers": []
                   }
                 ]
               },

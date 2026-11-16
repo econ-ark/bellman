@@ -150,6 +150,12 @@ def _lines_after(related, write):
 # name is the field `rule` of a refusal and is a claim about authored input,
 # not about the code that checks it.
 RULES = (
+    # Supplied continuation data name exactly the declared external inputs,
+    # and their values satisfy every requirement their representation decides.
+    "continuation-input",
+    # A numerical law has a supplied value for every constant field its
+    # parameter arguments read.
+    "law-requirement",
     # The file is written in the forms the grammar admits, and every !-marked
     # word is one of the vocabulary. It is the first rule a
     # file meets: the refusal is raised where the parser or the lowering
@@ -200,6 +206,15 @@ RULES = (
     # A statement's perch has observed every shock the statement's right side
     # depends on; otherwise the statement asks for an expectation.
     "shock-observed",
+    # The word !cnst types a value-type field alone, and a field typed !cnst
+    # has no state, shock or control dependence in its value or declared
+    # domain.
+    "constant-dependence",
+    # A maximization has exactly one decision field whose defining expression
+    # is its objective, after renaming the bound candidate.
+    "policy-objective",
+    # A feasibility correspondence reads only fields known before the choice.
+    "policy-feasibility",
     # A backward function does not read a shock again beside a term whose
     # expectation has integrated it.
     "shock-reintroduced",
@@ -241,7 +256,8 @@ RULES = (
     # Every field is produced and consumed: a block writes it or the stage
     # receives it, and a block reads it or the stage delivers it.
     "stage-boundary",
-    # Every required block output has an equation.
+    # Every required block output has an equation or is kept under the same
+    # spelling on both sides of the header.
     "output-defined",
     # A grid line, a line that writes a decision state under the continuation
     # mark (`m_d[>] = a + c[>]`), agrees with the law of motion solved for
@@ -398,7 +414,8 @@ RULES = (
     # and the controls at which its lines are read, and no state: a state of
     # the perch at which its output stands is a coordinate of the output
     # function, and a state of its input perch is reached through the law of
-    # motion.
+    # motion. A forward block's header lists no field that a backward block
+    # of the same stage writes.
     "header-coordinate",
     # A backward line reads a state of its input or a later perch only through
     # the law of motion. A direct read is refused, including in a relation or
@@ -426,7 +443,9 @@ RULES = (
     # A declaration's family parameters lie in the family's domain: matched
     # dimensions, a symmetric positive semidefinite covariance, nonnegative
     # variances and deviations, finite endpoints in order, positive scales,
-    # and real arguments that have a number.
+    # and real arguments that have a number. A law with arguments names
+    # distinct arguments, and each use of its shock supplies one constant
+    # that the stage takes in for each of them.
     "distribution-domain",
     # A derived parameter's definition, `h := 1/(1 - Γ/R)`, reads declared
     # parameters, finite numbers and other derived parameters, and is formed
@@ -460,8 +479,9 @@ RULES = (
     # order; a branch a shock selects is read under the expectation over the
     # shock alone.
     "branch-tuple-mismatch",
-    # A continuation value stands at one position of the selection tuples, the
-    # position of the branch on whose fields it is a function.
+    # A nonconstant continuation value has one branch association established
+    # by a selection tuple; it may also be read outside that tuple. A constant
+    # read only outside tuples receives its supplier from the connection.
     "branch-value-position",
     # The law of a label shock gives one probability to each label in the
     # order of the labels, `Categorical((p₁, …, pₙ))` or `Bernoulli(p)` over
@@ -779,6 +799,13 @@ class FactoryError(ValueError):
 # concavity under which a relation defines a policy: those are propositions of
 # the calculus, stated for the reader on its pages and held by no record.
 CONDITIONS = (
+    # A supplied continuation field has its declared range and dependence;
+    # a representing function is measurable on its declared coordinates.
+    "continuation-input",
+    # The joint law of the first period's external arrival states gives mass
+    # one to that period's admissible arrival set, which need not be the
+    # product of their declared sets.
+    "initial-law-supported",
     # the conditions the fold records on the lines, the definitions and the
     # sets (the `fold` folder, `distributions.edges.factorization_obligation`)
     "aggregation-admissibility",
@@ -854,8 +881,10 @@ CONDITIONS = (
 METHOD_CONDITIONS = {
     "egm-eligibility": (
         "the construction satisfies the declared line where the continuation value 𝑉≻ is "
-        "concave and continuously differentiable on (0, ∞) with a finite positive right "
-        "derivative at 0"
+        "concave and continuously differentiable above the savings bound, with a positive "
+        "right derivative at the bound, finite or infinite; an infinite derivative gives "
+        "zero consumption as the interpolation endpoint, outside a strictly positive "
+        "consumption domain"
     ),
     "marginal-reading": (
         "the right side of each derivative line equals the derivative, in the named "

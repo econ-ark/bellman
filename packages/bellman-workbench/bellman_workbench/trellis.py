@@ -1717,7 +1717,7 @@ def describe_node(shown: TrellisShown, graph: str, node_id: str, stage_views: di
             for address in layers
             if address in positions and address.startswith(f"{occurrence}/")
         )
-        rows = dict(layers[occurrence])
+        rows = {name: value for name, value in layers[occurrence].items() if name != "age"}
         return Subject("period", node_id, graph, occurrence, None, rows, {}, None, held)
     position = positions[occurrence]
     if node_id == occurrence + LAYER_ID_ENDING:
@@ -1833,8 +1833,8 @@ class Cells(NamedTuple):
 
 class OccurrenceRows(NamedTuple):
     """Details of a selected stage occurrence (design pass §2, "A stage
-    occurrence"; K-D2): `key`, the stage's key; `place`, its period and the
-    period's age where the exporter writes one, `periods[1] · age 69`; and
+    occurrence"; K-D2): `key`, the stage's key; `place`, its period's
+    position, `periods[1]`; and
     `rows`, each `(label, lines)`, a label of §2's vocabulary and a tuple
     of `Line`."""
 
@@ -2032,8 +2032,7 @@ def occurrence_rows(
     (`stage.methods`); and `sources`, the binding source files its record
     names (`recipe.record_files`), relative to the folder, one a line. A
     row with nothing to print is left out, `fields` alone excepted. The
-    head's place reads the age the exporter writes on the period's
-    layer."""
+    head's place is the period's position in the trellis."""
     h, key = position
     address = f"periods[{h}]/{key}"
     layers = next(
@@ -2044,8 +2043,7 @@ def occurrence_rows(
         ),
         {},
     )
-    age = (layers.get(f"periods[{h}]") or {}).get("age")
-    place = f"periods[{h}] · age {age}" if age else f"periods[{h}]"
+    place = f"periods[{h}]"
     stage = shown.trellis["periods"][h]["stages"][key]
     record = shown.syntactic["periods"][h]["stages"][key]
     path = occurrence_file(folder, shown, position)

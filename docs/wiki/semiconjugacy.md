@@ -34,6 +34,8 @@ type: concept
 
 A **semiconjugacy** between self-maps $S:V\to V$ and $\widehat S:\widehat V\to\widehat V$ is a map $F:V\to\widehat V$ satisfying $F\circ S=\widehat S\circ F$. It sends exact iterates and fixed points of the first system to those of the second. This identity alone does not recover every original solution or establish equivalence of economic problems.
 
+In a staged model, projecting the tuple of backward fields to its constant components gives a semiconjugacy when their update depends only on those components. The identity holds on the domains where the partial maps compose; it asserts no value outside those domains. A fixed point of the full update therefore requires the constants to be fixed as well. [Periods and the trellis](../bellman-calculus/08-periods-and-trellis.md) §§3 and 4 state the map on pairs and its fixed points.
+
 ## Strong semiconjugacy
 
 Sargent and Stachurski use the stronger paired factorization

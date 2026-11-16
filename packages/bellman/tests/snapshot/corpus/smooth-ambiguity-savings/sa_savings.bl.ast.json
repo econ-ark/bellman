@@ -1243,44 +1243,71 @@
                       "right": {
                         "__class__": "Pow",
                         "base": {
-                          "__class__": "Operator",
-                          "head": "E",
-                          "subs": [
-                            {
-                              "__class__": "Var",
-                              "name": "ν"
-                            }
-                          ],
-                          "args": [
-                            {
-                              "__class__": "Pow",
-                              "base": {
-                                "__class__": "Operator",
-                                "head": "E",
-                                "subs": [
-                                  {
-                                    "__class__": "Var",
-                                    "name": "Ψ"
-                                  }
-                                ],
-                                "args": [
-                                  {
-                                    "__class__": "Pow",
-                                    "base": {
-                                      "__class__": "Sym",
-                                      "symbol": {
-                                        "__class__": "Variable",
-                                        "name": "V",
-                                        "when": {
-                                          "__class__": "At",
-                                          "side": {
-                                            "__class__": "Continuation"
+                          "__class__": "Pow",
+                          "base": {
+                            "__class__": "Operator",
+                            "head": "E",
+                            "subs": [
+                              {
+                                "__class__": "Var",
+                                "name": "ν"
+                              }
+                            ],
+                            "args": [
+                              {
+                                "__class__": "Pow",
+                                "base": {
+                                  "__class__": "Pow",
+                                  "base": {
+                                    "__class__": "Operator",
+                                    "head": "E",
+                                    "subs": [
+                                      {
+                                        "__class__": "Var",
+                                        "name": "Ψ"
+                                      }
+                                    ],
+                                    "args": [
+                                      {
+                                        "__class__": "Pow",
+                                        "base": {
+                                          "__class__": "Sym",
+                                          "symbol": {
+                                            "__class__": "Variable",
+                                            "name": "V",
+                                            "when": {
+                                              "__class__": "At",
+                                              "side": {
+                                                "__class__": "Continuation"
+                                              }
+                                            },
+                                            "shift": 0
                                           }
                                         },
-                                        "shift": 0
+                                        "exponent": {
+                                          "__class__": "Sub",
+                                          "left": {
+                                            "__class__": "Number",
+                                            "value": 1
+                                          },
+                                          "right": {
+                                            "__class__": "Sym",
+                                            "symbol": {
+                                              "__class__": "Constant",
+                                              "name": "γ"
+                                            }
+                                          }
+                                        }
                                       }
+                                    ]
+                                  },
+                                  "exponent": {
+                                    "__class__": "Div",
+                                    "left": {
+                                      "__class__": "Number",
+                                      "value": 1
                                     },
-                                    "exponent": {
+                                    "right": {
                                       "__class__": "Sub",
                                       "left": {
                                         "__class__": "Number",
@@ -1295,11 +1322,8 @@
                                       }
                                     }
                                   }
-                                ]
-                              },
-                              "exponent": {
-                                "__class__": "Div",
-                                "left": {
+                                },
+                                "exponent": {
                                   "__class__": "Sub",
                                   "left": {
                                     "__class__": "Number",
@@ -1312,53 +1336,43 @@
                                       "name": "η"
                                     }
                                   }
-                                },
-                                "right": {
-                                  "__class__": "Sub",
-                                  "left": {
-                                    "__class__": "Number",
-                                    "value": 1
-                                  },
-                                  "right": {
-                                    "__class__": "Sym",
-                                    "symbol": {
-                                      "__class__": "Constant",
-                                      "name": "γ"
-                                    }
-                                  }
+                                }
+                              }
+                            ]
+                          },
+                          "exponent": {
+                            "__class__": "Div",
+                            "left": {
+                              "__class__": "Number",
+                              "value": 1
+                            },
+                            "right": {
+                              "__class__": "Sub",
+                              "left": {
+                                "__class__": "Number",
+                                "value": 1
+                              },
+                              "right": {
+                                "__class__": "Sym",
+                                "symbol": {
+                                  "__class__": "Constant",
+                                  "name": "η"
                                 }
                               }
                             }
-                          ]
+                          }
                         },
                         "exponent": {
-                          "__class__": "Div",
+                          "__class__": "Sub",
                           "left": {
-                            "__class__": "Sub",
-                            "left": {
-                              "__class__": "Number",
-                              "value": 1
-                            },
-                            "right": {
-                              "__class__": "Sym",
-                              "symbol": {
-                                "__class__": "Constant",
-                                "name": "ρ"
-                              }
-                            }
+                            "__class__": "Number",
+                            "value": 1
                           },
                           "right": {
-                            "__class__": "Sub",
-                            "left": {
-                              "__class__": "Number",
-                              "value": 1
-                            },
-                            "right": {
-                              "__class__": "Sym",
-                              "symbol": {
-                                "__class__": "Constant",
-                                "name": "η"
-                              }
+                            "__class__": "Sym",
+                            "symbol": {
+                              "__class__": "Constant",
+                              "name": "ρ"
                             }
                           }
                         }

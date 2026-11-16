@@ -47,6 +47,7 @@ The [Bellman-SYM guide](../Bellman-Sym/index.md) explains authoring and inspecti
 - [Matsya instructions](matsya_instructions.md)
 - [Methodization](methodization.md)
 - [Methods](methods.md)
+- [Modularity](modularity.md)
 - [operator](operator.md)
 - [Ordering conventions](ordering_conventions.md)
 - [Parameters](parameters.md)

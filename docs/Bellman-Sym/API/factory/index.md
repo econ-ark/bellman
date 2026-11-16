@@ -17,7 +17,9 @@ topic: [factory]
 > **Used by** — [Stage functions](stage-factory.md), [Recipe functions](spec-factory.md), [Period functions](period-factory.md) and [The trellis factory](trellis-factory.md): the four reference pages.
 > **See also** — [Model directory layout](../../reference/model-directory-layout.md): the folders of a registry.
 
-## 1 The fourteen functions
+<a id="1-the-fourteen-functions"></a>
+
+## 1 Factory functions
 
 A function of a stage is imported from `bellman.stage`, one of a period from `bellman.period` and one of a trellis from `bellman.trellis`, as `from bellman.trellis import load_recipe`; the refusal class `FactoryError` from `bellman.refusals`.
 

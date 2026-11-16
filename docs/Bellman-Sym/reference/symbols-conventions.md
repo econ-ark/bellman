@@ -51,7 +51,7 @@ The block identifier `cntn_to_dcsn` provides an address. Renaming it changes ref
 
 ## 2 Fields, functions, and spaces
 
-A **field** is a named quantity of a stage: a state, a control, a value or a multiplier ([Constraints](../10-constraints.md) §4.2) at one perch, or a shock, which belongs to no perch (§9.3). Once shocks are declared, fields may be interpreted as random variables on the underlying probability space. A **state function** represents such a quantity using explicit state arguments. A domain describes the values an object may take; it is distinct from the space of functions on a state domain.
+A **field** is a named quantity of a stage: a state, a control, a value or a multiplier ([Constraints](../10-constraints.md) §4.2) at one perch, or a shock, which belongs to no perch (§9.3). Once shocks are declared, fields may be interpreted as random variables on the underlying probability space. A **representing function** gives the field's value as a function of the state coordinates on which it depends. A domain describes the values an object may take; it is distinct from the space of functions on a state domain.
 
 | Mathematical notation | Object |
 |---|---|
@@ -71,6 +71,8 @@ For example, if the continuation state field is $x_\succ$ and a value field is m
 
 The notation $L^2(\Omega,\mathcal F)$ denotes square-integrable fields on a probability space with information $\mathcal F$. Use it only when square integrability is assumed. A declaration allowing extended values does not automatically put a field in $L^2$.
 
+A value-type field sent backward can be declared `!cnst`. The field then has no state coordinates in its representing function. If the field's whole value is itself a function, evaluating that function still takes its own arguments. See [Fields sent backward](../01-stage.md#31-fields-sent-backward).
+
 ## 3 Perches and information
 
 A **perch** is one of the three information contexts within a stage:
@@ -81,7 +83,7 @@ A **perch** is one of the three information contexts within a stage:
 | Decision | $\sim$, usually omitted | `V` or `V[~]` | `!dcsn` |
 | Continuation | $\succ$ | `V[>]` | `!cntn` |
 
-In a block's header a mark agrees with the perch word of its side: the listing `(a[>] : Xa) : !arvl` is refused under [`field-perch`](refusals.md#field-perch). The package reads `a[~]` as the bare name `a`, so the listing `(a[~] : Xa) : !arvl`, which breaks the rule, is read as the arrival field `a`. The package does not yet check this ([Appendix C](../appendices/14-appendix-c-syntax-to-semantics.md) §5.3).
+In a block's header a mark agrees with the perch word of its side: the listing `(a[>] : Xa) : !arvl` is refused under [`field-perch`](refusals.md#field-perch). The one exception is a constant that the stage takes in at its continuation perch: the input side of a forward block lists it as the backward header spells it, `age[>]`, and it stays at the continuation perch ([Stages](../01-stage.md#21-indexed-data) §2.1). The package reads `a[~]` as the bare name `a`, so the listing `(a[~] : Xa) : !arvl`, which breaks the rule, is read as the arrival field `a`. The package does not yet check this ([Appendix C](../appendices/14-appendix-c-syntax-to-semantics.md) §5.3).
 
 When nested information is assumed, the information structure can be written $\mathcal F_\prec\subseteq\mathcal F_\sim\subseteq\mathcal F_\succ$. Stage marks alone do not establish this assumption. These inclusions need not be strict: an identity transition can reveal no additional information. Nor must a list of current state coordinates alone generate all past information. State sufficiency is an assumption used when passing to functions of those coordinates.
 
@@ -141,13 +143,17 @@ A **stage occurrence** is one use of a stage file under a particular key in a pe
 | `syntactic["periods"][h]["stages"][stage_name]` | The record of that occurrence and period: its merged parameter, setting, and method mappings. |
 | `[<]`, `[~]`, `[>]` | Information contexts within one stage, independently of `h`. |
 
-Terminal continuation values are separate boundary data for period zero. A connector renames corresponding fields between occurrences; matching names alone does not prove matching domains or information roles. The per-stage mathematical graph and the syntactic trellis, a dictionary of stage records, serve different purposes; the order of a period's stages is computed from the fields they join. [Periods](../06-period.md) and [Trellises](../07-trellis.md) give their composition rules.
+Terminal data supply all unconnected continuation fields of period zero at realization. A connector renames corresponding fields between occurrences; matching names alone does not prove matching domains or information roles. The per-stage mathematical graph and the syntactic trellis, a dictionary of stage records, serve different purposes; the order of a period's stages is computed from the fields they join. [Periods](../06-period.md) and [Trellises](../07-trellis.md) give their composition rules.
 
 ## 8 Parameters, settings, and interpretation
 
 A **parameter** defines the economic problem; a **setting** controls a numerical calculation. A finite menu of housing sizes is a mathematical domain, so changing its endpoints or number of available sizes changes the problem. A grid approximating a continuous housing domain is a numerical choice. A simulation grid need not equal the solution grid.
 
-A **derived parameter** is a constant of the economic problem that a definition without arguments writes from the declared parameters, such as human wealth `h := 1/(1 - Γ/R)`, so that it is a parameter and not a setting; its definition may be written by cases, `h : ℝ_{+∞} := if Γ < R then 1/(1 - Γ/R) else inf`, with the declared set that its infinite branch requires ([Equation parsing rules](../appendices/12-equation-parsing-rules.md) §2; [Parameters and settings](../API/stage/06-par-and-settings.md) §1.1). The line that defines a derived parameter may declare the set in which its value lies, `q : (0,1) := (β*R)^(1/ρ)/R`, and calibration then refuses values of the parameters at which the derived value lies outside that set (§9.2).
+A **derived parameter** is a constant defined from calibrated parameters without arguments. For example, `q : (0,1) := (β*R)^(1/ρ)/R` defines the return patience factor. Its value must lie in the declared set, which calibration checks (§9.2).
+
+A definition may use cases, such as `h : ℝ_{+∞} := if Γ < R then 1/(1 - Γ/R) else inf`. The declared set must admit the infinite branch. This generic syntax example does not state the human-wealth declaration of the perfect-foresight application. That application sends human wealth backward as a field.
+
+[Equation parsing rules](../appendices/12-equation-parsing-rules.md) §2 gives the definition forms. [Parameters and settings](../API/stage/06-par-and-settings.md) §1.1 shows the parameter table.
 
 The meaning map $\Upsilon$ interprets declarations and equations. The representation map Ρ denotes their numerical realization after the required choices and bindings. Lowercase $\rho$ remains available for an economic parameter, such as risk aversion. These names do not assert that interpretation or approximation is invertible, or that different numerical choices commute.
 
@@ -159,7 +165,7 @@ The reference page [Types](types.md) lists the role words, the perch words, the 
 
 ### 9.1 Punctuation
 
-The examples are lines of the stage files under `applications/portfolio-choice/`: `disc.bl`, whose source §1 shows, `cons.bl` and `noport.bl`; the derived parameter `h` and the definition of `q` that declares its set are lines of `perfect_foresight.bl` under `applications/consumption-perfect-foresight-crra/`. The examples of the union and the difference are written for this table.
+The examples are lines of the stage files under `applications/portfolio-choice/`: `disc.bl`, whose source §1 shows, `cons.bl` and `noport.bl`; the definition of `q` that declares its set is a line of `perfect_foresight.bl` under `applications/consumption-perfect-foresight-crra/`. The examples of the union and the difference are written for this table.
 
 | Spelling | Use | Example |
 |---|---|---|
@@ -167,7 +173,7 @@ The examples are lines of the stage files under `applications/portfolio-choice/`
 | `@` | Write the components of a type with `@` between them; their order does not matter. Several sets in one type declare their intersection (§9.2). | `c : !ctrl @ ℝ₊₊` |
 | `\/`, also `∪` | Form the union of two sets of numbers, in the declared set of a parameter, a derived parameter or a setting (§9.2). | `ρ : (0,1) \/ (1, inf)` |
 | `\`, also `∖` | Form the difference of two sets of numbers, the members of the first that lie outside the second, in the same places (§9.2). | `ρ : ℝ₊₊ \ {1}` |
-| `:=`, also `<-` | Define a named set, which may be written as a comprehension (§9.2), a function, or a derived parameter (§8), whose definition may declare its set, `q : (0,1) := (β*R)^(1/ρ)/R`. | `Xa := ℝ₊`; `Xa := [0, ā]`; `𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)`; `h := 1/(1 - Γ/R)` |
+| `:=`, also `<-` | Define a named set, which may be written as a comprehension (§9.2), a function, or a derived parameter (§8), whose definition may declare its set, `q : (0,1) := (β*R)^(1/ρ)/R`. | `Xa := ℝ₊`; `Xa := [0, ā]`; `𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)`; `q : (0,1) := (β*R)^(1/ρ)/R` |
 | `=` | State an equation inside a block, explicit or implicit. | `V = β*V[>]` |
 | `~` | Give a shock its law, on a line of its own. | `θ ~ LogNormal(μ_θ, σ_θ)` |
 | `->` | Separate the input side of a block's header from its output side. | `(a : Xa) : !arvl -> (a_d : Xa) : !dcsn` |
@@ -252,7 +258,7 @@ The identifier `household_status` asserts shared category meanings across stage 
 
 ### 9.3 Type words and statement marks
 
-A **type word** is a word after `!` that gives a field its role or its information context; the `!` sets it apart from a name the author chooses.
+A **type word** is a word after `!` that gives a field its role, its information context or, for `!cnst`, its independence of the state; the `!` sets it apart from a name the author chooses.
 
 | Word | Meaning |
 |---|---|
@@ -260,6 +266,7 @@ A **type word** is a word after `!` that gives a field its role or its informati
 | `!ctrl` | A control, chosen with the information of the decision perch. |
 | `!shck` | A shock, whose law and timing are declared separately. A shock belongs to no perch: it is drawn on the edge between two perches, and a perch word or a mark `[<]` or `[>]` written on a shock is refused under [`field-perch`](refusals.md#field-perch). |
 | `!vlu` | A value field. |
+| `!cnst` | Written with `!vlu`: a constant, a value-type field whose value and declared set depend on no state, shock or control (§2). |
 | `!arvl`, `!dcsn`, `!cntn` | The arrival, decision and continuation perches of §3. |
 
 Removing a word can change the problem: without `!ctrl`, `c` is no longer chosen. A parameter needs no word: a name declared with a set on a line of its own, which no block header lists, is a parameter, as `β : (0,1)` is, and a line of a block that writes it is refused under [`parameter-or-field`](refusals.md#parameter-or-field).

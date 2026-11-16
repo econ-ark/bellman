@@ -49,12 +49,14 @@ from bellman.fold.wire_terms import (
     defining_line,
     expectation_nodes,
     is_wire_symbol,
+    label_case,
     retained_term_at,
     right_side,
     spelled_with_mark,
     stated_derivative,
     statement_core,
     symbol_occurrences,
+    term_nodes,
     wire_symbol,
     wires_read,
 )
@@ -163,13 +165,14 @@ def backward_block(plan, name, dom, cod, lines, by_spelling, seeds) -> BackwardB
     )
 
 
-def _transition_shocks(ctx, g):
+def _transition_shocks(ctx, g, coordinates=None):
     """The shock names the complete law of motion g reads: the right sides of
     the lines that define its output states, its local definitions followed."""
     block = g.identity.address
     found = []
+    coordinates = g.outputs if coordinates is None else coordinates
     for core in g.equations:
-        if not any(i in g.outputs for i in ctx.defined(core, block)):
+        if not any(i in coordinates for i in ctx.defined(core, block)):
             continue
         term = right_side(core)
         for name, side in symbol_occurrences(term):
@@ -447,6 +450,12 @@ def _block_outputs(block, env, acc):
     for identity in block.cod:
         line = defining_line(ctx, block.name, block.lines, identity)
         if line is None:
+            kept = next((i for i in block.inputs if i.field == identity.field), None)
+            if kept is not None:
+                wire = ctx.function_wire(kept)
+                acc.roles.setdefault(wire, ctx.role(kept))
+                outputs.append(identity)
+                maps.append(wire_symbol(wire))
             continue
         address, role, core = line
         if role == NODE:
@@ -627,13 +636,38 @@ def folded_line(block, env, acc, entry):
     return folded
 
 
-def reduced_term(block, env, acc, term, address, order):
+def reduced_term(block, env, acc, term, address, order, *, guards=()):
     """The dispatch of the fold (AMD-SG-005 §1): an expectation operator to
     `expectation_rows`, a symbol to `_reduced_name`, a selection key to
     its resolution, and any other constructor to its folded children
     joined by `_join`."""
     if isinstance(term, T.Operator) and term.head == "E":
-        return expectation_rows(block, env, acc, term, address, order)
+        return expectation_rows(block, env, acc, term, address, order, guards=guards)
+    if isinstance(term, T.Conditional):
+        test = reduced_term(block, env, acc, term.test, address, order, guards=guards)
+        then = reduced_term(
+            block,
+            env,
+            acc,
+            term.then,
+            address,
+            order,
+            guards=guards + ((term.test, test, True),),
+        )
+        otherwise = reduced_term(
+            block,
+            env,
+            acc,
+            term.otherwise,
+            address,
+            order,
+            guards=guards + ((term.test, test, False),),
+        )
+        return _join(
+            block,
+            T.Conditional(test.term, then.term, otherwise.term),
+            (test, then, otherwise),
+        )
     if (
         isinstance(term, T.Sym)
         and isinstance(term.symbol, (T.Variable, T.Constant))
@@ -643,24 +677,37 @@ def reduced_term(block, env, acc, term, address, order):
     if isinstance(term, T.Key) and isinstance(term.at, str):
         folded = _reduced_name(block, env, acc, T.Sym(T.Constant(term.at)), address)
         value = folded.term
-        if not isinstance(value, T.Sym) or not isinstance(value.symbol, T.Constant):
-            refuse_backward_block(
-                block,
-                "not-constructed",
-                address,
-                f"the selection key {term.at!r} is defined by {to_source(value)}; the retained "
-                f"selector requires a name, so this pullback needs a construction for a "
-                f"computed selection key",
-            )
-        return dataclasses.replace(folded, term=T.Key(value.symbol.name))
+        selector = (
+            T.Key(value.symbol.name)
+            if isinstance(value, T.Sym)
+            and isinstance(value.symbol, T.Constant)
+            and not is_wire_symbol(value)
+            else T.Term(value)
+        )
+        return dataclasses.replace(folded, term=selector)
+    if (
+        isinstance(term, T.Call)
+        and block.ctx.role(block.ctx.resolve(term.fun, block.name)) in VALUE_ROLES
+    ):
+        called = _reduced_name(block, env, acc, T.Sym(T.Constant(term.fun)), address)
+        arguments = tuple(
+            reduced_term(block, env, acc, arg, address, order, guards=guards) for arg in term.args
+        )
+        return _join(
+            block,
+            T.Call(called.term.symbol.name, tuple(arg.term for arg in arguments)),
+            (called,) + arguments,
+        )
     if dataclasses.is_dataclass(term) and not isinstance(term, type):
         children = [
-            reduced_term(block, env, acc, getattr(term, f.name), address, order)
+            reduced_term(block, env, acc, getattr(term, f.name), address, order, guards=guards)
             for f in dataclasses.fields(term)
         ]
         return _join(block, type(term)(*(child.term for child in children)), children)
     if isinstance(term, tuple):
-        children = [reduced_term(block, env, acc, item, address, order) for item in term]
+        children = [
+            reduced_term(block, env, acc, item, address, order, guards=guards) for item in term
+        ]
         return _join(block, tuple(child.term for child in children), children)
     return _ReducedTerm(term)
 
@@ -672,16 +719,14 @@ class _ReducedTerm:
     shock names active through its value inputs (`active`) and the shocks it
     reads explicitly outside every expectation, with the address of each read
     (`read`); the shocks already integrated on its producing paths, with the
-    occurrence that integrated each (`history`); and its genuine value or
-    shock paths, each a description with the shocks integrated on it
-    (`paths`). A constant has none of these. Exists during one fold."""
+    occurrence that integrated each (`history`). A constant has none of
+    these. Exists during one fold."""
 
     term: object
     _: KW_ONLY
     active: frozenset = frozenset()
     read: tuple = ()
     history: tuple = ()
-    paths: tuple = ()
 
     @property
     def shocks(self):
@@ -711,9 +756,7 @@ def _reduced_name(block, env, acc, term, address):
         if acc.node_domains.get(spelling, env.domain) is not env.domain:
             _refuse_domains(block, env, identity, spelling)
         wire, folded = acc.node_results[spelling]
-        return _ReducedTerm(
-            wire_symbol(wire), active=folded.shocks, history=folded.history, paths=folded.paths
-        )
+        return _ReducedTerm(wire_symbol(wire), active=folded.shocks, history=folded.history)
     line = block.by_spelling.get(spelling)
     if line is not None and line.address != address and line.role != NODE:
         # a perch-marked field is read on its own domain; a local name is
@@ -737,22 +780,20 @@ def _reduced_name(block, env, acc, term, address):
         ):
             _refuse_domains(block, env, identity, spelling)
         wire = pullback_wire(block, env, acc, identity)
-        label = f"the value input {spelled_with_mark(spelling)}"
-        return _ReducedTerm(
-            wire_symbol(wire), active=frozenset(domain.shocks), paths=((label, frozenset()),)
+        shocks = (
+            ()
+            if domain.g is None
+            else _transition_shocks(ctx, domain.g, ctx.dependencies(identity))
         )
+        return _ReducedTerm(wire_symbol(wire), active=frozenset(shocks))
     if role in VALUE_ROLES:
         wire = ctx.function_wire(identity)
         acc.roles.setdefault(wire, role)
-        return _ReducedTerm(
-            wire_symbol(wire),
-            paths=((f"the function {spelled_with_mark(spelling)}", frozenset()),),
-        )
+        return _ReducedTerm(wire_symbol(wire))
     if role == "shock" and side is None and domain.edge is not None and name in domain.edge.shocks:
         return _ReducedTerm(
             term,
             read=((name, address),),
-            paths=((f"the shock {name} read in {address}", frozenset()),),
         )
     return _ReducedTerm(term)
 
@@ -762,14 +803,11 @@ def _read(block, env, acc, identity, spelling):
     coordinates on the grid of its perch, through the law of motion g on
     the edge whose g produces that perch; refused between other domains."""
     domain = env.domain
-    label = f"the function {spelled_with_mark(spelling)}"
     if identity.perch == domain.perch or domain.g is None and domain.perch is None:
-        return _ReducedTerm(wire_symbol(acc.wires[identity]), paths=((label, frozenset()),))
+        return _ReducedTerm(wire_symbol(acc.wires[identity]))
     if domain.g is not None and identity.perch == domain.target:
         wire = pullback_wire(block, env, acc, identity)
-        return _ReducedTerm(
-            wire_symbol(wire), active=frozenset(domain.shocks), paths=((label, frozenset()),)
-        )
+        return _ReducedTerm(wire_symbol(wire), active=frozenset(domain.shocks))
     _refuse_domains(block, env, identity, spelling)
 
 
@@ -860,11 +898,10 @@ def _join(block, term, children):
                     f"integrate the combination after it"
                 ),
             )
-    paths = tuple(dict.fromkeys(path for child in children for path in child.paths))
-    return _ReducedTerm(term, active=active, read=read, history=history, paths=paths)
+    return _ReducedTerm(term, active=active, read=read, history=history)
 
 
-def expectation_rows(block, env, acc, node, address, order):
+def expectation_rows(block, env, acc, node, address, order, *, guards=()):
     """Rule 4: the fold of the integrand, its pending aggregation unless it
     is one bare result, and one expectation under the conditional
     distribution the occurrence selects (AMD-SG-009 §5), made once in
@@ -875,8 +912,8 @@ def expectation_rows(block, env, acc, node, address, order):
     shocks = tuple(s.var if isinstance(s, T.In) else s.name for s in node.subs)
     label = _label_shock(block, shocks)
     if label is not None:
-        return _label_expectation(block, env, acc, node, address, order, label)
-    inner = reduced_term(block, env, acc, node.args[0], address, order)
+        return _label_expectation(block, env, acc, node, address, order, label, guards=guards)
+    inner = reduced_term(block, env, acc, node.args[0], address, order, guards=guards)
     suffix = _suffix(block, env, address)
     occurrence = Identity("Expectation", address=address, occurrence=n, owner=suffix)
     if any(row.identity == occurrence for row in acc.rows):
@@ -893,7 +930,10 @@ def expectation_rows(block, env, acc, node, address, order):
             ),
         )
     given, selection = _selected_conditional(block, env, acc, shocks, inner, occurrence, address)
-    integrand, printed = _integrand(block, env, acc, node, inner, address, n, suffix, shocks)
+    guard_shocks = frozenset().union(*(test.shocks for _, test, _ in guards))
+    integrand, printed = _integrand(
+        block, env, acc, node, inner, address, n, suffix, shocks, guards, guard_shocks
+    )
     result = dataclasses.replace(occurrence, mark="result")
     owners = selection.declarations
     acc.rows.append(
@@ -907,7 +947,8 @@ def expectation_rows(block, env, acc, node, address, order):
             outputs=(result,),
             references=tuple(owner.identity for owner in owners) + _policies(block),
             distribution=owners[0].identity if owners else None,
-            arguments=env.domain.base + shocks_in_header_order(block, env, given),
+            arguments=env.domain.base
+            + shocks_in_header_order(block, env, set(given) | guard_shocks),
             node=env.node,
             maps=(wire_symbol(integrand),),
             equations=(printed,),
@@ -926,12 +967,10 @@ def expectation_rows(block, env, acc, node, address, order):
         )
     )
     acc.roles[result] = acc.roles.get(integrand)
-    paths = tuple((label, cover | frozenset(shocks)) for label, cover in inner.paths)
     folded = _ReducedTerm(
         wire_symbol(result),
         active=frozenset(given),
         history=_history_after(inner, shocks, given, occurrence),
-        paths=paths,
     )
     env.occurrences[(address, n)] = folded
     return folded
@@ -971,21 +1010,23 @@ def _selected_conditional(block, env, acc, shocks, inner, occurrence, address):
     return given, selection
 
 
-def _integrand(block, env, acc, node, inner, address, n, suffix, shocks):
+def _integrand(block, env, acc, node, inner, address, n, suffix, shocks, guards, guard_shocks):
     """The wire an expectation integrates and the term its row prints: the
     folded integrand itself where it is one bare result; otherwise the result
     of the pending aggregation made for it, whose role is the integrand's value
     role or that of the output its line defines, printed as `E_{…}(w)`."""
     ctx = block.ctx
     role = value_role_of(acc, inner.term)
-    if is_wire_symbol(inner.term):
+    if is_wire_symbol(inner.term) and not guards:
         return inner.term.symbol.name, node.args[0]
+    authored = _guarded_term(node.args[0], ((test, branch) for test, _, branch in guards))
+    mapped = _guarded_term(inner.term, ((test.term, branch) for _, test, branch in guards))
     integrand = Identity("Aggregation", address=address, occurrence=n, owner=suffix, mark="result")
     check_value_roles(block, acc, address, inner.term)
     if role is None:
         defined = defined_field(ctx, block.name, retained_term_at(block.lines, address))
         role = ctx.role(defined) if defined in block.cod else None
-    inputs = wires_read(inner.term) or (
+    inputs = wires_read(mapped) or (
         () if block.written_controls else (_formal(block, env, acc, role, address),)
     )
     aggregation_row(
@@ -996,12 +1037,21 @@ def _integrand(block, env, acc, node, inner, address, n, suffix, shocks):
         statements=(address,),
         inputs=inputs,
         outputs=(integrand,),
-        maps=(inner.term,),
-        cores=(node.args[0],),
-        coordinates=env.domain.base + shocks_in_header_order(block, env, inner.shocks),
+        maps=(mapped,),
+        cores=(authored,),
+        coordinates=env.domain.base
+        + shocks_in_header_order(block, env, inner.shocks | guard_shocks),
     )
     acc.roles[integrand] = role or (acc.roles.get(inputs[0]) if inputs else None)
     return integrand, "E_{" + ",".join(shocks) + "}(w)"
+
+
+def _guarded_term(term, guards):
+    """Extend a scalar integrand by zero where its branch is inactive."""
+    for test, positive in reversed(tuple(guards)):
+        zero = T.Number(0)
+        term = T.Conditional(test, term, zero) if positive else T.Conditional(test, zero, term)
+    return term
 
 
 def _history_after(inner, shocks, given, occurrence):
@@ -1021,7 +1071,7 @@ def _label_shock(block, shocks):
     return identity if block.ctx.labels(identity) else None
 
 
-def _label_expectation(block, env, acc, node, address, order, label):
+def _label_expectation(block, env, acc, node, address, order, label, *, guards=()):
     """The expectation over the shock that selects a branch: the
     weighted case operation Σ_j p(j | x) Q_j(x) at the decision state, a term
     of the aggregation that holds the line and no row of its own; the label is
@@ -1030,13 +1080,18 @@ def _label_expectation(block, env, acc, node, address, order, label):
     n = order[id(node)]
     if (address, n) in env.occurrences:
         return env.occurrences[(address, n)]
-    inner = reduced_term(block, env, acc, node.args[0], address, order)
+    inner = reduced_term(block, env, acc, node.args[0], address, order, guards=guards)
+    term = T.Operator("E", node.subs, (inner.term,))
+    if label.field in block.ctx.law_formals:
+        owner = next(owner for owner in block.plan.owners if label.field in owner.subjects)
+        case = label_case(block.ctx, term, block.name, owner=owner)
+        if case is not None:
+            term = case
     folded = _ReducedTerm(
-        T.Operator("E", node.subs, (inner.term,)),
+        term,
         active=inner.active - {label.field},
         read=tuple((shock, where) for shock, where in inner.read if shock != label.field),
         history=inner.history + ((label.field, address),),
-        paths=tuple((text, cover | {label.field}) for text, cover in inner.paths),
     )
     env.occurrences[(address, n)] = folded
     return folded
@@ -1094,7 +1149,7 @@ def pullback_wire(block, env, acc, identity):
     function = ctx.function_wire(identity)
     if ctx.role(identity) in VALUE_ROLES:
         acc.roles.setdefault(function, ctx.role(identity))
-    if g is None:
+    if g is None or (identity in ctx.ports and ctx.ports[identity].constant):
         env.pullbacks[identity] = function
         return function
     wire = dataclasses.replace(
@@ -1104,21 +1159,29 @@ def pullback_wire(block, env, acc, identity):
     )
     by_output = {}
     for core in g.equations:
-        for defined in ctx.defined(core, block.name):
+        for defined in ctx.defined(core, g.identity.address):
             by_output[defined] = right_side(core)
     # a branch value is pulled back along its section, at no policy and on the
     # decision states without the label control, since the section fixes the
     # label
     base = block.plan.bases.get(identity)
+    coordinates = (
+        ctx.dependencies(identity)
+        if ctx.role(identity) in VALUE_ROLES
+        else tuple(o for o in g.outputs if ctx.role(o) == "state")
+    )
     if base is not None:
         _, section = base
-        args = tuple(by_output[o] for o in block.plan.sections[base] if o in by_output)
+        law_outputs = block.plan.sections[base]
         policies, arguments = (), tuple(i for i in env.domain.base if not ctx.labels(i))
         placed = {"section": section}
     else:
-        args = tuple(by_output[o] for o in g.outputs if o in by_output and ctx.role(o) == "state")
+        law_outputs = g.outputs
         policies, arguments = _policies(block), env.domain.base
         placed = {"policy": policies}
+    terms = tuple(by_output[o] for o in law_outputs if o in by_output)
+    captures = _constant_arguments(ctx, g, terms)
+    args = tuple(by_output[o] for o in coordinates if o in by_output)
     pulled = T.Equation(ctx.symbol(identity), T.Call(identity.field, args))
     owner = block.name if env.node is None else env.owner
     acc.rows.append(
@@ -1128,11 +1191,12 @@ def pullback_wire(block, env, acc, identity):
             builder=block.name,
             direction="backward",
             statements=(),
-            inputs=(function,),
+            inputs=(function, *captures),
             outputs=(wire,),
             references=(g.identity,) + policies,
             definition=g.identity,
-            arguments=arguments + shocks_in_header_order(block, env, env.domain.shocks),
+            arguments=arguments
+            + shocks_in_header_order(block, env, _transition_shocks(ctx, g, coordinates)),
             node=env.node,
             equations=(pulled,),
             **placed,
@@ -1142,6 +1206,29 @@ def pullback_wire(block, env, acc, identity):
         acc.roles[wire] = ctx.role(identity)
     env.pullbacks[identity] = wire
     return wire
+
+
+def _constant_arguments(ctx, law, terms):
+    """The continuation constant wires a law's output equations read."""
+    inputs = tuple(
+        identity for identity in law.inputs
+        if identity in ctx.ports and ctx.ports[identity].constant
+    )
+    if not inputs:
+        return ()
+    block = law.identity.address
+    read = {
+        ctx.resolve(name, block, side)
+        for term in terms
+        for name, side in symbol_occurrences(term)
+    }
+    read.update(
+        ctx.resolve(node.fun, block)
+        for term in terms
+        for node in term_nodes(term)
+        if isinstance(node, T.Call) and isinstance(node.fun, str)
+    )
+    return tuple(ctx.function_wire(identity) for identity in inputs if identity in read)
 
 
 def _formal(block, env, acc, role, address):
@@ -1210,10 +1297,7 @@ def shocks_in_header_order(block, env, shocks):
 
 
 def check_output_shocks(block, env, identity, address, folded):
-    """The check that an output of the block has no active shock and that
-    every shock of the edge is integrated on each of its genuine paths
-    (AMD-SG-008 §4; rule shock-observed)."""
-    ctx = block.ctx
+    """Refuse an output with a shock that remains after substitution and binding."""
     edge = env.domain.edge
     output = spelled_with_mark(
         (identity.field, {"arvl": T.Arrival(), "cntn": T.Continuation()}.get(identity.perch))
@@ -1234,22 +1318,6 @@ def check_output_shocks(block, env, identity, address, folded):
             f"E_{{{','.join(residual)}}}(…) around the term that depends on it",
             write=f"Write E_{{{','.join(residual)}}}(…) around the term that depends on it",
         )
-    shocks = edge.shocks if edge else ()
-    for label, cover in folded.paths:
-        missing = [s for s in shocks if s not in cover]
-        if missing:
-            integrated = ", ".join(s for s in shocks if s in cover) or "no shock"
-            refuse_backward_block(
-                block,
-                "shock-observed",
-                address,
-                f"the output {output} of builder {block.name!r} is reached from {label} by a path "
-                f"that integrates {integrated} and not {', '.join(missing)}; every shock of the "
-                f"edge of {edge.block!r} ({', '.join(shocks)}) is integrated on each path to an "
-                f"output, and one path's integral does not cover another (AMD-SG-008 §4, D28; "
-                f"rule shock-observed); integrate E_{{{','.join(shocks)}}}(…) on that path",
-                write=f"Integrate E_{{{','.join(shocks)}}}(…) on that path",
-            )
 
 
 def check_value_roles(block, acc, address, term):

@@ -47,7 +47,7 @@ def build_parser(strict=False, retired=False):
     default changes nothing here. The package parses with `strict=False`;
     `strict=True`, which needs `interegular`, is the certificate that the
     grammar has no parser-table conflict and no lexer collision, built by
-    `tests/test_spec07_u1_grammar.py` and not re-checked at every import.
+    `tests/test_parsing.py` and not re-checked at every import.
     With `retired`, the grammar is the language's with the rules of
     `retired.lark` added, which `parse_text` reads a refused text with."""
     return Lark(
@@ -149,6 +149,7 @@ FORMS = {
     "RELOP": "a comparison, <=, >=, ≤, ≥, < or >",
     # what a name, a number and the reserved glyphs are called
     "NAME": "a name",
+    "LOCAL_NAME": "a local name starting with an underscore",
     "NUMBER": "a number",
     "INFTY": "inf",
     "BBSET": "a reserved set, ℝ, ℝ₊, ℝ₊₊, ℝ̄, ℝ_{+∞}, ℕ or ℤ",
@@ -415,9 +416,10 @@ def syntax_refusal(error, text, origin):
 # before the place the parser stopped at
 _CONDITIONAL_PLACE = (
     "a conditional, `if … then … else …`, stands as the whole right side of a definition "
-    "without arguments, `x := if a < b then 1 else 2`, with or without a declared set, "
-    "`x : (0, 3) := if a < b then 1 else 2`, or as a branch of another conditional; it stands "
-    f"inside no formula, no function's body and no line of a block; {CASE_WORDS_ARE_NO_NAMES}"
+    "without arguments, `x := if a < b then 1 else 2`, with or without a declared set. "
+    "It can also be the whole right side of a block equation, "
+    "`x = if a < b then 1 else 2`, or a branch of another conditional. "
+    f"{CASE_WORDS_ARE_NO_NAMES}"
 )
 
 

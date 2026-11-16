@@ -1,11 +1,9 @@
 # Parameters of the stage shocks of the pension model (Dobrescu, Shanker,
 # Bateman, Newell and Thorp 2023, Section 5 and Table 4, males), in units of
-# $100,000 as the code's settings use. Y is the earnings level at the age of
-# the period; it is zero in the retirement years.
+# $100,000 as the code's settings use.
 calibration:
   R: 1.0223
   δ: 0.011
-  Y: 0.0
   φ: 0.9044
   σ_u: 0.0922
   r_r: 0.0476

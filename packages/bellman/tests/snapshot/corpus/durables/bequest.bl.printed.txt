@@ -1,0 +1,570 @@
+BELLMAN-SYM / STAGE bequest                               [VERSION = SYMBOLIC]
+a stage occurrence of
+applications/durables/declaration/stages/bequest/bequest.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        a_bq≺ state, h_bq≺ state, z_bq≺ state, V≺ value, age≺ value
+  ∼ decision       x state, V value, age value
+  ≻ continuation   V≻ value, age≻ value
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           a_bq≺ at arrival, h_bq≺ at arrival, z_bq≺ at arrival, x at
+                   decision
+  controls         none
+  values           V at every perch; age at every perch
+  shocks           none
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → arvl_to_dcsn   (a_bq≺, h_bq≺, z_bq≺) : !arvl -> (x) : !dcsn
+  ← cntn_to_dcsn   (V≻, age≻) : !cntn -> (V, age) : !dcsn
+  ← dcsn_to_arvl   (V, age) : !dcsn -> (V≺, age≺) : !arvl
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  sets                     1   Age := {20, …, 71}
+  parameters               7   θ : ℝ₊₊; K : ℝ₊₊; α : (0, 1); γ_c : (1, inf);
+                               R : ℝ₊₊; R_H : ℝ₊₊; δ : [0, 1)
+  laws of motion           1   x = R*a_bq + R_H*(1 - δ)*h_bq
+  value aggregators        2   V = θ*α*(K + x)^(1 - γ_c)/(1 - γ_c) + V[>];
+                               V[<] = V
+  block lines              3   arvl_to_dcsn.wealth, cntn_to_dcsn.value,
+                               dcsn_to_arvl.value
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   (𝑉≻, 𝑎𝑔𝑒≻) ↦ 𝑉≺, 𝑎𝑔𝑒≺
+                    forward    μ≺ ↦ μ
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ≺ a_bq≺, h_bq≺, z_bq≺  →  ∼ x
+  backward   ≺ V≺, age≺  ←  ∼ V, age  ←  ≻ V≻, age≻
+
+==== stage ====
+STAGE bequest
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑉≻    : {()} → ℝ
+         𝑎𝑔𝑒≻  : {()} → Age
+         ────────────────────────────────────────────
+    out  𝑉≺    : ℝ₊ × ℝ₊₊ → ℝ
+         𝑎𝑔𝑒≺  : {()} → Age
+  forward
+    in   μ≺    : finite measure on ℝ₊ × ℝ₊₊ × ℝ₊₊
+         ────────────────────────────────────────────
+    out  μ     : finite measure on ℝ₊₊
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉≻, 𝑎𝑔𝑒≻                     out: 𝑉, 𝑎𝑔𝑒
+
+    2  dcsn_to_arvl
+       in: 𝑉, 𝑎𝑔𝑒                       out: 𝑉≺, 𝑎𝑔𝑒≺
+
+  forward
+    1  arvl_to_dcsn
+       in: μ≺                           out: μ
+
+Conditions
+  cntn_to_dcsn:Aggregation  𝑉(x) ∈ ℝ
+  cntn_to_dcsn:Aggregation  𝑎𝑔𝑒 ∈ Age
+  dcsn_to_arvl:Aggregation  𝑉≺(a_bq, h_bq) ∈ ℝ
+  dcsn_to_arvl:Aggregation  𝑎𝑔𝑒≺ ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  14  x = R*a_bq + R_H*(1 - δ)*h_bq           :: [id=wealth]
+  19  V = θ*α*(K + x)^(1-γ_c)/(1-γ_c) + V[>]  :: [id=value]
+  23  V[<] = V                                :: [id=value]
+
+Definitions referenced
+  Age   bequest:set:Age
+
+File
+  applications/durables/declaration/stages/bequest/bequest.bl
+
+Perches
+  ≺  arrival, written [<]
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE bequest / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻    : {V≻, age≻}
+       age≻  : {age≻}
+       ──────────────────
+  out  V     : {V, age}
+       age   : {age}
+
+Conditions
+  𝑉(x) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  19  V = θ*α*(K + x)^(1-γ_c)/(1-γ_c) + V[>]  :: [id=value]
+
+Definitions referenced
+  Age   bequest:set:Age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward dcsn_to_arvl ====
+STAGE bequest / BACKWARD BLOCK dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V     : {V, age}
+       age   : {age}
+       ──────────────────
+  out  V≺    : {V≺, age≺}
+       age≺  : {age≺}
+
+Conditions
+  𝑉≺(a_bq, h_bq) ∈ ℝ
+  𝑎𝑔𝑒≺ ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  23  V[<] = V  :: [id=value]
+
+Definitions referenced
+  Age   bequest:set:Age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward arvl_to_dcsn ====
+STAGE bequest / FORWARD BLOCK arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a_bq≺  : {a_bq≺, h_bq≺, z_bq≺}
+       h_bq≺  : {h_bq≺, z_bq≺}
+       z_bq≺  : {h_bq≺, z_bq≺}
+       ──────────────────────────────
+  out  x      : {x}
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  14  x = R*a_bq + R_H*(1 - δ)*h_bq  :: [id=wealth]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE bequest / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻    : {()} → ℝ
+       𝑎𝑔𝑒≻  : {()} → Age
+       ────────────────────────────────────────────
+  out  𝑉     : ℝ₊₊ → ℝ
+       𝑎𝑔𝑒   : {()} → Age
+
+Operations
+  1  Aggregation
+     in: 𝑉≻, 𝑎𝑔𝑒≻                       out: 𝑉, 𝑎𝑔𝑒
+     ──────────────────────────────────────────────
+     rule: 𝑉(x) = θ · α · (K + x)^(1 − γ_c)/(1 − γ_c) + 𝑉≻
+           𝑎𝑔𝑒(x) = 𝑎𝑔𝑒≻()
+
+  2  Evaluation
+     in: 𝑉, 𝑎𝑔𝑒                         out: 𝑉, 𝑎𝑔𝑒
+     ──────────────────────────────────────────────
+     rule: 𝑉 : ℝ₊₊ → ℝ
+           𝑎𝑔𝑒 : {()} → Age
+
+Conditions
+  Aggregation  𝑉(x) ∈ ℝ
+  Aggregation  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  19  V = θ*α*(K + x)^(1-γ_c)/(1-γ_c) + V[>]  :: [id=value]
+
+Definitions referenced
+  Age   bequest:set:Age
+  θ     bequest:parameter:θ
+  K     bequest:parameter:K
+  α     bequest:parameter:α
+  γ_c   bequest:parameter:γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE bequest / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻    : {()} → ℝ
+       𝑎𝑔𝑒≻  : {()} → Age
+       ──────────────────
+  out  𝑉     : ℝ₊₊ → ℝ
+       𝑎𝑔𝑒   : ℝ₊₊ → Age
+
+Rule
+  𝑉(x) = θ · α · (K + x)^(1 − γ_c)/(1 − γ_c) + 𝑉≻
+  𝑎𝑔𝑒(x) = 𝑎𝑔𝑒≻()
+
+Conditions
+  𝑉(x) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  19  V = θ*α*(K + x)^(1-γ_c)/(1-γ_c) + V[>]  :: [id=value]
+
+Definitions referenced
+  Age   bequest:set:Age
+  θ     bequest:parameter:θ
+  K     bequest:parameter:K
+  α     bequest:parameter:α
+  γ_c   bequest:parameter:γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE bequest / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉    : ℝ₊₊ → ℝ
+       𝑎𝑔𝑒  : ℝ₊₊ → Age
+       ─────────────────
+  out  𝑉    : ℝ₊₊ → ℝ
+       𝑎𝑔𝑒  : {()} → Age
+
+Rule
+  𝑉(x) = θ · α · (K + x)^(1 − γ_c)/(1 − γ_c) + 𝑉≻
+  𝑉 : ℝ₊₊ → ℝ
+  𝑎𝑔𝑒(x) = 𝑎𝑔𝑒≻()
+  𝑎𝑔𝑒 : {()} → Age
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Age   bequest:set:Age
+  θ     bequest:parameter:θ
+  K     bequest:parameter:K
+  α     bequest:parameter:α
+  γ_c   bequest:parameter:γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl ====
+STAGE bequest / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉     : ℝ₊₊ → ℝ
+       𝑎𝑔𝑒   : {()} → Age
+       ──────────────────────────────────────────────
+  out  𝑉≺    : ℝ₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒≺  : {()} → Age
+
+Operations
+  1  Pullback
+     in: 𝑉                              out: 𝑉 ∘ 𝑔≺
+     ────────────────────────────────────────────────
+     rule: (𝑉 ∘ 𝑔≺)(a_bq, h_bq, z_bq) = 𝑉(𝑔≺(a_bq, h_bq, z_bq))
+
+  2  Aggregation
+     in: (1), 𝑎𝑔𝑒                       out: 𝑉≺, 𝑎𝑔𝑒≺
+     ────────────────────────────────────────────────
+     rule: 𝑉≺ = 𝑉(𝑔≺(a_bq, h_bq, z_bq))
+           on (a_bq, h_bq, z_bq) ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊
+           𝑎𝑔𝑒≺ = 𝑎𝑔𝑒()                 on (a_bq, h_bq, z_bq) ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊
+
+  3  Evaluation
+     in: 𝑉≺, 𝑎𝑔𝑒≺                       out: 𝑉≺, 𝑎𝑔𝑒≺
+     ────────────────────────────────────────────────
+     rule: 𝑉≺ : ℝ₊ × ℝ₊₊ → ℝ
+           𝑎𝑔𝑒≺ : {()} → Age
+
+Conditions
+  Aggregation  𝑉≺(a_bq, h_bq) ∈ ℝ
+  Aggregation  𝑎𝑔𝑒≺ ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  23  V[<] = V  :: [id=value]
+
+Definitions referenced
+  Age   bequest:set:Age
+  𝑔≺    bequest:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Pullback ====
+STAGE bequest / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : ℝ₊₊ → ℝ
+       ───────────────────────
+  out  𝑉 ∘ 𝑔≺
+          : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+
+Rule
+  (𝑉 ∘ 𝑔≺)(a_bq, h_bq, z_bq) = 𝑉(𝑔≺(a_bq, h_bq, z_bq))
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  14  x = R*a_bq + R_H*(1 - δ)*h_bq  :: [id=wealth]
+
+Definitions referenced
+  𝑔≺    bequest:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Aggregation ====
+STAGE bequest / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉 ∘ 𝑔≺
+             : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒   : {()} → Age
+       ────────────────────────────
+  out  𝑉≺    : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒≺  : ℝ₊ × ℝ₊₊ × ℝ₊₊ → Age
+
+Rule
+  𝑉≺ = 𝑉(𝑔≺(a_bq, h_bq, z_bq))          on (a_bq, h_bq, z_bq) ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊
+  𝑎𝑔𝑒≺ = 𝑎𝑔𝑒()                          on (a_bq, h_bq, z_bq) ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊
+
+Conditions
+  𝑉≺(a_bq, h_bq) ∈ ℝ
+  𝑎𝑔𝑒≺ ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  23  V[<] = V  :: [id=value]
+
+Definitions referenced
+  Age   bequest:set:Age
+  𝑔≺    bequest:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Evaluation ====
+STAGE bequest / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≺    : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒≺  : ℝ₊ × ℝ₊₊ × ℝ₊₊ → Age
+       ────────────────────────────
+  out  𝑉≺    : ℝ₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒≺  : {()} → Age
+
+Rule
+  𝑉≺ = 𝑉(𝑔≺(a_bq, h_bq, z_bq))          on (a_bq, h_bq, z_bq) ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊
+  𝑉≺ : ℝ₊ × ℝ₊₊ → ℝ
+  𝑎𝑔𝑒≺ = 𝑎𝑔𝑒()                          on (a_bq, h_bq, z_bq) ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊
+  𝑎𝑔𝑒≺ : {()} → Age
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Age   bequest:set:Age
+  𝑔≺    bequest:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn ====
+STAGE bequest / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on ℝ₊ × ℝ₊₊ × ℝ₊₊
+       ───────────────────────────────────────
+  out  μ   : finite measure on ℝ₊₊
+
+Operations
+  1  Pushforward
+     in: μ≺                             out: μ
+     ─────────────────────────────────────────
+     rule: μ(B)
+             = μ≺({a_bq≺, h_bq≺, z_bq≺ ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊ |
+                    𝑔≺(a_bq≺, h_bq≺, z_bq≺) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  14  x = R*a_bq + R_H*(1 - δ)*h_bq  :: [id=wealth]
+
+Definitions referenced
+  𝑔≺    bequest:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / Pushforward ====
+STAGE bequest / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on ℝ₊ × ℝ₊₊ × ℝ₊₊
+       ──────────────────────────────────────
+  out  μ   : finite measure on ℝ₊₊
+
+Rule
+  μ(B)
+    = μ≺({a_bq≺, h_bq≺, z_bq≺ ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊ | 𝑔≺(a_bq≺, h_bq≺, z_bq≺) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  14  x = R*a_bq + R_H*(1 - δ)*h_bq  :: [id=wealth]
+
+Definitions referenced
+  𝑔≺    bequest:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bequest:set:Age ====
+STAGE bequest / SET Age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Age  = {20, …, 71}
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  3  Age := {20, …, 71}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bequest:parameter:θ ====
+STAGE bequest / PARAMETER θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  θ  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  5  θ   : ℝ₊₊  :: ["weight of the bequest in utility"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bequest:parameter:K ====
+STAGE bequest / PARAMETER K
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  K  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  6  K   : ℝ₊₊  :: ["shift of the bequest utility"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bequest:parameter:α ====
+STAGE bequest / PARAMETER α
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  α  ∈ (0, 1)
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  7  α   : (0,1)  :: ["weight of consumption in utility"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bequest:parameter:γ_c ====
+STAGE bequest / PARAMETER γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  γ_c  ∈ (1, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  8  γ_c : (1, inf)  :: ["curvature of utility from consumption"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bequest:parameter:R ====
+STAGE bequest / PARAMETER R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  R  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  9  R   : ℝ₊₊  :: ["gross return on financial assets"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bequest:parameter:R_H ====
+STAGE bequest / PARAMETER R_H
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  R_H  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  10  R_H : ℝ₊₊
+        :: ["gross return on housing, received when the house is sold"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bequest:parameter:δ ====
+STAGE bequest / PARAMETER δ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  δ  ∈ [0, 1)
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  11  δ   : [0,1)  :: ["depreciation rate of housing"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.wealth ====
+STAGE bequest / FORWARD BLOCK arvl_to_dcsn / wealth
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  bequest.bl
+  14  x = R*a_bq + R_H*(1 - δ)*h_bq  :: [id=wealth]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.value ====
+STAGE bequest / BACKWARD BLOCK cntn_to_dcsn / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(x) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  19  V = θ*α*(K + x)^(1-γ_c)/(1-γ_c) + V[>]  :: [id=value]
+
+Definitions referenced
+  Age   bequest:set:Age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.value ====
+STAGE bequest / BACKWARD BLOCK dcsn_to_arvl / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉≺(a_bq, h_bq) ∈ ℝ
+  𝑎𝑔𝑒≺ ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  23  V[<] = V  :: [id=value]
+
+Definitions referenced
+  Age   bequest:set:Age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bequest:g:arvl_to_dcsn ====
+STAGE bequest / LAW OF MOTION arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≺  : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ₊₊,
+        (a_bq, h_bq, z_bq) ↦ R · a_bq + R_H · (1 − δ) · h_bq
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  14  x = R*a_bq + R_H*(1 - δ)*h_bq  :: [id=wealth]
+
+Definitions referenced
+  R     bequest:parameter:R
+  R_H   bequest:parameter:R_H
+  δ     bequest:parameter:δ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bequest:G:cntn_to_dcsn ====
+STAGE bequest / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : ℝ × Age × ℝ₊₊ → ℝ × Age,
+        (V≻, age, x) ↦ (θ · α · (K + x)^(1 − γ_c)/(1 − γ_c) + V≻, age)
+
+Conditions
+  𝑉(x) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  19  V = θ*α*(K + x)^(1-γ_c)/(1-γ_c) + V[>]  :: [id=value]
+
+Definitions referenced
+  Age   bequest:set:Age
+  θ     bequest:parameter:θ
+  K     bequest:parameter:K
+  α     bequest:parameter:α
+  γ_c   bequest:parameter:γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bequest:G:dcsn_to_arvl ====
+STAGE bequest / VALUE AGGREGATOR dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≺  : ℝ × Age × ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ × Age,
+        (V, age, a_bq, h_bq, z_bq) ↦ (V, age)
+
+Conditions
+  𝑉≺(a_bq, h_bq) ∈ ℝ
+  𝑎𝑔𝑒≺ ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  23  V[<] = V  :: [id=value]
+
+Definitions referenced
+  Age   bequest:set:Age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

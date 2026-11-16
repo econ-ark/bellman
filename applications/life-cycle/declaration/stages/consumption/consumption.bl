@@ -1,0 +1,47 @@
+@stage: consumption
+# The budget reads the current-age income schedule. Only this stage changes the age field in the backward recursion.
+
+Xa := ℝ₊                  :: ["assets"]
+Xm := ℝ₊₊                 :: ["cash on hand"]
+J : ℤ @ [1, inf)          :: ["number of ages"]
+Ages := {0, …, J - 1}
+Clock := {0, …, J}        :: ["the ages, and J, which the stage after the last age sends back"]
+Z := {1, 2, 3}
+
+β : (0,1)                 :: ["discount factor"]
+ρ : (1, inf)              :: ["coefficient of relative risk aversion"]
+R : ℝ₊₊                   :: ["gross return, an input of the date"]
+w : ℝ₊₊                   :: ["wage, an input of the date"]
+τ : [0,1)                 :: ["tax rate, an input of the date"]
+I : ℝ₊                    :: ["inheritance, an input of the date"]
+F : Ages → ℝ₊₊            :: ["age factor of productivity"]
+ζ : Z → ℝ₊₊               :: ["productivity in each state"]
+work : Ages → {0,1}       :: ["one at a working age, zero at a retirement age"]
+
+𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)                                 :: [id=util]
+𝑦(z : Z, j : Ages) := (work[j]*w + 1 - work[j])*F[j]*ζ[z]   :: [id=income]
+Γ_c(x : ℝ₊₊) := (0, x]                                      :: [id=feasible_consumption]
+
+[id=arvl_to_dcsn, (z_3 : Z, a_3 : Xa, age_next) : !arvl -> (z_c : Z, m : Xm) : !dcsn] {
+    z_c = z_3
+    m   = R*(a_3 + I) + (1 - τ)*𝑦(z_3, age_next - 1)                 :: [id=cash_on_hand]
+}
+
+[id=dcsn_to_cntn, (z_c, m, c : ℝ₊₊ @ !ctrl) : !dcsn -> (z_4 : Z, a_4 : Xa) : !cntn] {
+    z_4 = z_c
+    a_4 = m - c                                             :: [id=savings]
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, age_next : Clock @ !vlu @ !cnst, c) : !cntn -> (V : ℝ @ !vlu, age : Ages @ !vlu @ !cnst) : !dcsn] {
+    V   = 𝑢(c) + β*V[>]                                     :: [id=value]
+    age = age_next - 1                                      :: [id=clock]
+}
+
+[id=dcsn_to_arvl, (V, age) : !dcsn -> (V[<] : ℝ @ !vlu, age) : !arvl] {
+    V[<] = V                                                :: [id=value]
+    D_{a_3}V[<] = R*D_{m}V  :: [id=marginal_arrival]
+}
+
+[id=policy, (V[>]) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+    c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])                :: [id=optimality]
+}

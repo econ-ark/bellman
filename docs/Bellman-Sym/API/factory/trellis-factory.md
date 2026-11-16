@@ -100,11 +100,13 @@ The call returns the list of positions `(h, key)` whose stage occurrence in `aft
 bellman.trellis.diagram_trellis(trellis, periods=None)
 ```
 
-The call returns a drawing of the periods of an elaborated trellis, every one or those whose indices `periods` lists, of the kind a graph's `diagram()` returns. Each period is drawn as `diagram_period` draws it, inside a frame labeled `periods[h]` with `h` and, where the trellis's `registry` holds `last_age`, the age `last_age − h`; the drawing's `labels` name each stage `periods[h] <key>`, its period's address and its key. The terminal period stands at the right and the earlier periods to its left, so that economic time runs from left to right and the backward computation from right to left, the two directions written in the drawing's title. Every inter-period connector `inter_connectors[h]` whose two periods are drawn is drawn as [wires](../stage/02-initial.md) from the continuation fields that leave `periods[h + 1]` to the arrival fields of `periods[h]`, each wire labeled with the mapping's index and its field pair; a period with no mapping to its neighbor is drawn with no wire. The drawing is built from the dictionary when it is asked for and stored nowhere; the trellis is not itself a graph object. The same trellis is read interactively in Google's Model Explorer, where each period and each stage occurrence inside it is a box that opens with a click, and each join is drawn between the wires of the two occurrences it joins ([The view in Model Explorer](../stage/10-model-explorer.md) §5).
+The call returns a drawing of the periods of an elaborated trellis, every one or those whose indices `periods` lists, of the kind a graph's `diagram()` returns. Each period is drawn as `diagram_period` draws it, inside a frame labeled `periods[h]` with its position `h`; the drawing's `labels` name each stage `periods[h] <key>`, its period's address and its key. The terminal period stands at the right and the earlier periods to its left, so that economic time runs from left to right and the backward computation from right to left, the two directions written in the drawing's title. Every inter-period connector `inter_connectors[h]` whose two periods are drawn is drawn as [wires](../stage/02-initial.md) from the continuation fields that leave `periods[h + 1]` to the arrival fields of `periods[h]`, each wire labeled with the mapping's index and its field pair; a period with no mapping to its neighbor is drawn with no wire. The drawing is built from the dictionary when it is asked for and stored nowhere; the trellis is not itself a graph object. The same trellis is read interactively in Google's Model Explorer, where each period and each stage occurrence inside it is a box that opens with a click, and each join is drawn between the wires of the two occurrences it joins ([The view in Model Explorer](../stage/10-model-explorer.md) §5).
 
-## 7 Period indices and the terminal value
+<a id="7-period-indices-and-the-terminal-value"></a>
 
-The index `h` counts periods before the terminal one. `periods[0]` is the terminal period, `periods[h + 1]` lies one period before `periods[h]`, and `inter_connectors[h]` joins the continuation fields that leave `periods[h + 1]` to the arrival fields of `periods[h]`, so that backward computation proceeds from `h = 0` to larger `h`. The **terminal value** is the continuation value that a stage of the terminal period reads, for the durables model the bequest stage, whose continuation value is zero and is supplied as boundary data at realization; no entry of `inter_connectors` is reserved for it, and `len(inter_connectors)` is `len(periods) - 1`.
+## 7 Period indices and terminal data
+
+The index `h` counts periods before the terminal one. `periods[0]` is the terminal period, `periods[h + 1]` lies one period before `periods[h]`, and `inter_connectors[h]` joins the continuation fields that leave `periods[h + 1]` to the arrival fields of `periods[h]`, so that backward computation proceeds from `h = 0` to larger `h`. At realization the user supplies [terminal data](../../07-trellis.md#2-inter-period-connectors) for every unconnected continuation field of the terminal period. This includes a zero value function where the terminal equation uses one, and any constants such as age. The trellis holds the joins and no terminal data: its `inter_connectors` list has one mapping for each adjacent pair of periods, so that `len(inter_connectors)` is `len(periods) - 1`.
 
 ## 8 The entries of a model's files
 
@@ -134,12 +136,16 @@ The writer tries an available qualified spelling; if the proposed entry would
 replace an existing key, it returns `source-authored` and identifies that mapping.
 Correct or remove the existing entry before asking to replace it.
 
-## 9 Inspect the selected connections
+<a id="9-inspect-the-selected-connections"></a>
+
+## 9 The connection report
 
 ```python
 from bellman.trellis import connection_report, to_model_explorer
 
 report = connection_report(trellis)
+for condition in report.obligations:
+    print(condition)
 view = to_model_explorer(trellis, periods=(0, 1), selection=report.selection)
 ```
 
@@ -147,7 +153,7 @@ view = to_model_explorer(trellis, periods=(0, 1), selection=report.selection)
 
 Each pair identifies both period indices, stage keys, local fields and perches, whether it was authored or inferred, and its compatibility judgment. An authored pair also records `source_address`, `source_key` and `source_value`: the expanded mapping address and exact written endpoints. `written_at(file, pair.source_address)` finds the physical mapping, including a shared period template. Inferred pairs have no authored source entry. The original `address` continues to name the connector group.
 
-A period or stage restriction filters the report's pairs, routes, diagnostics, rejected candidates, unjoined fields and bindings. Its `selection` and `counts` still describe the complete trellis. Reuse `selection` only with the exact stage occurrences, connectors and effective bindings that produced it; a changed reading requires a new selection. The report, Model Explorer view and `unpaired_joins` can share that result, so changing a display restriction does not require another selection or stage construction.
+A period or stage restriction filters the report's pairs, routes, diagnostics, rejected candidates, unjoined fields and bindings. Its `selection` and `counts` still describe the complete trellis. The tuple `obligations` includes the required `initial-law-supported` condition on the joint law of the external arrival coordinates of `periods[-1]`, the first period in time. The condition requires mass one on the period's admissible arrival set. A filter that includes any of those coordinates retains the entire joint condition, including the other coordinates. The report checks no supplied law and infers no independence. Reuse `selection` only with the exact stage occurrences, connectors and effective bindings that produced it; a changed reading requires a new selection. The report, Model Explorer view and `unpaired_joins` can share that result, so changing a display restriction does not require another selection or stage construction.
 
 ### 9.1 Inspect an unfinished model
 

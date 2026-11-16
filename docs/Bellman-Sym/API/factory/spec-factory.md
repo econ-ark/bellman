@@ -108,7 +108,7 @@ A mapping whose every top-level key is one of `calibration` and `settings` is re
 
 ### 2.4 The registry block
 
-A source named under `registry:` assigns names that no stage declares. They stand under the trellis's top-level `registry` key, `{kind: {name: value}}`, with their sources under the trellis's `provenance`, are bound to no stage, and are copied unread by `elaborate_trellis` and the trellis verbs; a fill of such a name changes the `registry` mapping and nothing else. They are data for the application's own functions, such as the function that evaluates the durables model's wage schedule.
+A source named under `registry:` assigns names that no stage declares. They stand under the trellis's top-level `registry` key, `{kind: {name: value}}`, with their sources under the trellis's `provenance`, are bound to no stage, and are copied unread by `elaborate_trellis` and the trellis verbs; a fill of such a name changes the `registry` mapping and nothing else. These values are available to application code. The durables model's fixed income tables are calibration sources of the tenure stage, and age enters through a field.
 
 ### 2.5 Files and parents
 

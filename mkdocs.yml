@@ -222,6 +222,7 @@ nav:
       - "E.4 Parameters and settings": bellman-calculus/catalogues/parameters-settings.md
     - "Appendix F: Operator algebra": bellman-calculus/APPX-F-OPERATOR-ALGEBRA.md
     - "Appendix G: Functional programming": bellman-calculus/APPX-G-FUNCTIONAL-PROGRAMMING.md
+    - "Appendix H: Modularity": bellman-calculus/APPX-H-MODULARITY.md
 
   # ══════════════════════════════════════════════════
   # EXAMPLES

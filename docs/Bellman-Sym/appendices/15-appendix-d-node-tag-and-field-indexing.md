@@ -250,6 +250,8 @@ position; it is not an inter-period time shift.
 > when its declared domain supplies suitable keys, as above. To apply a
 > declared function to a state, use parentheses, `𝑞(a)` (§5.3).
 
+A table key may be a marked input, such as the age in `wage_fn[age[>]][tau]`. The forward header names that input. The key's value identifies a row in the declared table, independent of the row's storage position. In a backward equation, an indexed value inherits the dependence of its key.
+
 ### 5.3 Explicit function arguments
 
 Use a declared function when the intended mathematical map and its

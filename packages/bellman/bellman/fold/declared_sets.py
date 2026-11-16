@@ -19,10 +19,11 @@ from bellman.native.predicates import And, Compare, IsInteger, Member, Not, Or
 from bellman.native.records import ArithmeticHead
 from bellman.refusals import ConstructionError
 from bellman.syntax import terms as T
-from bellman.syntax.source import to_source
+from bellman.syntax.source import may_hold_infinity, to_source, union_of
 from bellman.typing import sets
 from bellman.typing.line_unknowns import CALL_OPERATORS
 from bellman.typing.ranges import arithmetic_range, convex_hull
+from bellman.typing.typed_expressions import predicate_text
 
 # --- the declared sets of a field at its sites ---
 
@@ -111,6 +112,14 @@ def right_side_set(term, ctx, block, local, active=()):
         return _arithmetic_enclosure(term, ctx, block, local, active)
     if isinstance(term, T.Call):
         return _call_set(term, ctx, block, local, active, right_side_set)
+    if isinstance(term, T.Conditional):
+        branches = tuple(
+            right_side_set(branch, ctx, block, local, active)
+            for branch in (term.then, term.otherwise)
+        )
+        if all(branch is not None for branch in branches):
+            return union_of(branches)
+        return None
     if isinstance(term, T.Operator):
         if term.head == "E" and term.args:
             return _expectation_set(term, ctx, block, local, active) or REAL
@@ -123,7 +132,7 @@ def right_side_set(term, ctx, block, local, active=()):
             return ctx.sets.get(ctx.resolve(first.name, block))
         if term.head == "argmax" and term.args:
             return right_side_set(term.args[0], ctx, block, local, active)
-    if isinstance(term, T.Select) and isinstance(term.sel, T.Key):
+    if isinstance(term, T.Select) and isinstance(term.sel, (T.Key, T.Term)):
         # one key of a collection on an index set fixed: the entries' set, or
         # the collection on the remaining factors; a selection from a product
         # or a tuple keeps its earlier reading
@@ -161,7 +170,7 @@ def _declared_set(term, ctx, block, local, active=()):
         if isinstance(symbol, T.Constant) and symbol.name in local:
             return local[symbol.name]
         if isinstance(symbol, T.Constant) and symbol.name in ("inf", "∞"):
-            return None
+            return POSITIVE_INFINITY
         if isinstance(symbol, T.Constant) and symbol.name in ctx.derived:
             # a derived parameter's value is a finite real number, which the
             # calibration establishes or refuses (AMD-MT-003, build contract
@@ -215,6 +224,8 @@ def operand_set(term, ctx, block, local, active=()):
             )
             else None
         )
+    if isinstance(term, (T.Conditional, T.Select)):
+        return right_side_set(term, ctx, block, local, active)
     if isinstance(term, T.Call):
         return _call_set(term, ctx, block, local, active, operand_set)
     if isinstance(term, T.Operator) and term.head == "E" and term.args:
@@ -238,7 +249,10 @@ def _call_set(term, ctx, block, local, active, reading):
     if term.fun in CALL_OPERATORS:
         return REAL
     definition = ctx.functions.get(term.fun)
-    if definition is None or term.fun in active:
+    if definition is None:
+        declared = callable_at(term.fun, ctx, block, local)
+        return None if declared is None else declared.codomain
+    if term.fun in active:
         return None
     core = definition.equations[0]
     if isinstance(core, T.FuncDef):
@@ -250,6 +264,12 @@ def _call_set(term, ctx, block, local, active, reading):
     if isinstance(core, T.CorrDef):
         return None
     return reading(core, ctx, None, {}, active + (term.fun,))
+
+
+def callable_at(name, ctx, block, local):
+    """The declared function set of a scoped field or parameter."""
+    value = local.get(name, ctx.declared_set(ctx.resolve(name, block)))
+    return sets.callable_set(value, ctx.set_terms)
 
 
 def _arithmetic_enclosure(term, ctx, block, local, active=()):
@@ -381,7 +401,7 @@ def definedness_condition(node):
     (AMD-SG-019 §2.4)."""
     kind = type(node).__name__
     if kind == "Div":
-        return None if _constant(node.right) == 0 else Not(Compare(node.right, "=", T.Number(0)))
+        return Not(Compare(node.right, "=", T.Number(0)))
     if kind == "Pow":
         base, exponent, zero = node.base, node.exponent, T.Number(0)
         return Or(
@@ -394,38 +414,88 @@ def definedness_condition(node):
     return None
 
 
-def definedness_obligation(node, obligations, owner, ctx, set_of):
-    """The condition under which one arithmetic node is defined, recorded as an
-    obligation only where the declared sets of its operands do not decide it
-    (AMD-SG-017 §4).
+def definedness_obligation(node, obligations, owner, ctx, set_of, *, guard=None, extended=False):
+    """The conditions an arithmetic node's declared operand sets leave open.
 
-    A sum, a difference, a product or a negation asks nothing where sound
-    arithmetic enclosure decides the operation, and records
-    `finite-real-arithmetic` where it does not; its entries are the owner and
-    the head, so that two sums of one owner are recorded once. A division asks
-    nothing where the set algebra decides that 0 is no member of the
-    denominator's set, and otherwise records `arithmetic-definedness` with the
-    one clause that the denominator is not zero. A power asks nothing where the
-    base's set is contained in ℝ₊₊ and the exponent's in ℝ, and otherwise
-    records the clauses the sets leave open. A condition that is not recorded
-    is not returned either, so that no card prints under `where` what the
-    declarations already settle. Each obligation recorded is appended to
-    `obligations`.
-
-    `set_of` answers the set of an operand in the scope the caller reads it
-    in, and `None` where the declarations give it none; `ctx` carries the sets
-    the stage defines by name, through which the set algebra resolves one."""
+    A branch condition applies where its guard holds. Block lines admit
+    defined arithmetic with infinities. Definitions retain finite arithmetic.
+    """
     place = owner if isinstance(owner, Identity) else piece_identity(owner)
     kind = type(node).__name__
+    held = []
     if kind in ("Add", "Sub", "Mul"):
-        return _finite_operands(node, obligations, place, ctx, set_of)
-    if kind == "Neg":
-        return _finite_operand(node, obligations, place, ctx, set_of)
-    if kind == "Div":
-        return _nonzero_divisor(node, obligations, place, ctx, set_of)
-    if kind == "Pow":
-        return _power_domain(node, obligations, place, ctx, set_of)
-    return ()
+        operation = _extended_operands if extended else _finite_operands
+        conditions = operation(node, held, place, ctx, set_of)
+    elif kind == "Neg":
+        conditions = () if extended else _finite_operand(node, held, place, ctx, set_of)
+    elif kind == "Div":
+        conditions = _nonzero_divisor(node, held, place, ctx, set_of, guarded=guard is not None)
+        if extended:
+            conditions += _extended_operands(node, held, place, ctx, set_of)
+    elif kind == "Pow":
+        conditions = _power_domain(node, held, place, ctx, set_of, extended=extended)
+    else:
+        conditions = ()
+    if guard is not None:
+        conditions = tuple(Or(Not(guard), condition) for condition in conditions)
+        held = [
+            (
+                name,
+                tuple(
+                    Or(Not(guard), entry) if isinstance(entry, (Compare, Member, And, Or, Not))
+                    else entry
+                    for entry in entries
+                ),
+                f"{explanation} This condition applies where {predicate_text(guard)}.",
+            )
+            for name, entries, explanation in held
+        ]
+    obligations.extend(held)
+    return conditions
+
+
+def _extended_operands(node, obligations, place, ctx, set_of):
+    """The indeterminate combinations the operands' declared sets allow."""
+    left, right = node.left, node.right
+    a = sets.resolved(set_of(left), ctx.set_terms)
+    b = sets.resolved(set_of(right), ctx.set_terms)
+    infinity = (POSITIVE_INFINITY, NEGATIVE_INFINITY)
+    disallowed = []
+    if isinstance(node, (T.Add, T.Sub)):
+        pairs = ((False, True), (True, False)) if isinstance(node, T.Add) else (
+            (False, False), (True, True)
+        )
+        for left_negative, right_negative in pairs:
+            if may_hold_infinity(a, left_negative) and may_hold_infinity(b, right_negative):
+                disallowed.append(
+                    And(
+                        Member(left, infinity[left_negative]),
+                        Member(right, infinity[right_negative]),
+                    )
+                )
+    elif isinstance(node, T.Mul):
+        for other, other_set, operand, declared in ((left, a, right, b), (right, b, left, a)):
+            if not _excludes_zero(declared, ctx) and any(
+                may_hold_infinity(other_set, negative) for negative in (False, True)
+            ):
+                disallowed.append(And(Not(Member(other, REAL)), Member(operand, ZERO)))
+    elif all(
+        any(may_hold_infinity(declared, negative) for negative in (False, True))
+        for declared in (a, b)
+    ):
+        disallowed.append(And(Not(Member(left, REAL)), Not(Member(right, REAL))))
+    if not disallowed:
+        return ()
+    condition = Not(functools.reduce(Or, disallowed))
+    kind = type(node).__name__
+    obligations.append(
+        (
+            "finite-real-arithmetic",
+            (place, ArithmeticHead(kind), condition),
+            f"The operands of {kind} at {place} must have a defined result.",
+        )
+    )
+    return (condition,)
 
 
 def _finite_operands(node, obligations, place, ctx, set_of):
@@ -469,12 +539,12 @@ def _finite_operand(node, obligations, place, ctx, set_of):
     return (Member(node.operand, REAL),)
 
 
-def _nonzero_divisor(node, obligations, place, ctx, set_of):
+def _nonzero_divisor(node, obligations, place, ctx, set_of, *, guarded=False):
     """The definedness of a division: a written zero divisor refused, nothing
     where the set algebra decides that 0 is no member of the divisor's set, and
     `arithmetic-definedness` with the one clause that the divisor is not zero
     otherwise."""
-    if _constant(node.right) == 0:
+    if _constant(node.right) == 0 and not guarded:
         raise ConstructionError(
             f"`{to_source(node)}` divides by zero, which is defined at no point; a divisor "
             f"the file writes as a number is not zero. Write a divisor other than zero",
@@ -497,11 +567,35 @@ def _nonzero_divisor(node, obligations, place, ctx, set_of):
     return (condition,)
 
 
-def _power_domain(node, obligations, place, ctx, set_of):
+def _power_domain(node, obligations, place, ctx, set_of, *, extended=False):
     """The definedness of a power: nothing where the base's set lies in ℝ₊₊ and
     the exponent's in ℝ, and otherwise `arithmetic-definedness` with the
     clauses the sets leave open."""
     base, exponent = set_of(node.base), set_of(node.exponent)
+    if extended:
+        power = sets.number_at(node.exponent, {}).value
+        negative = (power is not None and power < 0) or set_lies_within(
+            exponent, NEGATIVE_REAL, ctx
+        )
+        if negative:
+            if set_lies_within(base, POSITIVE_EXTENDED, ctx):
+                return ()
+            condition = Member(node.base, POSITIVE_EXTENDED)
+            integral = _integer_exponent(node.exponent, exponent, ctx)
+            if integral is not False:
+                integer_case = Member(node.base, NEGATIVE_REAL)
+                if integral is None:
+                    integer_case = And(integer_case, IsInteger(node.exponent))
+                condition = Or(condition, integer_case)
+            obligations.append(
+                (
+                    "arithmetic-definedness",
+                    (place, condition, node),
+                    f"The negative power {to_source(node)} at {place} requires a positive "
+                    "base (which may be infinite), or a negative real base with integer exponent.",
+                )
+            )
+            return (condition,)
     clauses = []
     if not set_lies_within(base, POSITIVE_REAL, ctx):
         # the condition reduced by the exponent's range where that range
@@ -602,6 +696,14 @@ def set_lies_within(setterm, outer, ctx) -> bool:
 # the point 0 as a set, so that whether a denominator can vanish is asked of
 # the set algebra and of nothing else (AMD-SG-017 §4)
 ZERO = T.Interval(T.Range(left=T.Closed(), lower=T.Number(0), upper=T.Number(0), right=T.Closed()))
+
+
+NEGATIVE_REAL = T.Interval(T.Range(left=T.Open(), lower=T.Neg(T.Sym(T.Constant("inf"))),
+                                  upper=T.Number(0), right=T.Open()))
+POSITIVE_EXTENDED = T.Interval(T.Range(left=T.Open(), lower=T.Number(0),
+                                       upper=T.Sym(T.Constant("inf")), right=T.Closed()))
+POSITIVE_INFINITY = sets.set_of_bounds(sets.Bounds(math.inf, True, math.inf, True))
+NEGATIVE_INFINITY = sets.set_of_bounds(sets.Bounds(-math.inf, True, -math.inf, True))
 
 
 def _excludes_zero(setterm, ctx) -> bool:

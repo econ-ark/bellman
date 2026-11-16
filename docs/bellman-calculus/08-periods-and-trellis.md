@@ -1,13 +1,12 @@
 ---
 title: Periods and the trellis
 short_title: Periods and trellis
-status: not yet drafted — stub notes only
+status: drafted
 tags:
   - bellman-calculus
   - period
   - trellis
   - inter-period-connector
-  - status/stub
 audience: user
 type: theory
 topic: [calculus]
@@ -16,71 +15,89 @@ topic: [calculus]
 # Periods and the trellis
 
 > [!summary]
-> These unfinished notes extend stage composition across periods and distinguish finite-horizon recursion from a stationary fixed-point problem. Boundary identifications and terminal data must match the declared domains.
+> A trellis is a diagram of periods joined by connections. Each period takes a tuple of continuation fields and returns a tuple for the preceding period. Repeated modular declarations share one family of operators; their supplied fields may differ. Finite-horizon recursion starts from terminal data, while a stationary problem requires a fixed point of all the fields sent backward.
 
 > [!info]- Relationship with other documents
-> **Builds on** — [Stage composition](./07-stage-composition.md) defines compatible within-period joins.
-> **See also** — [Stages and perches](./03-Stages%20and%20perches.md) states the local operators and information assumptions.
-> **Used by** — [Period Syntax](../Bellman-Sym/06-period.md) and [Trellis Syntax](../Bellman-Sym/07-trellis.md) specify the outer YAML structure; [Stages](../Bellman-Sym/01-stage.md) describes the source's typed declarations.
+> **Builds on** — [Stage composition](./07-stage-composition.md) defines compatible within-period connections; [Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) §6 defines the partial operators and their domains.
+> **See also** — [Modularity](./APPX-H-MODULARITY.md) states the equality of repeated declaration meanings and the restriction on calibration sources.
+> **Used by** — [Periods](../Bellman-Sym/06-period.md) and [Trellis](../Bellman-Sym/07-trellis.md) give the corresponding source forms.
 
-> [!note] Not yet drafted — stub notes only
-> Structural outline only; the multi-period and trellis chapter is not yet written.
+<a id="1-period-as-a-local-namespace"></a>
 
-A **period** contains stage occurrences (uses of stage modules) connected through their boundary fields. A **trellis** orders period occurrences and their inter-period connections. A recursive problem also supplies terminal or infinite-horizon conditions; a one-stage problem is included as a special case.
+## 1 Period declarations
 
-## 1. Period as a local namespace
+A **period** contains stages and their connections. A **stage occurrence** is one use of a stage declaration. Its fields keep their stage-local names. Within one period, stages that declare the same parameter name share that parameter coordinate and must state compatible declared sets.
 
-A period contains stage occurrences and their dependencies, but each stage keeps its own field names. A name declared as a parameter by two stages of one period denotes one period parameter; the same spelling in another period denotes another. In a chain, selected dependencies determine a forward economic order. *(Placeholder.)* The period operator $\mathbb{T}_{\text{period}}$ has the conditional composition reading described in [Stage composition](./07-stage-composition.md) where compatible complete routes and operators are supplied; the period's *boundary fields* are the arrival of its first stage and the continuation of its last.
+In a general trellis, parameter coordinates may differ between periods. A **modular model** has the stricter meaning of [Modularity](./APPX-H-MODULARITY.md): every occurrence takes calibration from the sources recorded by its declaration, with no rule addressed to its position. Methods and settings lie outside this condition. Distinct occurrence objects may therefore share one declared family of mathematical operators without sharing mutable data.
 
-## 2. Inter-period connectors
+A fixed declaration has no date argument. A quantity such as age is supplied as a field. A fixed wage table or function read at that age can consequently give different wages at different uses of one operator.
 
-Between-period connectors pair one period's boundary continuation fields with the next period's boundary arrival fields. *(Placeholder.)* These are the **inter-period connectors** in the project's vocabulary — occurrence-specific selections, not changes to a field's local name. A nonidentity transformation must be authored as a stage equation; the connector performs no calculation. They differ from intra-period connectors, which join stages within a single period.
+<a id="2-inter-period-connectors"></a>
 
-## 3. The trellis
+## 2 Inter-period connections
 
-A trellis is a finite-horizon sequence of period instances wired by between-period connectors. *(Placeholder.)* The backward recursion runs:
+An **inter-period connection** joins one period's continuation state to the following period's arrival state. It also pairs the value-type fields sent backward by the following period with the fields required by the earlier one. The pairing preserves each local name and computes no economic transformation. A transformation belongs in a stage equation.
 
-$$
-v_{T+1} \;=\; v_{\mathrm{terminal}}, \qquad v_t \;=\; \mathbb{T}_{t}\, v_{t+1}, \qquad t = T, T{-}1, \ldots, 0.
-$$
+For a state-coordinate map $\varphi$, a backward representing function $f$ becomes $f\circ\varphi$ on the preimage of its domain. A constant remains a constant. The supplied declared set and dependence must satisfy the recipient's requirements. A complete route also requires the joint forward law; marginal laws alone do not determine it.
 
-Here $t$ is forward economic time, $T$ the last decision date, $v_{\mathrm{terminal}}$ the supplied terminal value, and $\mathbb T_t$ the possibly date-dependent period operator. The display uses compatible boundary identifications. The application's period index may instead count backward from terminal; §1 of Bellman-SYM's Trellis Syntax page defines that separate convention.
+<a id="3-the-trellis"></a>
 
-In the specified construction, each stage occurrence has a fresh graph and bindings even when module text is parsed once. The `.bl` syntax tree is temporary; interpreted equations and definitions remain. Periods, trellises, connectors, methods, settings and calibration retain their YAML outer forms. A mathematical composition expression does not assert one stored whole-trellis semantic graph.
+## 3 The map on pairs
 
-## 4. Infinite horizon and the fixed point
-
-For a stationary period operator mapping a chosen value-function space to itself, a candidate infinite-horizon value satisfies:
+Let $\varsigma\in\mathsf P$ collect the state-independent fields whose backward equations read only those fields and parameters. Their period update is a partial map $\tau$. Let $v\in\mathsf B_\varsigma$ collect the other representing functions. Include the connection to the earlier period in $\mathbb T_\varsigma$. The **map on pairs** is
 
 $$
-v^\star \;=\; \mathbb{T}_{\text{period}}\, v^\star.
+\Phi(\varsigma,v)=(\tau\varsigma,\mathbb T_\varsigma v).
 $$
 
-*(Placeholder.)* State the model-specific conditions for existence, uniqueness and iteration convergence. A contraction on a nonempty complete metric space is one sufficient route; monotone or other fixed-point arguments need their own assumptions. A one-period composition alone establishes none of these results.
+It is defined where both components have values. Repeated applications give
+
+$$
+\Phi^k(\varsigma,v)=
+(\tau^k\varsigma,\mathbb T_{\tau^{k-1}\varsigma}\cdots\mathbb T_\varsigma v).
+$$
+
+This follows by substitution and associativity wherever successive applications are defined. Different period declarations contribute their own maps in backward order. A finite path of $N$ periods has $N-1$ internal connections; comparison with $\Phi^N$ additionally includes the earlier-end connection. Terminal data supply the last period's input. Maximizing rules require measurable maximizing policies at every application.
+
+<a id="4-infinite-horizon-and-the-fixed-point"></a>
+
+## 4 Stationary and seasonal problems
+
+A stationary pair satisfies
+
+$$
+\tau\varsigma^*=\varsigma^*,\qquad
+\mathbb T_{\varsigma^*}v^*=v^*.
+$$
+
+Thus every field sent backward must be fixed. An age update that subtracts one has no fixed point. Existence, uniqueness and convergence require separate assumptions.
+
+For seasonal declarations, list their maps in backward order as $\Phi_1,\ldots,\Phi_m$. A fixed point of $\Phi_m\circ\cdots\circ\Phi_1$ gives the cycle, provided every application is defined. When the seasonal maps all equal $\Phi$, the composite is $\Phi^m$.
 
 <a id="5-why-this-matters-for-the-calculus-framing"></a>
 
-## 5. Information and composition
+## 5 Information and composition
 
-A staged description records the economic order, information available for each choice, and compatible interfaces. Composition then defines the larger recursion where each operation is well defined. *(Placeholder.)* Develop this account without treating every recursive program as an instance of the present finite stage representation.
+A staged description records the information available for each choice and the dependence of its equations. Composition preserves this order. Associativity allows regrouping a fixed sequence of compatible partial maps; it neither changes that sequence nor proves convergence.
 
-## 6. Composition as identification of fields
+A supplied constant can select a shock law or a forward transition. Repeated modular declarations then share the family of kernels, although different supplied ages may select different kernels. A forward map on pairs needs an authored update of those constants. A backward update is not assumed invertible.
 
-For a chain of stages $S_1,S_2$, selected pairs relate the continuation state fields of $S_1$ to compatible arrival state fields of $S_2$. A connector declares a pair and leaves each field's local name intact. A complete route establishes a coordinate map only when all ordered state coordinates, the joint forward law and the backward value components agree. Mathematical transformations belong in the equations, as in [Stage composition](./07-stage-composition.md).
+<a id="6-composition-as-identification-of-fields"></a>
 
-**Fields and value domains.** A field is a random quantity on the model's probability space. A declaration that its values lie in a domain $D$ does not make it square-integrable or select a particular function space. Measurability, integrability and a representative function require their stated assumptions. [Fields, functions and types](./04-fields,%20functions%20and%20types.md) distinguishes these objects; the source's typed declarations are described on Bellman-SYM's Stages page.
+## 6 Field identification
 
-**Identification and names.** A common compatible value domain is needed for a direct pairing but is not sufficient: assets and age can both take nonnegative real values while denoting different quantities. A boundary join must pair the intended quantities with compatible units and information. Under a common probabilistic interpretation, the equality $X_{S_2,\prec}=X_{S_1,\succ}$ holds almost surely at that boundary when the connection pairs those coordinates; equality of their written names alone does not assert it. A declared transformation $X_{S_2,\prec}=\varkappa(X_{S_1,\succ})$ instead requires the typed measurable map $\varkappa$ in the model equations.
+A **field** is a declared random quantity, and its **representing function** gives its value at a state on a specified domain. Neither a declared set nor a pairing establishes square integrability. [Fields, functions and types](./04-fields%2C%20functions%20and%20types.md) states these distinctions.
 
-**Composition of meanings.** Under the fixed interpretation and compatible interfaces, evaluating a composition means composing its stage operators. The associativity of function composition permits regrouping an unchanged sequence; it does not permit arbitrary reordering or supply convergence. [Initial-algebra semantics](./APPX-B-INITIAL-ALGEBRA.md) states the corresponding exact term argument with free inputs fixed.
+Equal names and compatible sets do not by themselves establish the intended economic identification. Assets and age may both be nonnegative while having different meanings. A connection records the chosen pairing; the model must justify its units and information. Under that interpretation, the paired state coordinates agree almost surely. A nonidentity transformation instead requires an authored measurable equation.
 
-> [!note] Related theory
-> Algebraic composition provides an account of how declared operations form a larger expression. Its applicability here requires compatible domains and the same target interpretation. The mathematical expression is distinct from the stage-dependency graph used to order computation and from the application's period dictionaries.
+The initial joint arrival law must assign probability one to the first period's admissible arrival set. Terminal data must meet the last period's input requirements. These are separate conditions on the two ends of the trellis, not fields of its declaration.
 
 <a id="see-also"></a>
 
-## 7. Related documents
+## 7 Related documents
 
-- **Across:** [Illustrative example](./02-Illustrative%20example.md), [Stage composition](./07-stage-composition.md), [Ingredients](./ingredients.md)
+- [Stage composition](./07-stage-composition.md)
+- [Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md)
+- [Modularity](./APPX-H-MODULARITY.md)
 
-[Next → 9. Branching](./09-branching.md)
+[Next → Branching](./09-branching.md)

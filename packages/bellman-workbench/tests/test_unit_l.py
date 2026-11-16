@@ -2447,7 +2447,7 @@ def test_task_15_a_join_by_equal_names_is_selected_and_its_reading_field_renamed
 # The pension model at step 29 of the UX simulation's record (Task 16): the
 # stage file of `shocks` and the calibration file `new file` wrote for it,
 # `calibration: {}`, which the recipe names in place of its slot; the
-# fourteen values the post-doc typed in the Parameters tab, in his order,
+# thirteen scalar values the post-doc typed in the Parameters tab, in his order,
 # and the matrix he typed for `Π_α` at step 30; and each row's value input,
 # by the row's name
 SHOCKS = "declaration/stages/shocks/shocks.bl"
@@ -2455,7 +2455,6 @@ SHOCKS_CALIBRATION = "declaration/calibration/shocks.yml"
 SHOCKS_VALUES = (
     ("R", "1.0223"),
     ("δ", "0.011"),
-    ("Y", "0.0"),
     ("φ", "0.9044"),
     ("σ_u", "0.0922"),
     ("r_r", "0.0476"),
@@ -2482,11 +2481,11 @@ def test_task_16_values_typed_a_second_apart_all_stand_and_a_matrix_gets_the_pac
     copy of the pension model the UX simulation's post-doc built, at step
     29 of its record, `shocks.bl` bound as `periods[0] / shocks` with its
     Parameters tab writing the calibration file `new file` wrote,
-    `calibration: {}`: the fourteen values the post-doc typed are typed one
+    `calibration: {}`: the thirteen scalar values the post-doc typed are typed one
     second apart, each with Enter. After each Enter every value typed so
     far stands in its input through the next second, none reading
     `unvalued` again, and after the first the status line prints the loop
-    running. After the reading the fourteen values stand in their inputs,
+    running. After the reading the thirteen values stand in their inputs,
     and the file holds each once. The matrix of step 30 typed for `Π_α` is
     written, the tab composing no sentence about its form, and the
     package's sentence refusing it, which names `Π_α`, stands in the list
@@ -2501,6 +2500,8 @@ def test_task_16_values_typed_a_second_apart_all_stand_and_a_matrix_gets_the_pac
     recipe_file.write_text(
         recipe_text.replace("$shocks_calibration", "calibration/shocks"), encoding="utf-8"
     )
+    profiles = copy / "declaration/calibration/pension_age_profiles.yml"
+    profiles_before = profiles.read_bytes()
     expected = {name: float(value) for name, value in SHOCKS_VALUES}
     taste = '.bl-values-row[data-name="Π_α"] .bl-values-value'
     context, tab = new_tab(browser)
@@ -2522,8 +2523,11 @@ def test_task_16_values_typed_a_second_apart_all_stand_and_a_matrix_gets_the_pac
         )
         inputs = tab.evaluate(VALUE_INPUTS_JS)
         assert {inputs[name] for name, _ in SHOCKS_VALUES} == {"unvalued"}
+        income = entry_value(profiles_before.decode("utf-8"), "calibration")["Y"]
+        assert entry_value(inputs["Y"]) == income
 
-        # fourteen values, one second apart
+
+        # thirteen scalar values, one second apart
         started = time.perf_counter()
         for n, (name, value) in enumerate(SHOCKS_VALUES):
             cell = tab.locator(f'.bl-values-row[data-name="{name}"] .bl-values-value')
@@ -2548,12 +2552,15 @@ def test_task_16_values_typed_a_second_apart_all_stand_and_a_matrix_gets_the_pac
         wait_until(
             lambda: written() == expected and status_settled_on(tab, SHOCKS),
             180.0,
-            "the fourteen values written and the reading settled",
+            "the thirteen scalar values written and the reading settled",
         )
         # the file reads, and the package's reader refuses a key written
         # twice, so that each value stands once
         inputs = tab.evaluate(VALUE_INPUTS_JS)
         assert {name: inputs[name] for name, _ in SHOCKS_VALUES} == dict(SHOCKS_VALUES)
+        assert entry_value(inputs["Y"]) == income
+        assert profiles.read_bytes() == profiles_before
+
 
         # the matrix of step 30 is passed to the package, whose sentence
         # stands under the error mark and on the row
@@ -3265,8 +3272,8 @@ def test_task_21_a_refusal_stands_once_no_slot_is_one_and_the_counts_of_unjoined
 ):
     """Task 21 (defects 17, 18 and 20 of the UX simulation; L-D13; K-D10,
     K-D29; A2-D13). On a copy of the pension model at its first reading,
-    step 19 of the record, every source of the recipe a slot and every join
-    written `{}`, the trellis's status line and the checklist's head count
+    step 19 of the record, the fixed profile source deliberately removed so every calibration
+    source is an unbound slot, and every state join written `{}`, the trellis's status line and the checklist's head count
     the same 25 unjoined fields, where the record read 148 and 25, and the
     list under the error mark holds no error, where the record listed three
     lines about the sources no occurrence names, since a slot is no refusal
@@ -3287,6 +3294,11 @@ def test_task_21_a_refusal_stands_once_no_slot_is_one_and_the_counts_of_unjoined
     head still count the same 25 fields, the head counting the binding
     refused."""
     copy = pensions_copy(tmp_path / "models" / "durables")
+    recipe_file = copy / PENSIONS_RECIPE
+    recipe_text = recipe_file.read_text(encoding="utf-8")
+    fixed = "calibration/pension_age_profiles, "
+    assert recipe_text.count(fixed) == 2
+    recipe_file.write_text(recipe_text.replace(fixed, ""), encoding="utf-8")
     for name in ("declaration/period.pensions.yml", PENSIONS_TRELLIS):
         text = (copy / name).read_text(encoding="utf-8")
         assert len(STEP_19_JOINS.findall(text)) == (1 if "period." in name else 2)

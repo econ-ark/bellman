@@ -438,8 +438,9 @@ def test_case_1_the_bytes_reviewed_are_the_bytes_sent_and_each_missing_input_is_
     byte for byte, those of the prepared-inputs file the record names, under
     the names and fingerprints the record lists, the recipe's one rewritten
     entry included, and the disk keeps its text. The durables recipe's
-    record names Y and y_R of tenure as missing from the declaration, with
-    the function of the folder's code that writes them. A PDF given to the
+    record names no missing input: its declaration holds the income
+    functions Y and y_R of tenure in `calibration/wage_schedule.yml`. A
+    PDF given to the
     client as a paper is refused before any request, with the client's
     sentence asking for its text."""
     log = tmp_path / "client-calls.jsonl"
@@ -506,16 +507,10 @@ def test_case_1_the_bytes_reviewed_are_the_bytes_sent_and_each_missing_input_is_
     durables = model.open_folder(matsya_durables)
     declared = matsya_work.prepare(durables, DURABLES, "recipe", session_of(durables), 1)
     assert declared.refusals == ()
-    [missing] = declared.record["missing"]
-    assert (missing["stage"], missing["names"], missing["function"], missing["file"]) == (
-        "tenure",
-        ["Y", "y_R"],
-        "write_wage_schedule",
-        "code/wage_schedule.py",
-    )
-    assert missing["sentence"].endswith(
-        "which a submission of the declaration omits; supply their values"
-    )
+    assert declared.record["missing"] == []
+    assert "declaration/calibration/wage_schedule.yml" in {
+        entry["path"] for entry in declared.record["files"]
+    }
 
     real_client("http://127.0.0.1:9", "msy_" + "0" * 32)
     paper = tmp_path / "paper.pdf"
@@ -535,7 +530,7 @@ def test_case_1_the_bytes_reviewed_are_the_bytes_sent_and_each_missing_input_is_
             "rewritten": record["rewritten"],
             "sent_equals_reviewed": received == {n: sha256(t) for n, t in reviewed.items()},
             "disk_unchanged": True,
-            "durables_missing": missing,
+            "durables_missing": declared.record["missing"],
             "pdf_refusal": {"exit_status": refused.code, "standard_error": refused.warning},
         },
         log,
@@ -690,7 +685,10 @@ def test_case_2_the_reviewed_history_is_read_one_reply_continues_once_and_result
         (assumption,),
     )
     assert inspected.missing == ()
-    assert found[3].details == (*inspected.construction, "External terminal input V[>] · bequest")
+    assert found[3].details == (
+        *inspected.construction, "External terminal input V[>] · bequest",
+        "External terminal input age[>] · bequest",
+    )
     kept(
         "case-2",
         {"durables": folder.root},

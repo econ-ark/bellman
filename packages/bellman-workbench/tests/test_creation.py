@@ -475,7 +475,7 @@ def test_new_trellis_add_stage_and_add_period_write_the_one_layout(repository):
     """A folder "new trellis" writes, with a stage copied under a key of
     its own, and to which "add stage" and "add period" add a stage and a
     period, has the one layout of a model folder by the layout's own check
-    (`layout_faults` of packages/bellman/tests/test_layout.py), answers.yml
+    (`layout_faults` of tests/test_application_layout.py), answers.yml
     and the .gitignore excepted at its top: `declaration/` holds the recipe,
     the trellis and period files, `calibration/`, `settings/` and one
     folder per stage, `stages/<key>/`, with the stage file `<key>.bl` and
@@ -3915,11 +3915,18 @@ def test_l_13_a_variant_s_labels_come_from_its_own_recipe_and_its_form_names_the
     calibration/wage_schedule`; in the stage list of the variant's trellis
     each of the folder's stages carries the variant recipe's name,
     `spec.pensions.yml`, and not the durables model's title, which the
-    folder's own recipe keeps; and the periods' ages come from the variant's
-    own registry, so that with its `registry` block taken out no period
-    carries an age."""
+    folder's own recipe keeps; and the period labels are positions both with and without the
+    variant's registry. No registry value supplies a displayed age."""
     copy = scratch_durables
+    source = copy / "declaration/spec.yml"
+    text = source.read_text(encoding="utf-8")
+    assert "registry:" not in text
+    source.write_text(
+        text + "\nregistry: {calibration: [calibration/wage_schedule]}\n", encoding="utf-8"
+    )
     app_state(copy)
+    previous_source = app.source.value
+    app.source.value = Source("recipe", "declaration/spec.yml")
     app.open_form("new variant")
     _, rendered = solara.render(app.NewVariantForm(), handle_error=False)
     try:
@@ -3928,6 +3935,7 @@ def test_l_13_a_variant_s_labels_come_from_its_own_recipe_and_its_form_names_the
         ]
     finally:
         rendered.close()
+        app.source.value = previous_source
     assert notes == [
         "writes spec.<name>.yml, trellis.<name>.yml and period.<name>.yml in declaration/",
         "Copies calibration, settings and method assignments.",
@@ -3949,12 +3957,12 @@ def test_l_13_a_variant_s_labels_come_from_its_own_recipe_and_its_form_names_the
         layers = forward["groupNodeAttributes"]
         return [layers[f"periods[{h}]"].get("age") for h in range(3)]
 
-    assert ages("spec.pensions.yml") == ["70", "69", "68"]
+    assert ages("spec.pensions.yml") == [None, None, None]
     variant = copy / "declaration/spec.pensions.yml"
     text = variant.read_text(encoding="utf-8")
     variant.write_text(text[: text.index("registry:")], encoding="utf-8")
     assert ages("spec.pensions.yml") == [None, None, None]
-    assert ages("spec.yml") == ["70", "69", "68"]
+    assert ages("spec.yml") == [None, None, None]
 
 
 # The portfolio model's row of the stage `port` and its line in period.yml,

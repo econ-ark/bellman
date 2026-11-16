@@ -44,14 +44,22 @@ zero and its multiplications and divisions by one, for printing.
 from __future__ import annotations
 
 import math
+from collections.abc import Mapping
 from dataclasses import dataclass, fields, is_dataclass, replace
+from numbers import Real
+from types import MappingProxyType
 from typing import NamedTuple
 
 import numpy
 
 from bellman.distributions import truncation
+from bellman.native.frozen import freeze
+from bellman.refusals import ConstructionError
 from bellman.syntax import terms as T
 from bellman.syntax.source import to_source
+from bellman.syntax.walk import nodes
+from bellman.typing import sets
+from bellman.typing.ranges import substituted
 
 NORMAL = "N"
 LOGNORMAL = "LogNormal"
@@ -1163,6 +1171,272 @@ def numeric_value(term, values):
             return None
         return result if isinstance(result, float) else None
     return None
+
+
+_UNBOUND = object()
+
+
+def specialize_distribution(
+    owner, values, *, indexed=False, dimension=None, domains=None, set_terms=None, functions=None
+):
+    """A declaration at additional values, with its concrete family checks.
+
+    A detached declaration supplies its own residual bindings. The optional
+    definition tables are used when first constructing a numerical law.
+    """
+    domains = {} if domains is None else domains
+    set_terms = {} if set_terms is None else set_terms
+    functions = {} if functions is None else functions
+    bindings = {name: value for name, value, _ in owner.bindings}
+    declared = {name: domain for name, _, domain in owner.bindings}
+    values = {**values, **bindings}
+    domains = {**domains, **declared}
+
+    def refuse(rule, address, message, write=None):
+        raise ConstructionError(
+            message, stage=owner.identity.stage, address=address, rule=rule, write=write
+        )
+
+    def invalid(message):
+        refuse("distribution-domain", owner.address, message)
+
+    term, remaining = _specialize_family(
+        owner.term, values, domains, set_terms, functions, owner.formals, invalid
+    )
+    resolved = replace(owner, term=term, bindings=remaining)
+    check_family_conditions(resolved, {}, refuse, indexed=indexed, dimension=dimension)
+    return resolved
+
+
+def _specialize_family(term, values, domains, set_terms, functions, formals, refuse):
+    """Substitute concrete arguments and keep bindings still read by the law."""
+    from bellman.fold.derived_parameters import derived_value
+    from bellman.typing.declarations import DERIVED_PARAMETER_CALLS, DERIVED_PARAMETER_EXTREMA
+
+    def native(value):
+        if isinstance(value, numpy.ndarray):
+            return value.tolist()
+        if isinstance(value, numpy.generic):
+            return value.item()
+        return value
+
+    def snapshot(value):
+        value = native(value)
+        if callable(value):
+            return value
+        if isinstance(value, Mapping):
+            return MappingProxyType({native(key): snapshot(item) for key, item in value.items()})
+        if isinstance(value, (tuple, list)):
+            return tuple(snapshot(item) for item in value)
+        return freeze(value)
+
+    def literal(value, original):
+        value = native(value)
+        if isinstance(value, bool):
+            return T.Sym(T.Constant("true" if value else "false"))
+        if isinstance(value, Real):
+            if math.isnan(value):
+                refuse("A supplied family argument is not a number.")
+            if math.isinf(value):
+                number = T.Sym(T.Constant("inf"))
+            else:
+                number = T.Number(abs(value) if isinstance(value, int) else float(abs(value)))
+            return T.Neg(number) if value < 0 else number
+        if isinstance(value, str):
+            return T.Sym(T.Constant(value))
+        if isinstance(value, (list, tuple)):
+            return T.Tuple(tuple(literal(item, original) for item in value))
+        return original
+
+    def resolved_value(value, original):
+        # Retain a table or function's name until the use that reads it has
+        # concrete arguments. Its declaration determines how it is applied.
+        if isinstance(value, Real) and not isinstance(value, bool):
+            return literal(value, original), value
+        return original, value
+
+    def value_set(node, declared):
+        if isinstance(node, T.Sym) and isinstance(node.symbol, T.Constant):
+            return declared.get(node.symbol.name)
+        if isinstance(node, T.Select):
+            family = value_set(node.family, declared)
+            if isinstance(node.sel, T.Pos):
+                product = sets.defined(family, set_terms)
+                if isinstance(product, T.Product) and 1 <= node.sel.at <= len(product.factors):
+                    return product.factors[node.sel.at - 1]
+            else:
+                indexed = sets.index_sets(family, set_terms)
+                if indexed is not None:
+                    return indexed[1]
+        return None
+
+    def select(node, scope, declared, active):
+        family, data = visit(node.family, scope, declared, active)
+        if isinstance(node.sel, T.Pos):
+            selected = T.Select(family, node.sel)
+            if isinstance(data, (tuple, list)):
+                position = node.sel.at - 1
+                if not 0 <= position < len(data):
+                    refuse(f"{to_source(node)} selects a coordinate outside its value.")
+                return resolved_value(native(data[position]), selected)
+            return selected, _UNBOUND
+        key = node.sel.at if isinstance(node.sel, T.Term) else T.Sym(T.Constant(node.sel.at))
+        key_term, key_value = visit(key, scope, declared, active)
+        selector = node.sel if key_term == key else T.Term(key_term)
+        selected = T.Select(family, selector)
+        domain = value_set(node.family, declared)
+        indexed = sets.index_sets(domain, set_terms)
+        if data is not _UNBOUND and key_value is not _UNBOUND and indexed is not None:
+            members = sets.finite_members(indexed[0], values, set_terms)
+            if members is not None:
+                position = sets.key_position(members, key_value)
+                if position is None:
+                    refuse(f"{to_source(node)} selects {key_value!r}, outside its index set.")
+                try:
+                    value = data[members[position]] if isinstance(data, Mapping) else data[position]
+                except (IndexError, KeyError, TypeError):
+                    refuse(f"{to_source(node)} has no supplied entry at {key_value!r}.")
+                return resolved_value(native(value), selected)
+        return selected, _UNBOUND
+
+    def real_arguments(value, *, finite):
+        if value is _UNBOUND:
+            return True
+        if isinstance(value, (list, tuple)):
+            return all(real_arguments(entry, finite=finite) for entry in value)
+        if not isinstance(value, Real) or isinstance(value, (bool, numpy.bool_)):
+            return False
+        return math.isfinite(value) if finite else not math.isnan(value)
+
+    def call(node, scope, declared, active):
+        parts = tuple(visit(argument, scope, declared, active) for argument in node.args)
+        terms = tuple(term for term, _ in parts)
+        arguments = tuple(value for _, value in parts)
+        if node.fun in FAMILY_ARGUMENTS:
+            terms = tuple(
+                literal(value, term) if value is not _UNBOUND else term
+                for term, value in parts
+            )
+            substituted = T.Call(node.fun, terms)
+            if node.fun in SCALAR_FAMILIES and any(
+                not real_arguments(value, finite=node.fun in (NORMAL, LOGNORMAL))
+                for value in arguments
+            ):
+                refuse(
+                    f"{to_source(substituted)} has an argument outside the family's real domain."
+                )
+            return substituted, _UNBOUND
+        name, called = node.fun, set(active)
+        if name not in scope:
+            while name in functions and name not in called:
+                function = functions[name]
+                body = function.equations[0]
+                called.add(name)
+                if isinstance(body, T.FuncDef):
+                    local = dict(zip((name for name, _ in function.coordinates), parts))
+                    return visit(
+                        body.body,
+                        {**global_scope, **local},
+                        {**domains, **dict(function.coordinates)},
+                        frozenset(called),
+                    )
+                if not (isinstance(body, T.Sym) and isinstance(body.symbol, T.Constant)):
+                    break
+                name = body.symbol.name
+        callee, supplied = scope.get(node.fun, (None, _UNBOUND))
+        if all(value is not _UNBOUND for value in arguments):
+            if callable(supplied):
+                try:
+                    value = native(supplied(*arguments))
+                except Exception as error:
+                    refuse(
+                        f"{to_source(node)} has no value at the supplied arguments: {error}."
+                    )
+            elif (
+                node.fun in DERIVED_PARAMETER_CALLS
+                and node.fun not in functions
+                and node.fun not in scope
+            ):
+                operands = arguments
+                if (
+                    node.fun in DERIVED_PARAMETER_EXTREMA
+                    and len(operands) == 1
+                    and isinstance(operands[0], (tuple, list))
+                ):
+                    operands = operands[0]
+                concrete = T.Call(node.fun, tuple(literal(value, node) for value in operands))
+                try:
+                    value = derived_value(concrete, {})
+                except (ArithmeticError, ValueError) as error:
+                    refuse(f"{to_source(node)} has no value at the supplied arguments: {error}.")
+            else:
+                refuse(f"{to_source(node)} has no numerical definition for its supplied arguments.")
+            result = literal(value, node)
+            if result == node:
+                refuse(f"{to_source(node)} gives no value of a supported family argument.")
+            return result, value
+        if isinstance(callee, T.Sym) and isinstance(callee.symbol, T.Constant):
+            return T.Call(callee.symbol.name, terms), _UNBOUND
+        return T.Call(node.fun, terms), _UNBOUND
+
+    def visit(node, scope, declared, active):
+        if isinstance(node, T.Sym) and isinstance(node.symbol, T.Constant):
+            if node.symbol.name in ("inf", "∞"):
+                return node, math.inf
+            return scope.get(node.symbol.name, (node, _UNBOUND))
+        if isinstance(node, T.Number):
+            return node, node.value
+        if isinstance(node, T.Tuple):
+            children = tuple(visit(item, scope, declared, active) for item in node.items)
+            value = tuple(value for _, value in children)
+            terms = T.Tuple(tuple(term for term, _ in children))
+            return terms, value if all(item is not _UNBOUND for item in value) else _UNBOUND
+        if isinstance(node, T.Select):
+            return select(node, scope, declared, active)
+        if isinstance(node, T.Call):
+            return call(node, scope, declared, active)
+        if isinstance(node, (T.Neg, T.Add, T.Sub, T.Mul, T.Div, T.Pow)):
+            children = tuple(
+                visit(getattr(node, field.name), scope, declared, active)
+                for field in fields(node)
+            )
+            substituted = type(node)(*(term for term, _ in children))
+            if all(value is not _UNBOUND for _, value in children):
+                value = numeric_value(substituted, {})
+                if value is None or math.isnan(value):
+                    refuse(f"{to_source(node)} has no value at the supplied arguments.")
+                return resolved_value(value, substituted)
+            return substituted, _UNBOUND
+        return node, _UNBOUND
+
+    scope = {
+        name: resolved_value(native(value), T.Sym(T.Constant(name)))
+        for name, value in values.items()
+    }
+    global_scope = {name: value for name, value in scope.items() if name not in formals}
+    term = visit(term, scope, domains, frozenset())[0]
+    referenced = set()
+    for node in nodes(term):
+        if isinstance(node, T.Sym) and isinstance(node.symbol, T.Constant):
+            referenced.add(node.symbol.name)
+        elif isinstance(node, T.Key):
+            referenced.add(node.at)
+        elif isinstance(node, T.Call) and node.fun not in FAMILY_ARGUMENTS:
+            referenced.add(node.fun)
+    replacements = {
+        T.Sym(T.Constant(name)): bound
+        for name, (bound, value) in scope.items()
+        if isinstance(value, (Real, str, bool))
+    }
+    remaining = tuple(
+        (
+            name, snapshot(scope[name][1]),
+            substituted(sets.resolved(domains.get(name), set_terms), replacements),
+        )
+        for name in scope
+        if name in referenced
+    )
+    return term, remaining
 
 
 def _names_read(term):

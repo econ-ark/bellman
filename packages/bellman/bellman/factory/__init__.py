@@ -2,6 +2,11 @@
 of a trellis, the joins and drawings of its periods, and the interactive view
 of a stage or a trellis.
 
+A trellis is the author's diagram of periods and their connections.
+Positions identify occurrences and select recipe bindings; they are not
+implicit inputs to the stage operators. Recipes retain their calibration
+lists and method assignments by ranges of positions.
+
 - `loading`: `load_stage`, a stage file into its source record, and
   `load_trellis`, a trellis file into the syntactic trellis, the model as
   written.

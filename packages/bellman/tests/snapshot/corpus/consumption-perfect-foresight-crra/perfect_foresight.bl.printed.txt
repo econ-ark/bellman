@@ -1,0 +1,972 @@
+BELLMAN-SYM / STAGE perfect_foresight                     [VERSION = SYMBOLIC]
+a stage occurrence of applications/consumption-perfect-foresight-crra/
+declaration/stages/perfect_foresight/perfect_foresight.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        k≺ state, V≺ value, h≺ value
+  ∼ decision       m state, c control, V value, h value
+  ≻ continuation   a≻ state, V≻ value, h≻ value
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           k≺ at arrival, m at decision, a≻ at continuation
+  controls         c at decision
+  values           V at every perch; h at every perch
+  shocks           none
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → arvl_to_dcsn   (k≺) : !arvl -> (m) : !dcsn
+  → dcsn_to_cntn   (m) : !dcsn, at c -> (a≻) : !cntn
+  ← cntn_to_dcsn   (V≻, h≻) : !cntn, at c -> (V, h) : !dcsn
+  ← dcsn_to_arvl   (V, h) : !dcsn -> (V≺, h≺) : !arvl
+  ← policy         (V≻, h≻) : !cntn -> (c) : !dcsn
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  sets                     2   Xm := ℝ, Xa := ℝ
+  parameters               4   β : ℝ₊₊ @ (0, R^(ρ - 1)); ρ : (1, inf);
+                               R : ℝ₊₊; Γ : ℝ₊₊
+  derived parameters       1   q : (0, 1) := (β*R)^(1/ρ)/R
+  functions                1   𝑢 on ℝ₊₊
+  correspondences          1   Γ_c : Xm ⇉ ℝ₊₊
+  laws of motion           2   m = R*k/Γ + 1; a = m - c
+  value aggregators        3   V = 𝑢(c) + β*V[>], h = 1 + h[>];
+                               V[<] = Γ^(1 - ρ)*V, h[<] = h*Γ/R;
+                               c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])
+  block lines              7   arvl_to_dcsn.market_resources,
+                               dcsn_to_cntn.savings, cntn_to_dcsn.value,
+                               cntn_to_dcsn.human_wealth, dcsn_to_arvl.value,
+                               dcsn_to_arvl.human_wealth, policy.optimality
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   (𝑉≻, ℎ≻) ↦ 𝑉≺, ℎ≺, 𝑐(m)
+                    forward    μ≺ ↦ μ≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ≺ k≺  →  ∼ m  →  ≻ a≻
+  backward   ≺ V≺, h≺  ←  ∼ V, h  ←  ≻ V≻, h≻
+  policy     ∼ c  ←  ≻ V≻, h≻
+
+==== stage ====
+STAGE perfect_foresight
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑉≻  : Xa → ℝ
+         ℎ≻  : {()} → ℝ₊
+         ──────────────────────────────────────────
+    out  𝑉≺  : Xa → ℝ
+         ℎ≺  : {()} → ℝ₊
+         𝑐   : Xm → ℝ₊₊,  𝑐(m) ∈ Γ_c(m)
+  forward
+    in   μ≺  : finite measure on Xa
+         ──────────────────────────────────────────
+    out  μ≻  : finite measure on Xa
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉≻, ℎ≻                       out: 𝑉, ℎ
+
+    2  dcsn_to_arvl
+       in: 𝑉, ℎ                         out: 𝑉≺, ℎ≺
+
+    3  policy
+       in: 𝑉≻, ℎ≻                       out: 𝑐
+
+  forward
+    1  arvl_to_dcsn
+       in: μ≺                           out: μ
+
+    2  dcsn_to_cntn
+       in: μ                            out: μ≻
+
+Conditions
+  cntn_to_dcsn:Aggregation       𝑉(m) ∈ ℝ
+  cntn_to_dcsn:Aggregation       ℎ ∈ ℝ₊
+  dcsn_to_arvl:Aggregation       𝑉≺(k) ∈ ℝ
+  dcsn_to_arvl:Aggregation       ℎ≺ ∈ ℝ₊
+  policy.optimality:Aggregation  ¬(𝑢(cp) ∈ [∞, ∞] ∧ β · V[>] ∈ [−∞, −∞]
+                                   ∨ 𝑢(cp) ∈ [−∞, −∞] ∧ β · V[>] ∈ [∞, ∞])
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  23  m = R*k/Γ + 1                             :: [id=market_resources]
+  27  a = m - c                                 :: [id=savings]
+  31  V = 𝑢(c) + β*V[>]                         :: [id=value]
+  32  h = 1 + h[>]                              :: [id=human_wealth]
+  36  V[<] = Γ^(1-ρ) * V                        :: [id=value]
+  37  h[<] = h*Γ/R                              :: [id=human_wealth]
+  41  c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xm    perfect_foresight:set:Xm
+  Xa    perfect_foresight:set:Xa
+  β     perfect_foresight:parameter:β
+  𝑢     perfect_foresight:function:𝑢
+  Γ_c   perfect_foresight:correspondence:Γ_c
+
+File
+  applications/consumption-perfect-foresight-crra/declaration/stages/
+  perfect_foresight/perfect_foresight.bl
+
+Perches
+  ≺  arrival, written [<]
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE perfect_foresight / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻, h≻}
+       h≻  : {h≻}
+       ──────────────
+  out  V   : {V, h}
+       h   : {h}
+
+Conditions
+  𝑉(m) ∈ ℝ
+  ℎ ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  31  V = 𝑢(c) + β*V[>]  :: [id=value]
+  32  h = 1 + h[>]       :: [id=human_wealth]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward dcsn_to_arvl ====
+STAGE perfect_foresight / BACKWARD BLOCK dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V   : {V, h}
+       h   : {h}
+       ──────────────
+  out  V≺  : {V≺, h≺}
+       h≺  : {h≺}
+
+Conditions
+  𝑉≺(k) ∈ ℝ
+  ℎ≺ ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  36  V[<] = Γ^(1-ρ) * V  :: [id=value]
+  37  h[<] = h*Γ/R        :: [id=human_wealth]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward policy ====
+STAGE perfect_foresight / POLICY BLOCK policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻, h≻}
+       h≻  : {h≻}
+       ──────────────
+  out  c   : {c}
+
+Conditions
+  ¬(𝑢(cp) ∈ [∞, ∞] ∧ β · V[>] ∈ [−∞, −∞]
+    ∨ 𝑢(cp) ∈ [−∞, −∞] ∧ β · V[>] ∈ [∞, ∞])
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  41  c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  β     perfect_foresight:parameter:β
+  𝑢     perfect_foresight:function:𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward arvl_to_dcsn ====
+STAGE perfect_foresight / FORWARD BLOCK arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   k≺  : {k≺}
+       ──────────
+  out  m   : {m}
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  23  m = R*k/Γ + 1  :: [id=market_resources]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE perfect_foresight / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   m   : {m}
+       ──────────
+  out  a≻  : {a≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  27  a = m - c  :: [id=savings]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE perfect_foresight / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xa → ℝ
+       ℎ≻  : {()} → ℝ₊
+       ───────────────────────────────────────────────────
+  out  𝑉   : Xm → ℝ
+       ℎ   : {()} → ℝ₊
+
+At
+  𝑐  : Xm → ℝ₊₊,  𝑐(m) ∈ Γ_c(m)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻(·, 𝑐)
+     ─────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻(·, 𝑐))(m) = 𝑉≻(𝑔≻(m, 𝑐(m)))
+
+  2  Aggregation
+     in: (1), ℎ≻                        out: 𝑉, ℎ
+     ─────────────────────────────────────────────────────
+     rule: 𝑉(m) = 𝑢(𝑐(m)) + β · 𝑉≻(𝑔≻(m, 𝑐(m)))
+           ℎ(m) = 1 + ℎ≻
+
+  3  Evaluation
+     in: 𝑉, ℎ                           out: 𝑉, ℎ
+     ─────────────────────────────────────────────────────
+     rule: 𝑉 : Xm → ℝ
+           ℎ : {()} → ℝ₊
+
+Conditions
+  Aggregation  𝑉(m) ∈ ℝ
+  Aggregation  ℎ ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  31  V = 𝑢(c) + β*V[>]  :: [id=value]
+  32  h = 1 + h[>]       :: [id=human_wealth]
+
+Definitions referenced
+  Xm    perfect_foresight:set:Xm
+  Xa    perfect_foresight:set:Xa
+  β     perfect_foresight:parameter:β
+  𝑢     perfect_foresight:function:𝑢
+  Γ_c   perfect_foresight:correspondence:Γ_c
+  𝑔≻    perfect_foresight:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback ====
+STAGE perfect_foresight / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xa → ℝ
+       ─────────────
+  out  𝑉≻ ∘ 𝑔≻(·, 𝑐)
+           : Xm → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻(·, 𝑐))(m) = 𝑉≻(𝑔≻(m, 𝑐(m)))
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  27  a = m - c  :: [id=savings]
+
+Definitions referenced
+  Xm    perfect_foresight:set:Xm
+  Xa    perfect_foresight:set:Xa
+  𝑔≻    perfect_foresight:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE perfect_foresight / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻(·, 𝑐)
+           : Xm → ℝ
+       ℎ≻  : {()} → ℝ₊
+       ───────────────
+  out  𝑉   : Xm → ℝ
+       ℎ   : Xm → ℝ₊
+
+Rule
+  𝑉(m) = 𝑢(𝑐(m)) + β · 𝑉≻(𝑔≻(m, 𝑐(m)))
+  ℎ(m) = 1 + ℎ≻
+
+Conditions
+  𝑉(m) ∈ ℝ
+  ℎ ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  31  V = 𝑢(c) + β*V[>]  :: [id=value]
+  32  h = 1 + h[>]       :: [id=human_wealth]
+
+Definitions referenced
+  Xm    perfect_foresight:set:Xm
+  β     perfect_foresight:parameter:β
+  𝑢     perfect_foresight:function:𝑢
+  𝑔≻    perfect_foresight:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE perfect_foresight / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : Xm → ℝ
+       ℎ  : Xm → ℝ₊
+       ──────────────
+  out  𝑉  : Xm → ℝ
+       ℎ  : {()} → ℝ₊
+
+Rule
+  𝑉(m) = 𝑢(𝑐(m)) + β · 𝑉≻(𝑔≻(m, 𝑐(m)))
+  𝑉 : Xm → ℝ
+  ℎ(m) = 1 + ℎ≻
+  ℎ : {()} → ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xm    perfect_foresight:set:Xm
+  β     perfect_foresight:parameter:β
+  𝑢     perfect_foresight:function:𝑢
+  𝑔≻    perfect_foresight:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl ====
+STAGE perfect_foresight / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉   : Xm → ℝ
+       ℎ   : {()} → ℝ₊
+       ────────────────────────────────────────────
+  out  𝑉≺  : Xa → ℝ
+       ℎ≺  : {()} → ℝ₊
+
+Operations
+  1  Pullback
+     in: 𝑉                              out: 𝑉 ∘ 𝑔≺
+     ──────────────────────────────────────────────
+     rule: (𝑉 ∘ 𝑔≺)(k) = 𝑉(𝑔≺(k))
+
+  2  Aggregation
+     in: (1), ℎ                         out: 𝑉≺, ℎ≺
+     ──────────────────────────────────────────────
+     rule: 𝑉≺(k) = Γ^(1 − ρ) · 𝑉(𝑔≺(k))
+           ℎ≺(k) = ℎ · Γ/R
+
+  3  Evaluation
+     in: 𝑉≺, ℎ≺                         out: 𝑉≺, ℎ≺
+     ──────────────────────────────────────────────
+     rule: 𝑉≺ : Xa → ℝ
+           ℎ≺ : {()} → ℝ₊
+
+Conditions
+  Aggregation  𝑉≺(k) ∈ ℝ
+  Aggregation  ℎ≺ ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  36  V[<] = Γ^(1-ρ) * V  :: [id=value]
+  37  h[<] = h*Γ/R        :: [id=human_wealth]
+
+Definitions referenced
+  Xm    perfect_foresight:set:Xm
+  Xa    perfect_foresight:set:Xa
+  ρ     perfect_foresight:parameter:ρ
+  R     perfect_foresight:parameter:R
+  Γ     perfect_foresight:parameter:Γ
+  𝑔≺    perfect_foresight:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Pullback ====
+STAGE perfect_foresight / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+  / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : Xm → ℝ
+       ───────────
+  out  𝑉 ∘ 𝑔≺
+          : Xa → ℝ
+
+Rule
+  (𝑉 ∘ 𝑔≺)(k) = 𝑉(𝑔≺(k))
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  23  m = R*k/Γ + 1  :: [id=market_resources]
+
+Definitions referenced
+  Xm    perfect_foresight:set:Xm
+  Xa    perfect_foresight:set:Xa
+  𝑔≺    perfect_foresight:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Aggregation ====
+STAGE perfect_foresight / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+  / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉 ∘ 𝑔≺
+           : Xa → ℝ
+       ℎ   : {()} → ℝ₊
+       ───────────────
+  out  𝑉≺  : Xa → ℝ
+       ℎ≺  : Xa → ℝ₊
+
+Rule
+  𝑉≺(k) = Γ^(1 − ρ) · 𝑉(𝑔≺(k))
+  ℎ≺(k) = ℎ · Γ/R
+
+Conditions
+  𝑉≺(k) ∈ ℝ
+  ℎ≺ ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  36  V[<] = Γ^(1-ρ) * V  :: [id=value]
+  37  h[<] = h*Γ/R        :: [id=human_wealth]
+
+Definitions referenced
+  Xa    perfect_foresight:set:Xa
+  ρ     perfect_foresight:parameter:ρ
+  R     perfect_foresight:parameter:R
+  Γ     perfect_foresight:parameter:Γ
+  𝑔≺    perfect_foresight:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Evaluation ====
+STAGE perfect_foresight / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+  / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≺  : Xa → ℝ
+       ℎ≺  : Xa → ℝ₊
+       ───────────────
+  out  𝑉≺  : Xa → ℝ
+       ℎ≺  : {()} → ℝ₊
+
+Rule
+  𝑉≺(k) = Γ^(1 − ρ) · 𝑉(𝑔≺(k))
+  𝑉≺ : Xa → ℝ
+  ℎ≺(k) = ℎ · Γ/R
+  ℎ≺ : {()} → ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xa    perfect_foresight:set:Xa
+  ρ     perfect_foresight:parameter:ρ
+  R     perfect_foresight:parameter:R
+  Γ     perfect_foresight:parameter:Γ
+  𝑔≺    perfect_foresight:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy ====
+STAGE perfect_foresight / POLICY BUILDER policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xa → ℝ
+       ℎ≻  : {()} → ℝ₊
+       ──────────────────────────────────────────────────────────────────────
+  out  𝑐   : Xm → ℝ₊₊,  𝑐(m) ∈ Γ_c(m)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻
+     ────────────────────────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻)(m, c) = 𝑉≻(𝑔≻(m, c))
+
+  2  optimality:Aggregation
+     in: (1)                            out: (m, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(m, c))
+     ────────────────────────────────────────────────────────────────────────
+     rule: (m, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(m, c))
+
+  3  optimality:Argmax
+     in: (2)                            out: 𝑐
+     ────────────────────────────────────────────────────────────────────────
+     rule: 𝑐(m) ∈ argmax_{cp ∈ Γ_c(m)} [𝑢(cp) + β · 𝑉≻(𝑔≻(m, cp))]
+
+  4  Evaluation
+     in: 𝑐                              out: 𝑐
+     ────────────────────────────────────────────────────────────────────────
+     rule: 𝑐 : Xm → ℝ₊₊,  𝑐(m) ∈ Γ_c(m)
+
+Conditions
+  optimality:Aggregation  ¬(𝑢(cp) ∈ [∞, ∞] ∧ β · V[>] ∈ [−∞, −∞]
+                            ∨ 𝑢(cp) ∈ [−∞, −∞] ∧ β · V[>] ∈ [∞, ∞])
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  41  c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xm    perfect_foresight:set:Xm
+  Xa    perfect_foresight:set:Xa
+  β     perfect_foresight:parameter:β
+  𝑢     perfect_foresight:function:𝑢
+  Γ_c   perfect_foresight:correspondence:Γ_c
+  𝑔≻    perfect_foresight:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback ====
+STAGE perfect_foresight / POLICY BUILDER policy / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xa → ℝ
+       ────────────────────────────────────────
+  out  𝑉≻ ∘ 𝑔≻
+           : {m, c ∈ Xm × ℝ₊₊ | c ∈ Γ_c(m)} → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻)(m, c) = 𝑉≻(𝑔≻(m, c))
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  27  a = m - c  :: [id=savings]
+
+Definitions referenced
+  Xm    perfect_foresight:set:Xm
+  Xa    perfect_foresight:set:Xa
+  Γ_c   perfect_foresight:correspondence:Γ_c
+  𝑔≻    perfect_foresight:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / optimality:Aggregation ====
+STAGE perfect_foresight / POLICY BUILDER policy / optimality:Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻
+         : {m, c ∈ Xm × ℝ₊₊ | c ∈ Γ_c(m)} → ℝ
+       ──────────────────────────────────────
+  out  (m, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(m, c))
+         : {m, c ∈ Xm × ℝ₊₊ | c ∈ Γ_c(m)} → ℝ
+
+Rule
+  (m, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(m, c))
+
+Conditions
+  ¬(𝑢(cp) ∈ [∞, ∞] ∧ β · V[>] ∈ [−∞, −∞]
+    ∨ 𝑢(cp) ∈ [−∞, −∞] ∧ β · V[>] ∈ [∞, ∞])
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  41  c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xm    perfect_foresight:set:Xm
+  β     perfect_foresight:parameter:β
+  𝑢     perfect_foresight:function:𝑢
+  Γ_c   perfect_foresight:correspondence:Γ_c
+  𝑔≻    perfect_foresight:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / optimality:Argmax ====
+STAGE perfect_foresight / POLICY BUILDER policy / optimality:Argmax
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (m, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(m, c))
+          : {m, c ∈ Xm × ℝ₊₊ | c ∈ Γ_c(m)} → ℝ
+       ───────────────────────────────────────
+  out  𝑐  : Xm → ℝ₊₊,  𝑐(m) ∈ Γ_c(m)
+
+Rule
+  𝑐(m) ∈ argmax_{cp ∈ Γ_c(m)} [𝑢(cp) + β · 𝑉≻(𝑔≻(m, cp))]
+
+Conditions
+  ¬(𝑢(cp) ∈ [∞, ∞] ∧ β · V[>] ∈ [−∞, −∞]
+    ∨ 𝑢(cp) ∈ [−∞, −∞] ∧ β · V[>] ∈ [∞, ∞])
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  41  c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xm    perfect_foresight:set:Xm
+  β     perfect_foresight:parameter:β
+  𝑢     perfect_foresight:function:𝑢
+  Γ_c   perfect_foresight:correspondence:Γ_c
+  𝑔≻    perfect_foresight:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Evaluation ====
+STAGE perfect_foresight / POLICY BUILDER policy / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑐  : Xm → ℝ₊₊,  𝑐(m) ∈ Γ_c(m)
+       ─────────────────────────────
+  out  𝑐  : Xm → ℝ₊₊,  𝑐(m) ∈ Γ_c(m)
+
+Rule
+  𝑐(m) ∈ argmax_{cp ∈ Γ_c(m)} [𝑢(cp) + β · 𝑉≻(𝑔≻(m, cp))]
+  𝑐 : Xm → ℝ₊₊,  𝑐(m) ∈ Γ_c(m)
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xm    perfect_foresight:set:Xm
+  β     perfect_foresight:parameter:β
+  𝑢     perfect_foresight:function:𝑢
+  Γ_c   perfect_foresight:correspondence:Γ_c
+  𝑔≻    perfect_foresight:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn ====
+STAGE perfect_foresight / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Xa
+       ───────────────────────────────────────
+  out  μ   : finite measure on Xm
+
+Operations
+  1  Pushforward
+     in: μ≺                             out: μ
+     ─────────────────────────────────────────
+     rule: μ(B) = μ≺({k≺ ∈ Xa | 𝑔≺(k≺) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  23  m = R*k/Γ + 1  :: [id=market_resources]
+
+Definitions referenced
+  Xm    perfect_foresight:set:Xm
+  Xa    perfect_foresight:set:Xa
+  𝑔≺    perfect_foresight:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / Pushforward ====
+STAGE perfect_foresight / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+  / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Xa
+       ──────────────────────────
+  out  μ   : finite measure on Xm
+
+Rule
+  μ(B) = μ≺({k≺ ∈ Xa | 𝑔≺(k≺) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  23  m = R*k/Γ + 1  :: [id=market_resources]
+
+Definitions referenced
+  Xm    perfect_foresight:set:Xm
+  Xa    perfect_foresight:set:Xa
+  𝑔≺    perfect_foresight:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE perfect_foresight / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on Xm
+       ────────────────────────────────────────
+  out  μ≻  : finite measure on Xa
+
+At
+  𝑐  : Xm → ℝ₊₊,  𝑐(m) ∈ Γ_c(m)
+
+Operations
+  1  Pushforward
+     in: μ                              out: μ≻
+     ──────────────────────────────────────────
+     rule: μ≻(B) = μ({m ∈ Xm | 𝑔≻(m, 𝑐(m)) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  27  a = m - c  :: [id=savings]
+
+Definitions referenced
+  Xm    perfect_foresight:set:Xm
+  Xa    perfect_foresight:set:Xa
+  Γ_c   perfect_foresight:correspondence:Γ_c
+  𝑔≻    perfect_foresight:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE perfect_foresight / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+  / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on Xm
+       ──────────────────────────
+  out  μ≻  : finite measure on Xa
+
+Rule
+  μ≻(B) = μ({m ∈ Xm | 𝑔≻(m, 𝑐(m)) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  27  a = m - c  :: [id=savings]
+
+Definitions referenced
+  Xm    perfect_foresight:set:Xm
+  Xa    perfect_foresight:set:Xa
+  𝑔≻    perfect_foresight:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== perfect_foresight:set:Xm ====
+STAGE perfect_foresight / SET Xm
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xm  = ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  8  Xm := ℝ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== perfect_foresight:set:Xa ====
+STAGE perfect_foresight / SET Xa
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xa  = ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  9  Xa := ℝ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== perfect_foresight:parameter:β ====
+STAGE perfect_foresight / PARAMETER β
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  β  ∈ {β ∈ ℝ₊₊ | β > 0 ∧ β < R^(ρ − 1)}
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  11  β : ℝ₊₊ @ (0, R^(ρ-1))
+        :: ["discount factor; its upper bound R^(ρ-1) is the return impatience
+        condition, q < 1"]
+
+Definitions referenced
+  ρ     perfect_foresight:parameter:ρ
+  R     perfect_foresight:parameter:R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== perfect_foresight:parameter:ρ ====
+STAGE perfect_foresight / PARAMETER ρ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  ρ  ∈ (1, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  12  ρ : (1, inf)
+        :: ["coefficient of relative risk aversion, greater than one"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== perfect_foresight:parameter:R ====
+STAGE perfect_foresight / PARAMETER R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  R  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  13  R : ℝ₊₊  :: ["gross interest factor"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== perfect_foresight:parameter:Γ ====
+STAGE perfect_foresight / PARAMETER Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Γ  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  14  Γ : ℝ₊₊  :: ["permanent income growth factor"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== perfect_foresight:derived:q ====
+STAGE perfect_foresight / DERIVED PARAMETER q
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  q  ∈ (0, 1),  := (β · R)^(1/ρ)/R
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  16  q : (0,1) := (β*R)^(1/ρ)/R
+        :: ["the return patience factor; the return impatience condition is q
+        < 1"]
+
+Definitions referenced
+  β     perfect_foresight:parameter:β
+  ρ     perfect_foresight:parameter:ρ
+  R     perfect_foresight:parameter:R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== perfect_foresight:function:𝑢 ====
+STAGE perfect_foresight / FUNCTION 𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑢  : ℝ₊₊ → (−∞, 0),  c ↦ c^(1 − ρ)/(1 − ρ)
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  18  𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)  :: [id=util]
+
+Definitions referenced
+  ρ     perfect_foresight:parameter:ρ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== perfect_foresight:correspondence:Γ_c ====
+STAGE perfect_foresight / CORRESPONDENCE Γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Γ_c  : Xm ⇉ ℝ₊₊,  x ↦ {c ∈ ℝ₊₊ | c < x + h≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  20  Γ_c(x : Xm) := {c : ℝ₊₊ | c < x + h[>]}  :: [id=feasible_consumption]
+
+Definitions referenced
+  Xm    perfect_foresight:set:Xm
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.market_resources ====
+STAGE perfect_foresight / FORWARD BLOCK arvl_to_dcsn / market_resources
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  perfect_foresight.bl
+  23  m = R*k/Γ + 1  :: [id=market_resources]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.savings ====
+STAGE perfect_foresight / FORWARD BLOCK dcsn_to_cntn / savings
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  perfect_foresight.bl
+  27  a = m - c  :: [id=savings]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.value ====
+STAGE perfect_foresight / BACKWARD BLOCK cntn_to_dcsn / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(m) ∈ ℝ
+  ℎ ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  31  V = 𝑢(c) + β*V[>]  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.human_wealth ====
+STAGE perfect_foresight / BACKWARD BLOCK cntn_to_dcsn / human_wealth
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(m) ∈ ℝ
+  ℎ ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  32  h = 1 + h[>]  :: [id=human_wealth]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.value ====
+STAGE perfect_foresight / BACKWARD BLOCK dcsn_to_arvl / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉≺(k) ∈ ℝ
+  ℎ≺ ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  36  V[<] = Γ^(1-ρ) * V  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.human_wealth ====
+STAGE perfect_foresight / BACKWARD BLOCK dcsn_to_arvl / human_wealth
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉≺(k) ∈ ℝ
+  ℎ≺ ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  37  h[<] = h*Γ/R  :: [id=human_wealth]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== policy.optimality ====
+STAGE perfect_foresight / POLICY BLOCK policy / optimality
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  ¬(𝑢(cp) ∈ [∞, ∞] ∧ β · V[>] ∈ [−∞, −∞]
+    ∨ 𝑢(cp) ∈ [−∞, −∞] ∧ β · V[>] ∈ [∞, ∞])
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  41  c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  β     perfect_foresight:parameter:β
+  𝑢     perfect_foresight:function:𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== perfect_foresight:g:arvl_to_dcsn ====
+STAGE perfect_foresight / LAW OF MOTION arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≺  : Xa → Xm,  k ↦ R · k/Γ + 1
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  23  m = R*k/Γ + 1  :: [id=market_resources]
+
+Definitions referenced
+  Xm    perfect_foresight:set:Xm
+  Xa    perfect_foresight:set:Xa
+  R     perfect_foresight:parameter:R
+  Γ     perfect_foresight:parameter:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== perfect_foresight:g:dcsn_to_cntn ====
+STAGE perfect_foresight / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : {m, c ∈ Xm × ℝ₊₊ | c ∈ Γ_c(m)} → Xa,  (m, c) ↦ m − c
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  27  a = m - c  :: [id=savings]
+
+Definitions referenced
+  Xm    perfect_foresight:set:Xm
+  Xa    perfect_foresight:set:Xa
+  Γ_c   perfect_foresight:correspondence:Γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== perfect_foresight:G:cntn_to_dcsn ====
+STAGE perfect_foresight / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, h≻, m, c ∈ ℝ × ℝ₊ × Xm × ℝ₊₊ | c ∈ Γ_c(m)} → ℝ × ℝ₊,
+        (V≻, h≻, m, c) ↦ (𝑢(c) + β · V≻, 1 + h≻)
+
+Conditions
+  𝑉(m) ∈ ℝ
+  ℎ ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  31  V = 𝑢(c) + β*V[>]  :: [id=value]
+  32  h = 1 + h[>]       :: [id=human_wealth]
+
+Definitions referenced
+  Xm    perfect_foresight:set:Xm
+  β     perfect_foresight:parameter:β
+  𝑢     perfect_foresight:function:𝑢
+  Γ_c   perfect_foresight:correspondence:Γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== perfect_foresight:G:dcsn_to_arvl ====
+STAGE perfect_foresight / VALUE AGGREGATOR dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≺  : ℝ × ℝ₊ × Xa → ℝ × ℝ₊,  (V, h, k) ↦ (Γ^(1 − ρ) · V, h · Γ/R)
+
+Conditions
+  𝑉≺(k) ∈ ℝ
+  ℎ≺ ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  36  V[<] = Γ^(1-ρ) * V  :: [id=value]
+  37  h[<] = h*Γ/R        :: [id=human_wealth]
+
+Definitions referenced
+  Xa    perfect_foresight:set:Xa
+  ρ     perfect_foresight:parameter:ρ
+  R     perfect_foresight:parameter:R
+  Γ     perfect_foresight:parameter:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== perfect_foresight:G:policy ====
+STAGE perfect_foresight / VALUE AGGREGATOR policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, m, c ∈ ℝ × Xm × ℝ₊₊ | c ∈ Γ_c(m)} → ℝ,
+        (V≻, m, c) ↦ 𝑢(c) + β · V≻
+
+Conditions
+  ¬(𝑢(cp) ∈ [∞, ∞] ∧ β · V[>] ∈ [−∞, −∞]
+    ∨ 𝑢(cp) ∈ [−∞, −∞] ∧ β · V[>] ∈ [∞, ∞])
+──────────────────────────────────────────────────────────────────────────────
+Source  perfect_foresight.bl
+  41  c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xm    perfect_foresight:set:Xm
+  β     perfect_foresight:parameter:β
+  𝑢     perfect_foresight:function:𝑢
+  Γ_c   perfect_foresight:correspondence:Γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

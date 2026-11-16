@@ -26,7 +26,7 @@ instance's types are parameters over those sets (`tau : Tau`,
 `r_type : R_type`), bare declarations with no law, since the source model
 fixes both types within a life (9 Sep 2026, after the ruling that a family
 indexed by a model-content count is written with literal members); the
-family selections `wage_fn[tau]` and `R_vec[r_type]` become
+family selections `wage_fn[age[>]][tau]` and `R_vec[r_type]` use
 Select(Sym(Constant(family)), Key(index)); the policy block's input side
 carries the perch word `: !cntn` and its output is `(c : !ctrl) : !dcsn`
 (the B01 alignment of 8 Sep 2026); the policy block states the
@@ -55,21 +55,21 @@ import pathlib
 import sys
 
 _TESTS = pathlib.Path(__file__).resolve().parent
-_TOOLS = _TESTS.parents[2] / "packages" / "bellman" / "tests" / "tools"
+_TOOLS = _TESTS.parents[2] / "applications"
 sys.path.insert(0, str(_TOOLS))
 
 import pytest                         # noqa: E402
 
 import stage_ast                      # noqa: E402
 from stage_ast import annotation as _ann, block, parsed, perched as _p, run_checks, sym as _c  # noqa: E402
-from stage_types import (             # noqa: E402
+from bellman.syntax.terms import (             # noqa: E402
     Add, Assignment, At, Cartesian, Constant, Continuation,
-    Control, Coordinate, Declaration, Declare, Decision, Div, Domain,
-    Equation, FiniteSet, Grid, Handler, Infoset, Interval, Key, KeyValue,
+    Constancy, Control, Coordinate, Declaration, Declare, Decision, Div, Domain,
+    Equation, FiniteSet, Functions, Grid, Handler, Infoset, IntegerRange, Interval, Key, KeyValue,
     Law, Marked, Metadata, Method, Mul, Name, Named, Neg, Node, Number,
     Open, Operator, Path, Points, Pow, Product, Range, Role, Segment, Select,
     SetDifference, Signature, Space, Spaced, Statement, Sub, Subject, Sym,
-    Typer, Value, Var, Word,
+    Term, Typer, Value, Var, Word,
 )
 
 _SOURCE = _TESTS.parent / "declaration" / "stages" / "benhabib_bellman" / "benhabib_bellman.bl"
@@ -91,21 +91,23 @@ def _sel(family, index):
 # R_vec[r_type], the gross return of the instance's return type, appears
 # in three equations.
 _GROSS_R = _sel("R_vec", "r_type")
+_WAGE = Select(Select(_c("wage_fn"), Term(_p("age", Continuation()))), Key("tau"))
+_AGE = [Domain(Named("Age")), Role(Value(0)), Constancy()]
 
 _DECILES = ["q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10"]
 _RETURN_TYPES = ["r1", "r2", "r3", "r4", "r5"]
 
 
 def test_item_census():
-    # One metadata line, three space assignments, eight parameter
+    # One metadata line, four space assignments, eight parameter
     # declarations (β, σ, μ, A, wage_fn, R_vec, tau, r_type), the feasible
     # set of consumption `Γ_c(x : Xa) := [0, x]`, then three blocks
     # (dcsn_to_cntn, cntn_to_dcsn, policy): the stage has no arrival perch,
     # its decision perch being the perch at which it is entered (decision
     # MB-V25). No law statement: the types are fixed within a life.
-    assert len(_ITEMS) == 16
+    assert len(_ITEMS) == 17
     kinds = [type(it).__name__ for it in _ITEMS]
-    assert kinds == (["Metadata"] + ["Statement"] * 3 + ["Declare"] * 8
+    assert kinds == (["Metadata"] + ["Statement"] * 4 + ["Declare"] * 8
                      + ["Statement"] + ["Block"] * 3)
     assert stage_ast.unlowered_parse_nodes(_AST) == []
 
@@ -128,12 +130,14 @@ def test_space_assignments():
     assert _ITEMS[3] == Statement(
         Assignment(Constant("R_type"), Space(FiniteSet(_RETURN_TYPES))),
         None)
+    assert _ITEMS[4] == Statement(
+        Assignment(Constant("Age"), Space(IntegerRange(Number(25), Number(61)))), None)
 
 
 def test_declare_beta_open_interval():
     # `β : (0,1)` — an open interval on both ends; the Domain sits on the
     # Declaration, the coordinate carries none.
-    assert _ITEMS[4] == Declare(Declaration(
+    assert _ITEMS[5] == Declare(Declaration(
         Subject([Coordinate("β", None, [])]),
         [Domain(Interval(Range(Open(), Number(0), Number(1), Open())))],
         None))
@@ -142,21 +146,18 @@ def test_declare_beta_open_interval():
 def test_declares_with_domains():
     # σ on ℝ₊₊ \ {1} and μ on ℝ₊ \ {1}, each a difference of sets that
     # excludes the value 1, at which the formula that divides by 1 - σ, or by
-    # 1 - μ in the bequest stage, has no value; A on ℝ₊; the two families on
-    # product sets of a fixed count (ten ℝ₊ factors for the decile wage
-    # schedule, five ℝ₊₊ factors for the gross returns), so that the source
-    # fixes the count the selections are checked against; the instance's
-    # types on their finite sets.
+    # 1 - μ in the bequest stage, has no value; A on ℝ₊; the wage table indexed by incoming age and decile, and
+    # the five gross returns in return-type order.
     one = Points([Number(1)], None)
     expected = [
         ("σ", SetDifference(Named("ℝ₊₊"), one)), ("μ", SetDifference(Named("ℝ₊"), one)),
         ("A", Named("ℝ₊")),
-        ("wage_fn", Product([Named("ℝ₊")] * 10)),
+        ("wage_fn", Functions(Product([Named("Age"), Named("Tau")]), Named("ℝ₊"))),
         ("R_vec", Product([Named("ℝ₊₊")] * 5)),
         ("tau", Named("Tau")), ("r_type", Named("R_type")),
     ]
     for offset, (stem, space) in enumerate(expected):
-        assert _ITEMS[5 + offset] == Declare(Declaration(
+        assert _ITEMS[6 + offset] == Declare(Declaration(
             Subject([Coordinate(stem, None, [])]),
             [Domain(space)],
             None)), stem
@@ -168,7 +169,7 @@ def test_types_carry_no_law():
     # carry no value.
     assert not any(isinstance(it, Statement) and isinstance(it.core, Law)
                    for it in _ITEMS)
-    assert _ITEMS[10].declaration.value is None and _ITEMS[11].declaration.value is None
+    assert _ITEMS[11].declaration.value is None and _ITEMS[12].declaration.value is None
 
 
 def test_block_dcsn_to_cntn_header():
@@ -176,25 +177,26 @@ def test_block_dcsn_to_cntn_header():
     # — the decision state is typed here, the first header that lists it;
     # the classifiers on c keep their written order, role then domain; the
     # return type is a parameter and so is not a coordinate.
-    assert _ITEMS[13].tag == _ann(
+    assert _ITEMS[14].tag == _ann(
         KeyValue("id", "dcsn_to_cntn"),
         Typer(Signature(
             Subject([Coordinate("m", None, [Domain(Named("Xa"))]),
                      Coordinate("c", None, [Role(Control()),
-                                            Domain(Named("ℝ₊"))])]),
+                                            Domain(Named("ℝ₊"))]),
+                     Coordinate("age", At(Continuation()), [])]),
             [Infoset(Decision())],
             Subject([Coordinate("a", None, [Domain(Named("Xa"))])]),
             [Infoset(Continuation())])))
 
 
 def test_block_dcsn_to_cntn_body():
-    # a = R_vec[r_type] * (m - c) + wage_fn[tau] — the return is applied to
+    # a = R_vec[r_type] * (m - c) + wage_fn[age[>]][tau] — the return is applied to
     # the saving and the earnings of the instance's decile are added after
     # it; the product binds before the sum, and the wage schedule selected
     # at the decile is a selection by name key, not a call.
-    assert list(_ITEMS[13].body) == [Statement(
+    assert list(_ITEMS[14].body) == [Statement(
         Equation(_c("a"), Add(Mul(_GROSS_R, Sub(_c("m"), _c("c"))),
-                              _sel("wage_fn", "tau"))),
+                              _WAGE)),
         _ann(KeyValue("id", "savings")))]
 
 
@@ -203,15 +205,17 @@ def test_block_cntn_to_dcsn_header():
     #        -> (V : ℝ @ !vlu) : !dcsn]
     # The perch mark on V's binding occurrence sits in the coordinate's
     # index slot; !vlu is Role(Value(0)), after its Domain as written.
-    assert _ITEMS[14].tag == _ann(
+    assert _ITEMS[15].tag == _ann(
         KeyValue("id", "cntn_to_dcsn"),
         Typer(Signature(
             Subject([Coordinate("V", At(Continuation()),
                                 [Domain(Named("ℝ")), Role(Value(0))]),
+                     Coordinate("age", At(Continuation()), _AGE),
                      Coordinate("c", None, [])]),
             [Infoset(Continuation())],
             Subject([Coordinate("V", None,
-                                [Domain(Named("ℝ")), Role(Value(0))])]),
+                                [Domain(Named("ℝ")), Role(Value(0))]),
+                     Coordinate("age", None, _AGE)]),
             [Infoset(Decision())])))
 
 
@@ -220,12 +224,15 @@ def test_block_cntn_to_dcsn_value_equation():
     # the division before the sum, and V[>] is a continuation-perch
     # occurrence of V. No expectation: the stage has no shock.
     one_minus_sigma = Sub(Number(1), _c("σ"))
-    assert _ITEMS[14].body[0] == Statement(
+    assert _ITEMS[15].body[0] == Statement(
         Equation(_c("V"),
                  Add(Div(Pow(_c("c"), one_minus_sigma), one_minus_sigma),
                      Mul(_c("β"), _p("V", Continuation())))),
         _ann(KeyValue("id", "value")))
-    assert len(_ITEMS[14].body) == 1
+    assert list(_ITEMS[15].body[1:]) == [Statement(
+        Equation(_c("age"), Sub(_p("age", Continuation()), Number(1))),
+        _ann(KeyValue("id", "age")),
+    )]
 
 
 def test_block_cntn_to_dcsn_marginal_equation():
@@ -248,11 +255,12 @@ def test_block_policy_header():
     # output carries the decision perch word and the control role with no
     # set written; V[>] is the value role Value(0), after its Domain. The
     # return type, a parameter, is not a coordinate.
-    assert _ITEMS[15].tag == _ann(
+    assert _ITEMS[16].tag == _ann(
         KeyValue("id", "policy"),
         Typer(Signature(
             Subject([Coordinate("V", At(Continuation()),
-                                [Domain(Named("ℝ")), Role(Value(0))])]),
+                                [Domain(Named("ℝ")), Role(Value(0))]),
+                     Coordinate("age", At(Continuation()), [])]),
             [Infoset(Continuation())],
             Subject([Coordinate("c", None, [Role(Control())])]),
             [Infoset(Decision())])))
@@ -275,7 +283,7 @@ def test_block_policy_inveuler():
 
 
 def test_block_policy_inverse_transition():
-    # m[>] = c[>] + (a - wage_fn[tau]) / R_vec[r_type]
+    # m[>] = c[>] + (a - wage_fn[age[>]][tau]) / R_vec[r_type]
     #        :: [id=inv_g_dcsn_to_cntn, !node] — the endogenous wealth grid,
     # the inverse of the transition g of dcsn_to_cntn in its state
     # coordinate (id renamed by AAS, 9 September 2026); the earnings are
@@ -285,7 +293,7 @@ def test_block_policy_inverse_transition():
     assert _EGM.body[1] == Statement(
         Equation(_p("m", Continuation()),
                  Add(_p("c", Continuation()),
-                     Div(Sub(_c("a"), _sel("wage_fn", "tau")), _GROSS_R))),
+                     Div(Sub(_c("a"), _WAGE), _GROSS_R))),
         _ann(KeyValue("id", "inv_g_dcsn_to_cntn"), Typer(Marked(Node()))))
 
 
@@ -298,7 +306,7 @@ def test_block_policy_consumption():
     assert _EGM.body[2] == Statement(
         Equation(_c("c"), _p("c", Continuation())),
         _ann(KeyValue("id", "cons_choice")))
-    assert len(_EGM.body) == 3 and len(_ITEMS[15].body) == 1
+    assert len(_EGM.body) == 3 and len(_ITEMS[16].body) == 1
 
 
 def test_addition_item_census():

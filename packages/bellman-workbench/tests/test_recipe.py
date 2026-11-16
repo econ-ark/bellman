@@ -921,33 +921,30 @@ def test_a_parameter_s_value_is_written_as_typed_and_judged_by_the_package_s_cal
 def test_a_value_typed_for_an_unvalued_parameter_is_added_as_the_writer_writes_it(
     scratch_durables,
 ):
-    """A value typed for a parameter that no file of the occurrence's list
-    values is added at the end of the mapping that the package's reader
-    reads in the list's last file, written as the package's writer writes
-    the number, and only where the added entry reads back as the number
-    typed (ruling R34; AMD-MI-002 §5 rule 6, A2-D8). On a copy of the
-    durables model at `periods[3]/tenure`, `--- 1.05` and `1.05` after a
-    byte-order mark, each of which reads as the number 1.05 alone and as
-    text written after `Y: `, typed for the unvalued `Y`, add `Y: 1.05`
-    after `K: 1.3`, the last entry of the file's `calibration`, and the row
-    of `Y` then shows `1.05`, what the file holds."""
+    """A missing scalar appends to the last declared calibration source.
+    A document marker or byte-order mark reads as the number 1.05; neither
+    becomes part of the written scalar. The income tables remain intact."""
     folder = model.open_folder(scratch_durables)
     calibration = scratch_durables / "declaration/calibration/durables.yml"
-    before = calibration.read_bytes()
-    lines = before.decode("utf-8").split("\n")
-    assert lines[37] == "  K: 1.3"
+    text = calibration.read_text(encoding="utf-8")
+    assert text.count("  R_H: 1.0\n") == 1
+    calibration.write_text(text.replace("  R_H: 1.0\n", ""), encoding="utf-8")
+    source = scratch_durables / "declaration/calibration/wage_schedule.yml"
+    before = source.read_bytes()
     found = recipe.find_occurrence(folder, RECIPE, TENURE, (3, "tenure"))
     text = (scratch_durables / TENURE).read_text(encoding="utf-8")
     tenure = recipe.bind_occurrence(elaborate_text(text, found.origin), found)
     for typed in ("--- 1.05", "\ufeff1.05"):
+        rows = recipe.parameters_tab(folder, tenure.stage, tenure.record, "tenure").rows
+        assert next(row.value for row in rows if row.name == "R_H") == "unvalued"
         written = recipe.write_value(
-            folder, tenure.record, "tenure", "calibration", "Y", "unvalued", typed
+            folder, tenure.record, "tenure", "calibration", "R_H", "unvalued", typed
         )
         assert written.saved
-        assert written.text == "\n".join([*lines[:38], "  Y: 1.05", *lines[38:]])
+        assert written.text == before.decode("utf-8") + "  R_H: 1.05\n"
         rows = recipe.parameters_tab(folder, tenure.stage, tenure.record, "tenure").rows
-        assert next(row.value for row in rows if row.name == "Y") == "1.05"
-        calibration.write_bytes(before)
+        assert next(row.value for row in rows if row.name == "R_H") == "1.05"
+        source.write_bytes(before)
 
 
 def test_a_value_no_file_writes_as_an_entry_of_its_own_is_refused_and_written_nowhere(

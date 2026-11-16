@@ -51,8 +51,9 @@ from bellman.fold.block_lines import (
 )
 from bellman.fold.conditions import domain_conditions
 from bellman.fold.derived_parameters import derived_values
+from bellman.fold.stage_fold import law_of_motion_equations
 from bellman.fold.stage_names import StageNames, branches_of, lines_of
-from bellman.fold.wire_terms import symbol_occurrences, term_nodes
+from bellman.fold.wire_terms import guarded_term_nodes, is_wire_symbol, symbol_occurrences, term_nodes
 from bellman.native import predicates as P
 from bellman.native.identity import OPERATOR_KINDS, Identity, piece_identity
 from bellman.native.records import Condition, Refusal
@@ -78,6 +79,7 @@ from bellman.stage.grains import (
 )
 from bellman.native.records import setting_names
 from bellman.stage.levels import is_declared_version, source_texts
+from bellman.stage.input_requirements import input_conditions
 from bellman.stage.representation_checks import representation_conditions
 from bellman.stage.representations import bound_row
 from bellman.stage.places import components_by_place, components_of_box
@@ -87,6 +89,7 @@ from bellman.stage.term_operations import reference_term, relation_of, tuple_ter
 from bellman.syntax import terms as T
 from bellman.syntax.source import grid_word, to_source
 from bellman.syntax.vocabulary import (
+    ALIAS,
     ARRIVAL,
     CONTINUATION,
     DECISION,
@@ -115,6 +118,98 @@ def fields(stage):
 
 
 # --- the conditions, in the order they are applied ---
+
+
+def primitive_guards(stage, builder):
+    """The guards of each primitive output, in the builder's native terms.
+
+    A wire is needed where any consumer needs it. A comparison needs its
+    operands where the enclosing expression is needed. Each branch needs
+    its operands only on its side of that comparison. A missing output in
+    the answer is unconditional.
+    """
+    rows = tuple(construction_table(stage).by_builder(builder))
+    consumed = {wire for row in rows for wire in row.inputs}
+    needed = {
+        wire: None for row in rows for wire in row.outputs if wire not in consumed
+    }
+    answer = {}
+    for row in reversed(rows):
+        guards = []
+        if not row.outputs:
+            for wire in row.inputs:
+                needed[wire] = None
+            continue
+        for position, output in enumerate(row.outputs):
+            if output not in needed:
+                continue
+            guard = needed[output]
+            if guard is not None:
+                guards.append((output, guard))
+            if len(row.outputs) == len(row.maps):
+                for node, branch in guarded_term_nodes(row.maps[position]):
+                    if is_wire_symbol(node):
+                        wire = node.symbol.name
+                    elif isinstance(node, T.Call) and isinstance(node.fun, Identity):
+                        wire = node.fun
+                    else:
+                        continue
+                    if wire in row.inputs:
+                        local = branch if guard is None else guard
+                        if guard is not None and branch is not None and guard != branch:
+                            local = P.And(guard, branch)
+                        _add_primitive_guard(needed, wire, local)
+            elif row.kind == "Pullback" and not row.unknowns:
+                _add_primitive_guard(needed, row.inputs[position], guard)
+                for wire in row.inputs[len(row.outputs):]:
+                    _add_primitive_guard(needed, wire, guard)
+            elif row.kind == "Evaluation" and len(row.inputs) == len(row.outputs):
+                _add_primitive_guard(needed, row.inputs[position], guard)
+            else:
+                for wire in row.inputs:
+                    _add_primitive_guard(needed, wire, guard)
+        if guards:
+            answer[row.identity] = tuple(guards)
+    return {row.identity: answer[row.identity] for row in rows if row.identity in answer}
+
+
+def _add_primitive_guard(needed, wire, guard):
+    """Join the regions of two consumers of one wire."""
+    if wire not in needed:
+        needed[wire] = guard
+        return
+    previous = needed[wire]
+    if previous == guard:
+        return
+    if (
+        previous is None or guard is None
+        or previous == P.Not(guard) or guard == P.Not(previous)
+    ):
+        needed[wire] = None
+    elif (
+        isinstance(previous, P.And) and isinstance(guard, P.And)
+        and previous.left == guard.left
+        and (previous.right == P.Not(guard.right) or guard.right == P.Not(previous.right))
+    ):
+        needed[wire] = previous.left
+    else:
+        needed[wire] = P.Or(previous, guard)
+
+
+def value_on_guard(value, guard, otherwise):
+    """An expression that evaluates its selected value under a native guard."""
+    if isinstance(guard, P.Compare):
+        op = {"<": T.Lt, "<=": T.Le, "=": T.Eq, ">=": T.Ge, ">": T.Gt}[guard.relation]
+        return T.Conditional(T.Rel(guard.left, op(), guard.right), value, otherwise)
+    if isinstance(guard, P.Not):
+        return value_on_guard(otherwise, guard.operand, value)
+    if isinstance(guard, P.And):
+        inner = value_on_guard(value, guard.right, otherwise)
+        return value_on_guard(inner, guard.left, otherwise)
+    if isinstance(guard, P.Or):
+        inner = value_on_guard(value, guard.right, otherwise)
+        return value_on_guard(value, guard.left, inner)
+    raise TypeError(f"No conditional expression for {type(guard).__name__}")
 
 
 def obligations(stage, level=None, direction=None):
@@ -192,16 +287,36 @@ def _symbolic_obligations(stage):
     the constructed policy attains it, and none states a hypothesis of
     monotonicity, injectivity, coverage or concavity."""
     found = {}
+    guards_by_builder = {}
+
+    def output_guards(builder):
+        if builder not in guards_by_builder:
+            guards_by_builder[builder] = {
+                output: guard
+                for entries in primitive_guards(stage, builder).values()
+                for output, guard in entries
+            }
+        return guards_by_builder[builder]
+
+    aliases = {
+        line.address
+        for box in blocks_in_file_order(stage)
+        for _, line in lines_of(stage, box)
+        if line.role == ALIAS
+    }
     for item in (*construction_table(stage).obligations, *domain_conditions(stage)):
         condition, identities = item[0], item[1]
+        explanation = item[2] if len(item) > 2 else ""
+        if condition == "expectation-integrability":
+            occurrence = identities[0]
+            guard = output_guards(occurrence.block).get(dataclasses.replace(occurrence, mark="result"))
+            if guard is not None:
+                body = value_on_guard(identities[2], guard, T.Number(0))
+                identities = identities[:2] + (body,) + identities[3:]
+                explanation += f" This condition applies where {S.predicate_text(guard)}."
         found.setdefault(
             (condition, identities),
-            Condition(
-                condition,
-                identities,
-                status="required",
-                explanation=item[2] if len(item) > 2 else "",
-            ),
+            Condition(condition, identities, status="required", explanation=explanation),
         )
     # the condition each solution method whose rows open a builder requires,
     # under the name its row of the catalogue gives it, required and checked
@@ -286,7 +401,13 @@ def _symbolic_obligations(stage):
                 termed[(made.condition, made.entries)] = made
             continue
         if item.condition == "arithmetic-definedness":
-            item = _owned_definedness(stage, item)
+            for made in _owned_definedness(stage, item, aliases, output_guards):
+                termed[(made.condition, made.entries)] = made
+            continue
+        if item.condition == "function-argument-domain-inclusion":
+            for made in _call_domain_at_use(stage, item, aliases, output_guards):
+                termed[(made.condition, made.entries)] = made
+            continue
         termed[(item.condition, item.entries)] = item
     # the conservation identity of a push-forward into the branches is
     # established where the range condition of every branch line is,
@@ -321,6 +442,8 @@ def _symbolic_obligations(stage):
                 explanation=item.explanation,
             )
     found = _each_condition_once(termed)
+    for item in input_conditions(stage):
+        found.setdefault((item.condition, item.entries), item)
     if not diagnostics(stage)["complete_signature"]:
         # the stage as a whole is what this condition is about; the identity
         # record names no stage of its own, so the stage's name is written as
@@ -399,11 +522,11 @@ def _admissibility_terms(stage, item):
     held = tuple(entry for entry in item.entries if isinstance(entry, Identity))
     made = []
     for output in outputs:
-        sort = rendering.sort_of(output)
         target = declared(output)
         if target is None:
             continue
         named = written_name(stage, output)
+        sort = rendering.sort_of(named)
         point, points = bound_point(ctx, row.identity, sort.coordinates)
         subject = (
             S.Apply(reference_term(named), (tuple_term(points[i] for i in sort.coordinates),))
@@ -500,53 +623,120 @@ def _range_terms(stage, item):
     return tuple(made)
 
 
-def _owned_definedness(stage, item):
-    """A definedness condition the fold records on a block, owned by the
-    piece whose own terms hold the power or the division and read in that
-    piece's spelling, `𝑉≻(𝑔≻(m_d, 𝑐(m_d), Ψ)) > 0`; the item as
-    recorded where no piece holds the node, as on a declared function."""
+def _owned_definedness(stage, item, aliases, output_guards):
+    """The regions in which the reduced operations evaluate the arithmetic."""
     first = item.entries[0]
     node = next((entry for entry in item.entries if isinstance(entry, (T.Pow, T.Div))), None)
     if node is None:
-        return item
-    # the node found the owner; it is held no further, a source term among
-    # the entries encoding by the names in scope and not by identity
+        return (item,)
     without = tuple(entry for entry in item.entries if entry is not node)
-    held = Condition(
-        condition=item.condition,
-        entries=without,
-        status=item.status,
-        evidence=item.evidence,
-        explanation=item.explanation,
-    )
+    held = dataclasses.replace(item, entries=without)
     if (
         not isinstance(first, Identity)
         or first.kind not in ("block", "line")
         or item.predicate is None
     ):
-        return held
-    for row in wire_table(stage).table.primitive_rows:
-        realises = (
-            row.builder == first.address
-            if first.kind == "block"
-            else first.address in row.statements
+        return (held,)
+
+    rows = tuple(wire_table(stage).table.by_builder(first.block))
+    matches = list(_guarded_uses(stage, rows, first, node, aliases, output_guards(first.block)))
+
+    if not matches:
+        for row in rows:
+            if first.kind == "block" or first.address in row.statements:
+                matched = matching_term(row, node)
+                if matched is not None:
+                    matches.append((row, matched, None))
+                    break
+    if not matches:
+        return (held,)
+
+    made = []
+    for row, matched, guard in matches:
+        predicate = _rebased(item.predicate, node, matched)
+        if guard is not None:
+            protected = P.Not(guard)
+            if not isinstance(predicate, P.Or) or predicate.left != protected:
+                predicate = P.Or(protected, predicate)
+        predicate = spelled_condition(stage, row, predicate)
+        identities = (row.identity,) + tuple(
+            predicate if entry is item.predicate else entry for entry in without[1:]
         )
-        matched = matching_term(row, node) if realises else None
-        if matched is not None:
-            # the condition over the row's own term, its inputs by reference:
-            # the node's operands are read as the slice holds them
-            predicate = spelled_condition(stage, row, _rebased(item.predicate, node, matched))
-            identities = (row.identity,) + tuple(
-                predicate if entry is item.predicate else entry for entry in without[1:]
+        explanation = item.explanation
+        if guard is not None and "This condition applies where" not in explanation:
+            explanation += f" This condition applies where {S.predicate_text(guard)}."
+        made.append(dataclasses.replace(held, entries=identities, explanation=explanation))
+    return tuple(made)
+
+
+def _call_domain_at_use(stage, item, aliases, output_guards):
+    """The argument's membership at the point where the call is evaluated."""
+    place, function, coordinate, actual, declared, call, *authored = item.entries
+    index = coordinate.occurrence
+    stated = authored[0] if authored else None
+    legacy = dataclasses.replace(item, entries=(place, function, coordinate, actual, declared))
+    rows = tuple(wire_table(stage).table.by_builder(place.block)) if place.kind == "line" else ()
+    uses = _guarded_uses(stage, rows, place, call, aliases, output_guards(place.block))
+    if not uses:
+        uses = ((None, call, stated),)
+    made = []
+    for row, held, guard in uses:
+        if guard is None:
+            made.append(legacy)
+            continue
+        argument = held.args[index]
+        predicate = P.Or(P.Not(guard), P.Member(argument, declared))
+        if row is not None:
+            predicate = spelled_condition(stage, row, predicate)
+        made.append(dataclasses.replace(
+            item,
+            entries=(place, function, coordinate, predicate),
+            explanation=(
+                f"The argument {to_source(call.args[index])} for {coordinate.field} of "
+                f"{function} at {place} must belong to {to_source(declared)} where "
+                f"{S.predicate_text(guard)}."
+            ),
+        ))
+    return tuple(made)
+
+
+def _guarded_uses(stage, rows, place, node, aliases, guards):
+    """The occurrences of a term and its evaluation regions in reduced rows."""
+    if not guards and not any(
+        isinstance(term, T.Conditional)
+        for row in rows for body in (row.maps or row.equations) for term in term_nodes(body)
+    ):
+        return ()
+    matches = []
+    ctx = None
+    for row in rows:
+        if place.kind == "line" and place.address not in row.statements and place.address not in aliases:
+            continue
+        maps = tuple(zip(row.outputs, row.maps))
+        if row.kind == "Pushforward":
+            if ctx is None:
+                ctx = StageNames(stage)
+            equations = law_of_motion_equations(ctx, row.builder, row.equations)
+            maps = tuple(
+                (output, relation_of(equation).rhs)
+                for equation in equations
+                for output in ctx.defined(equation, row.builder)
+                if output in row.outputs
             )
-            return Condition(
-                condition=item.condition,
-                entries=identities,
-                status=item.status,
-                evidence=item.evidence,
-                explanation=item.explanation,
-            )
-    return held
+        for output, term in maps:
+            needed = {}
+            outer = guards.get(output)
+            for candidate, branch in guarded_term_nodes(term):
+                if type(candidate) is not type(node):
+                    continue
+                if matching_term(row, node, terms=(candidate,)) != candidate:
+                    continue
+                where = outer if branch is None else branch
+                if outer is not None and branch is not None and outer != branch:
+                    where = P.And(outer, branch)
+                _add_primitive_guard(needed, candidate, where)
+            matches.extend((row, matched, guard) for matched, guard in needed.items())
+    return tuple(matches)
 
 
 def _rebased(predicate, node, held):
@@ -817,25 +1007,19 @@ def passed_through(stage, value, coordinates):
         if sort.role in VALUE_ROLES and sort.identity.perch == earlier
     }
     parameters = set(parameter_sets(stage))
-    written, read = f"{value.field}{WRITTEN_MARK[value.perch]}", None
-    # the written spellings of the other fields the builder writes, `Θ[<]`
-    # beside `V[<]`
-    others = {
-        f"{sort.identity.field}{WRITTEN_MARK.get(sort.identity.perch, '')}"
-        for sort in header_of(writer).outputs
-    } - {written}
-    for row in table.by_builder(writer.name):
-        if row.kind in ("Evaluation", "Pullback"):
-            continue
-        for equation in row.equations:
-            # a line that writes another field is no line of `value`
-            if isinstance(equation, T.Equation) and to_source(equation.lhs) in others:
-                continue
-            if not isinstance(equation, T.Equation) or to_source(equation.lhs) != written:
-                return None
-            read = _passed_value(equation.rhs, values, parameters)
-            if read is None:
-                return None
+    ctx = StageNames(stage)
+    field = Identity("field", stage=stage.name, perch=value.perch, field=value.field)
+    equations = [
+        line.core for _, line in lines_of(stage, writer)
+        if line.role != "doc" and field in ctx.defined(line.core, writer.name)
+    ]
+    if len(equations) > 1:
+        return None
+    if equations:
+        equation = equations[0]
+        read = _passed_value(equation.rhs, values, parameters) if isinstance(equation, T.Equation) else None
+    else:
+        read = values.get(value.field + WRITTEN_MARK[earlier])
     if read is None:
         return None
     law = _identity_law(stage, ports, table, law_perches)
@@ -885,11 +1069,14 @@ def _identity_law(stage, ports, table, perches):
         for perch in perches
     }
     found = {}
+    ctx = StageNames(stage)
     for box in blocks_in_file_order(stage):
         if perches_of(box, ports) != perches:
             continue
         for row in table.by_builder(box.name):
-            for equation in row.equations:
+            if row.kind != "Pushforward":
+                continue
+            for equation in law_of_motion_equations(ctx, box.name, row.equations):
                 if not isinstance(equation, T.Equation):
                     continue
                 lhs, rhs = equation.lhs, equation.rhs
@@ -1404,9 +1591,10 @@ def settings_readers(stage):
     each name a keyword argument of a method word or a factor of a grid
     writes, the pairs of the place and its `Components`, in the order of the
     places (`records.setting_names`)."""
+    declared = setting_sets(stage)
     found = {}
     for place, held in components_by_place(stage).items():
-        for name in dict.fromkeys(setting_names(held)):
+        for name in dict.fromkeys(setting_names(held, declared=declared)):
             found.setdefault(name, []).append((place, held))
     return found
 
@@ -1416,7 +1604,7 @@ def _grid_of_setting(held, name):
     or `!Fibred`, where the setting `name` is read by the grid, a bound or a
     count of one of its factors or its declared points; the empty text
     otherwise (specification 0.7 D5)."""
-    if held.grid is None or name not in set(setting_names(held.grid)):
+    if held.grid is None or name not in set(setting_names(held.grid, declared=(name,))):
         return ""
     return grid_word(held.grid)
 

@@ -20,8 +20,8 @@ The canonical grammar lives with the package:
 `packages/bellman/bellman/syntax/grammars/` (the typed stage grammar and
 term listings). The worked models live here, one folder per model, each
 in the layout below; the spec's §2 listings mirror their stage files. The
-corpus test's recordings of the stage files, their parsed terms and their
-encodings, stand with the package's tests, in
+corpus test's recordings of the stage files, their parsed terms and the
+printed texts of their stages, stand with the package's tests, in
 `packages/bellman/tests/snapshot/corpus/<model>/`.
 
 ## The layout of a model folder
@@ -49,8 +49,17 @@ Every folder keeps the files the language reads in its subfolder
 A folder holds the parts its model has. The documentation page
 [Model directory layout](../docs/Bellman-Sym/reference/model-directory-layout.md)
 states the rules of the layout, its variants and the paths a model's
-documents write, and `packages/bellman/tests/test_layout.py` checks every
+documents write, and `tests/test_application_layout.py` checks every
 folder against it.
+
+## Structural tests
+
+The structural tests of a model, its files `tests/test_*_ast.py`, parse the
+model's stage files and compare each parsed term with a term that the test
+writes. They import the module `stage_ast`, which gives the parsed term of a
+stage file, the spellings in which those tests write their expected terms
+and `check`, which names the first place where a parsed term and an expected
+one differ.
 
 ## Naming
 
@@ -76,7 +85,8 @@ and are left as they are.
   three lessons stand in `tutorials/models/cons-port/`.
 - `consumption-perfect-foresight-crra/` holds the perfect foresight
   consumption model with CRRA utility, the buffer-stock stage without
-  its income shocks. Its stage file with three derived parameters, the
+  its income shocks. Its stage file, which sends human wealth backward as
+  a constant field and has one derived parameter, the
   methods file `methods.bl` that solves it in closed form with
   `!explicit`, the methods file `methods.egm.bl` that solves it by the
   endogenous grid method and its calibration stand in `declaration/`;

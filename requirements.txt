@@ -14,22 +14,22 @@ numpy==2.3.5
 PyYAML==6.0.3
 
 # asva (packages/asva): its endogenous grid factories are compiled by Numba,
-# as are the kernels in packages/bellman/tests/cat/test_kernel_functions.py and
+# as are the kernels in packages/bellman/tests/test_kernels.py and
 # in the lesson tutorials/topics/kernels.ipynb; its runner reads data files
 # with pandas
 numba==0.63.1
 pandas==2.3.3
 
 # the tests, which pytest-xdist runs in parallel (-n auto); cloudpickle saves
-# the compiled kernels in packages/bellman/tests/cat/test_kernel_functions.py
+# the compiled kernels in packages/bellman/tests/test_kernels.py
 # and the endogenous grid operator in the cons-port application's acceptance
 # tests, applications/cons-port/code/tests/test_cons_port_acceptance.py
 pytest==9.0.2
 pytest-xdist==3.8.0
 cloudpickle==3.1.2
-# the arbitrary-precision arithmetic that two test modules of packages/bellman
-# compare the package's distributions against (test_amd_sg_036.py,
-# test_continuous_distributions.py)
+# the arbitrary-precision arithmetic that the tests of packages/bellman
+# compare the package's distributions against
+# (packages/bellman/tests/test_shock_distributions.py)
 mpmath==1.3.0
 
 # the lessons under tutorials/ and the execution of notebooks: the kernel that

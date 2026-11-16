@@ -37,20 +37,23 @@ type: user-guide
 The buffer-stock stage, `applications/buffer-stock/declaration/stages/buffer_stock/buffer_stock.bl`, states the model and nothing about its computation. The household arrives with assets `k`. The permanent and transitory income shocks `ψ` and `ξ` then give its resources, `m = R*k/(Γ*ψ) + ξ`, from which it chooses consumption `c` and saves `a = m - c`; `Γ` is the growth factor of permanent income, and `Γ_c(m)` the set of feasible consumption levels. Its two value blocks and its policy block are:
 
 ```bl
-[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, L : (-inf, 0] @ !vlu @ !cnst, c) : !cntn -> (V : ℝ @ !vlu, L) : !dcsn] {
     V = 𝑢(c) + β*V[>]               :: [id=value]
 }
 
-[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+[id=dcsn_to_arvl, (V, L) : !dcsn -> (V[<] : ℝ @ !vlu, L[<] : (-inf, 0] @ !vlu @ !cnst) : !arvl] {
     V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)     :: [id=value]
+    L[<] = if σ_ψ > 0 then 0 else Γ*L/R :: [id=borrowing_bound]
 }
 
-[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+[id=policy, (V[>] : ℝ @ !vlu, L) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
     c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])     :: [id=optimality]
 }
 ```
 
 Each block opens with a bracket that holds its id and its signature: the fields the block reads, an arrow and the fields it writes, each side followed by its perch, with `@ !vlu` marking a value and `@ !ctrl` a control ([Stages](01-stage.md) §3). The mark after a field names its [perch](../wiki/perch.md): `V[>]` is the value at the continuation perch, after the choice; `V` the value at the decision perch; and `V[<]` the value at the arrival perch, before the shocks are drawn. The policy block states the choice as a maximization over `Γ_c(m)`, and the stage file writes no derivative, no grid and no method.
+
+The stage also takes in the borrowing bound `L`, a constant typed `@ !cnst`. The block `cntn_to_dcsn` keeps `L` by listing it on both sides of its header, and the block `dcsn_to_arvl` sends back `L[<]`. The policy block lists `L` because the feasible set `Γ_c(m)` reads it ([Stages](01-stage.md#31-fields-sent-backward) §3.1).
 
 The methods file, `methods.bl` in the same folder, chooses how the stage is computed: the endogenous grid method for the policy, on a grid of savings; linear interpolation of the consumption function and of the arrival value; Gauss–Hermite quadrature for the expectation over the two shocks; and the two derivative lines that the endogenous grid method reads. With its comment lines left out, each a line that begins with `#`, the file is:
 
@@ -58,7 +61,7 @@ The methods file, `methods.bl` in the same folder, chooses how the stage is comp
 @methods: buffer_stock
 
 n_a : ℕ              :: ["number of points of the savings grid"]
-a_min : Xa           :: ["lower bound of the savings grid"]
+extra_grid : ℝ₊     :: ["distance from the borrowing bound to the first savings point"]
 a_max : Xa           :: ["upper bound of the savings grid"]
 n_k : ℕ              :: ["number of points of the asset grid"]
 k_min : Xa           :: ["lower bound of the asset grid"]
@@ -66,9 +69,9 @@ k_max : Xa           :: ["upper bound of the asset grid"]
 n_ψ_nodes : ℕ        :: ["quadrature nodes of the permanent shock"]
 n_ξ_nodes : ℕ        :: ["quadrature nodes of the transitory shock"]
 
-[id=policy, policy.method : !egm | policy.grid : !Cartesian(a=(a_min, a_max, n_a))
+[id=policy, policy.method : !egm | policy.grid : !Cartesian(a=(L + extra_grid, a_max, n_a))
     | evaluate.method : !Linear] {
-    c[>] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[>])       :: [id=InvEuler]
+    c[>] = (β*D_{a}V[>])^(-1/ρ)       :: [id=InvEuler]
     m[>] = a + c[>]                 :: [id=g_cntn_to_dcsn]
     c[~] = c[>]                     :: [id=cons_choice]
 }
@@ -88,8 +91,8 @@ n_ξ_nodes : ℕ        :: ["quadrature nodes of the transitory shock"]
 The file is read as follows.
 
 - `@methods: buffer_stock` names the stage the file adds to, by the name the stage file declares after `@stage:`; a file that names another stage is refused (`metadata-mismatch`).
-- The eight declarations are the **settings** the file reads, each with its set and a description, in the form in which a stage file declares a parameter (§4). A count is a natural number, `n_a : ℕ`, and a bound of a grid is a point of the set the stage declares for the coordinate, `a_min : Xa`.
-- The block `[id=policy, …]` names the stage's policy block by its id and adds to it. Its bracket holds the id and three **typing entries**: the first follows the id after a comma, and each of the other two stands in a group of its own, opened by `|`. `policy.method : !egm` gives the policy builder the endogenous grid method, and `policy.grid : !Cartesian(a=(a_min, a_max, n_a))` the grid of savings on which the method computes, one factor keyed by the coordinate `a`, with its bounds and its count written as the names of settings. `evaluate.method : !Linear`, whose path is read relative to the block, types piecewise linear interpolation at the Evaluation that stores the consumption function; it interpolates the pairs of resources and consumption that the method computes, and so the block writes no grid for it (§3.4). The three lines of the block are the lines of the method: the consumption chosen at each saving, from the inverted Euler equation, `c[>] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[>])`; the resources at which that consumption is chosen, `m[>] = a + c[>]`, which is the law of motion `a = m - c` solved for `m`; and the identification `c[~] = c[>]`, which states that the policy at those resources is the candidate. `c[~]` is the field `c` with its decision mark written out, the same term as `c`, and the consumption stage of §2 writes the same line as `c = c[>]`. The stage computes with these three lines in place of the maximization, and it keeps the maximization as the policy builder it declares (§5).
+- The eight declarations are the **settings** the file reads, each with its set and a description, in the form in which a stage file declares a parameter (§4). A count is a natural number, `n_a : ℕ`, and a bound of a grid is a point of the set the stage declares for the coordinate, `a_max : Xa`. The setting `extra_grid : ℝ₊` is the distance from the borrowing bound to the first point of the savings grid.
+- The block `[id=policy, …]` names the stage's policy block by its id and adds to it. Its bracket holds the id and three **typing entries**: the first follows the id after a comma, and each of the other two stands in a group of its own, opened by `|`. `policy.method : !egm` gives the policy builder the endogenous grid method, and `policy.grid : !Cartesian(a=(L + extra_grid, a_max, n_a))` the grid of savings on which the method computes, one factor keyed by the coordinate `a`. Its lower bound is the sum of the constant `L` and the setting `extra_grid` (§3.2), and its upper bound and its count are written as the names of settings. `evaluate.method : !Linear`, whose path is read relative to the block, types piecewise linear interpolation at the Evaluation that stores the consumption function; it interpolates the pairs of resources and consumption that the method computes, and so the block writes no grid for it (§3.4). The three lines of the block are the lines of the method: the consumption chosen at each saving, from the inverted Euler equation, `c[>] = (β*D_{a}V[>])^(-1/ρ)`, written as a power so that an infinite marginal value at the borrowing bound gives consumption zero; the resources at which that consumption is chosen, `m[>] = a + c[>]`, which is the law of motion `a = m - c` solved for `m`; and the identification `c[~] = c[>]`, which states that the policy at those resources is the candidate. `c[~]` is the field `c` with its decision mark written out, the same term as `c`, and the consumption stage of §2 writes the same line as `c = c[>]`. The stage computes with these three lines in place of the maximization, and it keeps the maximization as the policy builder it declares (§5).
 - The block `[id=cntn_to_dcsn]` adds one line to the decision value block, the envelope condition `D_{m}V = 𝑑𝑢(c)`: the derivative of the decision value in resources, which the arrival block of the same stage reads inside its expectation.
 - The block `[id=dcsn_to_arvl …]` writes its first entry in a group of its own, opened by `|` after the id, which is read as an entry after a comma is, and it adds three entries and one line to the arrival value block: Gauss–Hermite quadrature at the expectation `E_ψ_ξ`, with one node count for each shock; linear interpolation at the Evaluation that stores the arrival value and its derivative, on the grid of assets `k`; and the derivative line of the arrival value, whose factor `R*(Γ*ψ)^(-ρ)` inside the expectation comes from the law of motion `m = R*k/(Γ*ψ) + ξ` and from the normalization `(Γ*ψ)^(1-ρ)` of the value. The policy builder of the period before reads this derivative as `D_{a}V[>]`, through the trellis's connection of its savings `a` to the assets `k` ([Trellises](07-trellis.md) §2.1).
 - The file types nothing at the decision builder's Evaluation, `cntn_to_dcsn.evaluate`. An Evaluation without an entry holds no method, and the package refuses nothing there; the envelope condition gives the derivative of the decision value at any resources through the consumption function, which `policy.evaluate` represents.
@@ -109,13 +112,14 @@ print(stage.builder.policy.signature())
 ```text
 dcsn_to_arvl.E_ψ_ξ      !gauss_hermite(n_ψ=n_ψ_nodes, n_ξ=n_ξ_nodes)
 dcsn_to_arvl.evaluate   !Linear   !Cartesian(k=(k_min, k_max, n_k))
-policy                  !egm   !Cartesian(a=(a_min, a_max, n_a))
+policy                  !egm   !Cartesian(a=(L + extra_grid, a_max, n_a))
 policy.evaluate         !Linear
 
 in         𝑉≻ : Xa → ℝ
+in         𝐿≻ : {()} → (−∞, 0]
 out        𝑐(m) : 𝒫({c ∈ (Xm → ℝ₊₊) | c(m) ∈ Γ_c(m)})
 method     !egm
-grid       !Cartesian(a=(a_min, a_max, n_a))
+grid       !Cartesian(a=(L + extra_grid, a_max, n_a))
 ```
 
 The `out` line writes the policy builder's output as a set of feasible consumption functions, `𝒫(…)`, the set of the maximizing policies, since a maximization may have several ([A builder](API/stage/04-builder.md) §2). Configuration assigns the values of the settings file, `applications/buffer-stock/declaration/settings/buffer_stock.yml`, to the declared settings, and `stage.settings` then prints each setting with its set, its value, the place that reads it, the method there and, for a bound or a count of a grid, the grid's kind:
@@ -126,15 +130,15 @@ print(stage.settings)
 ```
 
 ```text
-name       set  value  read at                by              grid
-n_a        ℕ    960    policy                 !egm            !Cartesian
-a_min      Xa   0.001  policy                 !egm            !Cartesian
-a_max      Xa   20.0   policy                 !egm            !Cartesian
-n_k        ℕ    960    dcsn_to_arvl.evaluate  !Linear         !Cartesian
-k_min      Xa   0.001  dcsn_to_arvl.evaluate  !Linear         !Cartesian
-k_max      Xa   20.0   dcsn_to_arvl.evaluate  !Linear         !Cartesian
-n_ψ_nodes  ℕ    7      dcsn_to_arvl.E_ψ_ξ     !gauss_hermite
-n_ξ_nodes  ℕ    7      dcsn_to_arvl.E_ψ_ξ     !gauss_hermite
+name        set  value  read at                by              grid
+n_a         ℕ    960    policy                 !egm            !Cartesian
+extra_grid  ℝ₊   0.001  policy                 !egm            !Cartesian
+a_max       Xa   20.0   policy                 !egm            !Cartesian
+n_k         ℕ    960    dcsn_to_arvl.evaluate  !Linear         !Cartesian
+k_min       Xa   0.001  dcsn_to_arvl.evaluate  !Linear         !Cartesian
+k_max       Xa   20.0   dcsn_to_arvl.evaluate  !Linear         !Cartesian
+n_ψ_nodes   ℕ    7      dcsn_to_arvl.E_ψ_ξ     !gauss_hermite
+n_ξ_nodes   ℕ    7      dcsn_to_arvl.E_ψ_ξ     !gauss_hermite
 ```
 
 The package solves nothing. It records the methods, and a handler, a routine outside the language, carries each out (§3.3); the buffer-stock file names no handler, so the program that solves the model reads the words from `stage.methods` and supplies a routine for each. [The buffer-stock example](../examples/buffer-stock/buffer_stock.md) quotes the file with its comments and shows the same calls.
@@ -232,6 +236,8 @@ for address, grid in stage.builder["dcsn", "arvl"].kernels().grids.items():
 dcsn_to_arvl.evaluate !Cartesian on (k), 960 points: (0.001,), (0.021854014598540146,), (0.04270802919708029,), …, (20,)
 ```
 
+The lower bound of a grid may be the sum of a continuation constant and a setting, for example `L + extra_grid` for the lower savings bound. The methods file declares `extra_grid` on `ℝ₊`. Supply `L` with the stage's other continuation inputs before asking the builder to construct the grid. At `extra_grid = 0`, the grid starts at the bound itself. See [Builder kernels](API/stage/04-builder.md#5-the-kernels-of-a-builder) for missing inputs and grid factors passed to a handler.
+
 ### 3.3 The handler
 
 A handler is the routine that carries a method out. Its entry names it by a quoted string of the form `<package>:<function>`, in the bracket, `handler : "cons-port:egm"`, or at file level, `dcsn_to_cntn.handler : "cons-port:transition_fwd"`. `"cons-port:egm"` is the function `egm` of the numerical code of the cons-port application, and `"asva:make_egm_1d"` a function of asva, the numerical toolkit installed beside the package ([Asva](../asva/index.md) §3). The package records the name and neither imports nor calls the function. A handler builds its numerical operator from three things: the record of the builder's kernels, which `kernels()` answers, for each operation of the builder its rule as a function with the wires it reads and writes ([A builder](API/stage/04-builder.md) §5); the grid at the place, whose realized points `kernels().grids` holds (§3.2); and the keyword arguments of the method word that the package does not read. A handler may be written with or without a method word; written alone, as for the forward builder `dcsn_to_cntn` above, it names the routine, and `stage.methods` prints it as the place's handler. Where a file names no handler, as the buffer-stock file names none, the word alone is typed, and the program that solves the model reads it from `stage.methods` and supplies the routine.
@@ -257,15 +263,21 @@ A representation reads one of four data sources. The package decides the source 
 
 ### 3.5 Explicit solutions
 
-Where the solution of a policy builder or a backward value builder is known in closed form, the methods file types `!explicit` at the builder and writes, in a block with the builder's id, one line `output = expression` for each output of the builder. In a perfect-foresight consumption stage whose stage file defines human wealth by the derived parameter `h := 1/(1 - Γ/R)` (§4), the methods file states the consumption function:
+A methods file gives a known closed-form solution by typing `!explicit` on a policy or backward value builder. The block names that builder's id and writes one line `output = expression` for each output. The perfect-foresight stage sends human wealth backward as a constant field. Its closed-form methods define the stationary limit and state consumption as a fraction of total wealth:
 
 ```bl
 @methods: perfect_foresight
 
+κ := 1 - q
+h_lim : ℝ₊₊ := 1/(1 - Γ/R)
+L_lim := 1 - h_lim
+
 [id=policy, policy.method : !explicit] {
-    c = (1 - (R*β)^(1/ρ)/R)*(m - 1 + h)    :: [id=consumption]
+    c = κ*(m - L_lim)    :: [id=consumption]
 }
 ```
+
+The application still supplies and checks the complete declared continuation inputs, including human wealth, before numerical preparation. The explicit method's smaller numerical dependence does not remove that obligation.
 
 The line stands in place of the maximization at the operative level, as the lines of every solution method do, and `stage.declared` keeps the maximization as the statement of the choice (§5), as it keeps the value lines of a value builder that `!explicit` solves; the module `code/closed_form_check.py` of `applications/consumption-perfect-foresight-crra/` checks the closed form against these declared builders, reading the Bellman equation from the declared level. The line's compiled kernel evaluates the expression, which establishes an evaluator and no optimality. An expression may read the states and the controls of the builder's output perch, the parameters, the derived parameters and the names that earlier lines of the block define. The package refuses, under `explicit-solution`, `!explicit` at a forward builder, a line that reads a value input of the builder or its derivative, such as `V[>]` or `D_{a}V[>]`, a line that states a relation, a line that applies `argmax`, `solve` or `upper_env`, and a line that defines or reads a field at another perch, such as the candidate `c[>]` of the endogenous grid method; an output that no line defines is refused under `output-defined`. A block of this complete formula-only form typed with `!egm` or `!time_iteration` is refused by a refusal that names `!explicit` (`explicit-solution`).
 
@@ -277,7 +289,7 @@ A setting is a value a method reads: a bound or a count of a grid, the points of
 
 ```bl
 n_a : ℕ              :: ["number of points of the savings grid"]
-a_min : Xa           :: ["lower bound of the savings grid"]
+a_max : Xa           :: ["upper bound of the savings grid"]
 ```
 
 A count is in `ℕ`, a tolerance in `ℝ₊₊`, and a bound of a grid in the set the stage declares for its coordinate, `Xa` for the savings and the assets of the buffer-stock stage, or in a literal set such as `ℝ₊`. A setting chosen among finitely many words is declared on the set of those words, as the tenure stage of the durables application declares the branch chosen where keeping and adjusting are worth the same, `tie_break : {keep, adjust}`. The declared set may read a parameter, a derived parameter or another setting, as the interval of `a_max : (0, R)` reads the parameter `R`. A set that names a field is refused, unless the field is a shock inside an expectation over that shock whose law reads no field. A set that names an undeclared name is refused under `name-in-scope`. A grid factor names its bounds and its count as declared settings, so that those numbers stand in the settings file, and a number written in their place is refused (§3.2). A keyword argument names a declared setting for every number its method reads, and a number written in its place is refused; it may hold a quoted string (§3.1). A setting that a grid factor or a keyword argument names without a declaration is refused where the entry is typed (§3.1, §3.2), a name declared twice in one file is refused (`declared-once`), and a name that two files declare differently is refused (`declared-twice`). A setting takes its value at configuration alone: a line of a block that writes a declared setting is refused (`parameter-or-field`).
@@ -289,14 +301,14 @@ settings:
   n_ψ_nodes: 7
   n_ξ_nodes: 7
   n_a: 960
-  a_min: 0.001
+  extra_grid: 0.001
   a_max: 20.0
   n_k: 960
   k_min: 0.001
   k_max: 20.0
 ```
 
-`configure` refuses a value outside the declared set, naming the line of the methods file that declares the setting (`setting-outside-set`), and a declared setting that neither the settings file nor an earlier configuration of the stage values (`setting-unvalued`). A later configuration keeps the values bound before and replaces those it names again. Where the declared set reads a parameter or a derived parameter, `configure` decides the membership at the calibration bound and at the values of the derived parameters there, and it admits a value whose membership it cannot decide, as it cannot while no calibration is bound. One settings file may serve every stage of a model, so a key that no declaration of the stage names is not refused: `stage.settings` lists it with its value and with no set and no place, which is where a misspelled key shows. When two stages of one period declare one name in their methods files, the name is one setting of the period, with one value, as a parameter declared in two stages is one parameter (`period-parameter-agreement`). A name that one stage of the period declares as a parameter and another as a setting is refused under the same rule. `stage.settings` lists every setting with its set, its value and the places that read it, and `stage.settings["n_a"]` answers one setting's record ([Parameters and settings](API/stage/06-par-and-settings.md) §2). A parameter, such as the risk aversion `ρ`, is declared in the stage file and defines the model; a setting is declared in the methods file and configures a method; and a finite set of alternatives the household chooses among belongs to the model and is declared in the stage file. A derived parameter is a constant written by `:=` from the declared parameters, such as human wealth `h := 1/(1 - Γ/R)` in a stage file or the marginal propensity to consume `κ := 1 - (R*β)^(1/ρ)/R` in a methods file: it is a parameter of the model and not a setting, its value is computed at calibration, and one that a methods file defines leaves the stage when its file leaves the selection ([Parameters and settings](API/stage/06-par-and-settings.md) §1.1). A methods file may declare on the same line the set the value lies in, `κ : (0,1) := 1 - (R*β)^(1/ρ)/R`, as a stage file may. Calibration then refuses a calibration at which the value lies outside that set, naming the derived parameter, its definition, the set and the parameter values read.
+`configure` refuses a value outside the declared set, naming the line of the methods file that declares the setting (`setting-outside-set`), and a declared setting that neither the settings file nor an earlier configuration of the stage values (`setting-unvalued`). A later configuration keeps the values bound before and replaces those it names again. Where the declared set reads a parameter or a derived parameter, `configure` decides the membership at the calibration bound and at the values of the derived parameters there, and it admits a value whose membership it cannot decide, as it cannot while no calibration is bound. One settings file may serve every stage of a model, so a key that no declaration of the stage names is not refused: `stage.settings` lists it with its value and with no set and no place, which is where a misspelled key shows. When two stages of one period declare one name in their methods files, the name is one setting of the period, with one value, as a parameter declared in two stages is one parameter (`period-parameter-agreement`). A name that one stage of the period declares as a parameter and another as a setting is refused under the same rule. `stage.settings` lists every setting with its set, its value and the places that read it, and `stage.settings["n_a"]` answers one setting's record ([Parameters and settings](API/stage/06-par-and-settings.md) §2). A parameter, such as the risk aversion `ρ`, is declared in the stage file and defines the model; a setting is declared in the methods file and configures a method; and a finite set of alternatives the household chooses among belongs to the model and is declared in the stage file. A derived parameter is a constant written by `:=` from the declared parameters, such as the return patience factor `q : (0,1) := (β*R)^(1/ρ)/R` in a stage file or the marginal propensity to consume `κ := 1 - (R*β)^(1/ρ)/R` in a methods file: it is a parameter of the model and not a setting, its value is computed at calibration, and one that a methods file defines leaves the stage when its file leaves the selection ([Parameters and settings](API/stage/06-par-and-settings.md) §1.1). A methods file may declare on the same line the set the value lies in, `κ : (0,1) := 1 - (R*β)^(1/ρ)/R`, as a stage file may. Calibration then refuses a calibration at which the value lies outside that set, naming the derived parameter, its definition, the set and the parameter values read.
 
 ## 5 The two levels
 

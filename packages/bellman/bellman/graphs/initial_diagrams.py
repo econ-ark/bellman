@@ -343,7 +343,7 @@ def block_bubble(wires, box, grouped, *, inputs, outputs):
             ),
             piece_identity(box.name),
         )
-    header = BlockHeader(inputs=tuple(header_of(box).inputs), unread=tuple(unread_inputs_of(box)))
+    header = _retained_header(box)
     interior = connect(wires, grouped, inputs=inputs, outputs=outputs)
     return with_identity(
         Block(
@@ -490,7 +490,11 @@ def _retained_header(box):
     data = getattr(box, "data", None)
     if isinstance(data, BlockHeader):
         return data
-    return BlockHeader(header_of(box).inputs, unread=tuple(unread_inputs_of(box)))
+    return BlockHeader(
+        header_of(box).inputs,
+        unread=tuple(unread_inputs_of(box)),
+        input_spellings=getattr(data, "input_spellings", ()),
+    )
 
 
 def _wire_priority(ports, direction):

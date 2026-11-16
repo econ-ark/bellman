@@ -4,8 +4,9 @@ beside this file and for the package's acceptance tests, which load this
 file by its path.
 
 The stage file `declaration/stages/perfect_foresight/perfect_foresight.bl`
-states the model. Its derived parameters are the return patience factor q,
-human wealth h and the natural borrowing limit L = 1 - h. The closed-form
+states the model. It defines the return patience factor q and sends human
+wealth backward as a constant field. The closed-form methods define h_lim
+and L_lim; the grid method reads supplied human wealth. The closed-form
 route binds the addition `methods.bl` beside the stage file, which types
 `!explicit` on the policy builder and on the two value builders and defines
 the marginal propensity to consume κ = 1 - q: the consumption function, the
@@ -146,6 +147,21 @@ def _call(found, values, named):
     return found.function(*arguments, *values)
 
 
+def _output_piece(record, key, name):
+    """The compiled expression for one named output of a primitive."""
+    found, = [part for identity, part in record.output_kernels[key].items()
+              if identity.field == name]
+    return found
+
+
+def output_function(record, key, name, parameters=None):
+    """One output, with the record’s calibration or explicitly supplied parameters."""
+    found = _output_piece(record, key, name)
+    values = (found.parameter_values if parameters is None else
+              tuple(parameters[key] for key in found.parameters))
+    return lambda **named: _call(found, values, named)
+
+
 def kernel_function(record, key):
     """One piece of a builder's `kernels()` record as a function of its
     named arguments alone, `function(m=..., c=...)`, the values of the
@@ -224,11 +240,65 @@ def _above(points, limit, coordinate, function):
     return points
 
 
+def stationary_inputs(stage):
+    """Finite stationary human wealth and an initial CRRA continuation value.
+
+    The value is utility of total wealth on a > -h[>], a measurable initial
+    value function. The stationary grid iteration evolves marginal values;
+    it does not evaluate this initial value as a solved continuation value.
+    """
+    p = parameters(stage)
+    ratio = p["Γ"] / p["R"]
+    if not ratio < 1:
+        raise ValueError("Stationary finite human wealth requires Γ < R; use gridded_step with supplied finite inputs.")
+    taken = 1 / (1 - ratio) - 1
+    def continuation(a):
+        wealth = _above(a, -taken, "a", "initial continuation value") + taken
+        return _finite("initial continuation value", wealth ** (1 - p["ρ"]) / (1 - p["ρ"]))
+    return {"V[>]": continuation, "h[>]": taken}
+
+
+def gridded_step(stage, inputs, continuation_marginal):
+    """One endogenous-grid step for supplied finite continuation data.
+
+    The value and its derivative are supplied independently. Their agreement
+    and the callable's measurability remain mathematical obligations. This
+    step admits Γ >= R and makes no stationary-solution claim.
+    """
+    conditions = stage.check_inputs(inputs)
+    grid, savings = _realized(stage, "policy", inputs=inputs)
+    limit = -float(inputs["h[>]"])
+    _above(savings, limit, "a", "continuation value")
+    marginal = _finite("continuation marginal value", continuation_marginal(savings))
+    if np.any(marginal <= 0):
+        raise ValueError("The continuation marginal value must be positive for the inverse Euler equation.")
+    policy_record = stage.builder.policy.kernels(inputs=inputs)
+    candidate = kernel_function(policy_record, "g_cntn_to_dcsn:Aggregation")
+    consumption, resources = candidate(a=savings, **{"D_{a}(V≻)": marginal})
+    _finite("candidate consumption", consumption)
+    _finite("endogenous resources", resources)
+    if not np.all((consumption > 0) & (consumption < resources - limit)):
+        raise ValueError("The endogenous-grid pairs violate the authored strict feasible set.")
+    policy = Linear(resources, consumption, "m")
+    decision = stage.builder["cntn", "dcsn"].kernels(inputs=inputs)
+    arrival = stage.builder["dcsn", "arvl"].kernels(inputs=inputs)
+    value = output_function(decision, "Aggregation", "V")
+    h = output_function(decision, "Aggregation", "h")(**{"h≻": inputs["h[>]"]})
+    sent = output_function(arrival, "Aggregation", "h")(h=h)
+    return SimpleNamespace(
+        inputs=inputs, input_conditions=conditions, grid=grid,
+        knots=resources, consumption=consumption, policy=policy,
+        value=_finite("decision value", value(m=resources, c=consumption,
+                    **{"V≻": inputs["V[>]"](savings)})),
+        h=float(h), sent_h=float(sent), limit=limit,
+    )
+
+
 def closed_form(stage):
     """The closed form as the stage holds it under `!explicit`: the derived
     parameters read from `stage.par` at the calibration, the return patience
-    factor `return_patience` (q), κ, human wealth `h` and the natural
-    borrowing limit `limit` (L); and five functions, each the compiled kernel
+    factor `return_patience` (q), κ, limiting human wealth `h` (h_lim) and
+    borrowing bound `limit` (L_lim); and five functions, each the compiled kernel
     of a line of one explicit block: `consumption(m) = κ(m - L)`, the
     decision value `value(m) = κ^(-ρ)(m - L)^(1-ρ)/(1-ρ)` and its marginal
     `marginal(m) = κ^(-ρ)(m - L)^(-ρ)`, all three on m > L, and the arrival
@@ -236,15 +306,20 @@ def closed_form(stage):
     its marginal `arrival_marginal(k) = RΓ^(-ρ) κ^(-ρ)(Rk/Γ + 1 - L)^(-ρ)`,
     both on k > L. Each function refuses a point at or below the limit,
     where total wealth is not positive, and a result that is not finite."""
-    q, κ, h, L = (stage.par[name].value for name in ("q", "κ", "h", "L"))
-    consumption = kernel_function(stage.builder.policy.kernels(), "consumption:Aggregation")
-    decision_record = stage.builder["cntn", "dcsn"].kernels()
-    arrival_record = stage.builder["dcsn", "arvl"].kernels()
-    decision = kernel_function(decision_record, "Aggregation")
+    q, κ, h, L = (stage.par[name].value for name in ("q", "κ", "h_lim", "L_lim"))
+    # The checker does not evaluate the callable. Its evaluator is constructed below.
+    inputs = {"V[>]": lambda a: form.arrival_value(a), "h[>]": h - 1}
+    conditions = stage.check_inputs(inputs)
+    consumption = kernel_function(stage.builder.policy.kernels(inputs=inputs), "consumption:Aggregation")
+    decision_record = stage.builder["cntn", "dcsn"].kernels(inputs=inputs)
+    arrival_record = stage.builder["dcsn", "arvl"].kernels(inputs=inputs)
+    decision = output_function(decision_record, "Aggregation", "V")
     decision_marginal = kernel_function(decision_record, "marginal:Derivative:1")
-    arrival = kernel_function(arrival_record, "Aggregation")
+    arrival = output_function(arrival_record, "Aggregation", "V")
     arrival_marginal = kernel_function(arrival_record, "arrival_marginal:Derivative:1")
-    return SimpleNamespace(
+    form = SimpleNamespace(
+        inputs=inputs,
+        input_conditions=conditions,
         return_patience=q,
         κ=κ,
         h=h,
@@ -268,6 +343,8 @@ def closed_form(stage):
         ),
     )
 
+    return form
+
 
 def value_kernels(stage):
     """The compiled kernels of the stage file's own blocks that the Bellman
@@ -279,13 +356,16 @@ def value_kernels(stage):
     `arrival_value(V, k) = Γ^(1-ρ)V`. Under `!explicit` the operative value
     builders hold the closed form, so the stage file's equations are read
     from the declared builders, which methods do not change."""
-    decision = stage.declared["cntn", "dcsn"].kernels()
-    arrival = stage.declared["dcsn", "arvl"].kernels()
+    inputs = stationary_inputs(stage)
+    conditions = stage.check_inputs(inputs)
+    decision = stage.declared["cntn", "dcsn"].kernels(inputs=inputs)
+    arrival = stage.declared["dcsn", "arvl"].kernels(inputs=inputs)
     savings = _declared_function(stage, decision, "Pullback")
-    aggregation = _declared_function(stage, decision, "Aggregation")
+    aggregation = output_function(decision, "Aggregation", "V", parameters(stage))
     resources = _declared_function(stage, arrival, "Pullback")
-    normalization = _declared_function(stage, arrival, "Aggregation")
+    normalization = output_function(arrival, "Aggregation", "V", parameters(stage))
     return SimpleNamespace(
+        input_conditions=conditions,
         savings=lambda m, c: savings(m=m, c=c),
         decision_value=lambda continuation, m, c: aggregation(
             **{"V≻": continuation, "m": m, "c": c}
@@ -803,13 +883,15 @@ def interpolate(m, knots, values):
     return np.where(m < knots[0], below, np.where(m > knots[-1], above, inside))
 
 
-def _exact_grid(stage, address):
+def _exact_grid(stage, address, inputs=None):
     """The realized grid of the place `address` of `stage`, from the
     `kernels()` record of the builder that holds the place, whose points are
     exact; refused where construction could not establish it or where it has
     another number of coordinates. A comparison with the grid reads these
     exact points, before any conversion."""
-    record = stage.builder[BUILDERS[address.split(".", 1)[0]]].kernels()
+    inputs = stationary_inputs(stage) if inputs is None else inputs
+    stage.check_inputs(inputs)
+    record = stage.builder[BUILDERS[address.split(".", 1)[0]]].kernels(inputs=inputs)
     grid = (record.grids or {}).get(address)
     if grid is None:
         raise ValueError(f"the place {address!r} has no realized grid at the bound settings")
@@ -823,7 +905,7 @@ def _exact_grid(stage, address):
     return grid
 
 
-def _realized(stage, address):
+def _realized(stage, address, inputs=None):
     """The realized grid of the place `address` of `stage` (`_exact_grid`)
     and the array of the nearest floating-point numbers of its exact points,
     at which an evaluator is built or a family's own nodes are sampled. The
@@ -831,7 +913,7 @@ def _realized(stage, address):
     nearest floating-point number, since numerical preparation refuses a
     conversion that merges distinct nodes (AMD-MT-003 build contract §4), and
     where an exact node exceeds the largest finite floating-point number."""
-    grid = _exact_grid(stage, address)
+    grid = _exact_grid(stage, address, inputs=inputs)
     (name,) = grid.coordinates
     converted = {}
     for (node,) in grid.points:
@@ -931,7 +1013,9 @@ def gridded_route(stage, tolerance=1e-12, iterations=10_000, initial=None):
     gives it, restricted to m > L, each extended value checked finite and
     feasible, and each use reported by a warning that counts the
     interpolated and the extended points."""
-    q, L = stage.par["q"].value, stage.par["L"].value
+    inputs = stationary_inputs(stage)
+    conditions = stage.check_inputs(inputs)
+    q, L = stage.par["q"].value, -inputs["h[>]"]
     if not q < 1:
         raise ValueError(
             f"the return patience factor q = (βR)^(1/ρ)/R is {q!r} at the calibration, and the "
@@ -939,7 +1023,7 @@ def gridded_route(stage, tolerance=1e-12, iterations=10_000, initial=None):
             "return impatience condition q < 1"
         )
     _finite("the natural borrowing limit L at the calibration", L)
-    grid, savings = _realized(stage, "policy")
+    grid, savings = _realized(stage, "policy", inputs=inputs)
     if grid.points[0][0] <= _exact(L):
         raise ValueError(
             f"the grid of savings starts at a_min = {_shown(savings[0])}, at or below the natural "
@@ -947,9 +1031,9 @@ def gridded_route(stage, tolerance=1e-12, iterations=10_000, initial=None):
             "resources at which no consumption is feasible, and the iteration would stop at "
             f"its tolerance on pairs that solve nothing; set a_min above {L!r}"
         )
-    candidate = kernel_function(stage.builder.policy.kernels(), "g_cntn_to_dcsn:Aggregation")
-    envelope = kernel_function(stage.builder["cntn", "dcsn"].kernels(), "marginal:Derivative:1")
-    arrival = stage.builder["dcsn", "arvl"].kernels()
+    candidate = kernel_function(stage.builder.policy.kernels(inputs=inputs), "g_cntn_to_dcsn:Aggregation")
+    envelope = kernel_function(stage.builder["cntn", "dcsn"].kernels(inputs=inputs), "marginal:Derivative:1")
+    arrival = stage.builder["dcsn", "arvl"].kernels(inputs=inputs)
     marginal = kernel_function(arrival, "marginal:Derivative:1")
     resources = kernel_function(arrival, "Pullback")
     extension = EndpointSecant(L)
@@ -1015,6 +1099,8 @@ def gridded_route(stage, tolerance=1e-12, iterations=10_000, initial=None):
         return found.values
 
     return SimpleNamespace(
+        inputs=inputs,
+        input_conditions=conditions,
         knots=policy.nodes,
         consumption=policy.values,
         policy=policy,

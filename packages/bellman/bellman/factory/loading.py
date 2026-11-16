@@ -238,7 +238,9 @@ def read_trellis_file(file, texts=None):
     """The periods and the inter-period mappings a trellis file writes,
     expanded: each entry of `periods` written out or
     given as `{template: <period file>, repeat: n}` and then repeated `n`
-    times; `inter_connectors` one mapping per adjacent pair, or one mapping
+    times. Repeated templates supply the same declaration at several
+    positions; recipes may select different bindings at those positions.
+    `inter_connectors` has one mapping per adjacent pair, or one mapping
     standing for every pair, or none, standing for empty mappings. Each period
     is `{"stages": <as written: a list of keys or a mapping of records>,
     "connectors": [...]}`; the file's path and digest stand beside them.

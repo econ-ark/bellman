@@ -15,6 +15,7 @@ from __future__ import annotations
 import dataclasses
 from typing import NamedTuple
 
+from bellman.distributions.edges import shock_application
 from bellman.native.identity import Identity
 from bellman.native.records import OperatorOccurrence
 from bellman.refusals import NotConstructed
@@ -185,21 +186,28 @@ def unreadable_form_refusal(declarations, address, message) -> NotConstructed:
 
 
 def check_selections_and_calls(
-    expr, address, declarations, local_domains=None, *, local_values=None, language_calls=()
+    expr, address, declarations, local_domains=None, *, local_values=None, language_calls=(),
+    law_fields=None,
 ) -> None:
     """The check of every selection from a family and of every call in an
     expression, under the local typed names: a selection is checked by
     `_check_family_selection` and a call by `_check_call`. `language_calls`
     names the functions of the language that the expression calls, `log`,
-    `exp`, `min` and `max` in a derived parameter's definition."""
+    `exp`, `min` and `max` in a derived parameter's definition. `law_fields`
+    maps each local argument of a shock law to its supplied field, if any."""
     local_values = {} if local_values is None else local_values
+    law_fields = {} if law_fields is None else law_fields
 
     def visit(e, local):
         if isinstance(e, terms.Select):
             visit(e.family, local)
-            _check_family_selection(
-                e, local, address=address, declarations=declarations, local_values=local_values
-            )
+            if isinstance(e.sel, terms.Term):
+                visit(e.sel.at, local)
+            if shock_application(e, declarations.parameterized_laws) is None:
+                _check_family_selection(
+                    e, local, address=address, declarations=declarations, local_values=local_values,
+                    law_fields=law_fields,
+                )
         elif isinstance(e, terms.Call):
             _check_call(e, local, address, declarations, language_calls)
             for arg in e.args:
@@ -233,7 +241,7 @@ def check_selections_and_calls(
     visit(expr, dict(local_domains or {}))
 
 
-def _check_family_selection(select, local, *, address, declarations, local_values) -> None:
+def _check_family_selection(select, local, *, address, declarations, local_values, law_fields) -> None:
     """A selection by a position reads a coordinate the family has, and one
     by a key reads a finite set of as many members as the family has
     coordinates; any other selection is refused under `family-selection`.
@@ -273,14 +281,21 @@ def _check_family_selection(select, local, *, address, declarations, local_value
                 f"set is selected by a name declared on the set, `{to_source(select.family)}[j]`",
                 by_name,
             )
-        if not isinstance(select.sel, terms.Key):
+        if not isinstance(select.sel, (terms.Key, terms.Term)):
             refuse(
                 f"selects by a selector no construction rule reads; a collection on an index set "
                 f"is selected by a name declared on the set, `{to_source(select.family)}[j]`",
                 by_name,
             )
-        name = select.sel.at
-        key_set = _local_domain(name, local, declarations)
+        key = select.sel.at
+        name = key if isinstance(select.sel, terms.Key) else to_source(key)
+        key_set = _local_domain(key, local, declarations) if isinstance(select.sel, terms.Key) else shape(key)
+        if key_set is None and isinstance(select.sel, terms.Term):
+            # A computed expression is checked at its indexed application.
+            return
+        if key_set is None and isinstance(select.sel, terms.Key) and key in law_fields:
+            # A local shock law argument gets its set from the supplied field.
+            return
         if key_set is None:
             missing = name not in local and declarations.declared_as(name) is None
             reason = (
@@ -293,12 +308,15 @@ def _check_family_selection(select, local, *, address, declarations, local_value
             )
         decided = sets.index_within(key_set, first, declarations.space_terms)
         if decided is False:
+            field = law_fields.get(name)
+            argument = repr(name) if field is None else f"{name!r} supplied by {field.field!r}"
+            declaration = name if field is None else field.field
             refuse(
-                f"selects by {name!r}, declared in {to_source(key_set)}, which is not within "
+                f"selects by {argument}, declared in {to_source(key_set)}, which is not within "
                 f"the index set {to_source(index_set)} of {to_source(select.family)}; declare "
-                f"{name} on the index set, or select under a condition that establishes its "
+                f"{declaration} on the index set, or select under a condition that establishes its "
                 f"membership",
-                f"Declare {name} on the index set {to_source(index_set)}, or select under a "
+                f"Declare {declaration} on the index set {to_source(index_set)}, or select under a "
                 f"condition that establishes its membership",
             )
         return
@@ -380,7 +398,18 @@ def _selection_shape(e, local, *, address, declarations, local_values, resolving
     if isinstance(e, terms.Sym) and isinstance(e.symbol, (terms.Constant, terms.Variable)):
         ref = field_spelling(e, address, declarations)
         if e.symbol.name not in local and ref in local_values and ref not in resolving:
-            return shape(local_values[ref], resolving | {ref})
+            inferred = shape(local_values[ref], resolving | {ref})
+            if inferred is not None:
+                return inferred
+        if ref.mark is not None:
+            matching = [
+                listing.domain_term for listing in declarations.listings
+                if listing.stem == ref.stem and listing.wire_type is not None
+                and listing.wire_type.perch == ref.mark
+                and listing.domain_term is not None
+            ]
+            if matching:
+                return coordinate_set_term(sets.meet(matching), declarations)
         return _local_domain(e.symbol.name, local, declarations)
     if isinstance(e, terms.Select):
         family = shape(e.family)
@@ -388,7 +417,7 @@ def _selection_shape(e, local, *, address, declarations, local_values, resolving
         if indexed is not None:
             # one key fixed: the entries' set, or the collection on the
             # remaining factors
-            return indexed[1] if isinstance(e.sel, terms.Key) else None
+            return indexed[1] if isinstance(e.sel, (terms.Key, terms.Term)) else None
         members = _coordinate_sets(family, declarations)
         if members is None:
             return None
@@ -441,6 +470,21 @@ def _check_call(call, local, address, declarations, language_calls=()) -> None:
     takes (`declarations.derived_parameter_fault`)."""
     definition = declarations.callable_definition(call.fun)
     declared = declarations.declared_as(call.fun)
+    # a set of functions on a finite index set is a table, whose entries are
+    # selected with brackets; a function-valued field alone is called
+    callable_domain = sets.callable_set(
+        _local_domain(call.fun, local, declarations), declarations.space_terms
+    )
+    if callable_domain is not None:
+        if len(call.args) != 1:
+            raise declarations.error(
+                "well-typed", address,
+                f"the call to {call.fun!r} supplies {len(call.args)} arguments; "
+                "a field on a set of functions takes one argument",
+            )
+        return
+    if declared == "shock" and call.fun in declarations.parameterized_laws:
+        return
     if declared not in (None, "function") or call.fun in local:
         raise declarations.error(
             "definition-order",
@@ -594,6 +638,77 @@ def maximand(operator):
     return terms.Tuple(tuple(operator.args))
 
 
+def rename_choice(term, names, aliases=None):
+    """Expand local definitions and rename free choice coordinates."""
+    aliases = {} if aliases is None else dict(aliases)
+
+    def visit(value, names, aliases):
+        if isinstance(value, terms.Sym):
+            symbol = value.symbol
+            if isinstance(symbol, terms.Constant):
+                spelling = (symbol.name, None)
+            elif isinstance(symbol, terms.Variable) and isinstance(symbol.when, terms.At):
+                spelling = (symbol.name, PERCH_OF_SIDE[type(symbol.when.side)])
+            else:
+                return value
+            if spelling in aliases:
+                remaining = {key: body for key, body in aliases.items() if key != spelling}
+                return visit(aliases[spelling], names, remaining)
+            if spelling[1] is None and symbol.name in names:
+                return terms.Sym(terms.Constant(names[symbol.name]))
+            return value
+        if isinstance(value, terms.Key):
+            key = visit(terms.Sym(terms.Constant(value.at)), names, aliases)
+            if isinstance(key, terms.Sym) and isinstance(key.symbol, terms.Constant):
+                return terms.Key(key.symbol.name)
+            return terms.Term(key)
+        if isinstance(value, terms.Operator):
+            scope, local, subs = dict(names), dict(aliases), []
+            for sub in value.subs:
+                subs.append(
+                    dataclasses.replace(sub, set=visit(sub.set, scope, local))
+                    if isinstance(sub, terms.In) else sub
+                )
+                bound = subscript_binder(sub)
+                scope.pop(bound, None)
+                local.pop((bound, None), None)
+            return terms.Operator(value.head, tuple(subs), visit(value.args, scope, local))
+        if isinstance(value, terms.Comprehension):
+            bound = {coordinate.stem for coordinate in value.bound.coordinates}
+            scope = {name: replacement for name, replacement in names.items() if name not in bound}
+            local = {key: body for key, body in aliases.items() if key not in {(name, None) for name in bound}}
+            return dataclasses.replace(
+                value,
+                base=visit(value.base, names, aliases),
+                conds=visit(value.conds, scope, local),
+            )
+        if dataclasses.is_dataclass(value) and not isinstance(value, type):
+            return type(value)(*(visit(getattr(value, f.name), names, aliases)
+                                 for f in dataclasses.fields(value)))
+        if isinstance(value, tuple):
+            return tuple(visit(item, names, aliases) for item in value)
+        return value
+
+    return visit(term, names, aliases)
+
+
+def policy_objective_fields(choice, controls, aliases, decision_lines):
+    """The fields whose decision equations state the maximand.
+
+    Each decision line supplies its field, right side and preceding aliases.
+    """
+    binders = tuple(subscript_binder(sub) for sub in choice.subs)
+    if len(binders) != len(controls) or (binders != controls and set(binders) == set(controls)):
+        return ()
+    tokens = tuple(object() for _ in controls)
+    target = rename_choice(maximand(choice), dict(zip(binders, tokens, strict=True)), aliases)
+    names = dict(zip(controls, tokens, strict=True))
+    return tuple(
+        field for field, term, local in decision_lines
+        if rename_choice(term, names, local) == target
+    )
+
+
 def selection_positions(entries, key, resolve):
     """The positions at which the selection tuples indexed by `key` read
     each name: `entries` holds (address, core) pairs in file order and
@@ -648,33 +763,39 @@ def free_names(expr, address, declarations, bound=frozenset(), *, aliases=None):
     )
 
 
-def free_names_with_shocks(expr, address, declarations, bound=frozenset(), *, aliases=None):
+def free_names_with_shocks(
+    expr, address, declarations, bound=frozenset(), *, aliases=None, choice_controls=frozenset()
+):
     """The names an expression reads that no operator in it binds, each with
     the shocks integrated at its occurrence, in source order. The aliases of
     the block and the bodies of the functions it calls are read in place, so
     that a free name is never read as a variable an unrelated local operator
-    binds."""
-    return list(
-        dict.fromkeys(
-            _references(expr, address, declarations, bound, aliases=aliases, contexts=True)
-        )
+    binds. The controls an ordered choice defines are available to shock laws
+    used in its objective or residuals."""
+    references = _references(
+        expr, address, declarations, bound, aliases=aliases,
+        contexts=True, choice_controls=choice_controls,
     )
+    return list(dict.fromkeys(references))
 
 
-def _references(expr, address, declarations, bound, *, aliases, contexts):
+def _references(
+    expr, address, declarations, bound, *, aliases, contexts, choice_controls=frozenset()
+):
     """The names an expression reads that no operator in it binds, in source
     order, each with the shocks integrated at its occurrence; with
     `contexts`, the aliases and the called functions are read in place."""
     aliases = {} if aliases is None else aliases
 
-    def reference(ref, bound, integrated, env, active, local_aliases):
+    def reference(ref, bound, integrated, env, active, local_aliases, controls):
         if ref.mark is None and ref.stem in bound:
             return []
         if contexts and ref in env:
             return [(r, shocks | integrated) for r, shocks in env[ref]]
         if contexts and ref in local_aliases and ref not in active:
             return visit(
-                local_aliases[ref], frozenset(), integrated, {}, active | {ref}, local_aliases
+                local_aliases[ref], frozenset(), integrated, {}, active | {ref}, local_aliases,
+                controls,
             )
         if contexts and ref.mark is None and ref.stem in declarations.functions:
             definition = declarations.functions[ref.stem]
@@ -685,12 +806,13 @@ def _references(expr, address, declarations, bound, *, aliases, contexts):
                 {},
                 active,
                 {},
+                controls,
             )
         return [(ref, integrated)]
 
-    def visit(e, bound, integrated, env, active, local_aliases):
-        def child(term, names=bound, shocks=integrated, bindings=env):
-            return visit(term, names, shocks, bindings, active, local_aliases)
+    def visit(e, bound, integrated, env, active, local_aliases, controls):
+        def child(term, names=bound, shocks=integrated):
+            return visit(term, names, shocks, env, active, local_aliases, controls)
 
         if isinstance(e, terms.Sym):
             return reference(
@@ -700,8 +822,11 @@ def _references(expr, address, declarations, bound, *, aliases, contexts):
                 env,
                 active,
                 local_aliases,
+                controls,
             )
-        if isinstance(e, (terms.Number, terms.Space, terms.Named, terms.FiniteSet)):
+        if isinstance(e, (terms.Number, terms.Named, terms.FiniteSet, terms.Interval)) and not (
+            isinstance(e, terms.Interval) and isinstance(e.bounds, terms.Range)
+        ):
             return []
         if isinstance(e, (terms.Add, terms.Sub, terms.Mul, terms.Div)):
             return child(e.left) + child(e.right)
@@ -719,10 +844,16 @@ def _references(expr, address, declarations, bound, *, aliases, contexts):
                     bindings = {
                         MarkedName(p, None): a for (p, _), a in zip(definition.params, args)
                     }
-                    return visit(definition.body, frozenset(), integrated, bindings, active, {})
+                    return visit(
+                        definition.body, frozenset(), integrated, bindings, active, {}, controls
+                    )
                 return sum(args, []) + visit(
-                    definition.body, frozenset(), integrated, {}, active, {}
+                    definition.body, frozenset(), integrated, {}, active, {}, controls
                 )
+            if declarations.declared_as(e.fun) in ("field", "shock"):
+                return reference(
+                    MarkedName(e.fun, None), bound, integrated, env, active, local_aliases, controls
+                ) + sum(args, [])
             return sum(args, [])
         if isinstance(e, terms.Operator):
             if contexts and e.head not in BOUND_OPERATORS:
@@ -770,8 +901,10 @@ def _references(expr, address, declarations, bound, *, aliases, contexts):
                     law_body = next(
                         body for body, at in declarations.law_terms if at == law_address
                     )
+                    formals = frozenset(declarations.parameterized_laws.get(name, ()))
                     law_dependencies[law_address] = visit(
-                        law_body, frozenset(), integrated, {}, active | {law_key}, {}
+                        law_body, frozenset(names) | formals | controls, integrated, {},
+                        active | {law_key}, {}, controls,
                     )
                     shocks.add(name)
                 else:
@@ -780,8 +913,12 @@ def _references(expr, address, declarations, bound, *, aliases, contexts):
                 out += _joint_integration(
                     law_dependencies, shocks, integrated, declarations, address
                 )
+            if e is expr and e.head in ("argmax", "solve"):
+                controls = choice_controls
             for arg in e.args:
-                out += child(arg, frozenset(names), frozenset(shocks))
+                out += visit(
+                    arg, frozenset(names), frozenset(shocks), env, active, local_aliases, controls
+                )
             return out
         if isinstance(e, terms.Tuple):
             return sum((child(item) for item in e.items), [])
@@ -793,9 +930,20 @@ def _references(expr, address, declarations, bound, *, aliases, contexts):
             out = child(e.family)
             if isinstance(e.sel, terms.Key):
                 out += reference(
-                    MarkedName(e.sel.at, None), bound, integrated, env, active, local_aliases
+                    MarkedName(e.sel.at, None), bound, integrated, env, active, local_aliases,
+                    controls,
                 )
+            elif isinstance(e.sel, terms.Term):
+                out += child(e.sel.at)
             return out
+        if isinstance(e, terms.Space):
+            return child(e.set)
+        if isinstance(e, terms.Functions):
+            return child(e.domain) + child(e.codomain)
+        if isinstance(e, terms.SetDifference):
+            return child(e.left) + child(e.right)
+        if isinstance(e, terms.SetUnion):
+            return sum((child(item) for item in e.members), [])
         if isinstance(e, terms.Interval) and isinstance(e.bounds, terms.Range):
             return child(e.bounds.lower) + child(e.bounds.upper)
         if isinstance(e, terms.IntegerRange):
@@ -820,7 +968,7 @@ def _references(expr, address, declarations, bound, *, aliases, contexts):
             "no construction rule reads the fields of a term written on this line",
         )
 
-    return visit(expr, bound, frozenset(), {}, frozenset(), aliases)
+    return visit(expr, bound, frozenset(), {}, frozenset(), aliases, frozenset())
 
 
 def _joint_integration(law_dependencies, shocks, integrated, declarations, address) -> list:
@@ -1049,6 +1197,13 @@ def perch_of_spelling(spelling, block_id, declarations, elsewhere=False) -> str 
         }
         if len(perches) == 1:
             return next(iter(perches))
+        if declarations.block_is_backward(block_id):
+            local = declarations.backward_perches(block_id)[1]
+            if local in perches and any(
+                source.field == stem and local in (source.perch, target.perch)
+                for source, target in declarations.kept_sources.items()
+            ):
+                return local
     return None
 
 

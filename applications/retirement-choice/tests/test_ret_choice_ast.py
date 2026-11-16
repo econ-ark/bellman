@@ -28,14 +28,14 @@ import pathlib
 import sys
 
 _REPO = pathlib.Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(_REPO / "packages" / "bellman" / "tests" / "tools"))
+sys.path.insert(0, str(_REPO / "applications"))
 
 import pytest
 
 import stage_ast
 from stage_ast import (VLU, at_var, block, check, dom, extended_real, parsed,
                        run_checks, sym)
-from stage_types import (
+from bellman.syntax.terms import (
     Add, Annotation, Arrival, Assignment, At, Block, Call, Cartesian, Closed,
     Constant, Continuation, Control, Coordinate, CorrDef, Declaration, Declare,
     Decision, Div, Domain, Equation, FiniteSet, FuncDef, Grid, Handler,

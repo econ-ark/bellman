@@ -70,7 +70,9 @@ where $B$ is arrival value. Require $\int|v(Rb+y)|\,\nu_y(dy)<\infty$. Bounded c
 
 The order matters: consumption responds to realized income inside the expectation. Maximizing before income were observed would describe a different decision problem. The supplied $W$ comes from an adjoining period or terminal boundary; the equation does not silently set $W=B$. Stationary closure would be an additional model assumption.
 
-## 4 Reuse the consumption module
+<a id="4-reuse-the-consumption-module"></a>
+
+## 4 The reusable consumption stage
 
 The separate `cons.bl` in [Field equations](03-field-equations.md#1-consumption-and-savings) begins with observed resources $m>0$, sets decision resources $m_d=m$, and uses the same savings equation. Let $H:[0,\infty)\to\mathbb R$ be its supplied continuation function. Because its value equation contains no beta, the choice value is
 
@@ -82,7 +84,11 @@ Apply the continuity, attainment, and measurable-selection conditions above to $
 
 The separate `cons_interior.bl` uses the endogenous grid method's candidate relation, described in [Field equations](03-field-equations.md#3-an-implicit-policy-relation). Its equation `c = c[>]` becomes a relation through savings, not an assignment or a guarantee of global optimality. Its inverse-marginal formula requires a finite strictly positive continuation derivative agreeing with the supplied value function. The first-order boundary criterion uses the finite right derivative at zero. To declare the full constrained policy, write the Kuhn–Tucker condition in one of its three spellings, the clause `⟂ m_d - c >= 0` on the decision-perch first-order condition using the forward law `a = m_d - c`, a multiplier declared in the policy block, or the clause `⟂ a >= 0` on the continuation-marked candidate line written as an inequality, which the loading software reads as the corner ([Constraints](10-constraints.md) §4); or restrict the equality to the interior and declare the boundary branch separately, or retain constrained maximization. A numerical boundary extension is not a solution of the unrestricted interior equality. Candidate coordinates must determine a measurable policy on the required domain. Those additional conditions do not belong to the value-only constrained source used above.
 
-## 5 Inspect equations and then solve
+For a stationary model the [representing functions](01-stage.md#31-fields-sent-backward) of all fields sent backward must be a joint fixed point. If a stage takes in both a value and a borrowing bound, their returned pair must reproduce both supplied values. See [Periods and trellises](../bellman-calculus/08-periods-and-trellis.md).
+
+<a id="5-inspect-equations-and-then-solve"></a>
+
+## 5 Inspection and numerical solution
 
 A stage is inspected through the queries of the constructed object: its fields, its definitions table, its graphs, whose boxes open from whole builders down to their single operations, the conditions its construction states, and the card that `denote()` prints for any piece or definition ([API](API/index.md)). A builder's card prints each of its operations with its rule written at a point, the state arguments explicit ([A builder](API/stage/04-builder.md) §1), so the functions of §§2 and 3 are read from the constructed stage itself. On `buffer_stock.bl`:
 

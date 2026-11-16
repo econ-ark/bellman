@@ -1,0 +1,7 @@
+@methods: buffer_stock
+# A deliberate conflict: read after egm.bl, this file gives the method of the
+# block policy a second time with different content. A component holds one
+# entry over the files of a stage, so the package refuses this line and names
+# the bracket of egm.bl beside it (`declared-twice`).
+
+policy.method : !vfi

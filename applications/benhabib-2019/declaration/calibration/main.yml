@@ -2,8 +2,8 @@
 # from Table 4 of Benhabib, Bisin and Luo (2019); a value in brackets there is
 # fixed outside the estimation, the others are estimated by simulated method of
 # moments. One mapping serves both stages, and each stage binds the parameters
-# it declares. The earnings of each age bracket are in calibration/wage/, and
-# the horizon and the ages, which no stage declares, in calibration/horizon.yml.
+# it declares. The earnings of each age bracket are in calibration/wage.yml, and
+# the age is supplied with the terminal value.
 
 calibration:
   # Preferences: u(c) = c^(1 - σ)/(1 - σ), discounted by β.

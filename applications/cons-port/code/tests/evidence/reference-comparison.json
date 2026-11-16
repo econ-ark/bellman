@@ -99,49 +99,49 @@
   "configuration": "beginning_vfi",
   "h": 0,
   "arrays": 9,
-  "largest difference": null,
+  "largest difference": 2.0000100065932574e+49,
   "share ties": null,
-  "result": "structural only: The beginning-of-period-returns run with the VFI consumption operator is recorded but excluded from numerical equality assertions: under the current inputs its values are of order 1e40, because the helper binds the consumption stage with the portfolio methods file to borrow !vfi, whose evaluate node starts the grid at k_min = 1e-10, so the candidate consumption range linspace(1e-6, m_d - 1e-6) is negative at the bottom of the grid and, with rho = 6, c^(-5) explodes (spec 0.3c section 7.3)."
+  "result": "historical handler; invalid value comparator: The beginning-of-period-returns run with the VFI consumption operator is recorded but excluded from numerical equality assertions: under the current inputs its values are of order 1e40, because the helper binds the consumption stage with the portfolio methods file to borrow !vfi, whose evaluate node starts the grid at k_min = 1e-10, so the candidate consumption range linspace(1e-6, m_d - 1e-6) is negative at the bottom of the grid and, with rho = 6, c^(-5) explodes (spec 0.3c section 7.3)."
  },
  {
   "configuration": "beginning_vfi",
   "h": 1,
   "arrays": 9,
-  "largest difference": null,
+  "largest difference": 2.0000100079394313e+49,
   "share ties": null,
-  "result": "structural only: The beginning-of-period-returns run with the VFI consumption operator is recorded but excluded from numerical equality assertions: under the current inputs its values are of order 1e40, because the helper binds the consumption stage with the portfolio methods file to borrow !vfi, whose evaluate node starts the grid at k_min = 1e-10, so the candidate consumption range linspace(1e-6, m_d - 1e-6) is negative at the bottom of the grid and, with rho = 6, c^(-5) explodes (spec 0.3c section 7.3)."
+  "result": "historical handler; invalid value comparator: The beginning-of-period-returns run with the VFI consumption operator is recorded but excluded from numerical equality assertions: under the current inputs its values are of order 1e40, because the helper binds the consumption stage with the portfolio methods file to borrow !vfi, whose evaluate node starts the grid at k_min = 1e-10, so the candidate consumption range linspace(1e-6, m_d - 1e-6) is negative at the bottom of the grid and, with rho = 6, c^(-5) explodes (spec 0.3c section 7.3)."
  },
  {
   "configuration": "beginning_vfi",
   "h": 2,
   "arrays": 9,
-  "largest difference": null,
+  "largest difference": 2.0000100092317576e+49,
   "share ties": null,
-  "result": "structural only: The beginning-of-period-returns run with the VFI consumption operator is recorded but excluded from numerical equality assertions: under the current inputs its values are of order 1e40, because the helper binds the consumption stage with the portfolio methods file to borrow !vfi, whose evaluate node starts the grid at k_min = 1e-10, so the candidate consumption range linspace(1e-6, m_d - 1e-6) is negative at the bottom of the grid and, with rho = 6, c^(-5) explodes (spec 0.3c section 7.3)."
+  "result": "historical handler; invalid value comparator: The beginning-of-period-returns run with the VFI consumption operator is recorded but excluded from numerical equality assertions: under the current inputs its values are of order 1e40, because the helper binds the consumption stage with the portfolio methods file to borrow !vfi, whose evaluate node starts the grid at k_min = 1e-10, so the candidate consumption range linspace(1e-6, m_d - 1e-6) is negative at the bottom of the grid and, with rho = 6, c^(-5) explodes (spec 0.3c section 7.3)."
  },
  {
   "configuration": "beginning_vfi",
   "h": 3,
   "arrays": 9,
-  "largest difference": null,
+  "largest difference": 2.0000100104723907e+49,
   "share ties": null,
-  "result": "structural only: The beginning-of-period-returns run with the VFI consumption operator is recorded but excluded from numerical equality assertions: under the current inputs its values are of order 1e40, because the helper binds the consumption stage with the portfolio methods file to borrow !vfi, whose evaluate node starts the grid at k_min = 1e-10, so the candidate consumption range linspace(1e-6, m_d - 1e-6) is negative at the bottom of the grid and, with rho = 6, c^(-5) explodes (spec 0.3c section 7.3)."
+  "result": "historical handler; invalid value comparator: The beginning-of-period-returns run with the VFI consumption operator is recorded but excluded from numerical equality assertions: under the current inputs its values are of order 1e40, because the helper binds the consumption stage with the portfolio methods file to borrow !vfi, whose evaluate node starts the grid at k_min = 1e-10, so the candidate consumption range linspace(1e-6, m_d - 1e-6) is negative at the bottom of the grid and, with rho = 6, c^(-5) explodes (spec 0.3c section 7.3)."
  },
  {
   "configuration": "beginning_vfi",
   "h": 4,
   "arrays": 9,
-  "largest difference": null,
+  "largest difference": 2.0000100116633985e+49,
   "share ties": null,
-  "result": "structural only: The beginning-of-period-returns run with the VFI consumption operator is recorded but excluded from numerical equality assertions: under the current inputs its values are of order 1e40, because the helper binds the consumption stage with the portfolio methods file to borrow !vfi, whose evaluate node starts the grid at k_min = 1e-10, so the candidate consumption range linspace(1e-6, m_d - 1e-6) is negative at the bottom of the grid and, with rho = 6, c^(-5) explodes (spec 0.3c section 7.3)."
+  "result": "historical handler; invalid value comparator: The beginning-of-period-returns run with the VFI consumption operator is recorded but excluded from numerical equality assertions: under the current inputs its values are of order 1e40, because the helper binds the consumption stage with the portfolio methods file to borrow !vfi, whose evaluate node starts the grid at k_min = 1e-10, so the candidate consumption range linspace(1e-6, m_d - 1e-6) is negative at the bottom of the grid and, with rho = 6, c^(-5) explodes (spec 0.3c section 7.3)."
  },
  {
   "configuration": "beginning_vfi",
   "h": 5,
   "arrays": 9,
-  "largest difference": null,
+  "largest difference": 2.000010012806766e+49,
   "share ties": null,
-  "result": "structural only: The beginning-of-period-returns run with the VFI consumption operator is recorded but excluded from numerical equality assertions: under the current inputs its values are of order 1e40, because the helper binds the consumption stage with the portfolio methods file to borrow !vfi, whose evaluate node starts the grid at k_min = 1e-10, so the candidate consumption range linspace(1e-6, m_d - 1e-6) is negative at the bottom of the grid and, with rho = 6, c^(-5) explodes (spec 0.3c section 7.3)."
+  "result": "historical handler; invalid value comparator: The beginning-of-period-returns run with the VFI consumption operator is recorded but excluded from numerical equality assertions: under the current inputs its values are of order 1e40, because the helper binds the consumption stage with the portfolio methods file to borrow !vfi, whose evaluate node starts the grid at k_min = 1e-10, so the candidate consumption range linspace(1e-6, m_d - 1e-6) is negative at the bottom of the grid and, with rho = 6, c^(-5) explodes (spec 0.3c section 7.3)."
  },
  {
   "configuration": "end_returns",
@@ -238,5 +238,53 @@
   "result": "equal to 1e-12",
   "largest difference": 2.710505431213761e-20,
   "share ties": 168
+ },
+ {
+  "configuration": "beginning_vfi_corrected",
+  "h": 0,
+  "arrays": 9,
+  "largest difference": 2.0000100065932574e+49,
+  "share ties": null,
+  "result": "ordinary share_search and gauss_hermite; finite feasible solve; invalid historical comparator"
+ },
+ {
+  "configuration": "beginning_vfi_corrected",
+  "h": 1,
+  "arrays": 9,
+  "largest difference": 2.3938262353000456e+49,
+  "share ties": null,
+  "result": "ordinary share_search and gauss_hermite; finite feasible solve; invalid historical comparator"
+ },
+ {
+  "configuration": "beginning_vfi_corrected",
+  "h": 2,
+  "arrays": 9,
+  "largest difference": 2.471371698203534e+49,
+  "share ties": null,
+  "result": "ordinary share_search and gauss_hermite; finite feasible solve; invalid historical comparator"
+ },
+ {
+  "configuration": "beginning_vfi_corrected",
+  "h": 3,
+  "arrays": 9,
+  "largest difference": 2.486641042198172e+49,
+  "share ties": null,
+  "result": "ordinary share_search and gauss_hermite; finite feasible solve; invalid historical comparator"
+ },
+ {
+  "configuration": "beginning_vfi_corrected",
+  "h": 4,
+  "arrays": 9,
+  "largest difference": 2.489647710475061e+49,
+  "share ties": null,
+  "result": "ordinary share_search and gauss_hermite; finite feasible solve; invalid historical comparator"
+ },
+ {
+  "configuration": "beginning_vfi_corrected",
+  "h": 5,
+  "arrays": 9,
+  "largest difference": 2.490239751906583e+49,
+  "share ties": null,
+  "result": "ordinary share_search and gauss_hermite; finite feasible solve; invalid historical comparator"
  }
 ]

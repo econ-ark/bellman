@@ -6,10 +6,10 @@ is one step of a dynamic program, with three perches, the information sets at
 arrival, at the decision and at continuation. From the file the package
 constructs the stage's **semgraph**, its semantic graph: the typed fields,
 equations and operators of the stage, held in four graphs of the DisCoPy
-library. It binds numerical methods, parameter values and numerical settings
-to a stage; assembles stages into periods, the stages of one date joined by
-their fields, and periods into trellises, the finite sequences of periods of
-a model; and prints what a stage holds. This file maps the package for a
+library. The package binds numerical methods, parameter values and numerical
+settings to a stage. It joins stages into periods by their fields and
+constructs trellises, the author's diagrams of periods and their connections.
+It also prints what a stage holds. This file maps the package for a
 reader of its code. Its words are those of the documentation, whose concept
 wiki, [`docs/wiki/`](../../docs/wiki/index.md), defines them, and the objects
 a user meets are stated in
@@ -57,7 +57,7 @@ import semgraph`.
 | name the perches in a key of `stage.builder`, `stage.builder[cntn, dcsn]` | `arvl`, `dcsn`, `cntn` |
 | answer the refusal held in the place of a graph, the line of a block's header and the lines a card quotes | `graph_refusal`; `header_line`, `source_lines` |
 | view a stage in Model Explorer, and read the view back | `explore`, `write_model_explorer`; `to_model_explorer`, `perch_overlays`, `box_attributes`, `layers_to_open`, `node_place`, `wire_counts`; `BOUNDARY_IDS`, `INITIAL_IDS`, `LAYER_ID_ENDING`, `LAYER_COLORS`, `NODE_STYLE`, `OUTPUT_STYLE`, `PERCH_COLORS` |
-| answer the sides a block's header declares, the fields of each branch and the `.bl` text of a term, such as a set, and name the word of each role, the primitive set of each spelling and the mark a printed name carries for each perch | `header_of`, `branches`, `to_source`; `ROLE_WORD`, `PRIMITIVE_SETS`, `PERCH_MARK` |
+| answer the sides a block's header declares, the field each listing of a header names in a text, the fields of each branch and the `.bl` text of a term, such as a set, and name the word of each role, the primitive set of each spelling and the mark a printed name carries for each perch | `header_of`, `header_fields`, `branches`, `to_source`; `ROLE_WORD`, `PRIMITIVE_SETS`, `PERCH_MARK` |
 
 `from bellman.period import …`
 
@@ -148,6 +148,11 @@ dictionary of periods whose stages are source records. `elaborate_trellis`
 returns the **elaborated trellis**, the same dictionary with a stage version
 at every key, and the three trellis verbs bind it. A **stage occurrence** is a
 stage file elaborated at one position of a trellis.
+
+The position records an
+address, not an economic input. A recipe may select different calibrations
+or methods by ranges of positions. Reusing the same declarations and
+bindings gives the same stage operator at each occurrence.
 
 ## 3 The folders
 
@@ -285,7 +290,7 @@ holds the refusal classes and the names of the rules and conditions and
 imports nothing of the package: the one exception. The root's other modules,
 `__init__`, `__main__`, `dossier`, `refusal_catalogue`, `refusal_examples`
 and `semantic_rules`, stand above every folder. No module imports inside a function, and none reads
-another's private name. `tests/tools/local_imports.py` checks the rule: it
+another's private name. `tests/import_rules.py` checks the rule: it
 counts the imports inside functions and classes, prints the cycles among the
 modules, and prints each import that reads a later folder or the root, reading
 the order of the folders from the table of §3, and prints each table entry
@@ -317,28 +322,63 @@ language, and a change is made in the listing and the file generated again: `syn
 from `dynspec_full.asdl` by `gen_types.py` beside this file, and the marked
 region of `typing/typed_expressions.py` that holds its generated constructors from
 `semantic.asdl` by `gen_semantic_types.py`. The tests are under `tests/`.
-The recordings in `tests/snapshot/` retain complete views, source terms,
-encodings and printed cards. `tests/test_snapshot.py` compares the complete
-live values, including the recorded refusals of applications whose
-construction is not admitted. Acceptance files check the current changes;
-`tests/test_refusals.py` and `tests/test_behaviour.py` check diagnostics and
-public operations that a fixed recording cannot establish.
 
-Run every package test from the repository root with
-`python -m pytest packages/bellman/tests`. No marker is excluded by default;
-`-m sweep` selects corpus checks alone. The optional test dependency
-`pytest-xdist` permits parallel execution with `-n 4`.
+The folder `tests/snapshot/` stores four kinds of file:
 
-`tests/snapshot/record.py --corpus` writes the source-term and stage-encoding
-recordings under `tests/snapshot/corpus/`. After reviewing any changed
-encoding or schema, run `tests/snapshot/validate_encodings.py` to validate
-every recording against the schema and record their SHA-256 hashes.
-Tests require those exact hashes and full equality with each live encoding:
-together these establish schema validity without revalidating an unchanged
-JSON object. Tests of malformed encodings still exercise the validator.
-`tests/snapshot/record_cards.py` explicitly records the complete formatting
-corpus. Tests never rewrite their expected recordings.
+- the parsed term of each stage file under `applications/`, at
+  `corpus/<application>/<file>.bl.ast.json`;
+- the printed text of the stage of each stage file that elaborates, at
+  `corpus/<application>/<file>.bl.printed.txt`, and the printed text of the
+  one fixture stage, under `corpus/fixtures/`;
+- for each of the eight corpus stages, which `CORPUS` of `tests/conftest.py`
+  lists, the text of its graphs, at
+  `corpus/<application>/<file>.bl.graphs.txt`: the listing and the wiring
+  of each graph at each grain, with the conditions and the sort of every
+  wire;
+- the table `encoding_digests.json`, which holds the SHA-256 digest of the
+  schema of encodings and, for each stage file that elaborates, the digest
+  of its encoding and of each section of that encoding.
 
-`tests/tools/` holds the
-printers of a parsed AST in ASDL notation and in HTML, which the tests of the
+`tests/test_applications.py` compares each stored file with the live value: the
+parsed term, the printed text, the text of the graphs and the digests of the
+live encoding. It also checks that
+each stage file that the tables of `tests/snapshot/corpus_cases.py` hold as
+refused is refused under its recorded rule. `tests/test_graphs_and_grains.py`
+checks properties of the graphs of every stage file that elaborates, and
+`tests/test_cards_and_sheets.py` checks that each piece of such a stage prints
+one card whichever handle reaches it. Acceptance files check the current changes;
+`tests/test_refusals.py` checks diagnostics, and the other test files, each
+named for its subject, check public operations that a fixed recording cannot
+establish.
+
+Run the package's tests from the repository root. The command
+`python -m pytest packages/bellman/tests` runs the default set: it skips
+each case marked `complete_set`. The command
+`python -m pytest packages/bellman/tests --complete` runs every case. In the
+default set, each test of `test_applications.py`, `test_cards_and_sheets.py`,
+`test_graphs_and_grains.py`, `test_field_equations.py` and `test_encoding.py`
+that runs over the stage files runs on one file of
+its list, in most of these tests the stage file of the consumption stage.
+The complete set runs each such test on every file of its list. The optional test dependency `pytest-xdist` permits
+parallel execution with `-n 4`.
+
+Tests never write the stored files. After a change has been read, these
+commands, run from `packages/bellman`, write each kind again:
+
+- `python tests/snapshot/record.py --corpus` writes the parsed terms, the
+  printed texts and the texts of the graphs under `tests/snapshot/corpus/`;
+- `python tests/snapshot/validate_encodings.py` validates the live encoding
+  of each stage file that elaborates against the schema, and only then
+  writes `tests/snapshot/encoding_digests.json`.
+
+Each of the two scripts, `record.py` and `validate_encodings.py`, reads the
+package `bellman` of the checkout that holds it, whatever copy the
+environment has installed. No encoding is stored. The command `python tests/snapshot/record.py --encodings FOLDER`
+writes the encoding of each stage file that elaborates in FOLDER, which must
+lie outside the repository, so that the encodings of two commits can be
+compared. At a commit whose tests pass, the SHA-256 digest of each file it
+writes equals the digest under `encoding` in the table.
+`tests/test_encoding.py` checks that the schema refuses malformed encodings.
+
+`applications/stage_ast.py` holds the helpers that the structural tests of the
 applications import.

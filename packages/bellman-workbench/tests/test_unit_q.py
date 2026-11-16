@@ -2375,14 +2375,13 @@ def test_details_heads_and_the_page_s_words_take_their_faces_and_sentence_case(
     backward trellis graph: a selected period's head prints `periods[0]` in
     Code name, then its kind `Period` in Small in ink-3, and its block labels
     read `Occurrences` and `Moved by a period typed first`; a selected card's
-    head prints its place `periods[2] · age 68` in Code small but the page's
-    word `age` in Small; the cable of `keep` within periods[0] heads Details
+    head prints its position `periods[2]` in Code small; the cable of `keep` within periods[0] heads Details
     with `Join` in Head, prints its route's `branch` in Small and `keep` in
     Code small, and the states `certified` and `inferred` in Small. In the
     stage view of tenure.bl, the builder `policy` heads Details with `policy`
     in Code name, then `Builder` in Small in ink-3, its block label
     `Signature`; the box `policy:Evaluation` labels its rule `Rule`; and the
-    legend's name line prints `tenure` in Code small and `methodized,
+    legend's name line prints `tenure` in Code small and `calibrated, methodized,
     configured` in Small in ink-2."""
     context, tab = new_tab(browser)
     try:
@@ -2406,11 +2405,9 @@ def test_details_heads_and_the_page_s_words_take_their_faces_and_sentence_case(
         tab.locator('.bf-card[aria-label="layer tenure"]').first.click()
         wait_until(lambda: tab.evaluate(DETAILS_MARKS_JS), 30.0, "Details of tenure")
         head = styled(tab.evaluate(TEXT_FACES_JS, ".bl-panel .bl-panel-head"))
-        assert head[:4] == [
+        assert head[:2] == [
             ("tenure", "Code name"),
-            ("periods[2] ·", "Code small"),
-            ("age", "Small"),
-            ("68", "Code small"),
+            ("periods[2]", "Code small"),
         ], head
 
         tab.keyboard.press("Escape")
@@ -2444,7 +2441,7 @@ def test_details_heads_and_the_page_s_words_take_their_faces_and_sentence_case(
             "the stage graph's lines",
         )
         name = tab.evaluate(TEXT_FACES_JS, ".bl-panel .bl-legend-name")
-        assert styled(name) == [("tenure", "Code small"), ("methodized, configured", "Small")], (
+        assert styled(name) == [("tenure", "Code small"), ("calibrated, methodized, configured", "Small")], (
             name
         )
         assert name[1][4] == ink_2, name

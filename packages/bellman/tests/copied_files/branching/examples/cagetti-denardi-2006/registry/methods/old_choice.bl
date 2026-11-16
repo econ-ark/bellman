@@ -1,0 +1,11 @@
+@methods: old_choice
+# The methods of the stage old_choice as an addition to old_choice.bl: the
+# discrete maximum over staying in business and retiring (equation (10) of the
+# paper) on the policy builder, the identity for the measure that
+# `arvl_to_dcsn` carries to the decision perch, and the deterministic
+# transition of the forward decision builder `dcsn_to_cntn`, which branches
+# over the control d. No method adds a line, so each entry is at file level.
+
+policy.method : !max
+arvl_to_dcsn.method : !identity
+dcsn_to_cntn.method : !deterministic        # the method of a block whose body is two branches with labels

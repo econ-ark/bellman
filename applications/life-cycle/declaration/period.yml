@@ -1,0 +1,4 @@
+!period
+name: life_cycle_period
+stages: [entry, mortality, draw, consumption]
+connectors: []

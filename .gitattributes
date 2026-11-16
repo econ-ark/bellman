@@ -1,0 +1,5 @@
+# The stored recordings of the snapshot tests keep \n line ends on every
+# platform, as `record.py` and `validate_encodings.py` write them: the tests
+# compare the parsed terms and the printed texts with the live texts exactly.
+packages/bellman/tests/snapshot/**/*.json text eol=lf
+packages/bellman/tests/snapshot/**/*.txt text eol=lf

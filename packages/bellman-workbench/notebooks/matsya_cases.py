@@ -128,8 +128,10 @@ def _fresh(name: str) -> Path:
 
 
 def durables() -> model.Folder:
-    """A fresh copy of the durables model, a git repository with one commit."""
-    return model.open_folder(support.repository_copy(support.DURABLES, _fresh("durables")))
+    """A declaration-only durables copy accepted by the job preparation."""
+    target = _fresh("durables")
+    shutil.copytree(support.DURABLES, target, ignore=shutil.ignore_patterns("__pycache__"))
+    return model.open_folder(support.init_repository(support.without_additions(target)))
 
 
 def pensions() -> model.Folder:
@@ -160,7 +162,12 @@ def unsaved(folder: model.Folder, path: str, line: str) -> dict:
 def received() -> dict:
     """The digest of each text the stand-in received with the last prepared
     submission, by the name the service reads it under."""
-    return [entry for entry in support.stub_calls(LOG) if "submitted" in entry][-1]["submitted"]
+    submissions, _ = support.wait_until(
+        lambda: [entry for entry in support.stub_calls(LOG) if "submitted" in entry],
+        20.0,
+        "the submitted inputs",
+    )
+    return submissions[-1]["submitted"]
 
 
 def prepared_texts(prepared) -> dict:
@@ -589,7 +596,14 @@ class Column:
         support.wait_until(lambda: len(matsya_window.exchanges.value) > before, 5.0, "the request")
         if kind == matsya_window.SEARCH:
             support.wait_until(
-                lambda: matsya_window.exchanges.value[-1].answer is not None, 20.0, "the search"
+                lambda: any(
+                    exchange.kind == "search"
+                    and exchange.question == text
+                    and exchange.answer is not None
+                    for exchange in matsya_window.exchanges.value[before:]
+                ),
+                20.0,
+                "the search",
             )
 
     def connect(self) -> dict:
@@ -638,10 +652,19 @@ class Column:
                 },
             }
         )
-        support.wait_until(
-            lambda: matsya_window.exchanges.value[-1].answer is not None, 20.0, "the answer"
+        answer, _ = support.wait_until(
+            lambda: next(
+                (
+                    exchange.answer
+                    for exchange in matsya_window.exchanges.value
+                    if exchange.turn == record["accepted"] and exchange.answer is not None
+                ),
+                None,
+            ),
+            20.0,
+            "the answer",
         )
-        return matsya_window.exchanges.value[-1].answer
+        return answer
 
     def files_listed(self) -> list:
         """The rows of `Files`, each file with the start of its

@@ -16,6 +16,7 @@ from typing import NamedTuple
 from bellman.distributions.families import FAMILY_ARGUMENTS, weighted_case
 from bellman.fold.block_lines import DeclaredSides, header_of
 from bellman.native.identity import Identity
+from bellman.native.predicates import And, Compare, Not
 from bellman.syntax import terms as T
 from bellman.syntax.source import to_source
 from bellman.syntax.vocabulary import PERCH_OF_SIDE, WRITTEN_MARK
@@ -40,7 +41,13 @@ def is_wire_symbol(node):
 
 def wires_read(term):
     """The wires a reduced term reads, in order of first appearance."""
-    return tuple(dict.fromkeys(n.symbol.name for n in term_nodes(term) if is_wire_symbol(n)))
+    wires = []
+    for node in term_nodes(term):
+        if is_wire_symbol(node):
+            wires.append(node.symbol.name)
+        elif isinstance(node, T.Call) and isinstance(node.fun, Identity):
+            wires.append(node.fun)
+    return tuple(dict.fromkeys(wires))
 
 
 def substitute_wires(term, replacements):
@@ -48,6 +55,10 @@ def substitute_wires(term, replacements):
     replaced: the composition of two pointwise maps."""
     if is_wire_symbol(term):
         return replacements.get(term.symbol.name, term)
+    if isinstance(term, T.Call) and isinstance(term.fun, Identity):
+        function = replacements.get(term.fun)
+        if is_wire_symbol(function):
+            term = dataclasses.replace(term, fun=function.symbol.name)
     if dataclasses.is_dataclass(term) and not isinstance(term, type):
         return type(term)(
             *(
@@ -347,30 +358,67 @@ def arithmetic_nodes(core):
     ]
 
 
-def arithmetic_nodes_with_scopes(node, ctx, block, local):
-    """Each arithmetic node of a term with the sets of the names bound where
-    it stands: those of `local` and those the operators around it bind."""
+def case_guards(test, guard):
+    """The predicates selecting the two branches within the enclosing guard."""
+    relation = {T.Lt: "<", T.Le: "<=", T.Eq: "=", T.Ge: ">=", T.Gt: ">"}
+    condition = Compare(test.left, relation[type(test.op)], test.right)
+    if guard is None:
+        return condition, Not(condition)
+    return And(guard, condition), And(guard, Not(condition))
+
+
+def guarded_term_nodes(node, guard=None):
+    """Each term and the predicate that selects its branch."""
+    yield node, guard
+    if isinstance(node, T.Conditional):
+        then, otherwise = case_guards(node.test, guard)
+        yield from guarded_term_nodes(node.test, guard)
+        yield from guarded_term_nodes(node.then, then)
+        yield from guarded_term_nodes(node.otherwise, otherwise)
+    elif dataclasses.is_dataclass(node) and not isinstance(node, type):
+        for field in dataclasses.fields(node):
+            yield from guarded_term_nodes(getattr(node, field.name), guard)
+    elif isinstance(node, tuple):
+        for item in node:
+            yield from guarded_term_nodes(item, guard)
+
+
+def arithmetic_nodes_with_scopes(node, ctx, block, local, guard=None, *, guards=False):
+    """Each arithmetic node with the sets of its bound names and its guard."""
     if isinstance(node, (T.Add, T.Sub, T.Mul, T.Div, T.Pow, T.Neg)):
-        yield node, local
+        yield (node, local, guard) if guards else (node, local)
     if isinstance(node, T.Operator):
         scope = dict(local)
         for sub in node.subs:
             if isinstance(sub, T.In):
-                yield from arithmetic_nodes_with_scopes(sub.set, ctx, block, local)
+                yield from arithmetic_nodes_with_scopes(
+                    sub.set, ctx, block, local, guard, guards=guards
+                )
                 scope[sub.var] = sub.set
             elif isinstance(sub, T.Var):
                 scope[sub.name] = ctx.sets.get(ctx.resolve(sub.name, block))
         for argument in node.args:
-            yield from arithmetic_nodes_with_scopes(argument, ctx, block, scope)
+            yield from arithmetic_nodes_with_scopes(
+                argument, ctx, block, scope, guard, guards=guards
+            )
+    elif isinstance(node, T.Conditional):
+        then, otherwise = case_guards(node.test, guard)
+        yield from arithmetic_nodes_with_scopes(node.test, ctx, block, local, guard, guards=guards)
+        yield from arithmetic_nodes_with_scopes(node.then, ctx, block, local, then, guards=guards)
+        yield from arithmetic_nodes_with_scopes(
+            node.otherwise, ctx, block, local, otherwise, guards=guards
+        )
     elif dataclasses.is_dataclass(node) and not isinstance(node, type):
         for field in dataclasses.fields(node):
-            yield from arithmetic_nodes_with_scopes(getattr(node, field.name), ctx, block, local)
+            yield from arithmetic_nodes_with_scopes(
+                getattr(node, field.name), ctx, block, local, guard, guards=guards
+            )
     elif isinstance(node, tuple):
         for item in node:
-            yield from arithmetic_nodes_with_scopes(item, ctx, block, local)
+            yield from arithmetic_nodes_with_scopes(item, ctx, block, local, guard, guards=guards)
 
 
-def label_case(ctx, term, block):
+def label_case(ctx, term, block, *, owner=None):
     """The weighted case operation a term `E_{s}((Q₁, …, Qₙ)[s])` over a label
     shock denotes: a term in the line's names with the weights the law of `s`
     writes; None for any other term, and on a `WorkingStage`, which holds no
@@ -392,10 +440,32 @@ def label_case(ctx, term, block):
         and ctx.labels(ctx.resolve(name, block))
     ):
         return None
-    table = getattr(ctx.stage_object, "definitions", None)
-    law = (
-        table.get(Identity("distribution", stage=ctx.stage_name, subjects=(name,)))
-        if table is not None
-        else None
-    )
-    return None if law is None else weighted_case(law.equations[0].law, argument.family.items)
+    if owner is None:
+        table = getattr(ctx.stage_object, "definitions", None)
+        law = (
+            table.get(Identity("distribution", stage=ctx.stage_name, subjects=(name,)))
+            if table is not None
+            else None
+        )
+        if law is None:
+            return None
+        declared = law.equations[0].law
+    else:
+        declared = owner.term
+    if name in ctx.law_formals:
+        from bellman.fold.stage_fold import stage_blocks_of
+        from bellman.typing.ranges import substituted
+
+        if owner is None:
+            owner = next(
+                owner
+                for owner in stage_blocks_of(ctx.stage_object).owners
+                if name in owner.subjects
+            )
+        replacements = {}
+        for formal, actual in zip(owner.formals, owner.actuals):
+            supplied = wire_symbol(ctx.function_wire(actual))
+            replacements[T.Sym(T.Constant(formal))] = supplied
+            replacements[T.Key(formal)] = T.Term(supplied)
+        declared = substituted(declared, replacements)
+    return weighted_case(declared, argument.family.items)

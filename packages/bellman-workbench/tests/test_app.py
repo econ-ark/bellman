@@ -4163,7 +4163,7 @@ def test_r_each_term_carries_one_sentence_on_hover():
         "the kind of the box's operator, or block or field in an initial diagram"
     )
     assert app.TERMS["period"] == (
-        "one date of the model, numbered from the terminal period, periods[0]"
+        "stages joined by their fields, at one position in the trellis"
     )
     assert [
         word
@@ -4930,25 +4930,24 @@ TENURE_MATRIX = "[[0.6, 0.4], [0.3, 0.7]]"
 def test_l_16_three_values_typed_in_a_second_are_written_in_turn_and_a_matrix_is_passed_on(
     scratch_durables, app_state
 ):
-    """Task 16 (defects 4 and 5 of the UX simulation; L-D13). With
-    `tenure.bl` of the durables model shown at `periods[3]/tenure`, three
-    values typed in the Parameters tab within a second, `1.05` for `R`,
-    `1.0` for the unvalued `Y` and the matrix `[[0.6, 0.4], [0.3, 0.7]]`
-    for the unvalued `y_R`, are each answered at once: each Enter adds its
-    value to the queue and returns, and while no writer has written, the
-    rows show the three values as typed and the calibration file is as it
-    was. Once the writers run, the three values are written in turn, each
-    once: the file holds `R: 1.05` at line 11 and `Y: 1.0` and the matrix
-    added after `K: 1.3`, and the three ids are answered in order. The tab
-    composes no sentence about the matrix; the stage bound again is refused
-    by the package's check of its calibration, in a sentence that names
-    `y_R`, which the row of `y_R` carries as its note."""
+    """Three queued edits return before their writers obtain the lock.
+    R changes in its original source. R_H and δ, deliberately omitted from
+    the temporary source, append to the final source in order. The matrix
+    for δ is written unchanged and then refused by the package; its row
+    carries that diagnostic. The income tables remain intact."""
     app_state(scratch_durables)
     calibration = scratch_durables / "declaration/calibration/durables.yml"
-    before = calibration.read_text(encoding="utf-8")
+    text = calibration.read_text(encoding="utf-8")
+    for entry in ("  R_H: 1.0\n", "  δ: 0.0\n"):
+        assert text.count(entry) == 1
+        text = text.replace(entry, "")
+    calibration.write_text(text, encoding="utf-8")
+    before = text
     lines = before.split("\n")
-    assert (lines[10], lines[37]) == ("  R: 1.045", "  K: 1.3")
-    typed = (("R", "1.045", "1.05"), ("Y", "unvalued", "1.0"), ("y_R", "unvalued", TENURE_MATRIX))
+    r_line = lines.index("  R: 1.045")
+    wages = scratch_durables / "declaration/calibration/wage_schedule.yml"
+    wages_before = wages.read_text(encoding="utf-8")
+    typed = (("R", "1.045", "1.05"), ("R_H", "unvalued", "1.0"), ("δ", "unvalued", TENURE_MATRIX))
     app.source.value = RECIPE
     app.head.value = (3, "tenure")
     try:
@@ -4979,22 +4978,24 @@ def test_l_16_three_values_typed_in_a_second_are_written_in_turn_and_a_matrix_is
             "the queue written and its writers ended",
         )
         assert app.value_queue.value == {"queue": (), "answered": ("t0", "t1", "t2")}
-        lines[10] = "  R: 1.05"
-        lines[38:38] = ["  Y: 1.0", f"  y_R: {TENURE_MATRIX}"]
+        lines[r_line] = "  R: 1.05"
         assert calibration.read_text(encoding="utf-8") == "\n".join(lines)
+        assert wages.read_text(encoding="utf-8") == (
+            wages_before + f"  R_H: 1.0\n  δ: {TENURE_MATRIX}\n"
+        )
         assert app.value_note.value is None
 
         # the stage bound again, as the watcher binds it once the file changed
         app.rebind.value = app.rebind.value + 1
         app.run_loop()
         current = app.shown.value
-        (note,) = [note for note in current.notes if "parameter 'y_R'" in note]
-        assert f"the value {TENURE_MATRIX} lies outside the declared set ℝ₊" in note
+        (note,) = [note for note in current.notes if "parameter 'δ'" in note]
+        assert f"the value {TENURE_MATRIX} lies outside the declared set [0, 1)" in note
         rows = app._tab_rows(
             app.value_tab(current, "Parameters"), "Parameters", (), tuple(current.notes)
         )
         noted = {row["name"]: (row["value"], row["note"]) for row in rows}
-        assert noted["y_R"] == (TENURE_MATRIX, app.folder_relative(note))
+        assert noted["δ"] == (TENURE_MATRIX, app.folder_relative(note))
         assert noted["R"] == ("1.05", None)
         assert not any("reads as" in sentence for sentence in current.notes)
     finally:
@@ -5013,7 +5014,7 @@ def test_l_16_a_value_whose_write_raises_leaves_the_steps_after_the_earlier_writ
 ):
     """Task 16 (unit L's final judgment, §6 item 6). With `tenure.bl` of
     the durables model shown at `periods[3]/tenure`, `1.05` typed for `R`
-    and `1.0` for `Y` within a second, where the write of `Y` raises: the
+    and `1.01` for `R_H` within a second, where the write of `R_H` raises: the
     writer writes `R`, answers both values and raises, and the steps after
     a write (`_after_write`) are taken once, for the calibration file that
     `R` was written to, so that the stage is bound again with its value."""
@@ -5025,8 +5026,8 @@ def test_l_16_a_value_whose_write_raises_leaves_the_steps_after_the_earlier_writ
     taken, raised = [], []
 
     def raising(folder, record, key, kind, name, shown, typed):
-        if name == "Y":
-            raise RuntimeError("the write of Y raised")
+        if name == "R_H":
+            raise RuntimeError("the write of R_H raised")
         return write_value(folder, record, key, kind, name, shown, typed)
 
     def recorded(path, written):
@@ -5041,7 +5042,7 @@ def test_l_16_a_value_whose_write_raises_leaves_the_steps_after_the_earlier_writ
     try:
         app.open_file(TENURE)
         app.run_loop()
-        typed = (("R", "1.045", "1.05"), ("Y", "unvalued", "1.0"))
+        typed = (("R", "1.045", "1.05"), ("R_H", "1.0", "1.01"))
         # the writers wait while the test holds their lock
         with app.WRITER_LOCK:
             for n, (name, shown, value) in enumerate(typed):
@@ -5052,10 +5053,11 @@ def test_l_16_a_value_whose_write_raises_leaves_the_steps_after_the_earlier_writ
             20.0,
             "the queue written and its writers ended",
         )
-        assert [str(error) for error in raised] == ["the write of Y raised"]
+        assert [str(error) for error in raised] == ["the write of R_H raised"]
         assert app.value_queue.value == {"queue": (), "answered": ("t0", "t1")}
         lines = (scratch_durables / calibration).read_text(encoding="utf-8").split("\n")
-        assert lines[10] == "  R: 1.05"
+        assert "  R: 1.05" in lines
+        assert "  R: 1.045" not in lines
         assert taken == [calibration]
     finally:
         app.value_queue.value = {"queue": (), "answered": ()}
@@ -5197,10 +5199,16 @@ def test_l_21_an_exception_names_its_operation_and_log_entry_without_a_rule_or_l
     copy = pensions_copy(tmp_path / "models" / "durables", PENSIONS_WORKING_YEARS)
     stage = copy / CONTRIBUTION
     lines = stage.read_text(encoding="utf-8").splitlines(keepends=True)
-    assert [line[: len(start)] for line, start in zip(lines[37:39], WRITTEN_OUT)] == list(
-        WRITTEN_OUT
+    positions = [
+        index for index in range(len(lines) - len(WRITTEN_OUT) + 1)
+        if all(line.startswith(start) for line, start in zip(lines[index:], WRITTEN_OUT))
+    ]
+    assert len(positions) == 1
+    start = positions[0]
+    stage.write_text(
+        "".join(lines[:start]) + V_RATE_LINES + "".join(lines[start + len(WRITTEN_OUT):]),
+        encoding="utf-8",
     )
-    stage.write_text("".join(lines[:37]) + V_RATE_LINES + "".join(lines[39:]), encoding="utf-8")
     app_state(copy)
     occurrences = ((4, "contribution"), (5, "contribution"), (6, "contribution"))
     app.source.value = recipe.Source("recipe", PENSIONS_RECIPE)

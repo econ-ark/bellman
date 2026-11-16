@@ -1,0 +1,906 @@
+BELLMAN-SYM / STAGE draw                                  [VERSION = SYMBOLIC]
+a stage occurrence of applications/life-cycle/declaration/stages/draw/draw.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        z_2≺ state, a_2≺ state, V≺ value, age≺ value
+  ∼ decision       z_d state, a_d state, V value, age value
+  ≻ continuation   age≻ value, z_3≻ state, a_3≻ state, V≻ value
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           z_2≺ at arrival, a_2≺ at arrival, z_d at decision, a_d at
+                   decision, z_3≻ at continuation, a_3≻ at continuation
+  controls         none
+  values           V at every perch; age at every perch
+  shocks           none
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → arvl_to_dcsn   (z_2≺ : !arvl, a_2≺ : !arvl, z : !shck, age≻ : !cntn) ->
+                   (z_d, a_d) : !dcsn
+  → dcsn_to_cntn   (z_d, a_d) : !dcsn -> (z_3≻, a_3≻) : !cntn
+  ← cntn_to_dcsn   (V≻, age≻) : !cntn -> (V, age) : !dcsn
+  ← dcsn_to_arvl   (V, age) : !dcsn -> (V≺, age≺) : !arvl
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  sets                     4   Xa := ℝ₊, Ages := {0, …, J - 1},
+                               Z := {1, 2, 3}, Transition := Z × Z → [0, 1]
+  distributions            1   z
+  parameters               2   J : ℤ @ [1, inf); Π : Ages → Transition
+  laws of motion           2   z_d = z(age); a_d = a_2; z_3 = z_d; a_3 = a_d
+  value aggregators        2   V = V[>], D_{a_d}(V) = D_{a_3}V[>];
+                               V[<] = E_{z}(V), D_{a_2}V[<] =
+                               E_{z}(D_{a_d}(V))
+  block lines              8   arvl_to_dcsn.1, arvl_to_dcsn.2,
+                               dcsn_to_cntn.1, dcsn_to_cntn.2,
+                               cntn_to_dcsn.value,
+                               cntn_to_dcsn.marginal_decision,
+                               dcsn_to_arvl.value,
+                               dcsn_to_arvl.marginal_arrival
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   (𝑎𝑔𝑒≻, 𝑉≻) ↦ 𝑉≺, 𝑎𝑔𝑒≺
+                    forward    μ≺ ↦ μ≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ≺ z_2≺, a_2≺  and  ≻ age≻  →  ∼ z_d, a_d  →  ≻ z_3≻, a_3≻
+  backward   ≺ V≺, age≺  ←  ∼ V, age  ←  ≻ V≻, age≻
+
+==== stage ====
+STAGE draw
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑎𝑔𝑒≻  : {()} → Ages
+         𝑉≻    : Z × Xa → ℝ
+         ────────────────────────────────────────────
+    out  𝑉≺    : Z × Xa → ℝ
+         𝑎𝑔𝑒≺  : {()} → Ages
+  forward
+    in   μ≺    : finite measure on Z × Xa
+         ────────────────────────────────────────────
+    out  μ≻    : finite measure on Z × Xa
+
+Where
+  (z_d, a_d) = 𝑔≺(z_2, a_2, z)
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉≻, 𝑎𝑔𝑒≻                     out: 𝑉, 𝑎𝑔𝑒
+
+    2  dcsn_to_arvl
+       in: 𝑉, 𝑎𝑔𝑒                       out: 𝑉≺, 𝑎𝑔𝑒≺
+
+  forward
+    1  arvl_to_dcsn
+       in: μ≺                           out: μ
+
+    2  dcsn_to_cntn
+       in: μ                            out: μ≻
+
+Conditions
+  cntn_to_dcsn:Aggregation        𝑉(z_d, a_d) ∈ ℝ
+  cntn_to_dcsn:Aggregation        𝑎𝑔𝑒 ∈ Ages
+  dcsn_to_arvl:Aggregation        𝑉≺(z_2, a_2) ∈ ℝ
+  dcsn_to_arvl:Aggregation        𝑎𝑔𝑒≺ ∈ Ages
+  cntn_to_dcsn.marginal_decision  marginal-reading: the right side of each
+                                    derivative line equals the derivative, in
+                                    the named coordinate, of the value the
+                                    builder writes, under the envelope
+                                    conditions: concavity of the continuation
+                                    value, interiority of the maximizer or the
+                                    multiplier's term at a binding constraint,
+                                    differentiability of the reward in the
+                                    control, a measurable selection of the
+                                    policy, and differentiability of the value
+                                    at the point read; listed and not checked
+                                     [required]
+  Ages                            J − 1 ∈ ℤ ∧ 0 ≤ J − 1
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  13  z(_age) ~ MarkovChain(Π[_age], Z, z_2)
+  16  z_d = z(age)
+  17  a_d = a_2
+  21  z_3 = z_d
+  22  a_3 = a_d
+  26  V = V[>]                       :: [id=value]
+  27  D_{a_d}V = D_{a_3}V[>]         :: [id=marginal_decision]
+  31  V[<] = E_{z}(V)                :: [id=value]
+  32  D_{a_2}V[<] = E_{z}(D_{a_d}V)  :: [id=marginal_arrival]
+
+Definitions referenced
+  Xa    draw:set:Xa
+  J     draw:parameter:J
+  Ages  draw:set:Ages
+  Z     draw:set:Z
+  z     draw:distribution:z
+  𝑔≺    draw:g:arvl_to_dcsn
+
+File
+  applications/life-cycle/declaration/stages/draw/draw.bl
+
+Perches
+  ≺  arrival, written [<]
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE draw / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻    : {age≻, V≻}
+       age≻  : {age≻}
+       ──────────────────
+  out  V     : {V, age}
+       age   : {age}
+
+Conditions
+  𝑉(z_d, a_d) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Ages
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  26  V = V[>]                :: [id=value]
+  27  D_{a_d}V = D_{a_3}V[>]  :: [id=marginal_decision]
+
+Definitions referenced
+  Ages  draw:set:Ages
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward dcsn_to_arvl ====
+STAGE draw / BACKWARD BLOCK dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V     : {V, age}
+       age   : {age}
+       ──────────────────
+  out  V≺    : {V≺, age≺}
+       age≺  : {age≺}
+
+Conditions
+  𝑉≺(z_2, a_2) ∈ ℝ
+  𝑎𝑔𝑒≺ ∈ Ages
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  31  V[<] = E_{z}(V)                :: [id=value]
+  32  D_{a_2}V[<] = E_{z}(D_{a_d}V)  :: [id=marginal_arrival]
+
+Definitions referenced
+  Ages  draw:set:Ages
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward arvl_to_dcsn ====
+STAGE draw / FORWARD BLOCK arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   z_2≺  : {z_2≺}
+       a_2≺  : {z_2≺, a_2≺}
+       z     : {z}
+       age≻  : {age≻}
+       ────────────────────
+  out  z_d   : {z_d}
+       a_d   : {z_d, a_d}
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  16  z_d = z(age)
+  17  a_d = a_2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE draw / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   z_d   : {z_d}
+       a_d   : {z_d, a_d}
+       ────────────────────
+  out  z_3≻  : {z_3≻}
+       a_3≻  : {z_3≻, a_3≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  21  z_3 = z_d
+  22  a_3 = a_d
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE draw / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻    : Z × Xa → ℝ
+       𝑎𝑔𝑒≻  : {()} → Ages
+       ─────────────────────────────────────────────
+  out  𝑉     : Z × Xa → ℝ
+       𝑎𝑔𝑒   : {()} → Ages
+
+Where
+  (z_3, a_3) = 𝑔≻(z_d, a_d)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻
+     ───────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻)(z_d, a_d) = 𝑉≻(𝑔≻(z_d, a_d))
+
+  2  Aggregation
+     in: (1), 𝑎𝑔𝑒≻                      out: 𝑉, 𝑎𝑔𝑒
+     ───────────────────────────────────────────────
+     rule: 𝑉 = 𝑉≻(𝑔≻(z_d, a_d))                         on (z_d, a_d) ∈ Z × Xa
+           𝑎𝑔𝑒 = 𝑎𝑔𝑒≻()                                 on (z_d, a_d) ∈ Z × Xa
+
+  3  Evaluation
+     in: 𝑉, 𝑎𝑔𝑒                         out: 𝑉, 𝑎𝑔𝑒
+     ───────────────────────────────────────────────
+     rule: 𝑉 : Z × Xa → ℝ
+           D_{a_d}𝑉(z_d, a_d) = D_{a_3}𝑉≻(z_3, a_3)
+           𝑎𝑔𝑒 : {()} → Ages
+
+Conditions
+  Aggregation  𝑉(z_d, a_d) ∈ ℝ
+  Aggregation  𝑎𝑔𝑒 ∈ Ages
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  26  V = V[>]                :: [id=value]
+  27  D_{a_d}V = D_{a_3}V[>]  :: [id=marginal_decision]
+
+Definitions referenced
+  Xa    draw:set:Xa
+  Ages  draw:set:Ages
+  Z     draw:set:Z
+  𝑔≻    draw:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback ====
+STAGE draw / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Z × Xa → ℝ
+       ────────────────
+  out  𝑉≻ ∘ 𝑔≻
+           : Z × Xa → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻)(z_d, a_d) = 𝑉≻(𝑔≻(z_d, a_d))
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  21  z_3 = z_d
+  22  a_3 = a_d
+
+Definitions referenced
+  Xa    draw:set:Xa
+  Z     draw:set:Z
+  𝑔≻    draw:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE draw / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻
+             : Z × Xa → ℝ
+       𝑎𝑔𝑒≻  : {()} → Ages
+       ─────────────────────
+  out  𝑉     : Z × Xa → ℝ
+       𝑎𝑔𝑒   : Z × Xa → Ages
+
+Rule
+  𝑉 = 𝑉≻(𝑔≻(z_d, a_d))                                  on (z_d, a_d) ∈ Z × Xa
+  𝑎𝑔𝑒 = 𝑎𝑔𝑒≻()                                          on (z_d, a_d) ∈ Z × Xa
+
+Conditions
+  𝑉(z_d, a_d) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Ages
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  26  V = V[>]  :: [id=value]
+
+Definitions referenced
+  Xa    draw:set:Xa
+  Ages  draw:set:Ages
+  Z     draw:set:Z
+  𝑔≻    draw:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE draw / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉    : Z × Xa → ℝ
+       𝑎𝑔𝑒  : Z × Xa → Ages
+       ────────────────────
+  out  𝑉    : Z × Xa → ℝ
+       𝑎𝑔𝑒  : {()} → Ages
+
+Where
+  (z_3, a_3) = 𝑔≻(z_d, a_d)
+
+Rule
+  𝑉 = 𝑉≻(𝑔≻(z_d, a_d))                                  on (z_d, a_d) ∈ Z × Xa
+  𝑉 : Z × Xa → ℝ
+  D_{a_d}𝑉(z_d, a_d) = D_{a_3}𝑉≻(z_3, a_3)
+  𝑎𝑔𝑒 = 𝑎𝑔𝑒≻()                                          on (z_d, a_d) ∈ Z × Xa
+  𝑎𝑔𝑒 : {()} → Ages
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  27  D_{a_d}V = D_{a_3}V[>]  :: [id=marginal_decision]
+
+Definitions referenced
+  Xa    draw:set:Xa
+  Ages  draw:set:Ages
+  Z     draw:set:Z
+  𝑔≻    draw:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl ====
+STAGE draw / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉     : Z × Xa → ℝ
+       𝑎𝑔𝑒   : {()} → Ages
+       ──────────────────────────────────────────────
+  out  𝑉≺    : Z × Xa → ℝ
+       𝑎𝑔𝑒≺  : {()} → Ages
+
+Where
+  (z_d, a_d) = 𝑔≺(z_2, a_2, z)
+
+Operations
+  1  Pullback
+     in: 𝑉                              out: 𝑉 ∘ 𝑔≺
+     ────────────────────────────────────────────────
+     rule: (𝑉 ∘ 𝑔≺)(z_2, a_2, z) = 𝑉(𝑔≺(z_2, a_2, z))
+
+  2  value:Expectation:1
+     in: (1)
+     out: (z_2, a_2) ↦ E_{z}[𝑉(𝑔≺(z_2, a_2, z))]
+     ────────────────────────────────────────────────
+     rule: (2)(z_2, a_2) = E_{z}[𝑉(𝑔≺(z_2, a_2, z))]
+
+  3  Aggregation
+     in: 𝑎𝑔𝑒, (2)                       out: 𝑉≺, 𝑎𝑔𝑒≺
+     ────────────────────────────────────────────────
+     rule: 𝑉≺ = E_{z}[𝑉(𝑔≺(z_2, a_2, z))]               on (z_2, a_2) ∈ Z × Xa
+           𝑎𝑔𝑒≺ = 𝑎𝑔𝑒()                                 on (z_2, a_2) ∈ Z × Xa
+
+  4  Evaluation
+     in: 𝑉≺, 𝑎𝑔𝑒≺                       out: 𝑉≺, 𝑎𝑔𝑒≺
+     ────────────────────────────────────────────────
+     rule: 𝑉≺ : Z × Xa → ℝ
+           D_{a_2}𝑉≺(z_2, a_2) = E_{z}[D_{a_d}𝑉(𝑔≺(z_2, a_2, z))]
+           𝑎𝑔𝑒≺ : {()} → Ages
+
+Conditions
+  Aggregation  𝑉≺(z_2, a_2) ∈ ℝ
+  Aggregation  𝑎𝑔𝑒≺ ∈ Ages
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  31  V[<] = E_{z}(V)                :: [id=value]
+  32  D_{a_2}V[<] = E_{z}(D_{a_d}V)  :: [id=marginal_arrival]
+
+Definitions referenced
+  Xa    draw:set:Xa
+  Ages  draw:set:Ages
+  Z     draw:set:Z
+  z     draw:distribution:z
+  𝑔≺    draw:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Pullback ====
+STAGE draw / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : Z × Xa → ℝ
+       ───────────────────
+  out  𝑉 ∘ 𝑔≺
+          : Z × Xa × Z → ℝ
+
+Rule
+  (𝑉 ∘ 𝑔≺)(z_2, a_2, z) = 𝑉(𝑔≺(z_2, a_2, z))
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  16  z_d = z(age)
+  17  a_d = a_2
+
+Definitions referenced
+  Xa    draw:set:Xa
+  Z     draw:set:Z
+  z     draw:distribution:z
+  𝑔≺    draw:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / value:Expectation:1 ====
+STAGE draw / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / value:Expectation:1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉 ∘ 𝑔≺
+         : Z × Xa × Z → ℝ
+       ──────────────────────────────────────
+  out  (z_2, a_2) ↦ E_{z}[𝑉(𝑔≺(z_2, a_2, z))]
+         : Z × Xa → ℝ
+
+Rule
+  value:Expectation:1(z_2, a_2) = E_{z}[𝑉(𝑔≺(z_2, a_2, z))]
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  13  z(_age) ~ MarkovChain(Π[_age], Z, z_2)
+  31  V[<] = E_{z}(V)  :: [id=value]
+
+Definitions referenced
+  Xa    draw:set:Xa
+  Z     draw:set:Z
+  z     draw:distribution:z
+  𝑔≺    draw:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Aggregation ====
+STAGE draw / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑎𝑔𝑒   : {()} → Ages
+       (z_2, a_2) ↦ E_{z}[𝑉(𝑔≺(z_2, a_2, z))]
+             : Z × Xa → ℝ
+       ──────────────────────────────────────
+  out  𝑉≺    : Z × Xa → ℝ
+       𝑎𝑔𝑒≺  : Z × Xa → Ages
+
+Rule
+  𝑉≺ = E_{z}[𝑉(𝑔≺(z_2, a_2, z))]                        on (z_2, a_2) ∈ Z × Xa
+  𝑎𝑔𝑒≺ = 𝑎𝑔𝑒()                                          on (z_2, a_2) ∈ Z × Xa
+
+Conditions
+  𝑉≺(z_2, a_2) ∈ ℝ
+  𝑎𝑔𝑒≺ ∈ Ages
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  31  V[<] = E_{z}(V)  :: [id=value]
+
+Definitions referenced
+  Xa    draw:set:Xa
+  Ages  draw:set:Ages
+  Z     draw:set:Z
+  z     draw:distribution:z
+  𝑔≺    draw:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Evaluation ====
+STAGE draw / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≺    : Z × Xa → ℝ
+       𝑎𝑔𝑒≺  : Z × Xa → Ages
+       ─────────────────────
+  out  𝑉≺    : Z × Xa → ℝ
+       𝑎𝑔𝑒≺  : {()} → Ages
+
+Rule
+  𝑉≺ = E_{z}[𝑉(𝑔≺(z_2, a_2, z))]                        on (z_2, a_2) ∈ Z × Xa
+  𝑉≺ : Z × Xa → ℝ
+  D_{a_2}𝑉≺(z_2, a_2) = E_{z}[D_{a_d}𝑉(𝑔≺(z_2, a_2, z))]
+  𝑎𝑔𝑒≺ = 𝑎𝑔𝑒()                                          on (z_2, a_2) ∈ Z × Xa
+  𝑎𝑔𝑒≺ : {()} → Ages
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  32  D_{a_2}V[<] = E_{z}(D_{a_d}V)  :: [id=marginal_arrival]
+
+Definitions referenced
+  Xa    draw:set:Xa
+  Ages  draw:set:Ages
+  Z     draw:set:Z
+  z     draw:distribution:z
+  𝑔≺    draw:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn ====
+STAGE draw / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Z × Xa
+       ──────────────────────────────────────────────────
+  out  μ   : finite measure on Z × Xa
+
+Operations
+  1  DistributionExtension:z
+     in: μ≺                             out: μ≺⊗P_{z|z_2}
+     ────────────────────────────────────────────────────
+     rule: μ≺⊗P_{z|z_2}(B)
+             = ∫_{(z_2, a_2) ∈ Z × Xa}
+                 [P_{z|z_2}(𝑎𝑔𝑒≻(), z_2)({z ∈ Z | (z_2, a_2, z) ∈ B})]
+               μ≺(d(z_2, a_2))
+
+  2  Pushforward
+     in: (1)                            out: μ
+     ────────────────────────────────────────────────────
+     rule: μ(B) =
+           μ≺⊗P_{z|z_2}({z_2≺, a_2≺, z ∈ Z × Xa × Z | 𝑔≺(z_2≺, a_2≺, z) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  16  z_d = z(age)
+  17  a_d = a_2
+
+Definitions referenced
+  Xa         draw:set:Xa
+  Z          draw:set:Z
+  P_{z|z_2}  draw:distribution:z
+  z          draw:distribution:z
+  𝑔≺         draw:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / DistributionExtension:z ====
+STAGE draw / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+  / DistributionExtension:z
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Z × Xa
+       ──────────────────────────────────
+  out  μ≺⊗P_{z|z_2}
+           : finite measure on Z × Xa × Z
+
+Rule
+  μ≺⊗P_{z|z_2}(B)
+    = ∫_{(z_2, a_2) ∈ Z × Xa}
+        [P_{z|z_2}(𝑎𝑔𝑒≻(), z_2)({z ∈ Z | (z_2, a_2, z) ∈ B})] μ≺(d(z_2, a_2))
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  13  z(_age) ~ MarkovChain(Π[_age], Z, z_2)
+
+Definitions referenced
+  Xa         draw:set:Xa
+  Z          draw:set:Z
+  P_{z|z_2}  draw:distribution:z
+  z          draw:distribution:z
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / Pushforward ====
+STAGE draw / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺⊗P_{z|z_2}
+          : finite measure on Z × Xa × Z
+       ─────────────────────────────────
+  out  μ  : finite measure on Z × Xa
+
+Rule
+  μ(B) = μ≺⊗P_{z|z_2}({z_2≺, a_2≺, z ∈ Z × Xa × Z | 𝑔≺(z_2≺, a_2≺, z) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  16  z_d = z(age)
+  17  a_d = a_2
+
+Definitions referenced
+  Xa         draw:set:Xa
+  Z          draw:set:Z
+  P_{z|z_2}  draw:distribution:z
+  z          draw:distribution:z
+  𝑔≺         draw:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE draw / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on Z × Xa
+       ────────────────────────────────────────
+  out  μ≻  : finite measure on Z × Xa
+
+Operations
+  1  Pushforward
+     in: μ                              out: μ≻
+     ──────────────────────────────────────────
+     rule: μ≻(B) = μ({z_d, a_d ∈ Z × Xa | 𝑔≻(z_d, a_d) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  21  z_3 = z_d
+  22  a_3 = a_d
+
+Definitions referenced
+  Xa    draw:set:Xa
+  Z     draw:set:Z
+  𝑔≻    draw:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE draw / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on Z × Xa
+       ──────────────────────────────
+  out  μ≻  : finite measure on Z × Xa
+
+Rule
+  μ≻(B) = μ({z_d, a_d ∈ Z × Xa | 𝑔≻(z_d, a_d) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  21  z_3 = z_d
+  22  a_3 = a_d
+
+Definitions referenced
+  Xa    draw:set:Xa
+  Z     draw:set:Z
+  𝑔≻    draw:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== draw:set:Xa ====
+STAGE draw / SET Xa
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xa  = ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  4  Xa := ℝ₊  :: ["assets"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== draw:set:Ages ====
+STAGE draw / SET Ages
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Ages  = {0, …, J − 1}
+
+Conditions
+  J − 1 ∈ ℤ ∧ 0 ≤ J − 1
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  6  Ages := {0, …, J - 1}
+
+Definitions referenced
+  J     draw:parameter:J
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== draw:set:Z ====
+STAGE draw / SET Z
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Z  = {1, 2, 3}
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  7  Z := {1, 2, 3}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== draw:set:Transition ====
+STAGE draw / SET Transition
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Transition  = Z × Z → [0, 1]
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  9  Transition := Z × Z → [0,1]
+
+Definitions referenced
+  Z     draw:set:Z
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== draw:parameter:J ====
+STAGE draw / PARAMETER J
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  J  ∈ {J ∈ ℤ | J ≥ 1}
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  5  J : ℤ @ [1, inf)  :: ["number of ages"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== draw:parameter:Π ====
+STAGE draw / PARAMETER Π
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Π  ∈ Ages → Transition
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  10  Π : Ages → Transition
+        :: ["transition probabilities of productivity, one matrix for each
+        age"]
+
+Definitions referenced
+  Ages        draw:set:Ages
+  Transition  draw:set:Transition
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== draw:distribution:z ====
+STAGE draw / DISTRIBUTION z
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  P_{z|z_2}  ~ (_age, z_2) ↦ MarkovChain(Π[_age], Z, z_2)
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  13  z(_age) ~ MarkovChain(Π[_age], Z, z_2)
+
+Definitions referenced
+  Z     draw:set:Z
+  Π     draw:parameter:Π
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.1 ====
+STAGE draw / FORWARD BLOCK arvl_to_dcsn / 1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  draw.bl
+  16  z_d = z(age)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.2 ====
+STAGE draw / FORWARD BLOCK arvl_to_dcsn / 2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  draw.bl
+  17  a_d = a_2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.1 ====
+STAGE draw / FORWARD BLOCK dcsn_to_cntn / 1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  draw.bl
+  21  z_3 = z_d
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.2 ====
+STAGE draw / FORWARD BLOCK dcsn_to_cntn / 2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  draw.bl
+  22  a_3 = a_d
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.value ====
+STAGE draw / BACKWARD BLOCK cntn_to_dcsn / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(z_d, a_d) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Ages
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  26  V = V[>]  :: [id=value]
+
+Definitions referenced
+  Ages  draw:set:Ages
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.marginal_decision ====
+STAGE draw / BACKWARD BLOCK cntn_to_dcsn / marginal_decision
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  27  D_{a_d}V = D_{a_3}V[>]  :: [id=marginal_decision]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.value ====
+STAGE draw / BACKWARD BLOCK dcsn_to_arvl / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉≺(z_2, a_2) ∈ ℝ
+  𝑎𝑔𝑒≺ ∈ Ages
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  31  V[<] = E_{z}(V)  :: [id=value]
+
+Definitions referenced
+  Ages  draw:set:Ages
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.marginal_arrival ====
+STAGE draw / BACKWARD BLOCK dcsn_to_arvl / marginal_arrival
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  32  D_{a_2}V[<] = E_{z}(D_{a_d}V)  :: [id=marginal_arrival]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== draw:g:arvl_to_dcsn ====
+STAGE draw / LAW OF MOTION arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≺  : Z × Xa × Z → Z × Xa,  (z_2, a_2, z) ↦ (z, a_2)
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  16  z_d = z(age)
+  17  a_d = a_2
+
+Definitions referenced
+  Xa    draw:set:Xa
+  Z     draw:set:Z
+  z     draw:distribution:z
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== draw:g:dcsn_to_cntn ====
+STAGE draw / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : Z × Xa → Z × Xa,  (z_d, a_d) ↦ (z_d, a_d)
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  21  z_3 = z_d
+  22  a_3 = a_d
+
+Definitions referenced
+  Xa    draw:set:Xa
+  Z     draw:set:Z
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== draw:G:cntn_to_dcsn ====
+STAGE draw / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : ℝ × Ages × Z × Xa → ℝ × Ages,  (V≻, age, z_d, a_d) ↦ (V≻, age)
+
+Conditions
+  𝑉(z_d, a_d) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Ages
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  26  V = V[>]                :: [id=value]
+  27  D_{a_d}V = D_{a_3}V[>]  :: [id=marginal_decision]
+
+Definitions referenced
+  Xa    draw:set:Xa
+  Ages  draw:set:Ages
+  Z     draw:set:Z
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== draw:G:dcsn_to_arvl ====
+STAGE draw / VALUE AGGREGATOR dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≺  : Ages × ℝ × Z × Xa → ℝ × Ages,  (age, w, z_2, a_2) ↦ (w, age)
+
+Conditions
+  𝑉≺(z_2, a_2) ∈ ℝ
+  𝑎𝑔𝑒≺ ∈ Ages
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  draw.bl
+  31  V[<] = E_{z}(V)                :: [id=value]
+  32  D_{a_2}V[<] = E_{z}(D_{a_d}V)  :: [id=marginal_arrival]
+
+Definitions referenced
+  Xa    draw:set:Xa
+  Ages  draw:set:Ages
+  Z     draw:set:Z
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

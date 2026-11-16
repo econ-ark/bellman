@@ -53,26 +53,26 @@ $$
 
 The indices stand for arrival, decision and continuation information sets. State spaces are assigned to these indices; the indices are not themselves state spaces. The path generates a free category of paths once identities and composition are included. This is a different construction from a many-sorted term algebra, to which §4 relates it, and neither says the bare graph is initial in an unspecified category.
 
-The coarse stage signature uses value-function and distribution sort names:
+The coarse stage signature uses representing-function tuple and distribution sort names:
 
 $$
-S=\{\mathsf V_p:p\in\{\prec,\sim,\succ\}\}
-\cup\{\mathsf M_p:p\in\{\prec,\sim,\succ\}\}.
+S=\{\mathtt B_p:p\in\{\prec,\sim,\succ\}\}
+\cup\{\mathtt M_p:p\in\{\prec,\sim,\succ\}\}.
 $$
 
-An interpretation assigns chosen value-function spaces on each state space and the spaces of finite measures on the corresponding state spaces, of which the probability measures are those of mass one, with the closure and integrability conditions needed by its operations. A random value field has a representative in the value-function space only under the state-generated measurability conditions in [Fields, functions and types](./04-fields,%20functions%20and%20types.md); it is not that function itself.
+The carriers are $\mathsf B_p$, the tuples of representing functions, and $\mathsf M_p$, the finite measures on the corresponding state spaces. Probability measures have mass one. Operations require their stated closure and integrability conditions. Each tuple coordinate has its own domain. A random value field has a representing function only under the state-generated measurability conditions in [Fields, functions and types](./04-fields,%20functions%20and%20types.md); it is not that function itself.
 
 | Operator symbol | Rank | Interpretation |
 |---|---|---|
-| $\mathbb T_{\succ,\pi}$ | $\mathsf V_\succ\to\mathsf V_\sim$ | decision evaluation under a fixed feasible measurable policy $\pi$ |
-| $\mathbb T_\succ$ | $\mathsf V_\succ\to\mathsf V_\sim$ | optimizing decision evaluation on its stated domain |
-| $\mathbb T_\prec$ | $\mathsf V_\sim\to\mathsf V_\prec$ | arrival evaluation |
-| $\mathbb M_\prec$ | $\mathsf M_\prec\to\mathsf M_\sim$ | arrival transition pushforward |
-| $\mathbb M_{\succ,\pi}$ | $\mathsf M_\sim\to\mathsf M_\succ$ | decision transition pushforward under $\pi$ |
+| $\mathbb T_{\succ,\pi}$ | $\mathtt B_\succ\to\mathtt B_\sim$ | decision evaluation under a fixed feasible measurable policy $\pi$ |
+| $\mathbb T_\succ$ | $\mathtt B_\succ\to\mathtt B_\sim$ | optimizing decision evaluation on its stated domain |
+| $\mathbb T_\prec$ | $\mathtt B_\sim\to\mathtt B_\prec$ | arrival evaluation |
+| $\mathbb M_\prec$ | $\mathtt M_\prec\to\mathtt M_\sim$ | arrival transition pushforward |
+| $\mathbb M_{\succ,\pi}$ | $\mathtt M_\sim\to\mathtt M_\succ$ | decision transition pushforward under $\pi$ |
 
-The policy-indexed rows have one symbol for each supplied policy. A finer signature can instead include a policy sort and policy as an explicit argument. In this coarse signature the pairing and function application are not additional symbols. They remain available when defining its target interpretation; mathematical properties can be stated without adding an authored name for every expression.
+The policy-indexed rows have one symbol for each supplied policy. A finer signature can instead include a policy sort and policy as an explicit argument. The chosen convention indexes decision builders by their policy. A value-type field sent backward is instead a coordinate of the builder’s input and output tuple. In this coarse signature the pairing and function application are not additional symbols. They remain available when defining its target interpretation; mathematical properties can be stated without adding an authored name for every expression.
 
-[Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) §6 calls this signature, together with a sort of policies and the policy builder from $\mathsf V_\succ$ to that sort, the **operator signature** of a stage. It obtains the operator signature from the stage's state signature, whose sorts are the state sorts of the perches and whose symbols are the transitions, each a law of motion with its shock law. The sorts here name the carriers, and the builder symbols of the table other than the optimizing $\mathbb T_\succ$ name the images, that two models, one in value functions and one in measures, give the declaration graph of the stage. The vertices of that graph are the states of the three perches, and its edges are typed by the transitions.
+[Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) §6 calls this signature, together with a sort of policies and the policy builder from $\mathtt B_\succ$ to that sort, the **operator signature** of a stage. It obtains the operator signature from the stage's state signature, whose sorts are the state sorts of the perches and whose symbols are the transitions, each a law of motion with its shock law. The symbols $\mathtt B_p$ and $\mathtt M_p$ name sorts; $\mathsf B_p$ and $\mathsf M_p$ are their carriers. The builder symbols of the table other than the optimizing $\mathbb T_\succ$ name the images that two models, one in representing-function tuples and one in measures, give the declaration graph of the stage. The vertices of that graph are the states of the three perches, and its edges are typed by the transitions.
 
 <a id="c3-why-state-spaces-are-not-sorts"></a>
 
@@ -80,7 +80,7 @@ The policy-indexed rows have one symbol for each supplied policy. A finer signat
 
 State, action and shock sorts are omitted from this coarse signature because none of its displayed ranks uses them. That is a choice of abstraction, not a ban on unused sorts in a signature or a claim that no sort names a state space: the state sorts of the state signature (§2) name the state spaces of the perches. The underlying state, action and shock spaces enter the target operations. A finer signature can include them when it displays pullback along the law of motion, scalar aggregation, or selection explicitly; [Operators and builders](./05-Operators%20and%20builders.md) gives the ranks of these operations.
 
-The mathematical signature is not a replacement for the concrete stage grammar. Stage equations are authored in `.bl`; arithmetic, binders and equation bodies are parsed. In the specified construction, interpretation maps the temporary abstract syntax tree into equations, definitions and typed graph connections. Scope and substitution use the declared context. The syntax tree and its source spans are not retained as the stage's mathematical representation. Distinct stage occurrences have fresh objects and bindings even if their common module text is parsed once.
+The mathematical signature is not a replacement for the concrete stage grammar. Stage equations are authored in `.bl`; arithmetic, binders and equation bodies are parsed. In the specified construction, interpretation maps the temporary abstract syntax tree into equations, definitions and typed graph connections. Scope and substitution use the declared context. The syntax tree and its source spans are not retained as the stage's mathematical representation. Distinct stage occurrences have fresh objects and bindings even if their common module text is parsed once. In a modular model, their declaration supplies the same calibration sources and family of operators; varying fields are arguments of that family. Methods and settings may differ.
 
 Periods, trellises, connectors, specification recipes, the calibration and the values of the settings remain YAML. The methods are written in a methods file, a `.bl` file that also declares the settings they read. A mathematical composition expression does not assert a new stored whole-trellis graph. Bellman-SYM's factory API and its Period Syntax page describe the application representation.
 
@@ -106,4 +106,8 @@ $$
 
 for bounded measurable $f$, or whenever the evaluations are absolutely integrable. [Stages and perches](./03-Stages%20and%20perches.md) defines these expectations. Rewards, discounting and selection require their own interpretation.
 
-A ground term has a unique evaluation once the signature's target operations are fixed. A term with free continuation or distribution inputs also requires their assignment; [Initial-algebra semantics](./APPX-B-INITIAL-ALGEBRA.md) §2 states the free-algebra result. [Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) §6 supplies the relation between this term account and the indexing path for symbols with one input. The path, with the state of each perch at its index, is the declaration graph of the stage. The model in measures, which that section calls the model of laws, is a functor out of the free category of that graph. The model in value functions, which it calls the backward model, is a functor out of the opposite of that category, in which every arrow is reversed. The sorts of §2 and the builder symbols of its table other than the optimizing $\mathbb T_\succ$ name the carriers and the images that these two models give the graph. For symbols with several inputs, as in a finer signature with pairing, the relation remains to be developed in that form. #todo
+A ground term over total operations has a unique evaluation once those operations are fixed. For the partial operators here, evaluation is defined only where every required application is defined. A term with free continuation or distribution inputs also requires their assignment; [Initial-algebra semantics](./APPX-B-INITIAL-ALGEBRA.md) §2 states the free-algebra result.
+
+[Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) §6 supplies the relation between this term account and the indexing path for symbols with one input. The path, with the state of each perch at its index, is the declaration graph of the stage. The model in measures, which that section calls the model of laws, is a functor out of the free category of that graph. The model in representing-function tuples and partial maps, which it calls the backward model, is a functor out of the opposite of that category, in which every arrow is reversed.
+
+The sorts of §2 and the builder symbols of its table other than the optimizing $\mathbb T_\succ$ name the carriers and the images that these two models give the graph. For total operations with several inputs, the finite-product term interpretation of Appendix D §6 supplies pairing. Ordinary products form the tuples; this makes no assertion of categorical products for arbitrary partial maps.

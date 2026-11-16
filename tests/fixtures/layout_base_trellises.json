@@ -1,0 +1,69 @@
+{
+ "applications/benhabib-2019/declaration/spec.yml": {
+  "*": "8ac3d4bce7b1a9f5e2219f71fab1990701f8ce2340067ab848a8ceb7aa41f89f",
+  "benhabib_bellman": "55e8b74f47df1cbd2982ee21fbe52250190b9468ee8f3ba4204fa7ccfd5e076c",
+  "bequest": "0e88151861156ac58e5ee07c79ffe5c9ba0c69c02bd2924d0bae4094061396db"
+ },
+ "applications/durables/declaration/spec.two-stages.yml": {
+  "*": "9253d12cf3f0c5e0bd9690f598b9e93c47e196b3c808589b800a308d523caed8",
+  "adjuster_cons": "48a2da2d95db62473586c41c1a984a79bd15d1abc7f73f0e85b9985248e83434",
+  "bequest": "2784fcc6523990c2add0de48f510ded02152d8f81fb116f381c46b1deba269af",
+  "keeper_cons": "2450325452a36e549814130235d7424d0b01ca85492342114278910700ebb692"
+ },
+ "applications/durables/declaration/spec.yml": {
+  "*": "0277c854e7008e5d862a8f2eab81d6b56b8083a5457c95186ec3db8034289efc",
+  "adjuster_cons": "48a2da2d95db62473586c41c1a984a79bd15d1abc7f73f0e85b9985248e83434",
+  "bequest": "2784fcc6523990c2add0de48f510ded02152d8f81fb116f381c46b1deba269af",
+  "keeper_cons": "2450325452a36e549814130235d7424d0b01ca85492342114278910700ebb692",
+  "tenure": "892bd3ab5a342b08a7d3d63ce7f34be1978d3ea2168e08b6b786a99aa04f7867"
+ },
+ "applications/housing-frictions/declaration/spec.yml": {
+  "*": "c535fdff71ba67efdcba0bdb2d36d64f4e79edefe8ae2af1babbd01cbd85536b",
+  "adjuster_saving": "85022ebd7742a27c060b7a503aa9fd50badb9c6e11af26620ca26dce066995bf",
+  "house_choice": "ccfe57f1af025bef3e7ca7a276a3fc45bef1d9909a81aa4134734e168ad431f1",
+  "keeper_saving": "4838f635bf07387939c5188094c2af70eeb05ff58aff82c461a748cfe43ffc3b",
+  "terminal": "9e26fa9e4ad02df32447d63bc8f060b6d5b9105e5986f849b20492771172b0db"
+ },
+ "applications/pension-retirement/declaration/spec.yml": {
+  "*": "b3a562fc4e32e328250ced13b56134b048a2432903fcd7e345124a2ec2669983",
+  "retire_choice": "3c7bfb7712271064868171e3e69c186710fbd8f3f6926c4dfc43e7f7df5aeec2",
+  "retiree_saving": "b104a5bdac79eded2f1c7135dbaef0aa8097b072c093ad6d34b47d7e1e0cd9d1",
+  "terminal": "efbfc12f64f87efecc175ef77a810b98e6fc88aada31012fa00bf449b9b4e021",
+  "worker_saving": "2bb0695adb273edde5b3f729396b8aa836b7fb5be96ae7c01bb543fade925efd"
+ },
+ "applications/retirement-choice/declaration/spec.yml": {
+  "*": "1fbacd40dd6600a01d275bd4e31b76eefe411f74eb7304b920c5f9a8bcedf8e6",
+  "bequest": "64ab56fe122f6477e15418bccc7abf27eac35dd7f2300e0084521074171a2207",
+  "ret_choice": "a89aacc525d34cac9b8d915afee4f2ecafb7a8a52918540233abffdbe81a16c6",
+  "retiree_cons": "6748d6c0243888261b2a59d46ecc9740877157cf5314e51bcf42bba0d2ab57df",
+  "worker_cons": "54ffa0d1f3e5d90cbe5914032d275550bf6fae8bc7a98ccb6bf7f9192ee721ec"
+ },
+ "packages/bellman/tests/copied_files/branching/examples/cagetti-denardi-2006/registry/spec.yml": {
+  "*": "89bc0271382918502c447eab18a4abdf03d42d0765ec97d7caa44ecc63038efd",
+  "entrepreneur_ageing": "3dce3eb44423a590ec39545083aa4078347a1bde7c74e3f223c54944ebef9ff6",
+  "entrepreneur_death": "1222803bf1d3416487da494b90e1596e9015e1ef683ab9eab05255122d747e2f",
+  "old_choice": "8b7a95f6541587234a9b15c246413013641acebcba78fd82a3271ccbbbeae72c",
+  "old_entrepreneur": "914e170e756d4a87e009a1190be436cd9011901fff1d83f5b3f9ceab675faebb",
+  "retiree": "a9c9c683f84a0bab912b845570521f8ead0b04bda8a5106cc1ba8f97bc2b3185",
+  "retiree_death": "67d719965b7fae66dc96a9671b5f19afc2380db8a932d890abb51515193816a1",
+  "terminal_old_entrepreneur": "7b754da67f07d1b6597cc7db9fe90235bb743a4b616fb1fa11eda0b7eb4d969c",
+  "terminal_retiree": "1bc3812dc000b761a914766520fb70cc385c48fce102dd3d9c87baf1de6290d6",
+  "terminal_worker": "df008e71ebae5568aed3e12034cd4b3b8d576b677ef8d72ecd713da6e8b30b8e",
+  "terminal_young_entrepreneur": "9e206874c3f20efa7e48c192c77dd1356a0a5bfddf73c514cca36a2d6cd7236f",
+  "worker": "392c345ef229666a25502ac6f877c770c2a75b1562f27d0a304085dfb5d3e525",
+  "worker_ageing": "e236048da10f4a91f7cd5f9cc90ed50a3d86a3f41dbe963558f8c649711ab2ff",
+  "young_choice": "576886034220dea2b1e0d6e7ccdd9c17878bb407ec5912bf93ab728015efda7c",
+  "young_entrepreneur": "4586354ec02e9e4f910c3b0ac72ef0cdd1495e70d99594458a8e29f24fc77f80"
+ },
+ "packages/bellman/tests/copied_files/de-la-croix-pommeret-2021/spec.yml": {
+  "*": "5ab5a540f2198d215d3e64fcbf9194c3f2b612c7ab4d39715cba85c6dd31e44e",
+  "attempt": "f0311027b91a0dbf0d1a4249bb1d3ebd6c6a2d48ca4700a02bf8be090564c340",
+  "cons_childless": "552070f7f2ea511a1258987df52fac6900ee76590e38a6dc767f44200d092cf2",
+  "cons_mother": "8d3605e1a48f29f0a62fff964507afdd710000b7dbc778a77e40785fcdd0ffe6",
+  "cons_wait": "a88d1f047c60edd97b27480aec130c700fb9496c3177e92f9d323b665c5b9efc",
+  "fecundity": "157edb598072ec5a4ab76cebb82b826ae8415745099827d3c8429c2964c4b51b",
+  "terminal_childless": "f2ced46af1b68ee788d3bcf1a9e16f50cbbcf899fd25175863fbceb5c09db23e",
+  "terminal_mother": "8ce10ac806d5db72ecce4f88c134796f5803ffa0379ba7a737f72f1bcecee9d0",
+  "terminal_wait": "24bd03d556b2fa9fbec083783be8b4e117bee9b47bd341719ba110e311bed957"
+ }
+}

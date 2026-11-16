@@ -258,27 +258,8 @@
           {
             "__class__": "Domain",
             "space": {
-              "__class__": "Interval",
-              "bounds": {
-                "__class__": "Range",
-                "left": {
-                  "__class__": "Open"
-                },
-                "lower": {
-                  "__class__": "Number",
-                  "value": 0
-                },
-                "upper": {
-                  "__class__": "Sym",
-                  "symbol": {
-                    "__class__": "Constant",
-                    "name": "R"
-                  }
-                },
-                "right": {
-                  "__class__": "Open"
-                }
-              }
+              "__class__": "Named",
+              "name": "ℝ₊₊"
             }
           }
         ],
@@ -289,7 +270,7 @@
         "entries": [
           {
             "__class__": "Tag",
-            "tag": "\"permanent income growth factor; its upper bound R is the finite human wealth condition\""
+            "tag": "\"permanent income growth factor\""
           }
         ]
       }
@@ -385,89 +366,6 @@
           {
             "__class__": "Tag",
             "tag": "\"the return patience factor; the return impatience condition is q < 1\""
-          }
-        ]
-      }
-    },
-    {
-      "__class__": "Statement",
-      "core": {
-        "__class__": "Assignment",
-        "target": {
-          "__class__": "Constant",
-          "name": "h"
-        },
-        "value": {
-          "__class__": "Div",
-          "left": {
-            "__class__": "Number",
-            "value": 1
-          },
-          "right": {
-            "__class__": "Sub",
-            "left": {
-              "__class__": "Number",
-              "value": 1
-            },
-            "right": {
-              "__class__": "Div",
-              "left": {
-                "__class__": "Sym",
-                "symbol": {
-                  "__class__": "Constant",
-                  "name": "Γ"
-                }
-              },
-              "right": {
-                "__class__": "Sym",
-                "symbol": {
-                  "__class__": "Constant",
-                  "name": "R"
-                }
-              }
-            }
-          }
-        }
-      },
-      "annot": {
-        "__class__": "Annotation",
-        "entries": [
-          {
-            "__class__": "Tag",
-            "tag": "\"human wealth, the present discounted value of permanent income\""
-          }
-        ]
-      }
-    },
-    {
-      "__class__": "Statement",
-      "core": {
-        "__class__": "Assignment",
-        "target": {
-          "__class__": "Constant",
-          "name": "L"
-        },
-        "value": {
-          "__class__": "Sub",
-          "left": {
-            "__class__": "Number",
-            "value": 1
-          },
-          "right": {
-            "__class__": "Sym",
-            "symbol": {
-              "__class__": "Constant",
-              "name": "h"
-            }
-          }
-        }
-      },
-      "annot": {
-        "__class__": "Annotation",
-        "entries": [
-          {
-            "__class__": "Tag",
-            "tag": "\"the natural borrowing limit on market resources, above which total wealth m - L is positive\""
           }
         ]
       }
@@ -598,7 +496,7 @@
                 "__class__": "Lt"
               },
               "right": {
-                "__class__": "Sub",
+                "__class__": "Add",
                 "left": {
                   "__class__": "Sym",
                   "symbol": {
@@ -609,8 +507,15 @@
                 "right": {
                   "__class__": "Sym",
                   "symbol": {
-                    "__class__": "Constant",
-                    "name": "L"
+                    "__class__": "Variable",
+                    "name": "h",
+                    "when": {
+                      "__class__": "At",
+                      "side": {
+                        "__class__": "Continuation"
+                      }
+                    },
+                    "shift": 0
                   }
                 }
               }
@@ -933,6 +838,35 @@
                   },
                   {
                     "__class__": "Coordinate",
+                    "stem": "h",
+                    "at": {
+                      "__class__": "At",
+                      "side": {
+                        "__class__": "Continuation"
+                      }
+                    },
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "ℝ₊"
+                        }
+                      },
+                      {
+                        "__class__": "Role",
+                        "kind": {
+                          "__class__": "Value",
+                          "order": 0
+                        }
+                      },
+                      {
+                        "__class__": "Constancy"
+                      }
+                    ]
+                  },
+                  {
+                    "__class__": "Coordinate",
                     "stem": "c",
                     "at": null,
                     "classifiers": []
@@ -968,6 +902,30 @@
                           "__class__": "Value",
                           "order": 0
                         }
+                      }
+                    ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "h",
+                    "at": null,
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "ℝ₊"
+                        }
+                      },
+                      {
+                        "__class__": "Role",
+                        "kind": {
+                          "__class__": "Value",
+                          "order": 0
+                        }
+                      },
+                      {
+                        "__class__": "Constancy"
                       }
                     ]
                   }
@@ -1048,6 +1006,50 @@
               }
             ]
           }
+        },
+        {
+          "__class__": "Statement",
+          "core": {
+            "__class__": "Equation",
+            "lhs": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "h"
+              }
+            },
+            "rhs": {
+              "__class__": "Add",
+              "left": {
+                "__class__": "Number",
+                "value": 1
+              },
+              "right": {
+                "__class__": "Sym",
+                "symbol": {
+                  "__class__": "Variable",
+                  "name": "h",
+                  "when": {
+                    "__class__": "At",
+                    "side": {
+                      "__class__": "Continuation"
+                    }
+                  },
+                  "shift": 0
+                }
+              }
+            }
+          },
+          "annot": {
+            "__class__": "Annotation",
+            "entries": [
+              {
+                "__class__": "KeyValue",
+                "key": "id",
+                "value": "human_wealth"
+              }
+            ]
+          }
         }
       ]
     },
@@ -1071,6 +1073,12 @@
                   {
                     "__class__": "Coordinate",
                     "stem": "V",
+                    "at": null,
+                    "classifiers": []
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "h",
                     "at": null,
                     "classifiers": []
                   }
@@ -1110,6 +1118,35 @@
                           "__class__": "Value",
                           "order": 0
                         }
+                      }
+                    ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "h",
+                    "at": {
+                      "__class__": "At",
+                      "side": {
+                        "__class__": "Arrival"
+                      }
+                    },
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "ℝ₊"
+                        }
+                      },
+                      {
+                        "__class__": "Role",
+                        "kind": {
+                          "__class__": "Value",
+                          "order": 0
+                        }
+                      },
+                      {
+                        "__class__": "Constancy"
                       }
                     ]
                   }
@@ -1191,6 +1228,63 @@
               }
             ]
           }
+        },
+        {
+          "__class__": "Statement",
+          "core": {
+            "__class__": "Equation",
+            "lhs": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Variable",
+                "name": "h",
+                "when": {
+                  "__class__": "At",
+                  "side": {
+                    "__class__": "Arrival"
+                  }
+                },
+                "shift": 0
+              }
+            },
+            "rhs": {
+              "__class__": "Div",
+              "left": {
+                "__class__": "Mul",
+                "left": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "h"
+                  }
+                },
+                "right": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "Γ"
+                  }
+                }
+              },
+              "right": {
+                "__class__": "Sym",
+                "symbol": {
+                  "__class__": "Constant",
+                  "name": "R"
+                }
+              }
+            }
+          },
+          "annot": {
+            "__class__": "Annotation",
+            "entries": [
+              {
+                "__class__": "KeyValue",
+                "key": "id",
+                "value": "human_wealth"
+              }
+            ]
+          }
         }
       ]
     },
@@ -1234,6 +1328,35 @@
                           "__class__": "Value",
                           "order": 0
                         }
+                      }
+                    ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "h",
+                    "at": {
+                      "__class__": "At",
+                      "side": {
+                        "__class__": "Continuation"
+                      }
+                    },
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "ℝ₊"
+                        }
+                      },
+                      {
+                        "__class__": "Role",
+                        "kind": {
+                          "__class__": "Value",
+                          "order": 0
+                        }
+                      },
+                      {
+                        "__class__": "Constancy"
                       }
                     ]
                   }

@@ -1,0 +1,1088 @@
+BELLMAN-SYM / STAGE young_choice                          [VERSION = SYMBOLIC]
+a stage occurrence of applications/cagetti-denardi-2006/declaration/stages/
+young_choice/young_choice.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        a_yc≺ state, y_yc≺ state, θ_yc≺ state, V≺ value
+  ∼ decision       a state, y state, θ state, d control, V value
+  ≻ continuation   a_ye≻ state, y_ye≻ state, θ_ye≻ state, a_yc_wk≻ state,
+                   y_yc_wk≻ state, θ_yc_wk≻ state, V_e≻ value, V_w≻ value
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           a_yc≺ at arrival, y_yc≺ at arrival, θ_yc≺ at arrival, a at
+                   decision, y at decision, θ at decision, a_ye≻ at
+                   continuation, y_ye≻ at continuation, θ_ye≻ at continuation,
+                   a_yc_wk≻ at continuation, y_yc_wk≻ at continuation,
+                   θ_yc_wk≻ at continuation
+  controls         d at decision
+  values           V at the arrival, decision perches; V_e at the continuation
+                   perch; V_w at the continuation perch
+  shocks           none
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → arvl_to_dcsn   (a_yc≺, y_yc≺, θ_yc≺) : !arvl -> (a, y, θ) : !dcsn
+  → dcsn_to_cntn   (a, y, θ) : !dcsn, at d ->
+                   (a_ye≻, y_ye≻, θ_ye≻, a_yc_wk≻, y_yc_wk≻, θ_yc_wk≻) : !cntn
+  ← cntn_to_dcsn   (V_e≻, V_w≻) : !cntn, at d -> (V) : !dcsn
+  ← dcsn_to_arvl   (V) : !dcsn -> (V≺) : !arvl
+  ← policy         (V_e≻, V_w≻) : !cntn -> (d) : !dcsn
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  sets                     3   Xa := ℝ₊, Y := ℝ₊₊, Θ := ℝ₊
+  laws of motion           2   a = a_yc; y = y_yc; θ = θ_yc;
+                               a_ye = a; y_ye = y; θ_ye = θ; a_yc_wk = a;
+                               y_yc_wk = y; θ_yc_wk = θ
+  value aggregators        3   V = (V_e[>], V_w[>])[d]; V[<] = V;
+                               d = argmax_{d}(V_e[>], V_w[>])
+  block lines             12   arvl_to_dcsn.1, arvl_to_dcsn.2,
+                               arvl_to_dcsn.3, dcsn_to_cntn.entrepreneur.1,
+                               dcsn_to_cntn.entrepreneur.2,
+                               dcsn_to_cntn.entrepreneur.3,
+                               dcsn_to_cntn.worker.1, dcsn_to_cntn.worker.2,
+                               dcsn_to_cntn.worker.3,
+                               cntn_to_dcsn.choice_value, dcsn_to_arvl.value,
+                               policy.choice
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   (𝑉_e≻, 𝑉_w≻) ↦ 𝑉≺, 𝑑(a, y, θ)
+                    forward    μ≺ ↦ μ_entrepreneur≻, μ_worker≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ≺ a_yc≺, y_yc≺, θ_yc≺  →  ∼ a, y, θ  →  ≻ a_ye≻, y_ye≻, θ_ye≻,
+             a_yc_wk≻, y_yc_wk≻, θ_yc_wk≻
+  backward   ≺ V≺  ←  ∼ V  ←  ≻ V_e≻, V_w≻
+  policy     ∼ d  ←  ≻ V_e≻, V_w≻
+
+==== stage ====
+STAGE young_choice
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑉_e≻             : Xa × Y × Θ → ℝ
+         𝑉_w≻             : Xa × Y × Θ → ℝ
+         ──────────────────────────────────────────────────────────────
+    out  𝑉≺               : Xa × Y × Θ → ℝ
+         𝑑                : Xa × Y × Θ → {entrepreneur, worker}
+  forward
+    in   μ≺               : finite measure on Xa × Y × Θ
+         ──────────────────────────────────────────────────────────────
+    out  μ_entrepreneur≻  : finite measure on Xa × Y × Θ
+         μ_worker≻        : finite measure on Xa × Y × Θ
+
+Where
+  (a, y, θ) = 𝑔≺(a_yc, y_yc, θ_yc)
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉_e≻, 𝑉_w≻                   out: 𝑉
+
+    2  dcsn_to_arvl
+       in: 𝑉                            out: 𝑉≺
+
+    3  policy
+       in: 𝑉_e≻, 𝑉_w≻                   out: 𝑑
+
+  forward
+    1  arvl_to_dcsn
+       in: μ≺                           out: μ
+
+    2  dcsn_to_cntn
+       in: μ                            out: μ_entrepreneur≻, μ_worker≻
+
+Conditions
+  cntn_to_dcsn:Aggregation  𝑉(a, y, θ) ∈ ℝ
+  dcsn_to_arvl:Aggregation  𝑉≺(a_yc, y_yc, θ_yc) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  8   a = a_yc
+  9   y = y_yc
+  10  θ = θ_yc
+  15  a_ye = a
+  16  y_ye = y
+  17  θ_ye = θ
+  20  a_yc_wk = a
+  21  y_yc_wk = y
+  22  θ_yc_wk = θ
+  27  V = (V_e[>], V_w[>])[d]         :: [id=choice_value]
+  31  V[<] = V                        :: [id=value]
+  35  d = argmax_{d}(V_e[>], V_w[>])  :: [id=choice]
+
+Definitions referenced
+  Xa    young_choice:set:Xa
+  Y     young_choice:set:Y
+  Θ     young_choice:set:Θ
+  𝑔≺    young_choice:g:arvl_to_dcsn
+
+File
+  applications/cagetti-denardi-2006/declaration/stages/young_choice/
+  young_choice.bl
+
+Perches
+  ≺  arrival, written [<]
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE young_choice / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V_e≻  : {V_e≻, V_w≻}
+       V_w≻  : {V_e≻, V_w≻}
+       ────────────────────
+  out  V     : {V}
+
+Conditions
+  𝑉(a, y, θ) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  27  V = (V_e[>], V_w[>])[d]  :: [id=choice_value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward dcsn_to_arvl ====
+STAGE young_choice / BACKWARD BLOCK dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V   : {V}
+       ──────────
+  out  V≺  : {V≺}
+
+Conditions
+  𝑉≺(a_yc, y_yc, θ_yc) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  31  V[<] = V  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward policy ====
+STAGE young_choice / POLICY BLOCK policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V_e≻  : {V_e≻, V_w≻}
+       V_w≻  : {V_e≻, V_w≻}
+       ────────────────────
+  out  d     : {d}
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  35  d = argmax_{d}(V_e[>], V_w[>])  :: [id=choice]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward arvl_to_dcsn ====
+STAGE young_choice / FORWARD BLOCK arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a_yc≺  : {a_yc≺, y_yc≺, θ_yc≺}
+       y_yc≺  : {y_yc≺}
+       θ_yc≺  : {a_yc≺, y_yc≺, θ_yc≺}
+       ──────────────────────────────
+  out  a      : {a, y, θ}
+       y      : {y}
+       θ      : {a, y, θ}
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  8   a = a_yc
+  9   y = y_yc
+  10  θ = θ_yc
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE young_choice / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a         : {a, y, θ}
+       y         : {y}
+       θ         : {a, y, θ}
+       ───────────────────────────────────────────────────────────────
+  out  a_ye≻     : {a_ye≻, y_ye≻, θ_ye≻, a_yc_wk≻, y_yc_wk≻, θ_yc_wk≻}
+       y_ye≻     : {y_ye≻, y_yc_wk≻}
+       θ_ye≻     : {a_ye≻, y_ye≻, θ_ye≻, a_yc_wk≻, y_yc_wk≻, θ_yc_wk≻}
+       a_yc_wk≻  : {a_ye≻, y_ye≻, θ_ye≻, a_yc_wk≻, y_yc_wk≻, θ_yc_wk≻}
+       y_yc_wk≻  : {y_ye≻, y_yc_wk≻}
+       θ_yc_wk≻  : {a_ye≻, y_ye≻, θ_ye≻, a_yc_wk≻, y_yc_wk≻, θ_yc_wk≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  15  a_ye = a
+  16  y_ye = y
+  17  θ_ye = θ
+  20  a_yc_wk = a
+  21  y_yc_wk = y
+  22  θ_yc_wk = θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn / entrepreneur ====
+STAGE young_choice / FORWARD BLOCK dcsn_to_cntn / entrepreneur
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a      : {a, y, θ}
+       y      : {y}
+       θ      : {a, y, θ}
+       ────────────────────────────────────────────────────────────
+  out  a_ye≻  : {a_ye≻, y_ye≻, θ_ye≻, a_yc_wk≻, y_yc_wk≻, θ_yc_wk≻}
+       y_ye≻  : {y_ye≻, y_yc_wk≻}
+       θ_ye≻  : {a_ye≻, y_ye≻, θ_ye≻, a_yc_wk≻, y_yc_wk≻, θ_yc_wk≻}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn / worker ====
+STAGE young_choice / FORWARD BLOCK dcsn_to_cntn / worker
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a         : {a, y, θ}
+       y         : {y}
+       θ         : {a, y, θ}
+       ───────────────────────────────────────────────────────────────
+  out  a_yc_wk≻  : {a_ye≻, y_ye≻, θ_ye≻, a_yc_wk≻, y_yc_wk≻, θ_yc_wk≻}
+       y_yc_wk≻  : {y_ye≻, y_yc_wk≻}
+       θ_yc_wk≻  : {a_ye≻, y_ye≻, θ_ye≻, a_yc_wk≻, y_yc_wk≻, θ_yc_wk≻}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE young_choice / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_e≻  : Xa × Y × Θ → ℝ
+       𝑉_w≻  : Xa × Y × Θ → ℝ
+       ────────────────────────────────────────────────────────────
+  out  𝑉     : Xa × Y × Θ → ℝ
+
+At
+  𝑑  : Xa × Y × Θ → {entrepreneur, worker}
+
+Where
+  𝑔_entrepreneur≻  : Xa × Y × Θ → Xa × Y × Θ,
+                     𝑔_entrepreneur≻(a, y, θ) = 𝑔≻(a, y, θ, entrepreneur)
+  𝑔_worker≻        : Xa × Y × Θ → Xa × Y × Θ,
+                     𝑔_worker≻(a, y, θ) = 𝑔≻(a, y, θ, worker)
+
+Operations
+  1  Pullback:entrepreneur
+     in: 𝑉_e≻                           out: 𝑉_e≻ ∘ 𝑔_entrepreneur≻
+     ──────────────────────────────────────────────────────────────
+     rule: (𝑉_e≻ ∘ 𝑔_entrepreneur≻)(a, y, θ) = 𝑉_e≻(𝑔_entrepreneur≻(a, y, θ))
+
+  2  Pullback:worker
+     in: 𝑉_w≻                           out: 𝑉_w≻ ∘ 𝑔_worker≻
+     ──────────────────────────────────────────────────────────────
+     rule: (𝑉_w≻ ∘ 𝑔_worker≻)(a, y, θ) = 𝑉_w≻(𝑔_worker≻(a, y, θ))
+
+  3  Aggregation
+     in: (1), (2)                       out: 𝑉
+     ──────────────────────────────────────────────────────────────
+     rule: 𝑉 = (𝑉_e≻(𝑔_entrepreneur≻(a, y, θ)), 𝑉_w≻(𝑔_worker≻(a, y, θ)))[𝑑]
+           on (a, y, θ) ∈ Xa × Y × Θ
+
+  4  Evaluation
+     in: 𝑉                              out: 𝑉
+     ──────────────────────────────────────────────────────────────
+     rule: 𝑉 : Xa × Y × Θ → ℝ
+
+Conditions
+  Aggregation  𝑉(a, y, θ) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  27  V = (V_e[>], V_w[>])[d]  :: [id=choice_value]
+
+Definitions referenced
+  Xa    young_choice:set:Xa
+  Y     young_choice:set:Y
+  Θ     young_choice:set:Θ
+  𝑔≻    young_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback:entrepreneur ====
+STAGE young_choice / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Pullback:entrepreneur
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_e≻  : Xa × Y × Θ → ℝ
+       ──────────────────────
+  out  𝑉_e≻ ∘ 𝑔_entrepreneur≻
+             : Xa × Y × Θ → ℝ
+
+Where
+  𝑔_entrepreneur≻  : Xa × Y × Θ → Xa × Y × Θ,
+                     𝑔_entrepreneur≻(a, y, θ) = 𝑔≻(a, y, θ, entrepreneur)
+
+Rule
+  (𝑉_e≻ ∘ 𝑔_entrepreneur≻)(a, y, θ) = 𝑉_e≻(𝑔_entrepreneur≻(a, y, θ))
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  15  a_ye = a
+  16  y_ye = y
+  17  θ_ye = θ
+  20  a_yc_wk = a
+  21  y_yc_wk = y
+  22  θ_yc_wk = θ
+
+Definitions referenced
+  Xa    young_choice:set:Xa
+  Y     young_choice:set:Y
+  Θ     young_choice:set:Θ
+  𝑔≻    young_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback:worker ====
+STAGE young_choice / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Pullback:worker
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_w≻  : Xa × Y × Θ → ℝ
+       ──────────────────────
+  out  𝑉_w≻ ∘ 𝑔_worker≻
+             : Xa × Y × Θ → ℝ
+
+Where
+  𝑔_worker≻  : Xa × Y × Θ → Xa × Y × Θ,
+               𝑔_worker≻(a, y, θ) = 𝑔≻(a, y, θ, worker)
+
+Rule
+  (𝑉_w≻ ∘ 𝑔_worker≻)(a, y, θ) = 𝑉_w≻(𝑔_worker≻(a, y, θ))
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  15  a_ye = a
+  16  y_ye = y
+  17  θ_ye = θ
+  20  a_yc_wk = a
+  21  y_yc_wk = y
+  22  θ_yc_wk = θ
+
+Definitions referenced
+  Xa    young_choice:set:Xa
+  Y     young_choice:set:Y
+  Θ     young_choice:set:Θ
+  𝑔≻    young_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE young_choice / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_e≻ ∘ 𝑔_entrepreneur≻
+          : Xa × Y × Θ → ℝ
+       𝑉_w≻ ∘ 𝑔_worker≻
+          : Xa × Y × Θ → ℝ
+       ──────────────────────
+  out  𝑉  : Xa × Y × Θ → ℝ
+
+Where
+  𝑔_entrepreneur≻  : Xa × Y × Θ → Xa × Y × Θ,
+                     𝑔_entrepreneur≻(a, y, θ) = 𝑔≻(a, y, θ, entrepreneur)
+  𝑔_worker≻        : Xa × Y × Θ → Xa × Y × Θ,
+                     𝑔_worker≻(a, y, θ) = 𝑔≻(a, y, θ, worker)
+
+Rule
+  𝑉 = (𝑉_e≻(𝑔_entrepreneur≻(a, y, θ)), 𝑉_w≻(𝑔_worker≻(a, y, θ)))[𝑑]
+  on (a, y, θ) ∈ Xa × Y × Θ
+
+Conditions
+  𝑉(a, y, θ) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  27  V = (V_e[>], V_w[>])[d]  :: [id=choice_value]
+
+Definitions referenced
+  Xa    young_choice:set:Xa
+  Y     young_choice:set:Y
+  Θ     young_choice:set:Θ
+  𝑔≻    young_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE young_choice / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : Xa × Y × Θ → ℝ
+       ───────────────────
+  out  𝑉  : Xa × Y × Θ → ℝ
+
+Where
+  𝑔_entrepreneur≻  : Xa × Y × Θ → Xa × Y × Θ,
+                     𝑔_entrepreneur≻(a, y, θ) = 𝑔≻(a, y, θ, entrepreneur)
+  𝑔_worker≻        : Xa × Y × Θ → Xa × Y × Θ,
+                     𝑔_worker≻(a, y, θ) = 𝑔≻(a, y, θ, worker)
+
+Rule
+  𝑉 = (𝑉_e≻(𝑔_entrepreneur≻(a, y, θ)), 𝑉_w≻(𝑔_worker≻(a, y, θ)))[𝑑]
+  on (a, y, θ) ∈ Xa × Y × Θ
+  𝑉 : Xa × Y × Θ → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xa    young_choice:set:Xa
+  Y     young_choice:set:Y
+  Θ     young_choice:set:Θ
+  𝑔≻    young_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl ====
+STAGE young_choice / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉   : Xa × Y × Θ → ℝ
+       ────────────────────────────────────────────
+  out  𝑉≺  : Xa × Y × Θ → ℝ
+
+Operations
+  1  Pullback
+     in: 𝑉                              out: 𝑉 ∘ 𝑔≺
+     ──────────────────────────────────────────────
+     rule: (𝑉 ∘ 𝑔≺)(a_yc, y_yc, θ_yc) = 𝑉(𝑔≺(a_yc, y_yc, θ_yc))
+
+  2  Aggregation
+     in: (1)                            out: 𝑉≺
+     ──────────────────────────────────────────────
+     rule: 𝑉≺ = 𝑉(𝑔≺(a_yc, y_yc, θ_yc))     on (a_yc, y_yc, θ_yc) ∈ Xa × Y × Θ
+
+  3  Evaluation
+     in: 𝑉≺                             out: 𝑉≺
+     ──────────────────────────────────────────────
+     rule: 𝑉≺ : Xa × Y × Θ → ℝ
+
+Conditions
+  Aggregation  𝑉≺(a_yc, y_yc, θ_yc) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  31  V[<] = V  :: [id=value]
+
+Definitions referenced
+  Xa    young_choice:set:Xa
+  Y     young_choice:set:Y
+  Θ     young_choice:set:Θ
+  𝑔≺    young_choice:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Pullback ====
+STAGE young_choice / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : Xa × Y × Θ → ℝ
+       ───────────────────
+  out  𝑉 ∘ 𝑔≺
+          : Xa × Y × Θ → ℝ
+
+Rule
+  (𝑉 ∘ 𝑔≺)(a_yc, y_yc, θ_yc) = 𝑉(𝑔≺(a_yc, y_yc, θ_yc))
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  8   a = a_yc
+  9   y = y_yc
+  10  θ = θ_yc
+
+Definitions referenced
+  Xa    young_choice:set:Xa
+  Y     young_choice:set:Y
+  Θ     young_choice:set:Θ
+  𝑔≺    young_choice:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Aggregation ====
+STAGE young_choice / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉 ∘ 𝑔≺
+           : Xa × Y × Θ → ℝ
+       ────────────────────
+  out  𝑉≺  : Xa × Y × Θ → ℝ
+
+Rule
+  𝑉≺ = 𝑉(𝑔≺(a_yc, y_yc, θ_yc))              on (a_yc, y_yc, θ_yc) ∈ Xa × Y × Θ
+
+Conditions
+  𝑉≺(a_yc, y_yc, θ_yc) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  31  V[<] = V  :: [id=value]
+
+Definitions referenced
+  Xa    young_choice:set:Xa
+  Y     young_choice:set:Y
+  Θ     young_choice:set:Θ
+  𝑔≺    young_choice:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Evaluation ====
+STAGE young_choice / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≺  : Xa × Y × Θ → ℝ
+       ────────────────────
+  out  𝑉≺  : Xa × Y × Θ → ℝ
+
+Rule
+  𝑉≺ = 𝑉(𝑔≺(a_yc, y_yc, θ_yc))              on (a_yc, y_yc, θ_yc) ∈ Xa × Y × Θ
+  𝑉≺ : Xa × Y × Θ → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xa    young_choice:set:Xa
+  Y     young_choice:set:Y
+  Θ     young_choice:set:Θ
+  𝑔≺    young_choice:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy ====
+STAGE young_choice / POLICY BUILDER policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_e≻  : Xa × Y × Θ → ℝ
+       𝑉_w≻  : Xa × Y × Θ → ℝ
+       ────────────────────────────────────────────────────────────────────
+  out  𝑑     : Xa × Y × Θ → {entrepreneur, worker}
+
+Where
+  𝑔_entrepreneur≻  : Xa × Y × Θ → Xa × Y × Θ,
+                     𝑔_entrepreneur≻(a, y, θ) = 𝑔≻(a, y, θ, entrepreneur)
+  𝑔_worker≻        : Xa × Y × Θ → Xa × Y × Θ,
+                     𝑔_worker≻(a, y, θ) = 𝑔≻(a, y, θ, worker)
+
+Operations
+  1  Pullback:entrepreneur
+     in: 𝑉_e≻                           out: 𝑉_e≻ ∘ 𝑔_entrepreneur≻
+     ──────────────────────────────────────────────────────────────────────
+     rule: (𝑉_e≻ ∘ 𝑔_entrepreneur≻)(a, y, θ) = 𝑉_e≻(𝑔_entrepreneur≻(a, y, θ))
+
+  2  Pullback:worker
+     in: 𝑉_w≻                           out: 𝑉_w≻ ∘ 𝑔_worker≻
+     ──────────────────────────────────────────────────────────────────────
+     rule: (𝑉_w≻ ∘ 𝑔_worker≻)(a, y, θ) = 𝑉_w≻(𝑔_worker≻(a, y, θ))
+
+  3  choice:Aggregation
+     in: (1), (2)
+     out: (a, y, θ, d)
+            ↦ (𝑉_e≻(𝑔_entrepreneur≻(a, y, θ)), 𝑉_w≻(𝑔_worker≻(a, y, θ)))[d]
+     ──────────────────────────────────────────────────────────────────────
+     rule: (a, y, θ, d)
+             ↦ (𝑉_e≻(𝑔_entrepreneur≻(a, y, θ)), 𝑉_w≻(𝑔_worker≻(a, y, θ)))[d]
+
+  4  choice:Argmax
+     in: (3)                            out: 𝑑
+     ──────────────────────────────────────────────────────────────────────
+     rule: 𝑑(a, y, θ)
+             ∈ argmax_{d ∈ {entrepreneur, worker}}
+                 [(𝑉_e≻(𝑔_entrepreneur≻(a, y, θ)),
+                   𝑉_w≻(𝑔_worker≻(a, y, θ)))[d]]
+
+  5  Evaluation
+     in: 𝑑                              out: 𝑑
+     ──────────────────────────────────────────────────────────────────────
+     rule: 𝑑 : Xa × Y × Θ → {entrepreneur, worker}
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  35  d = argmax_{d}(V_e[>], V_w[>])  :: [id=choice]
+
+Definitions referenced
+  Xa    young_choice:set:Xa
+  Y     young_choice:set:Y
+  Θ     young_choice:set:Θ
+  𝑔≻    young_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback:entrepreneur ====
+STAGE young_choice / POLICY BUILDER policy / Pullback:entrepreneur
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_e≻  : Xa × Y × Θ → ℝ
+       ──────────────────────
+  out  𝑉_e≻ ∘ 𝑔_entrepreneur≻
+             : Xa × Y × Θ → ℝ
+
+Where
+  𝑔_entrepreneur≻  : Xa × Y × Θ → Xa × Y × Θ,
+                     𝑔_entrepreneur≻(a, y, θ) = 𝑔≻(a, y, θ, entrepreneur)
+
+Rule
+  (𝑉_e≻ ∘ 𝑔_entrepreneur≻)(a, y, θ) = 𝑉_e≻(𝑔_entrepreneur≻(a, y, θ))
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  15  a_ye = a
+  16  y_ye = y
+  17  θ_ye = θ
+  20  a_yc_wk = a
+  21  y_yc_wk = y
+  22  θ_yc_wk = θ
+
+Definitions referenced
+  Xa    young_choice:set:Xa
+  Y     young_choice:set:Y
+  Θ     young_choice:set:Θ
+  𝑔≻    young_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback:worker ====
+STAGE young_choice / POLICY BUILDER policy / Pullback:worker
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_w≻  : Xa × Y × Θ → ℝ
+       ──────────────────────
+  out  𝑉_w≻ ∘ 𝑔_worker≻
+             : Xa × Y × Θ → ℝ
+
+Where
+  𝑔_worker≻  : Xa × Y × Θ → Xa × Y × Θ,
+               𝑔_worker≻(a, y, θ) = 𝑔≻(a, y, θ, worker)
+
+Rule
+  (𝑉_w≻ ∘ 𝑔_worker≻)(a, y, θ) = 𝑉_w≻(𝑔_worker≻(a, y, θ))
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  15  a_ye = a
+  16  y_ye = y
+  17  θ_ye = θ
+  20  a_yc_wk = a
+  21  y_yc_wk = y
+  22  θ_yc_wk = θ
+
+Definitions referenced
+  Xa    young_choice:set:Xa
+  Y     young_choice:set:Y
+  Θ     young_choice:set:Θ
+  𝑔≻    young_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / choice:Aggregation ====
+STAGE young_choice / POLICY BUILDER policy / choice:Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_e≻ ∘ 𝑔_entrepreneur≻
+         : Xa × Y × Θ → ℝ
+       𝑉_w≻ ∘ 𝑔_worker≻
+         : Xa × Y × Θ → ℝ
+       ─────────────────────────────────────────────────────────────────
+  out  (a, y, θ, d)
+         ↦ (𝑉_e≻(𝑔_entrepreneur≻(a, y, θ)), 𝑉_w≻(𝑔_worker≻(a, y, θ)))[d]
+         : Xa × Y × Θ × {entrepreneur, worker} → ℝ
+
+Where
+  𝑔_entrepreneur≻  : Xa × Y × Θ → Xa × Y × Θ,
+                     𝑔_entrepreneur≻(a, y, θ) = 𝑔≻(a, y, θ, entrepreneur)
+  𝑔_worker≻        : Xa × Y × Θ → Xa × Y × Θ,
+                     𝑔_worker≻(a, y, θ) = 𝑔≻(a, y, θ, worker)
+
+Rule
+  (a, y, θ, d) ↦ (𝑉_e≻(𝑔_entrepreneur≻(a, y, θ)), 𝑉_w≻(𝑔_worker≻(a, y, θ)))[d]
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  35  d = argmax_{d}(V_e[>], V_w[>])  :: [id=choice]
+
+Definitions referenced
+  Xa    young_choice:set:Xa
+  Y     young_choice:set:Y
+  Θ     young_choice:set:Θ
+  𝑔≻    young_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / choice:Argmax ====
+STAGE young_choice / POLICY BUILDER policy / choice:Argmax
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (a, y, θ, d)
+         ↦ (𝑉_e≻(𝑔_entrepreneur≻(a, y, θ)), 𝑉_w≻(𝑔_worker≻(a, y, θ)))[d]
+          : Xa × Y × Θ × {entrepreneur, worker} → ℝ
+       ─────────────────────────────────────────────────────────────────
+  out  𝑑  : Xa × Y × Θ → {entrepreneur, worker}
+
+Where
+  𝑔_entrepreneur≻  : Xa × Y × Θ → Xa × Y × Θ,
+                     𝑔_entrepreneur≻(a, y, θ) = 𝑔≻(a, y, θ, entrepreneur)
+  𝑔_worker≻        : Xa × Y × Θ → Xa × Y × Θ,
+                     𝑔_worker≻(a, y, θ) = 𝑔≻(a, y, θ, worker)
+
+Rule
+  𝑑(a, y, θ)
+    ∈ argmax_{d ∈ {entrepreneur, worker}}
+        [(𝑉_e≻(𝑔_entrepreneur≻(a, y, θ)), 𝑉_w≻(𝑔_worker≻(a, y, θ)))[d]]
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  35  d = argmax_{d}(V_e[>], V_w[>])  :: [id=choice]
+
+Definitions referenced
+  Xa    young_choice:set:Xa
+  Y     young_choice:set:Y
+  Θ     young_choice:set:Θ
+  𝑔≻    young_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Evaluation ====
+STAGE young_choice / POLICY BUILDER policy / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑑  : Xa × Y × Θ → {entrepreneur, worker}
+       ────────────────────────────────────────
+  out  𝑑  : Xa × Y × Θ → {entrepreneur, worker}
+
+Where
+  𝑔_entrepreneur≻  : Xa × Y × Θ → Xa × Y × Θ,
+                     𝑔_entrepreneur≻(a, y, θ) = 𝑔≻(a, y, θ, entrepreneur)
+  𝑔_worker≻        : Xa × Y × Θ → Xa × Y × Θ,
+                     𝑔_worker≻(a, y, θ) = 𝑔≻(a, y, θ, worker)
+
+Rule
+  𝑑(a, y, θ)
+    ∈ argmax_{d ∈ {entrepreneur, worker}}
+        [(𝑉_e≻(𝑔_entrepreneur≻(a, y, θ)), 𝑉_w≻(𝑔_worker≻(a, y, θ)))[d]]
+  𝑑 : Xa × Y × Θ → {entrepreneur, worker}
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xa    young_choice:set:Xa
+  Y     young_choice:set:Y
+  Θ     young_choice:set:Θ
+  𝑔≻    young_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn ====
+STAGE young_choice / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Xa × Y × Θ
+       ───────────────────────────────────────
+  out  μ   : finite measure on Xa × Y × Θ
+
+Operations
+  1  Pushforward
+     in: μ≺                             out: μ
+     ─────────────────────────────────────────
+     rule: μ(B)
+             = μ≺({a_yc≺, y_yc≺, θ_yc≺ ∈ Xa × Y × Θ |
+                    𝑔≺(a_yc≺, y_yc≺, θ_yc≺) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  8   a = a_yc
+  9   y = y_yc
+  10  θ = θ_yc
+
+Definitions referenced
+  Xa    young_choice:set:Xa
+  Y     young_choice:set:Y
+  Θ     young_choice:set:Θ
+  𝑔≺    young_choice:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / Pushforward ====
+STAGE young_choice / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Xa × Y × Θ
+       ──────────────────────────────────
+  out  μ   : finite measure on Xa × Y × Θ
+
+Rule
+  μ(B) = μ≺({a_yc≺, y_yc≺, θ_yc≺ ∈ Xa × Y × Θ | 𝑔≺(a_yc≺, y_yc≺, θ_yc≺) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  8   a = a_yc
+  9   y = y_yc
+  10  θ = θ_yc
+
+Definitions referenced
+  Xa    young_choice:set:Xa
+  Y     young_choice:set:Y
+  Θ     young_choice:set:Θ
+  𝑔≺    young_choice:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE young_choice / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ                : finite measure on Xa × Y × Θ
+       ────────────────────────────────────────────────────────────────
+  out  μ_entrepreneur≻  : finite measure on Xa × Y × Θ
+       μ_worker≻        : finite measure on Xa × Y × Θ
+
+At
+  𝑑  : Xa × Y × Θ → {entrepreneur, worker}
+
+Where
+  𝑔_entrepreneur≻  : Xa × Y × Θ → Xa × Y × Θ,
+                     𝑔_entrepreneur≻(a, y, θ) = 𝑔≻(a, y, θ, entrepreneur)
+  𝑔_worker≻        : Xa × Y × Θ → Xa × Y × Θ,
+                     𝑔_worker≻(a, y, θ) = 𝑔≻(a, y, θ, worker)
+
+Operations
+  1  Pushforward
+     in: μ                              out: μ_entrepreneur≻, μ_worker≻
+     ──────────────────────────────────────────────────────────────────
+     rule: μ_entrepreneur≻(B)
+             = μ({a, y, θ ∈ Xa × Y × Θ |
+                   𝑑(a, y, θ) = entrepreneur ∧ 𝑔_entrepreneur≻(a, y, θ) ∈ B})
+           μ_worker≻(B)
+             = μ({a, y, θ ∈ Xa × Y × Θ |
+                   𝑑(a, y, θ) = worker ∧ 𝑔_worker≻(a, y, θ) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  15  a_ye = a
+  16  y_ye = y
+  17  θ_ye = θ
+  20  a_yc_wk = a
+  21  y_yc_wk = y
+  22  θ_yc_wk = θ
+
+Definitions referenced
+  Xa    young_choice:set:Xa
+  Y     young_choice:set:Y
+  Θ     young_choice:set:Θ
+  𝑔≻    young_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE young_choice / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ                : finite measure on Xa × Y × Θ
+       ───────────────────────────────────────────────
+  out  μ_entrepreneur≻  : finite measure on Xa × Y × Θ
+       μ_worker≻        : finite measure on Xa × Y × Θ
+
+Where
+  𝑔_entrepreneur≻  : Xa × Y × Θ → Xa × Y × Θ,
+                     𝑔_entrepreneur≻(a, y, θ) = 𝑔≻(a, y, θ, entrepreneur)
+  𝑔_worker≻        : Xa × Y × Θ → Xa × Y × Θ,
+                     𝑔_worker≻(a, y, θ) = 𝑔≻(a, y, θ, worker)
+
+Rule
+  μ_entrepreneur≻(B)
+    = μ({a, y, θ ∈ Xa × Y × Θ |
+          𝑑(a, y, θ) = entrepreneur ∧ 𝑔_entrepreneur≻(a, y, θ) ∈ B})
+  μ_worker≻(B)
+    = μ({a, y, θ ∈ Xa × Y × Θ | 𝑑(a, y, θ) = worker ∧ 𝑔_worker≻(a, y, θ) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  15  a_ye = a
+  16  y_ye = y
+  17  θ_ye = θ
+  20  a_yc_wk = a
+  21  y_yc_wk = y
+  22  θ_yc_wk = θ
+
+Definitions referenced
+  Xa    young_choice:set:Xa
+  Y     young_choice:set:Y
+  Θ     young_choice:set:Θ
+  𝑔≻    young_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== young_choice:set:Xa ====
+STAGE young_choice / SET Xa
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xa  = ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  3  Xa := ℝ₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== young_choice:set:Y ====
+STAGE young_choice / SET Y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Y  = ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  4  Y  := ℝ₊₊
+       :: ["working ability; the positive reals stand in for its finite grid,
+       whose number of points is a numerical choice"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== young_choice:set:Θ ====
+STAGE young_choice / SET Θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Θ  = ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  5  Θ  := ℝ₊
+       :: ["entrepreneurial ability; the nonnegative reals stand in for its
+       two levels, 0 and θ_e"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.1 ====
+STAGE young_choice / FORWARD BLOCK arvl_to_dcsn / 1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  young_choice.bl
+  8  a = a_yc
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.2 ====
+STAGE young_choice / FORWARD BLOCK arvl_to_dcsn / 2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  young_choice.bl
+  9  y = y_yc
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.3 ====
+STAGE young_choice / FORWARD BLOCK arvl_to_dcsn / 3
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  young_choice.bl
+  10  θ = θ_yc
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.entrepreneur.1 ====
+STAGE young_choice / FORWARD BLOCK dcsn_to_cntn / entrepreneur.1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  young_choice.bl
+  15  a_ye = a
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.entrepreneur.2 ====
+STAGE young_choice / FORWARD BLOCK dcsn_to_cntn / entrepreneur.2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  young_choice.bl
+  16  y_ye = y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.entrepreneur.3 ====
+STAGE young_choice / FORWARD BLOCK dcsn_to_cntn / entrepreneur.3
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  young_choice.bl
+  17  θ_ye = θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.worker.1 ====
+STAGE young_choice / FORWARD BLOCK dcsn_to_cntn / worker.1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  young_choice.bl
+  20  a_yc_wk = a
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.worker.2 ====
+STAGE young_choice / FORWARD BLOCK dcsn_to_cntn / worker.2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  young_choice.bl
+  21  y_yc_wk = y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.worker.3 ====
+STAGE young_choice / FORWARD BLOCK dcsn_to_cntn / worker.3
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  young_choice.bl
+  22  θ_yc_wk = θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.choice_value ====
+STAGE young_choice / BACKWARD BLOCK cntn_to_dcsn / choice_value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(a, y, θ) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  27  V = (V_e[>], V_w[>])[d]  :: [id=choice_value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.value ====
+STAGE young_choice / BACKWARD BLOCK dcsn_to_arvl / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉≺(a_yc, y_yc, θ_yc) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  31  V[<] = V  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== policy.choice ====
+STAGE young_choice / POLICY BLOCK policy / choice
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  young_choice.bl
+  35  d = argmax_{d}(V_e[>], V_w[>])  :: [id=choice]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== young_choice:g:arvl_to_dcsn ====
+STAGE young_choice / LAW OF MOTION arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≺  : Xa × Y × Θ → Xa × Y × Θ,  (a_yc, y_yc, θ_yc) ↦ (a_yc, y_yc, θ_yc)
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  8   a = a_yc
+  9   y = y_yc
+  10  θ = θ_yc
+
+Definitions referenced
+  Xa    young_choice:set:Xa
+  Y     young_choice:set:Y
+  Θ     young_choice:set:Θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== young_choice:g:dcsn_to_cntn ====
+STAGE young_choice / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : Xa × Y × Θ × {entrepreneur, worker} → (Xa × Y × Θ, Xa × Y × Θ)[d],
+        (a, y, θ, d) ↦ ((a, y, θ), (a, y, θ))[d]
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  15  a_ye = a
+  16  y_ye = y
+  17  θ_ye = θ
+  20  a_yc_wk = a
+  21  y_yc_wk = y
+  22  θ_yc_wk = θ
+
+Definitions referenced
+  Xa    young_choice:set:Xa
+  Y     young_choice:set:Y
+  Θ     young_choice:set:Θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== young_choice:G:cntn_to_dcsn ====
+STAGE young_choice / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : ℝ × ℝ × Xa × Y × Θ × {entrepreneur, worker} → ℝ,
+        (V_e≻, V_w≻, a, y, θ, d) ↦ (V_e≻, V_w≻)[d]
+
+Conditions
+  𝑉(a, y, θ) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  27  V = (V_e[>], V_w[>])[d]  :: [id=choice_value]
+
+Definitions referenced
+  Xa    young_choice:set:Xa
+  Y     young_choice:set:Y
+  Θ     young_choice:set:Θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== young_choice:G:dcsn_to_arvl ====
+STAGE young_choice / VALUE AGGREGATOR dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≺  : ℝ × Xa × Y × Θ → ℝ,  (V, a_yc, y_yc, θ_yc) ↦ V
+
+Conditions
+  𝑉≺(a_yc, y_yc, θ_yc) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  31  V[<] = V  :: [id=value]
+
+Definitions referenced
+  Xa    young_choice:set:Xa
+  Y     young_choice:set:Y
+  Θ     young_choice:set:Θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== young_choice:G:policy ====
+STAGE young_choice / VALUE AGGREGATOR policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : ℝ × ℝ × Xa × Y × Θ × {entrepreneur, worker} → ℝ,
+        (V_e≻, V_w≻, a, y, θ, d) ↦ (V_e≻, V_w≻)[d]
+──────────────────────────────────────────────────────────────────────────────
+Source  young_choice.bl
+  35  d = argmax_{d}(V_e[>], V_w[>])  :: [id=choice]
+
+Definitions referenced
+  Xa    young_choice:set:Xa
+  Y     young_choice:set:Y
+  Θ     young_choice:set:Θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

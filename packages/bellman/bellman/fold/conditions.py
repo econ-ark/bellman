@@ -13,30 +13,45 @@ from __future__ import annotations
 import dataclasses
 from collections.abc import Mapping
 
-from bellman.distributions.conditionals import check_conditioning_covariance, select_conditional
+from bellman.distributions.conditionals import (
+    check_conditioning_covariance,
+    conditioning_shocks,
+    select_conditional,
+)
 from bellman.distributions.edges import JointDistribution
-from bellman.distributions.families import check_family_conditions
+from bellman.distributions.families import check_family_conditions, specialize_distribution
 from bellman.fold.block_lines import blocks_in_file_order
 from bellman.fold.declared_sets import (
     argmax_of,
     binder_sets,
     binder_value_set,
+    callable_at,
     inverted_function,
     right_side_set,
     set_lies_within,
     subject_dimension,
 )
+from bellman.fold.derived_parameters import derived_values
 from bellman.fold.stage_fold import block_rows_of, stage_blocks_of
 from bellman.fold.stage_names import StageNames, lines_of
-from bellman.fold.wire_terms import arithmetic_nodes, symbol_occurrences, term_nodes
+from bellman.fold.wire_terms import (
+    arithmetic_nodes,
+    guarded_term_nodes,
+    symbol_occurrences,
+    term_nodes,
+)
 from bellman.native.identity import Identity, piece_identity
-from bellman.native.predicates import Compare
-from bellman.native.records import UNDECLARED_SET
+from bellman.native.predicates import Compare, Member, Not, Or
+from bellman.native.provenance import source_file
+from bellman.native.records import UNDECLARED_SET, Refusal
+from bellman.native.versions import kept_answer
 from bellman.refusals import ConstructionError
 from bellman.syntax import terms as T
 from bellman.syntax.source import to_source
 from bellman.typing import sets
+from bellman.typing import typed_expressions as S
 from bellman.typing.line_unknowns import CALL_OPERATORS
+from bellman.typing.primitive_definitions import primitive_definition
 
 
 def domain_conditions(stage) -> tuple:
@@ -183,27 +198,28 @@ def _term_conditions(ctx, term, address, block, local, found):
     arithmetic. `local` holds the sets of the bound names in scope."""
     place = address if isinstance(address, Identity) else piece_identity(address)
     local = binder_sets(term, local)
-    for node in term_nodes(term):
+    for node, guard in guarded_term_nodes(term):
         if isinstance(node, T.Call):
-            _call_conditions(ctx, node, place, block, local, found)
+            _call_conditions(ctx, node, place, block, local, found, guard)
         elif isinstance(node, T.Operator) and node.head != "E":
             _binder_conditions(ctx, node, place, block, found)
-        elif isinstance(node, T.Select) and isinstance(node.sel, T.Key):
+        elif isinstance(node, T.Select) and isinstance(node.sel, (T.Key, T.Term)):
             _selection_conditions(ctx, node, place, block, local, found)
     _arithmetic_conditions(ctx, term, place, block, local, found)
 
 
-def _selection_conditions(ctx, node, place, block, local, found):
+def _selection_conditions(ctx, node, place, block, local, found, *, formal=None, guard=None):
     """`set-inclusion` for a selection from a collection on an index set by
     a key whose declared set the terms alone do not place within that index
-    set: the inclusion is retained as a term and decided at calibration from
-    the members of the two sets (AMD-SG-017 §4; the finite-index brief §3)."""
+    set. An unapplied law formal has a membership condition at the point
+    until its argument supplies a set."""
     family = right_side_set(node.family, ctx, block, local)
     indexed = sets.index_sets(family, ctx.set_terms) if family is not None else None
     if indexed is None:
         return
     first, _ = indexed
-    key_set = right_side_set(T.Sym(T.Constant(node.sel.at)), ctx, block, local)
+    key = node.sel.at if isinstance(node.sel, T.Term) else T.Sym(T.Constant(node.sel.at))
+    key_set = right_side_set(key, ctx, block, local)
     if (
         isinstance(key_set, T.Sym)
         and isinstance(key_set.symbol, T.Constant)
@@ -211,7 +227,19 @@ def _selection_conditions(ctx, node, place, block, local, found):
     ):
         # a binder's set is read as the name it writes, `argmax_{jp : L_J}`
         key_set = T.Named(key_set.symbol.name)
-    if key_set is None or sets.index_within(key_set, first, ctx.set_terms) is not None:
+    if key_set is None:
+        if formal is not None:
+            index_set = sets.defined(first, ctx.set_terms)
+            predicate = Member(T.Sym(T.Constant(formal)), index_set)
+            _record(
+                found,
+                "set-inclusion",
+                (place, formal, predicate if guard is None else Or(Not(guard), predicate)),
+                f"The argument {formal.field} must belong to the index set "
+                f"{to_source(index_set)} of {to_source(node.family)} when it is selected.",
+            )
+        return
+    if sets.index_within(key_set, first, ctx.set_terms) is not None:
         return
     index_set = sets.defined(first, ctx.set_terms)
     key_set = sets.defined(key_set, ctx.set_terms)
@@ -219,16 +247,18 @@ def _selection_conditions(ctx, node, place, block, local, found):
         found,
         "set-inclusion",
         (place, key_set, index_set, Compare(key_set, "⊆", index_set)),
-        f"The set {to_source(key_set)} of {node.sel.at} must lie within the index set "
+        f"The set {to_source(key_set)} of {to_source(key)} must lie within the index set "
         f"{to_source(index_set)} of {to_source(node.family)} at {place}.",
     )
 
 
-def _call_conditions(ctx, node, place, block, local, found):
+def _call_conditions(ctx, node, place, block, local, found, guard):
     """The conditions of one call: `inverse-function-domain` for an inverse,
     `external-callable-result-domain` for a callable no definition of the
     stage declares, and `function-argument-domain-inclusion` for each argument
     not known to lie in the set of the coordinate it is passed to."""
+    if node.fun in ctx.law_formals:
+        return
     functions = ctx.functions
     if node.fun == "Inv":
         # the obligation names the function inverted, so that the
@@ -243,36 +273,46 @@ def _call_conditions(ctx, node, place, block, local, found):
         )
         return
     definition = functions.get(node.fun)
-    if definition is None:
-        if node.fun not in CALL_OPERATORS:
-            _record(
-                found,
-                "external-callable-result-domain",
-                (Identity("external", field=node.fun, mark="result"), place),
-                f"The result of {node.fun} at {place} must lie in the set required there.",
-            )
-        return
-    for index, ((name, declared), argument) in enumerate(zip(definition.coordinates, node.args)):
+    if definition is not None:
+        identity, coordinates = definition.identity, definition.coordinates
+    elif node.fun in ("exp", "log"):
+        primitive = primitive_definition(node.fun)
+        identity = primitive.identity
+        ((formal, domain),) = primitive.equations[0].bindings
+        # The primitive term uses a numerical endpoint for infinity.
+        if node.fun == "log":
+            domain = T.Named("ℝ₊₊")
+        coordinates = ((formal.identity.field, domain),)
+    else:
+        declared = callable_at(node.fun, ctx, block, local)
+        if declared is None:
+            if node.fun not in CALL_OPERATORS:
+                _record(
+                    found,
+                    "external-callable-result-domain",
+                    (Identity("external", field=node.fun, mark="result"), place),
+                    f"The result of {node.fun} at {place} must lie in the set required there.",
+                )
+            return
+        identity = ctx.resolve(node.fun, block)
+        coordinates = (("argument", declared.domain),)
+    for index, ((name, declared), argument) in enumerate(zip(coordinates, node.args)):
         if declared is None:
             continue
         actual = right_side_set(argument, ctx, block, local)
         if actual is None or not set_lies_within(actual, declared, ctx):
+            coordinate = Identity(
+                "function-parameter", owner=identity, occurrence=index, field=name
+            )
             _record(
                 found,
                 "function-argument-domain-inclusion",
                 (
-                    place,
-                    definition.identity,
-                    Identity(
-                        "function-parameter",
-                        owner=definition.identity,
-                        occurrence=index,
-                        field=name,
-                    ),
-                    UNDECLARED_SET if actual is None else actual,
-                    declared,
-                ),
-                f"The argument for {name} of {definition.identity} at {place}, from "
+                    place, identity, coordinate,
+                    UNDECLARED_SET if actual is None else actual, declared,
+                    node,
+                ) + ((guard,) if guard is not None else ()),
+                f"The argument for {name} of {identity} at {place}, from "
                 f"{to_source(actual) if actual is not None else 'an undeclared set'}, "
                 f"must belong to {to_source(declared)}.",
             )
@@ -337,7 +377,8 @@ def _definition_conditions(ctx, definition, found):
     elif definition.kind == "function_alias":
         _term_conditions(ctx, definition.equations[0], definition.identity, None, {}, found)
     elif definition.kind == "distribution":
-        subjects = definition.equations[0].subjects
+        law = definition.equations[0]
+        subjects = law.subjects
         _record(
             found,
             "law-support",
@@ -348,6 +389,28 @@ def _definition_conditions(ctx, definition, found):
             f"The distribution of {', '.join(subjects)} gives probability only to values "
             f"in the declared shock set{'s' if len(subjects) > 1 else ''}.",
         )
+        _law_index_conditions(ctx, definition, law, found)
+
+
+def _law_index_conditions(ctx, definition, law, found):
+    """Membership requirements for local law indices whose sets are unknown."""
+    formals = dict(distribution_formal_fields(ctx.stage_object, definition))
+    local = {name: ctx.declared_set(identity) for name, identity in formals.items()}
+    if None not in local.values():
+        return
+    bound = {name: T.Sym(T.Constant(identity)) for name, identity in formals.items()}
+    for node, guard in guarded_term_nodes(law.law):
+        if (
+            isinstance(node, T.Select)
+            and isinstance(node.sel, T.Key)
+            and node.sel.at in local
+            and local[node.sel.at] is None
+        ):
+            _selection_conditions(
+                ctx, node, definition.identity, None, local, found,
+                formal=formals[node.sel.at],
+                guard=S.substitute(guard, bound) if guard is not None else None,
+            )
 
 
 def _argmax_range(equation, defined, address, ctx, found):
@@ -448,6 +511,113 @@ def conditional_distribution_of(stage, row, plan=None):
     return select_conditional(edge, row.integrated, row.given, row.identity, refuse)
 
 
+def numerical_law(stage, *, builder, integrated=None, given=(), inputs=None, plan=None):
+    """The derived joint law of an edge or conditional law of an expectation.
+
+    The caller has checked any supplied continuation values. The returned
+    record owns its specialized terms and does not change the stage.
+    """
+    from bellman.stage.input_requirements import continuation_inputs, supplied_constants
+
+    plan = stage_blocks_of(stage) if plan is None else plan
+    edge = plan.edges.get(builder) if integrated is None else _edge_drawing(plan, integrated)
+    if edge is None:
+        if integrated is None:
+            return None
+        owners = plan.distributions_of(integrated)
+        edge = JointDistribution(
+            block=None,
+            base=(),
+            shocks=tuple(shock for owner in owners for shock in owner.subjects),
+            declarations=owners,
+        )
+
+    def refuse(rule, address, message, write=None):
+        raise ConstructionError(
+            message, stage=stage.name, address=address, rule=rule, write=write
+        )
+
+    calibration = stage.bindings.calibration
+    values = {} if calibration is None else {**calibration, **derived_values(stage, calibration)}
+    constants = supplied_constants(stage, inputs)
+    declarations = []
+    for owner in edge.declarations:
+        missing = tuple(field for field in owner.actuals if field not in constants)
+        requirement = None
+        if owner.formals and not owner.actuals:
+            requirement = (
+                f"the arguments {', '.join(owner.formals)}. "
+                "Supply them as constant fields on its forward edge."
+            )
+        elif missing:
+            names = {sort.identity: name for name, sort in continuation_inputs(stage).items()}
+            fields = ", ".join(names.get(field, field.field) for field in missing)
+            requirement = f"continuation fields {fields}."
+        if requirement is not None:
+            return Refusal(
+                f"The distribution of {', '.join(owner.subjects)} at {builder} "
+                f"requires {requirement}",
+                {
+                    "stage": stage.name,
+                    "address": builder,
+                    "rule": "law-requirement",
+                    "file": source_file(stage),
+                },
+            )
+        bound = {
+            formal: constants[field]
+            for formal, field in zip(owner.formals, owner.actuals)
+        }
+        domains = {
+            formal: plan.ctx.declared_set(field)
+            for formal, field in zip(owner.formals, owner.actuals)
+        }
+        indexed, dimension = subject_dimension(plan.ctx, owner, values)
+        declarations.append(
+            specialize_distribution(
+                owner,
+                {**values, **bound},
+                indexed=indexed,
+                dimension=dimension,
+                domains={**plan.ctx.parameter_sets, **domains},
+                set_terms=plan.ctx.set_terms,
+                functions=plan.ctx.functions,
+            )
+        )
+    edge = dataclasses.replace(edge, declarations=tuple(declarations))
+    if integrated is None:
+        return edge
+    if given is None:
+        given = conditioning_shocks(edge, integrated, (), ())
+    occurrence = piece_identity(builder)
+    selection = select_conditional(edge, integrated, given, occurrence, refuse)
+    check_conditioning_covariance(selection, {}, occurrence, refuse)
+    return selection
+
+
+def distribution_formal_fields(stage, definition):
+    """A law's local arguments and the fields supplied on its edge."""
+    declaration = definition.equations[0]
+    if not isinstance(declaration, T.ParameterizedLaw):
+        return ()
+
+    def read():
+        owner = next(
+            owner for owner in stage_blocks_of(stage).owners if owner.identity == definition.identity
+        )
+        fields = owner.actuals or tuple(
+            Identity("function-parameter", owner=definition.identity, occurrence=i, field=name)
+            for i, name in enumerate(declaration.arguments)
+        )
+        return tuple(zip(declaration.arguments, fields, strict=True))
+
+    return kept_answer(
+        stage,
+        ("distribution formal fields", definition.identity),
+        read,
+    )
+
+
 def edge_drawing(stage, shocks):
     """The forward block whose edge draws every shock of `shocks`, or None
     where no one edge draws them all: the edge an expectation's kernel line
@@ -498,7 +668,7 @@ def _parameters_used(terms, ctx, functions):
             if isinstance(node, T.Call) and node.fun in functions and node.fun not in seen:
                 seen.add(node.fun)
                 pending.extend(functions[node.fun].equations)
-            elif isinstance(node, T.Select) and isinstance(node.sel, T.Key):
+            elif isinstance(node, T.Select) and isinstance(node.sel, (T.Key, T.Term)):
                 # a selection from a collection reads the parameters its
                 # index sets name, the bounds of a range and the members of
                 # a listed set, which decide the entry the key selects
@@ -517,11 +687,15 @@ def index_set_terms(ctx, select):
     if not (isinstance(family, T.Sym) and isinstance(family.symbol, T.Constant)):
         return ()
     name = family.symbol.name
-    identity = (
-        Identity("parameter", stage=ctx.stage_name, field=name)
-        if name in ctx.parameter_names
-        else ctx.resolve(name, None)
-    )
+    if isinstance(name, Identity):
+        # a table that a constant field holds is read through its wire
+        identity = Identity("field", stage=name.stage, perch=name.perch, field=name.field)
+    else:
+        identity = (
+            Identity("parameter", stage=ctx.stage_name, field=name)
+            if name in ctx.parameter_names
+            else ctx.resolve(name, None)
+        )
     indexed = sets.index_factors(ctx.declared_set(identity), ctx.set_terms)
     if indexed is None:
         return ()

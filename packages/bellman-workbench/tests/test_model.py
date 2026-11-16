@@ -6,7 +6,7 @@ construction refuses (model interface specification 0.3, §2.2 rules 1 to
 The test named `test_item_5_*` closes acceptance item 5 of stage A: the
 collection the editor shows equals the lesson's. The layers the editor
 opens are the package's `layers_to_open`, whose values
-`packages/bellman/tests/cat/test_model_explorer.py` asserts. The test
+`packages/bellman/tests/test_model_explorer_stage.py` asserts. The test
 named `test_item_2_*` closes acceptance item 2 of stage P: the module
 defines no function the package answers, and it imports from the
 package's three namespaces and `bellman.refusals` alone. The tests named
@@ -1605,9 +1605,13 @@ def test_t_every_set_written_back_to_itself_leaves_the_fields_of_the_corpus():
     line it names, starting with the field as the row writes it, and the
     edits of every set to its own printed set, made at once, give a text
     whose fields table prints as before (unit T, rules 1 to 3, on the
-    corpus)."""
+    corpus). A field that no block header declares has no place for a set:
+    the table refuses the edit and writes nothing. Such a field is the
+    output of a name that a header lists on both sides with no line, which
+    the block keeps, and whose set is the one its input declares, as `age`
+    at the decision perch of `draw.bl`."""
     files = stage_files()
-    elaborated = 0
+    elaborated = refused = 0
     for path in files:
         relpath = str(path.relative_to(ROOT))
         text = path.read_text(encoding="utf-8")
@@ -1625,12 +1629,24 @@ def test_t_every_set_written_back_to_itself_leaves_the_fields_of_the_corpus():
                 first = row.listings[0].at
                 written = lines[first.line - 1][first.column - 1 :]
                 assert first.line == row.line and written.startswith(row.field), relpath
-                if row.set:
-                    change = {"kind": "set", "identity": row.identity, "value": row.set}
+                if not row.set:
+                    continue
+                change = {"kind": "set", "identity": row.identity, "value": row.set}
+                declared = any(
+                    (listing.domain, listing.role, listing.perch) != (None, None, None)
+                    for listing in row.listings
+                )
+                if declared:
                     edits.extend(model.classification_edits(groups, change))
+                    continue
+                with pytest.raises(ValueError) as refusal:
+                    model.classification_edits(groups, change)
+                assert str(refusal.value) == f"no block header declares {row.field}", relpath
+                refused += 1
         again = elaborate_text(applied(text, edits), relpath)
         assert str(again.fields()) == str(stage.fields()), relpath
     assert elaborated > 30
+    assert refused > 0
 
 
 def test_r_the_tables_read_from_a_text_are_those_its_construction_gives():
@@ -1656,6 +1672,61 @@ def test_r_the_tables_read_from_a_text_are_those_its_construction_gives():
         )
         compared += 1
     assert compared > 30
+
+
+# a stage whose forward block `arvl_to_dcsn` lists the constant `age` among
+# its inputs, which its backward block `cntn_to_dcsn` takes in at the
+# continuation perch
+DRAW_PATH = "applications/life-cycle/declaration/stages/draw/draw.bl"
+
+
+def test_r_a_refused_text_places_a_constant_of_a_forward_block_as_the_package_does():
+    """The tables read from a text whose construction is refused. With a
+    line of a block that reads a name nothing declares, the package still
+    reads the headers (`header_fields`), and the listing of `age` on the
+    arrival side of `arvl_to_dcsn` stands in the row of the continuation
+    perch, as in the stage: the tables are those of the accepted text. With
+    a header the package cannot place, an output side whose perch word is
+    removed, the listings are placed from their own words: the two fields
+    of that side have no row, so that no perch is guessed, and every other
+    header keeps its rows."""
+    text = (ROOT / DRAW_PATH).read_text(encoding="utf-8")
+    stage = elaborate_text(text, DRAW_PATH)
+    accepted = model.classification(stage, source_spans(text, DRAW_PATH))
+
+    def rows_of(tables):
+        return {
+            group.perch: {row.stem: [at.at.line for at in row.listings] for row in group.rows}
+            for group in tables
+        }
+
+    line = text.replace("a_d = a_2", "a_d = a_2 + nothing_declares_this")
+    with pytest.raises(ValueError):
+        elaborate_text(line, DRAW_PATH)
+    read = model.classification(stage, source_spans(line, DRAW_PATH), line)
+    assert rows_of(read) == rows_of(accepted)
+
+    def header_line(block):
+        """The line of the text on which the header of `block` opens."""
+        return next(
+            number
+            for number, held in enumerate(text.splitlines(), 1)
+            if held.startswith(f"[id={block},")
+        )
+
+    # the forward block `arvl_to_dcsn` lists the constant on its arrival side,
+    # and the constant stands at the continuation perch
+    assert rows_of(read)["cntn"]["age"] == [
+        header_line("arvl_to_dcsn"), header_line("cntn_to_dcsn")
+    ]
+    assert rows_of(read)["arvl"]["age"] == [header_line("dcsn_to_arvl")]
+
+    header = text.replace("(z_3 : Z, a_3 : Xa) : !cntn", "(z_3 : Z, a_3 : Xa)")
+    with pytest.raises(ValueError):
+        elaborate_text(header, DRAW_PATH)
+    own = rows_of(model.classification(stage, source_spans(header, DRAW_PATH), header))
+    assert not {"z_3", "a_3"} & set(own["cntn"])
+    assert {"z_d", "a_d", "V"} <= set(own["dcsn"]) and "V" in own["cntn"]
 
 
 # --- unit L: a decision field listed in both blocks that carry the decision

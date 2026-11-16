@@ -1,7 +1,0 @@
-# Earnings in age bracket 6, ages 55 to 60: periods 1-6 of the trellis,
-# counted from the terminal period (the legacy registry's periods 31-36,
-# counted from age 25). Benhabib, Bisin and Luo (2019), Table 1, column
-# "Age 55-60", in thousands of dollars a year, one entry per earnings decile,
-# q1 to q10 in order.
-calibration:
-  wage_fn: [8.222, 19.08, 26.78, 34.39, 42.96, 51.91, 61.65, 74.35, 93.42, 180.4]

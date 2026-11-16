@@ -1,0 +1,29 @@
+@methods: buffer_stock
+# The endogenous grid method on the policy builder of the buffer-stock stage
+# with the pension account, read after pension.bl at every occurrence of the
+# trellis but the last. The method's grid is an entry of its own beside the
+# method word: one factor for each coordinate of the continuation perch, the
+# exogenous savings grid and the carried-balance grid, since the candidate
+# line is read at each pair (a, q). The consumption function c(m, p_d) is
+# read between the candidate pairs by linear interpolation at the policy
+# builder's Evaluation, which writes no grid entry, its knots being the pairs
+# that the method stores. The three lines are the inverted Euler equation,
+# the inverted law of motion and the identification of the chosen consumption
+# with the candidate. Since the method of the block is a solution method that
+# brings lines, the package reads them at the operative level in place of the
+# declared maximization, which stage.declared keeps. The set Xp of the
+# balance is defined by pension.bl, which precedes this file.
+
+n_a : ℕ              :: ["number of points of the savings grid"]
+a_min : Xa           :: ["lower bound of the savings grid"]
+a_max : Xa           :: ["upper bound of the savings grid"]
+n_q : ℕ              :: ["number of points of the carried-balance grid"]
+q_min : Xp           :: ["lower bound of the carried-balance grid"]
+q_max : Xp           :: ["upper bound of the carried-balance grid"]
+
+[id=policy, policy.method : !egm | policy.grid : !Cartesian(a=(a_min, a_max, n_a), q=(q_min, q_max, n_q))
+    | evaluate.method : !Linear] {
+    c[>] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[>])                        :: [id=InvEuler]
+    m[>] = a + c[>]                                  :: [id=g_cntn_to_dcsn]
+    c[~] = c[>]                                      :: [id=cons_choice]
+}

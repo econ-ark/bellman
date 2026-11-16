@@ -37,7 +37,12 @@ import dataclasses
 import math
 from typing import NamedTuple
 
-from bellman.distributions.edges import DistributionDeclaration, dependency_order, shock_builders
+from bellman.distributions.edges import (
+    DistributionDeclaration,
+    dependency_order,
+    law_arguments,
+    shock_builders,
+)
 from bellman.distributions.families import label_weights
 from bellman.native.identity import (
     COLLISION_RULE,
@@ -99,10 +104,13 @@ from bellman.typing.line_unknowns import (
     listed_identity,
     named_sets,
     names_fields,
+    maximand,
+    rename_choice,
     names_read_in_set,
     occurrence_paths,
     outputs_and_unknowns,
     perch_of_spelling,
+    policy_objective_fields,
     position_text,
     role_word,
     selection_positions,
@@ -161,6 +169,7 @@ class _HeaderEntry:
     address: str
     text: str  # the coordinate as written, `V[>]`, for messages
     wire_type: Identity | None = None
+    constant: bool = False
 
 
 @dataclasses.dataclass(frozen=True)
@@ -187,6 +196,7 @@ class _TopLevelDeclaration(NamedTuple):
     role: str | None
     address: str
     domain_term: object
+    constant: bool = False
 
 
 class _Classified(NamedTuple):
@@ -198,6 +208,7 @@ class _Classified(NamedTuple):
     domain: str | None
     domain_term: object
     perch: str | None
+    constant: bool
 
 
 class _SetSite(NamedTuple):
@@ -762,6 +773,8 @@ class Declarations:
         self.scalars = {}  # name -> _TopLevelDeclaration
         self.scalar_keys = {}  # name -> (item order, place in its declaration's subject)
         self.laws = {}  # subjects tuple -> _DistributionStatement
+        self.parameterized_laws = {}
+        self.law_actuals = {}
         self.law_of = {}  # shock name -> the address of its distribution declaration
         self.shocks = {}  # shock name -> (item order, place) of its first mention
         self.listings = []  # _HeaderEntry, in textual order
@@ -1079,7 +1092,7 @@ class Declarations:
                         f"says which information set the field belongs to"
                     ),
                 )
-            role, domain, _, perch = self.classify(classifiers, c, address)
+            role, domain, _, perch, constant = self.classify(classifiers, c, address)
             if perch is not None:
                 raise self.error(
                     "field-perch",
@@ -1101,7 +1114,8 @@ class Declarations:
                     ),
                 )
             self.scalars[c.stem] = _TopLevelDeclaration(
-                domain=domain, role=role, address=address, domain_term=classifier_set(classifiers)
+                domain=domain, role=role, address=address, domain_term=classifier_set(classifiers),
+                constant=constant,
             )
             self.scalar_keys[c.stem] = (self.order[address], place)
             if role == SHOCK:
@@ -1241,6 +1255,7 @@ class Declarations:
         a header lists, or of a top-level name that carries a role word or
         a perch word, is refused (`refuse_union_or_difference`)."""
         role = domain = domain_term = perch = None
+        constant = False
         place = f"block {block_id!r}" if block_id else "the top level"
         for cl in classifiers:
             if isinstance(cl, terms.Domain):
@@ -1282,6 +1297,8 @@ class Declarations:
                         ),
                     )
                 role = word
+            elif isinstance(cl, terms.Constancy):
+                constant = True
             elif isinstance(cl, terms.Infoset):
                 word = self.perch_token(
                     cl.side, address, f"{coordinate_text(coordinate)} in {place}"
@@ -1327,7 +1344,7 @@ class Declarations:
                     None if block_id else f"the word `!{word}` belongs to a field",
                 )
             )
-        return _Classified(role=role, domain=domain, domain_term=domain_term, perch=perch)
+        return _Classified(role, domain, domain_term, perch, constant)
 
     def perch_token(self, side, address, what: str) -> str:
         """The token of a perch word or of a mark (`arvl`, `dcsn`, `cntn`).
@@ -1378,7 +1395,7 @@ class Declarations:
             self.read_definition(core.name, core.params, core.body, "body", address)
         elif isinstance(core, terms.CorrDef):
             self.read_definition(core.name, core.params, core.body, "body", address)
-        elif isinstance(core, terms.Law):
+        elif isinstance(core, (terms.Law, terms.ParameterizedLaw)):
             self.read_distribution(core, address)
         else:
             raise self.error(
@@ -1490,6 +1507,15 @@ class Declarations:
                     f"distribution, `y ~ LogNormal(μ_y, σ_y)`"
                 ),
             )
+        if isinstance(law, terms.ParameterizedLaw):
+            formals = tuple(law.arguments)
+            if not formals or len(set(formals)) != len(formals):
+                raise self.error(
+                    "distribution-domain",
+                    address,
+                    f"The law of {', '.join(subjects)} must give distinct formal arguments.",
+                )
+            self.parameterized_laws.update((name, formals) for name in subjects)
         key = tuple(subjects)
         if key in self.laws:
             raise self.error(
@@ -1716,7 +1742,7 @@ class Declarations:
                         f"side lists its fields, `(V[>] : ℝ @ !vlu, c)`"
                     ),
                 )
-            role, domain, domain_term, own_perch = self.classify(
+            role, domain, domain_term, own_perch, constant = self.classify(
                 c.classifiers, c, address, block_id
             )
             mark = self.perch_of_mark(c.at, address, coordinate_text(c))
@@ -1733,6 +1759,7 @@ class Declarations:
                     side_perch=side_perch,
                     address=address,
                     text=coordinate_text(c),
+                    constant=constant,
                 )
             )
             if role == SHOCK:
@@ -2576,6 +2603,16 @@ class Declarations:
         # the roles stand on the record from here: the check of a state listed
         # on a backward header reads them before any perch is placed
         self.field_roles = roles
+        self.incoming_constants = {
+            (listing.stem, listing.mark)
+            for listing in self.listings
+            if listing.side == INPUT
+            and self.block_is_backward(listing.block_id)
+            and (listing.mark or listing.own_perch or listing.side_perch) == CONTINUATION
+            and (listing.constant or (
+                listing.stem in self.scalars and self.scalars[listing.stem].constant
+            ))
+        }
         fields = {}
         sides = {block_id: ([], []) for block_id, _ in self.blocks}
         for listing in self.listings:
@@ -2657,7 +2694,126 @@ class Declarations:
             )
             for block_id, _ in self.blocks
         }
+        self.constants = {
+            listing.wire_type
+            for listing in self.listings
+            if listing.constant
+            or (listing.stem in self.scalars and self.scalars[listing.stem].constant)
+        }
+        for wire in self.constants:
+            if roles[wire.field] not in VALUE_ROLES:
+                raise self.error(
+                    "constant-dependence", self.first_listing_address(wire),
+                    f"{wire.field} carries !cnst, which types a constant value field",
+                )
+        self.check_function_sets(roles)
+        self.check_forward_value_inputs(roles)
         return fields, signatures
+
+    def check_forward_value_inputs(self, roles) -> None:
+        """A forward block lists no value-type field that a backward block
+        of the same stage writes: the builder that writes the field pulls
+        its inputs back along the forward block's law, and would read the
+        field it writes. Of the fields sent backward, a forward line reads
+        a constant that the stage takes in (`incoming_constants`)."""
+        written = {
+            listing.wire_type
+            for listing in self.listings
+            if listing.side == OUTPUT and self.block_is_backward(listing.block_id)
+        }
+        for listing in self.listings:
+            if (
+                listing.side == INPUT
+                and roles.get(listing.stem) in VALUE_ROLES
+                and not self.block_is_backward(listing.block_id)
+                and listing.wire_type in written
+            ):
+                raise self.error(
+                    "header-coordinate",
+                    listing.address,
+                    (
+                        f"the forward block {listing.block_id!r} lists {listing.text}, a "
+                        "field that a backward block of the stage writes; a forward line "
+                        "reads a constant that the stage takes in, as a backward block "
+                        "lists it at the continuation perch with `!cnst`, and no field "
+                        "that the stage itself sends backward"
+                    ),
+                )
+
+    def check_function_sets(self, roles) -> None:
+        """A set of functions on a set that is no finite index set, `Xa → ℝ`,
+        is the declared set of a value-type field alone, the constant whose
+        value is a function. Declared for a parameter, a setting, a state, a
+        control or a shock, it is refused under `readable-form`: such a
+        quantity is a collection on a finite index set."""
+        declared = (
+            *((stem, held.domain_term, held.address) for stem, held in self.scalars.items()),
+            *((listing.stem, listing.domain_term, listing.address) for listing in self.listings),
+        )
+        for stem, term, address in declared:
+            if term is None or roles.get(stem) in VALUE_ROLES:
+                continue
+            function = sets.callable_set(term, self.space_terms)
+            if function is not None:
+                raise self.error(
+                    "readable-form",
+                    address,
+                    (
+                        f"the set {to_source(function)} declares functions on "
+                        f"{to_source(function.domain)}, which is no finite index set; a "
+                        "collection is declared on a set of labels, an integer range, a listed "
+                        "set of numbers or a product of these, `δ : L_J → ℝ` with "
+                        "`L_J := {1, …, J}`; a function on another set is the value of a "
+                        "value-type field alone, `f : Xa → ℝ @ !vlu @ !cnst`"
+                    ),
+                )
+
+    def kept_fields(self, block_id):
+        """The input and output identities for names listed unchanged."""
+        inputs = {(l.stem, l.mark): l for l in self.side_entries(block_id, INPUT)}
+        written = set()
+        for _, address, item in self.bodies[block_id]:
+            marks, _ = annotation_entries(item.annot, address, self)
+            core = item.core.core if isinstance(item.core, terms.Slack) else item.core
+            if DOC not in marks and isinstance(core, terms.Equation) and names_fields(core.lhs):
+                written.update(outputs_and_unknowns(core.lhs, address, self, core.rhs))
+        return {
+            inputs[spelling].wire_type: listing.wire_type
+            for listing in self.side_entries(block_id, OUTPUT)
+            if listing.mark is None and listing.domain_term is None
+            and (spelling := (listing.stem, listing.mark)) in inputs and spelling not in written
+        }
+
+    def classify_kept_fields(self, fields):
+        """Collect the identical declarations of states and values a block keeps."""
+        pairs = tuple(
+            (block, address, source, target)
+            for block, address in self.blocks
+            for source, target in self.kept_fields(block).items()
+        )
+        for block, address, source, target in pairs:
+            role = self.field_roles[source.field]
+            if role not in (STATE, *VALUE_ROLES):
+                raise self.error(
+                    "output-defined", address,
+                    f"block {block!r} lists {source.field} on both sides without a line; "
+                    "only states and value fields can be kept",
+                )
+        changed = True
+        while changed:
+            changed = False
+            for _, _, source, target in pairs:
+                source_sites = list(zip(fields[source].sites, fields[source].domain_terms, strict=True))
+                target_sites = list(zip(fields[target].sites, fields[target].domain_terms, strict=True))
+                combined = list(dict.fromkeys(source_sites + target_sites))
+                if combined != source_sites or combined != target_sites:
+                    for wire in (source, target):
+                        fields[wire].sites[:] = [site for site, _ in combined]
+                        fields[wire].domain_terms[:] = [term for _, term in combined]
+                    changed = True
+                if (source in self.constants) != (target in self.constants):
+                    self.constants.update((source, target))
+                    changed = True
 
     def check_one_builder_per_output(self) -> None:
         """One block writes a field between two perches: a second block whose
@@ -2861,6 +3017,11 @@ class Declarations:
         field_names = set(self.field_names())
         for stem, declaration in self.scalars.items():
             role, address = declaration.role, declaration.address
+            if declaration.constant and stem not in field_names:
+                raise self.error(
+                    "parameter-or-field", address,
+                    f"{stem} carries !cnst; list the constant value field in a block header",
+                )
             if role is not None:
                 if stem not in field_names and role != SHOCK:
                     raise self.error(
@@ -2928,6 +3089,13 @@ class Declarations:
         if roles.get(listing.stem) == SHOCK:
             return self.shock_perch(listing)
         explicit = self.explicit_perch(listing)
+        if (
+            listing.side == INPUT
+            and not self.block_is_backward(listing.block_id)
+            and (listing.stem, listing.mark) in self.incoming_constants
+            and explicit in (None, CONTINUATION)
+        ):
+            return CONTINUATION
         if roles.get(listing.stem) == CONTROL:
             return self.control_perch(listing, explicit, roles)
         if explicit is not None:
@@ -3116,7 +3284,8 @@ class Declarations:
             arguments = tuple(
                 name
                 for name in names(term)
-                if self.declared_as(name) in ("shock", "field") or name in self.law_of
+                if name not in self.parameterized_laws.get(subjects[0], ())
+                and (self.declared_as(name) in ("shock", "field") or name in self.law_of)
             )
             owners.append(
                 DistributionDeclaration(
@@ -3155,6 +3324,50 @@ class Declarations:
                     )
                 )
         self.shock_edges = shock_builders(tuple(owners), tuple(forward), refuse)
+
+        lines = (
+            (block, address, item.core)
+            for block, _ in self.blocks
+            for _, address, item in self.bodies[block]
+        )
+        self.law_actuals = law_arguments(
+            self.parameterized_laws, self.shock_edges, lines, self._law_constant, refuse
+        )
+        for name in self.parameterized_laws:
+            if name in self.shock_edges and name not in self.law_actuals:
+                block = self.shock_edges[name]
+                raise self.error(
+                    "distribution-edge",
+                    self.law_of[name],
+                    f"The law of {name} requires arguments. Write {name}(…) in {block}, "
+                    "with its incoming constant fields in argument order.",
+                )
+
+    def _law_constant(self, term, block, address):
+        if not isinstance(term, terms.Sym):
+            return None
+        identity = listed_identity(
+            field_spelling(term, address, self), self.side_entries(block, INPUT), self
+        )
+        if identity in self.constants and identity.perch == CONTINUATION:
+            return identity
+        return None
+
+    def law_argument_sets(self, shock):
+        """The sets of a law's formal arguments, from its supplied fields."""
+        formals = self.parameterized_laws.get(shock, ())
+        actuals = self.law_actuals.get(shock, ())
+        domains = {}
+        for formal, actual in zip(formals, actuals):
+            domains[formal] = next(
+                (
+                    listing.domain_term
+                    for listing in self.listings
+                    if listing.wire_type == actual and listing.domain_term is not None
+                ),
+                self.declared_set_of(actual.field),
+            )
+        return tuple((formal, domains.get(formal)) for formal in formals)
 
     def declared_as(self, name: str) -> str | None:
         """What a name is declared as — a function, a space, a shock, a field,
@@ -3217,16 +3430,24 @@ class Declarations:
             visit(name)
         self.definition_order = tuple(order)
         self.check_derived_parameters()
-        for body, address in self.law_terms:
+        for subjects, declaration in self.laws.items():
+            address = declaration.address
+            body = next(body for body, site in self.law_terms if site == address)
+            arguments = self.law_argument_sets(subjects[0])
+            formals = tuple(name for name, _ in arguments)
+            law_fields = dict.fromkeys(formals)
+            law_fields.update(zip(formals, self.law_actuals.get(subjects[0], ())))
             self.check_definition_body(
                 _Definition(
                     name="law",
-                    params=(),
+                    params=tuple((name, "") for name, _ in arguments),
                     body=body,
                     printed=to_source(body),
                     slot="law",
                     address=address,
-                )
+                    domains=arguments,
+                ),
+                law_fields=law_fields,
             )
         for definition in self.functions.values():
             free_names_with_shocks(
@@ -3318,7 +3539,7 @@ class Declarations:
                 )
         return None
 
-    def check_definition_body(self, definition) -> list:
+    def check_definition_body(self, definition, *, law_fields=None) -> list:
         """The defined functions a definition's body mentions, each once, in
         reading order: a call to one, or its name as a value (`Inv(𝑑𝑢)`,
         `D_{c}(𝑢)`). Every other name the body mentions must be in scope
@@ -3433,6 +3654,7 @@ class Declarations:
             language_calls=(
                 DERIVED_PARAMETER_CALLS if self.defines_a_derived_parameter(definition) else ()
             ),
+            law_fields=law_fields,
         )
         visit(definition.body)
         return out
@@ -3755,6 +3977,8 @@ class Declarations:
                         f"value at its own branch's position alone"
                     ),
                 )
+            if not places and wire in self.constants:
+                continue
             if not places:
                 raise self.error(
                     "branch-value-position",
@@ -3913,10 +4137,18 @@ class Declarations:
                     isinstance(core.rhs, terms.Operator)
                     and core.rhs.head == "argmax"
                     and len(core.rhs.subs) == 1
-                    and subscript_binder(core.rhs.subs[0]) == key
+                    and isinstance(core.lhs, terms.Sym)
+                    and isinstance(core.lhs.symbol, terms.Constant)
+                    and core.lhs.symbol.name == key
                 ):
-                    policy = _AuthoredLine(address=a, rhs=core.rhs)
-        chosen = selection_tuples(policy.rhs, key) if policy else []
+                    binder = subscript_binder(core.rhs.subs[0])
+                    policy = _AuthoredLine(
+                        address=a, rhs=rename_choice(maximand(core.rhs), {binder: key})
+                    )
+        if policy is None:
+            # An explicit or implicit policy can supply the label.
+            return
+        chosen = selection_tuples(policy.rhs, key)
 
         def agreement(line):
             # whether the line's tuple is the policy's maximand, then how
@@ -3980,6 +4212,286 @@ class Declarations:
 
     # -- 9. the statements of every block --
 
+    def field_dependences(self, fields) -> None:
+        """Derive a value field's state coordinates from its line and declared set."""
+        self.states = {
+            perch: tuple(wire for wire in fields if wire.perch == perch
+                         and self.field_roles[wire.field] == STATE)
+            for perch in PERCHES
+        }
+        self.field_lines, self.kept_sources = {}, {}
+        for block, _ in self.blocks:
+            outputs = self.side_entries(block, OUTPUT)
+            self.kept_sources.update({target: source for source, target in self.kept_fields(block).items()})
+            aliases = {}
+            for _, address, item in self.bodies[block]:
+                marks, _ = annotation_entries(item.annot, address, self)
+                core = item.core.core if isinstance(item.core, terms.Slack) else item.core
+                if DOC in marks or not isinstance(core, terms.Equation) or not names_fields(core.lhs):
+                    continue
+                for name in outputs_and_unknowns(core.lhs, address, self, core.rhs):
+                    output = listed_identity(name, outputs, self)
+                    if output is not None:
+                        self.field_lines[output] = (block, address, core.rhs, dict(aliases))
+                    elif self.field_roles.get(name.stem) != CONTROL:
+                        aliases[name] = core.rhs
+
+        self.field_domains = {}
+        for listing in self.listings:
+            if listing.domain_term is not None:
+                self.field_domains.setdefault(listing.wire_type, []).append(
+                    (listing.domain_term, listing.block_id, listing.address)
+                )
+        for wire in fields:
+            top = self.scalars.get(wire.field)
+            if top is not None and top.domain_term is not None:
+                self.field_domains.setdefault(wire, []).append((top.domain_term, None, top.address))
+
+        self.dependence = {}
+        for wire in fields:
+            role = self.field_roles[wire.field]
+            if role == STATE:
+                for term, _, address in self.declared_domains(wire):
+                    read, _ = self.field_read_in_set(term)
+                    if read is not None:
+                        raise self.error(
+                            "readable-form", address,
+                            f"the declared set of state {wire.field} reads {read} "
+                            "and a declared state set reads no field",
+                        )
+            if role not in VALUE_ROLES:
+                continue
+            reads = self.value_dependencies(wire)
+            if wire in self.constants and reads:
+                address = self.field_lines[wire][1] if wire in self.field_lines else self.first_listing_address(wire)
+                descriptions = ", ".join(
+                    f"{self.field_roles.get(item.field, SHOCK)} {item.field}"
+                    for item in sorted(reads)
+                )
+                raise self.error(
+                    "constant-dependence", address,
+                    f"the constant field {wire.field} depends on {descriptions}; "
+                    "its value and declared set must be independent of state, shock and choice",
+                )
+            if any(self.field_roles.get(item.field) == CONTROL for item in reads):
+                reads |= self.state_dependencies_at(self.states[DECISION], wire.perch)
+            self.dependence[wire] = tuple(state for state in self.states[wire.perch] if state in reads)
+
+        for target, source in self.kept_sources.items():
+            if self.field_roles[target.field] not in VALUE_ROLES:
+                continue
+            required = self.dependence[source]
+            kept_states = {
+                state for state in self.states[source.perch]
+                if state in self.kept_sources and self.kept_sources[state].perch == target.perch
+            }
+            if source not in self.constants and not kept_states:
+                raise self.error(
+                    "output-defined", self.first_listing_address(target),
+                    f"only a constant value field can be kept where the forward block "
+                    f"keeps no state; declare {target.field} with !cnst or write its equation",
+                )
+            for state in required:
+                previous = self.kept_sources.get(state)
+                if previous is None or previous.perch != target.perch:
+                    raise self.error(
+                        "output-defined", self.first_listing_address(target),
+                        f"{target.field} depends on {state.field}; keeping {target.field} "
+                        "requires the forward block to keep that state",
+                    )
+
+    def declared_domains(self, wire):
+        """The declared sets of a wire, with every named set's definition."""
+        for domain, block, address in self.field_domains.get(wire, ()):
+            yield domain, block, address
+            for _, term in self.defined_sets_read(domain):
+                yield term, block, address
+
+    def value_dependencies(self, wire, active=frozenset()):
+        """The free field identities in one representing function before policy evaluation."""
+        if wire in active:
+            return set()
+        active = active | {wire}
+        reads = {
+            dependency
+            for domain, block, address in self.declared_domains(wire)
+            for dependency in self.expression_dependencies(
+                domain, block, wire.perch, address, active=active
+            )
+        }
+        if wire in self.kept_sources:
+            source = self.kept_sources[wire]
+            return reads | self.state_dependencies_at(
+                self.value_dependencies(source, active), wire.perch, active=active
+            )
+        if wire in self.field_lines:
+            block, address, term, aliases = self.field_lines[wire]
+            return reads | self.expression_dependencies(
+                term, block, wire.perch, address, aliases, active
+            )
+        if wire in self.constants:
+            return reads
+        if any(listing.wire_type == wire and listing.side == OUTPUT for listing in self.listings):
+            # an output that no line defines and no header keeps is refused
+            # under `output-defined`; it is given no dependence here
+            return reads
+        branch = self.branch_of_value(wire.field) if wire.perch == CONTINUATION else None
+        states = self.states.get(wire.perch, ())
+        if branch is not None:
+            states = tuple(state for state in states if state.field in branch[1])
+        if wire in self.kept_sources.values():
+            target = next(t for t, source in self.kept_sources.items() if source == wire)
+            states = tuple(
+                state for state in states
+                if state in self.kept_sources and self.kept_sources[state].perch == target.perch
+            )
+        return reads | set(states)
+
+    def state_dependencies_at(self, coordinates, perch, integrated=frozenset(), *, active=frozenset()):
+        """Substitute the forward lines of the given coordinates down to a perch."""
+        found = set()
+        for wire in coordinates:
+            role = self.field_roles.get(wire.field, SHOCK)
+            if wire in active or (role == SHOCK and wire.field in integrated):
+                continue
+            if role != STATE or not _precedes(perch, wire.perch):
+                found.add(wire)
+            elif wire in self.kept_sources:
+                found.update(self.state_dependencies_at(
+                    (self.kept_sources[wire],), perch, integrated, active=active | {wire}
+                ))
+            elif wire in self.field_lines:
+                block, address, term, aliases = self.field_lines[wire]
+                found.update(self.expression_dependencies(
+                    term, block, perch, address, aliases, active | {wire}, integrated
+                ))
+        return found
+
+    def expression_dependencies(
+        self, term, block, perch, address, aliases=None, active=frozenset(), integrated=frozenset()
+    ):
+        """The free field identities of a term after forward substitution and shock binding."""
+        found = set()
+        for spelling, bound in free_names_with_shocks(term, address, self, aliases=aliases):
+            held = self.dependency_identity(spelling, block, perch)
+            if held is None:
+                continue
+            role = self.field_roles.get(held.field, SHOCK)
+            if role in VALUE_ROLES:
+                reads = self.value_dependencies(held, active)
+                # Earlier evaluations may affect the policy defining feasibility.
+                # At an earlier perch the evaluated function depends on its state.
+                if _precedes(perch, held.perch) and any(
+                    self.field_roles.get(item.field) == CONTROL for item in reads
+                ):
+                    reads |= set(self.states[DECISION])
+                    reads = {item for item in reads if self.field_roles.get(item.field) != CONTROL}
+            else:
+                reads = (held,)
+            found.update(self.state_dependencies_at(
+                reads, perch, integrated | bound, active=active
+            ))
+        return found
+
+    def dependency_identity(self, spelling, block, perch):
+        """Resolve a field read using its header or the coordinate's own perch."""
+        name, mark = spelling
+        role = self.field_roles.get(name)
+        if role == SHOCK or name in self.law_of:
+            return Identity("field", stage=self.stage, perch=SHCK, field=name)
+        if role == CONTROL and mark is None:
+            return Identity("field", stage=self.stage, perch=DECISION, field=name)
+        if role is None:
+            return None
+        if block is not None:
+            for side in (INPUT, OUTPUT):
+                listed = listed_identity(spelling, self.side_entries(block, side), self)
+                if listed is not None:
+                    return listed
+        perches = [
+            listing.wire_type.perch for listing in self.listings
+            if listing.stem == name and listing.wire_type is not None
+            and (mark is not None or listing.mark is None)
+        ]
+        if not perches:
+            return None
+        actual = mark or (perch if perch in perches else perches[0])
+        return Identity("field", stage=self.stage, perch=actual, field=name)
+
+    def check_policy_objective(self):
+        """Check the maximized field and the information used by feasibility."""
+        decision_lines = {
+            wire: (address, term, aliases)
+            for wire, (_, address, term, aliases) in self.field_lines.items()
+            if wire.perch == DECISION and self.field_roles.get(wire.field) in VALUE_ROLES
+        }
+        for block, _ in self.blocks:
+            outputs = self.side_entries(block, OUTPUT)
+            if not any(self.field_roles[listing.stem] == CONTROL for listing in outputs):
+                continue
+            for _, address, item in self.bodies[block]:
+                marks, _ = annotation_entries(item.annot, address, self)
+                if DOC in marks or not isinstance(item.core, terms.Equation):
+                    continue
+                core = item.core
+                choice = core.rhs
+                if not isinstance(choice, terms.Operator) or choice.head not in ("argmax", "solve"):
+                    continue
+                controls = tuple(name.stem for name in outputs_and_unknowns(
+                    core.lhs, address, self, choice
+                ))
+                binders = tuple(subscript_binder(sub) for sub in choice.subs)
+                if len(binders) != len(controls) or (
+                    binders != controls and set(binders) == set(controls)
+                ):
+                    # The policy fold reports invalid choice rank and order.
+                    continue
+                for index, sub in enumerate(choice.subs):
+                    if not isinstance(sub, terms.In):
+                        continue
+                    bound = frozenset(binders[:index])
+                    for spelling, integrated in free_names_with_shocks(sub.set, address, self, bound):
+                        held = self.dependency_identity(spelling, block, DECISION)
+                        if held is None:
+                            continue
+                        if self.field_roles.get(held.field) in VALUE_ROLES:
+                            inputs = self.value_dependencies(held)
+                        else:
+                            inputs = (held,)
+                        reads = self.state_dependencies_at(inputs, DECISION, integrated)
+                        if any(self.field_roles.get(w.field) == CONTROL for w in reads):
+                            raise self.error(
+                                "policy-feasibility", address,
+                                f"the feasible set reads {spelling_text(spelling)}, which "
+                                "depends on the choice",
+                            )
+                        for shock in sorted(w.field for w in reads if w.perch == SHCK):
+                            self.check_shock_observed(shock, DECISION, address)
+                if (
+                    choice.head != "argmax"
+                    or not self.in_stage_file(address)
+                    or any(not self.in_stage_file(site) for site, _, _ in decision_lines.values())
+                ):
+                    continue
+                control = next((listing.wire_type for listing in outputs if listing.stem in controls), None)
+                policy_aliases = self.field_lines[control][3] if control in self.field_lines else {}
+                matches = policy_objective_fields(
+                    choice, controls, policy_aliases,
+                    ((wire.field, term, aliases) for wire, (_, term, aliases) in decision_lines.items()),
+                )
+                if len(matches) == 1:
+                    continue
+                fields = ", ".join(matches) if matches else ", ".join(wire.field for wire in decision_lines)
+                problem = (
+                    f"the decision fields {fields} share its right side"
+                    if matches
+                    else f"none of the decision fields ({fields or 'none'}) has its right side"
+                )
+                raise self.error(
+                    "policy-objective", address,
+                    f"the argmax objective must equal the right side of one decision field; {problem}",
+                )
+
     def check_statements(self) -> None:
         """Every line of every block, in textual order: the lines of one
         block carry distinct ids, every selection takes a coordinate of a
@@ -4003,12 +4515,35 @@ class Declarations:
         `argmax_{cp : Γ_c(m)}(…)`. `signature-complete` requires none of the
         listings answered here. It does not require the listing of a field
         that a feasible set alone reads either: `check_definition_name`
-        requires that some header of the stage list such a field. A block
-        whose lines read no listed value input keeps its
+        requires that some header of the stage list such a field. A constant
+        read by a forward transition or shock law is also a stage input. A
+        block whose lines read no listed value input keeps its
         listings, since the kernel of a statement with no value dependency
         takes one as its formal input (rule `value-input-role`), and is not
         in the answer. Called after `check_statements`, so every line has
         been read under the scope rules."""
+        forward_constants = set()
+        for block_id, _ in self.blocks:
+            if self.block_is_backward(block_id):
+                continue
+            inputs = [
+                listing for listing in self.side_entries(block_id, INPUT)
+                if listing.wire_type in self.constants
+                and listing.wire_type.perch == CONTINUATION
+            ]
+            if not inputs:
+                continue
+            for _, address, item in self.bodies[block_id]:
+                marks, _ = annotation_entries(item.annot, address, self)
+                if DOC in marks:
+                    continue
+                core = item.core.core if isinstance(item.core, terms.Slack) else item.core
+                forward_constants.update(
+                    identity
+                    for spelling in free_names(core.rhs, address, self)
+                    if (identity := listed_identity(spelling, inputs, self)) is not None
+                )
+
         found = {}
         for block_id, _ in self.blocks:
             if not self.block_is_backward(block_id):
@@ -4017,7 +4552,8 @@ class Declarations:
             values = [l for l in listings if self.field_roles.get(l.stem) in VALUE_ROLES]
             if not values:
                 continue
-            read = set()
+            read = set(self.kept_fields(block_id)) | forward_constants
+            read.update(field for fields in self.law_actuals.values() for field in fields)
             for _, address, item in self.bodies[block_id]:
                 core = item.core
                 equation = core.core if isinstance(core, terms.Slack) else core
@@ -4030,9 +4566,39 @@ class Declarations:
                         if identity is not None:
                             read.add(identity)
                     read.update(self.feasible_set_reads(term, address))
+            read.update(self.grid_input_reads(block_id, listings))
             unread = tuple(l for l in values if l.wire_type not in read)
             if unread and len(unread) < len(values):
                 found[block_id] = unread
+        return found
+
+    def grid_input_reads(self, block_id, listings):
+        """Listed fields read by expression-valued grids of this block."""
+        found = set()
+        for address, item in self.items:
+            if isinstance(item, terms.Declare) and is_typing_entry(item.declaration):
+                entries = (item.declaration,)
+                scope = None
+            elif isinstance(item, terms.Block) and address == block_id:
+                entries = tuple(entry.typing for entry in item.tag.entries
+                                if isinstance(entry, terms.Typer)
+                                and is_typing_entry(entry.typing))
+                scope = block_id
+            else:
+                continue
+            for entry in entries:
+                if not isinstance(entry, terms.Declaration):
+                    continue
+                path = entry.subject.segments
+                if path[-1].name != "grid" or (scope is None and path[0].name != block_id):
+                    continue
+                for node in nodes(entry.classifiers):
+                    if not isinstance(node, terms.ExpressionArgument):
+                        continue
+                    for spelling in free_names(node.value, block_id, self):
+                        identity = listed_identity(spelling, listings, self)
+                        if identity is not None:
+                            found.add(identity)
         return found
 
     def feasible_set_reads(self, term, address) -> set:
@@ -4050,7 +4616,7 @@ class Declarations:
         field."""
         found = set()
         for node in nodes(term):
-            if not (isinstance(node, terms.Operator) and node.head == "argmax"):
+            if not (isinstance(node, terms.Operator) and node.head in ("argmax", "solve")):
                 continue
             bound = set()
             for sub in node.subs:
@@ -4083,12 +4649,31 @@ class Declarations:
         candidates = []  # (candidate spelling, address, place in the block) of each candidate line
         reads_of = []  # (place in the block, the spellings the line reads) of each line
         envelope_reads = self.envelope_reads(block_id)
+        # the declared set of each name that the block lists without a mark, read
+        # from the listings of that field's own identity: where a stage lists
+        # `age[>]` on one set and `age` on another, a bare `age` on a line of
+        # this block has the set of the field that this block lists bare
+        block_domains = {}
+        for listing in out_listings + self.side_entries(block_id, INPUT):
+            if listing.mark is not None or listing.wire_type is None:
+                continue
+            if listing.stem in block_domains:
+                continue
+            declared = [
+                other.domain_term
+                for other in self.listings
+                if other.wire_type == listing.wire_type and other.domain_term is not None
+            ]
+            if declared:
+                block_domains[listing.stem] = sets.meet(declared)
         for ordinal, address, item in self.bodies[block_id]:
             core = item.core
             equation = core.core if isinstance(core, terms.Slack) else core
             marks, _ = annotation_entries(item.annot, address, self)
             self.check_line_id(block_id, item, ordinal, address, ids)
-            check_selections_and_calls(equation.rhs, address, self, local_values=aliases)
+            check_selections_and_calls(
+                equation.rhs, address, self, block_domains, local_values=aliases
+            )
             if isinstance(equation, terms.Equation) and derivative_left_side(equation.lhs):
                 # a derivative line, `D_{k_d}V = E_{θ}(D_{m}V[>]*R)`, is a statement
                 # about the value its term names, read at that value's perch; it
@@ -4162,9 +4747,12 @@ class Declarations:
                 and DOC not in marks
             ):
                 self.check_defines_no_name_by_itself(block_id, equation, address)
+            if not left_fields and self.block_is_backward(block_id):
+                for read in read_terms:
+                    self.check_known_at_perch(block_id, None, None, read, aliases, address)
             for lhs in left_fields:
                 lhs_type = listed_identity(lhs, out_listings, self)
-                for read in reads:
+                for read in read_terms:
                     self.check_known_at_perch(
                         block_id, lhs, lhs_type, read, aliases, address
                     )
@@ -4200,13 +4788,18 @@ class Declarations:
         carries no action: the header of such a block refuses a marked
         control under `field-perch`."""
         lhs = equation.lhs
-        if not (
-            isinstance(lhs, terms.Sym)
-            and isinstance(lhs.symbol, terms.Constant)
-            and equation.rhs == lhs
-        ):
+        rhs = equation.rhs
+        while isinstance(rhs, terms.Operator) and rhs.head == "E" and len(rhs.args) == 1:
+            rhs = rhs.args[0]
+        if not (isinstance(lhs, terms.Sym) and isinstance(lhs.symbol, terms.Constant) and rhs == lhs):
             return
         name = lhs.symbol.name
+        if rhs != equation.rhs:
+            raise self.error(
+                "definition-order", address,
+                f"the expectation in the line of block {block_id!r} reads the bare name "
+                f"{name} that it defines; write the two fields with their perch marks",
+            )
         if self.field_roles.get(name) == CONTROL:
             raise self.error(
                 "definition-order",
@@ -4809,7 +5402,12 @@ class Declarations:
         every expression of the line in `check_block`).
         """
         dependencies = free_names_with_shocks(rhs, address, self, aliases=aliases)
-        left = perch_of_spelling(lhs, block_id, self)
+        if lhs_type is not None:
+            left = lhs_type.perch
+        elif lhs is None:
+            left = self.backward_perches(block_id)[1]
+        else:
+            left = perch_of_spelling(lhs, block_id, self)
         if left is None or left == SHCK:
             return
         direct = self.transition_perches(block_id, lhs, lhs_type)
@@ -5120,11 +5718,21 @@ class Declarations:
         chain = forward_blocks_between(left, perch, self)
         if chain is None:
             return
+        held = Identity("field", stage=self.stage, perch=perch, field=spelling.stem)
+        role = self.field_roles[spelling.stem]
+        if role in VALUE_ROLES:
+            reads = self.value_dependencies(held)
+            if any(self.field_roles.get(item.field) == CONTROL for item in reads):
+                reads |= set(self.states[DECISION])
+            required = self.state_dependencies_at(reads, left, integrated)
+            depends = {item.field for item in required if item.perch == SHCK}
+        else:
+            depends = {shock for block in chain for shock in self.input_shocks(block)}
         shocks = [
             (shock, block)
             for block in chain
             for shock in self.input_shocks(block)
-            if shock not in integrated
+            if shock in depends and shock not in integrated
         ]
         if shocks:
             drawn = ", ".join(sorted({shock for shock, _ in shocks}))
@@ -5424,6 +6032,8 @@ def _header_entry(listing, perch_word=None) -> str:
     parts = [listing.domain] if listing.domain is not None else []
     if listing.role is not None:
         parts.append("!" + ROLE_WORD[listing.role])
+    if listing.constant:
+        parts.append("!cnst")
     if (listing.own_perch or perch_word) is not None:
         parts.append(f"!{listing.own_perch or perch_word}")
     return listing.text + (" : " + " @ ".join(parts) if parts else "")

@@ -26,6 +26,8 @@ The specification factory merges parameter, numerical-setting and method sources
 
 Each recipe stage names its stage file and supplies `all` **source lists** for calibration, settings and methods. Resolution applies those sources in order, then any matching inclusive [[period]]-range overrides. Binding ranges do not themselves restrict stage activity; an optional stage `periods` interval does that separately. Ranges within one stage and binding kind must not overlap.
 
+In a [modular model](../bellman-calculus/APPX-H-MODULARITY.md), repeated declarations share their operators and calibration sources. Their supplied fields may differ, and methods and settings remain separate numerical choices. A stage occurrence's position is an address in the trellis, not an input to its equations. Recipe ranges remain available for all three bindings. Choosing different calibration sources by position can define a model outside this modularity condition; methods and settings do not affect the condition.
+
 ## Source composition
 
 Mappings merge recursively, and later scalars and ordinary lists replace earlier values. A methods list is not merged: the `.bl` additions it names are unioned with the stage file in the order written, so that the whole list is the stage occurrence's selection. This preserves omitted bindings without asserting a general categorical or algebraic theorem about arbitrary merge inputs.
@@ -42,7 +44,9 @@ A flat mapping supplies entries directly. A mapping whose top-level keys are all
 
 An unfilled slot contributes an empty mapping. A keyword naming no slot is refused with `FactoryError` under the rule `recipe-slot-unknown`. Extra keys inside a declared slot do not become model declarations. Slots are not the only source of user data: files and direct stage bindings are separate supported routes. A recipe slot is also distinct from an [[asdl|ASDL field]], an economic [[field]] or an operation's argument.
 
-## The syntactic trellis the recipe defines
+<a id="the-syntactic-trellis-the-recipe-defines"></a>
+
+## The syntactic trellis
 
 `syntactic["periods"][h]["stages"][key]["calibration"]`, and the settings and methods beside it, are the merged mappings of that stage at period `h`, `h` counting periods before the terminal one; the record holds bindings as data, not a stage, and no policy or solved stage. `elaborate_trellis` constructs the [[stage|stage occurrences]], one for each stage file at each position, from the records, and `calibrate_trellis`, `methodize_trellis` and `configure_trellis` bind them, completing the lifecycle of a [[specified_stage|specified stage]].
 

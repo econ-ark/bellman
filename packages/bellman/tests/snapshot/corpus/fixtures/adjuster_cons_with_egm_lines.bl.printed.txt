@@ -1,0 +1,1159 @@
+BELLMAN-SYM / STAGE adjuster_cons                         [VERSION = SYMBOLIC]
+a stage occurrence of
+packages/bellman/tests/fixtures/adjuster_cons_with_egm_lines.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        w_adj≺ state, z_adj≺ state, V≺ value
+  ∼ decision       m state, z_d state, c control, h_choice control, V value
+  ≻ continuation   a_nxt_adj≻ state, h_nxt_adj≻ state, z_nxt_adj≻ state, V≻
+                   value
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           w_adj≺ at arrival, z_adj≺ at arrival, m at decision, z_d at
+                   decision, a_nxt_adj≻ at continuation, h_nxt_adj≻ at
+                   continuation, z_nxt_adj≻ at continuation
+  controls         c at decision, h_choice at decision
+  values           V at every perch
+  shocks           none
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → arvl_to_dcsn   (w_adj≺, z_adj≺) : !arvl -> (m, z_d) : !dcsn
+  → dcsn_to_cntn   (m, z_d) : !dcsn, at c, at h_choice ->
+                   (a_nxt_adj≻, h_nxt_adj≻, z_nxt_adj≻) : !cntn
+  ← cntn_to_dcsn   (V≻) : !cntn, at c, at h_choice -> (V) : !dcsn
+  ← dcsn_to_arvl   (V) : !dcsn -> (V≺) : !arvl
+  ← policy         (V≻) : !cntn -> (c, h_choice) : !dcsn
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  parameters               6   β : (0, 1); α : (0, 1); γ_c : (1, inf);
+                               γ_h : (1, inf); κ : ℝ₊₊; τ : ℝ₊₊
+  functions                4   𝑢 on ℝ₊₊ × ℝ₊₊, 𝑢_c, 𝑢_h, 𝑢_c_inv on ℝ₊₊
+  correspondences          2   Γ_c : ℝ₊₊ ⇉ ℝ₊₊, Γ_h : ℝ₊ ⇉ ℝ₊₊
+  laws of motion           2   m = w_adj; z_d = z_adj;
+                               a_nxt_adj = m - c - (1 + τ)*h_choice; h_nxt_adj
+                               = h_choice; z_nxt_adj = z_d
+  value aggregators        3   V = 𝑢(c, h_choice) + β*V[>], D_{m}(V) = 𝑢_c(c);
+                               V[<] = V; policy, three kernels
+  block lines             12   arvl_to_dcsn.1, arvl_to_dcsn.2,
+                               dcsn_to_cntn.savings, dcsn_to_cntn.housing,
+                               dcsn_to_cntn.income_state, cntn_to_dcsn.value,
+                               cntn_to_dcsn.marginal_wealth,
+                               dcsn_to_arvl.value, policy.optimality,
+                               policy.InvEuler, policy.endoggrid,
+                               policy.choice
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   𝑉≻ ↦ 𝑉≺, (𝑐(m, z_d), ℎ_choice(m, z_d))
+                    forward    μ≺ ↦ μ≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ≺ w_adj≺, z_adj≺  →  ∼ m, z_d  →  ≻ a_nxt_adj≻, h_nxt_adj≻,
+             z_nxt_adj≻
+  backward   ≺ V≺  ←  ∼ V  ←  ≻ V≻
+  policy     ∼ c, h_choice  ←  ≻ V≻
+
+==== stage ====
+STAGE adjuster_cons
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑉≻             : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+         ─────────────────────────────────────────────────
+    out  𝑉≺             : ℝ₊₊ × ℝ₊₊ → ℝ
+         (𝑐, ℎ_choice)  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
+                          𝑐(m, z_d) ∈ Γ_c(m),
+                          ℎ_choice(m, z_d) ∈ Γ_h(m − 𝑐(m, z_d))
+  forward
+    in   μ≺             : finite measure on ℝ₊₊ × ℝ₊₊
+         ─────────────────────────────────────────────────
+    out  μ≻             : finite measure on ℝ₊ × ℝ₊₊ × ℝ₊₊
+
+Where
+  (a_nxt_adj, h_nxt_adj, z_nxt_adj) = 𝑔≻(m, z_d, 𝑐(m, z_d), ℎ_choice(m, z_d))
+  (m, z_d) = 𝑔≺(w_adj, z_adj)
+  (a_nxt_adj, h_nxt_adj, z_nxt_adj) = 𝑔≻(m, z_d, c, h_choice)
+
+Declared
+  (𝑐(m, z_d), ℎ_choice(m, z_d))
+    ∈ argmax_{c ∈ Γ_c(m), h_choice ∈ Γ_h(m − c)}
+        [𝑢(c, h_choice) + β · 𝑉≻(𝑔≻(m, z_d, c, h_choice))]
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉≻                           out: 𝑉
+
+    2  dcsn_to_arvl
+       in: 𝑉                            out: 𝑉≺
+
+    3  policy
+       in: 𝑉≻                           out: (𝑐, ℎ_choice)
+
+  forward
+    1  arvl_to_dcsn
+       in: μ≺                           out: μ
+
+    2  dcsn_to_cntn
+       in: μ                            out: μ≻
+
+Conditions
+  cntn_to_dcsn:Aggregation      𝑉(m, z_d) ∈ ℝ
+  dcsn_to_arvl:Aggregation      𝑉≺(w_adj, z_adj) ∈ ℝ
+  policy.endoggrid:Aggregation  𝑚≻(a_nxt_adj, h_nxt_adj, z_nxt_adj) ∈ ℝ₊₊
+  cntn_to_dcsn.marginal_wealth  marginal-reading: the right side of each
+                                  derivative line equals the derivative, in
+                                  the named coordinate, of the value the
+                                  builder writes, under the envelope
+                                  conditions: concavity of the continuation
+                                  value, interiority of the maximizer or the
+                                  multiplier's term at a binding constraint,
+                                  differentiability of the reward in the
+                                  control, a measurable selection of the
+                                  policy, and differentiability of the value
+                                  at the point read; listed and not checked
+                                  [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  18  m   = w_adj
+  19  z_d = z_adj
+  23  a_nxt_adj = m - c - (1 + τ)*h_choice
+        :: [id=savings]
+  24  h_nxt_adj = h_choice
+        :: [id=housing]
+  25  z_nxt_adj = z_d
+        :: [id=income_state]
+  29  V      = 𝑢(c, h_choice) + β*V[>]
+        :: [id=value]
+  30  D_{m}V = 𝑢_c(c)
+        :: [id=marginal_wealth]
+  34  V[<]    = V
+        :: [id=value]
+  38  (c, h_choice) = argmax_{c : Γ_c(m), h_choice :
+        Γ_h(m - c)}(𝑢(c, h_choice) + β*V[>])
+        :: [id=optimality, !doc]
+  39  c[>]          <= 𝑢_c_inv(β*D_{a_nxt_adj}V[>])
+        :: [id=InvEuler]
+  40  m[>]          = a_nxt_adj + c[>] + (1 + τ)*h_nxt_adj
+        :: [id=endoggrid]
+  41  (c, h_choice) = solve_{c, h_choice}(c - c[>], (1 + τ)*𝑢_c(c) -
+        𝑢_h(h_choice) - β*D_{h_nxt_adj}V[>])
+        :: [id=choice]
+
+Definitions referenced
+  β     adjuster_cons:parameter:β
+  𝑢     adjuster_cons:function:𝑢
+  Γ_c   adjuster_cons:correspondence:Γ_c
+  Γ_h   adjuster_cons:correspondence:Γ_h
+  𝑔≺    adjuster_cons:g:arvl_to_dcsn
+  𝑔≻    adjuster_cons:g:dcsn_to_cntn
+
+File
+  packages/bellman/tests/fixtures/adjuster_cons_with_egm_lines.bl
+
+Perches
+  ≺  arrival, written [<]
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE adjuster_cons / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻}
+       ──────────
+  out  V   : {V}
+
+Conditions
+  𝑉(m, z_d) ∈ ℝ
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  29  V      = 𝑢(c, h_choice) + β*V[>]  :: [id=value]
+  30  D_{m}V = 𝑢_c(c)                   :: [id=marginal_wealth]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward dcsn_to_arvl ====
+STAGE adjuster_cons / BACKWARD BLOCK dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V   : {V}
+       ──────────
+  out  V≺  : {V≺}
+
+Conditions
+  𝑉≺(w_adj, z_adj) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  34  V[<]    = V  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward policy ====
+STAGE adjuster_cons / POLICY BLOCK policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻        : {V≻}
+       ─────────────────────────
+  out  c         : {c, h_choice}
+       h_choice  : {c, h_choice}
+
+Conditions
+  𝑚≻(a_nxt_adj, h_nxt_adj, z_nxt_adj) ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  38  (c, h_choice) = argmax_{c : Γ_c(m), h_choice :
+        Γ_h(m - c)}(𝑢(c, h_choice) + β*V[>])
+        :: [id=optimality, !doc]
+  39  c[>]          <= 𝑢_c_inv(β*D_{a_nxt_adj}V[>])
+        :: [id=InvEuler]
+  40  m[>]          = a_nxt_adj + c[>] + (1 + τ)*h_nxt_adj
+        :: [id=endoggrid]
+  41  (c, h_choice) = solve_{c, h_choice}(c - c[>], (1 + τ)*𝑢_c(c) -
+        𝑢_h(h_choice) - β*D_{h_nxt_adj}V[>])
+        :: [id=choice]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward arvl_to_dcsn ====
+STAGE adjuster_cons / FORWARD BLOCK arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   w_adj≺  : {w_adj≺, z_adj≺}
+       z_adj≺  : {w_adj≺, z_adj≺}
+       ──────────────────────────
+  out  m       : {m, z_d}
+       z_d     : {m, z_d}
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  18  m   = w_adj
+  19  z_d = z_adj
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE adjuster_cons / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   m           : {m, z_d}
+       z_d         : {m, z_d}
+       ──────────────────────────────────────────────────
+  out  a_nxt_adj≻  : {a_nxt_adj≻, h_nxt_adj≻, z_nxt_adj≻}
+       h_nxt_adj≻  : {h_nxt_adj≻, z_nxt_adj≻}
+       z_nxt_adj≻  : {h_nxt_adj≻, z_nxt_adj≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  23  a_nxt_adj = m - c - (1 + τ)*h_choice  :: [id=savings]
+  24  h_nxt_adj = h_choice                  :: [id=housing]
+  25  z_nxt_adj = z_d                       :: [id=income_state]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE adjuster_cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       ────────────────────────────────────────────────────────────────
+  out  𝑉   : ℝ₊₊ × ℝ₊₊ → ℝ
+
+At
+  (𝑐, ℎ_choice)  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
+                   𝑐(m, z_d) ∈ Γ_c(m),
+                   ℎ_choice(m, z_d) ∈ Γ_h(m − 𝑐(m, z_d))
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻(·, ·, 𝑐, ℎ_choice)
+     ──────────────────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻(·, ·, 𝑐, ℎ_choice))(m, z_d)
+             = 𝑉≻(𝑔≻(m, z_d, 𝑐(m, z_d), ℎ_choice(m, z_d)))
+
+  2  Aggregation
+     in: (1)                            out: 𝑉
+     ──────────────────────────────────────────────────────────────────
+     rule: 𝑉 = 𝑢(𝑐, ℎ_choice) + β · 𝑉≻(𝑔≻(m, z_d, 𝑐, ℎ_choice))
+           on (m, z_d) ∈ ℝ₊₊ × ℝ₊₊
+
+  3  Evaluation
+     in: 𝑉                              out: 𝑉
+     ──────────────────────────────────────────────────────────────────
+     rule: 𝑉 : ℝ₊₊ × ℝ₊₊ → ℝ
+           D_{m}𝑉(m, z_d) = 𝑢_c(𝑐(m, z_d))
+
+Conditions
+  Aggregation  𝑉(m, z_d) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  29  V      = 𝑢(c, h_choice) + β*V[>]  :: [id=value]
+  30  D_{m}V = 𝑢_c(c)                   :: [id=marginal_wealth]
+
+Definitions referenced
+  β     adjuster_cons:parameter:β
+  𝑢     adjuster_cons:function:𝑢
+  𝑢_c   adjuster_cons:function:𝑢_c
+  Γ_c   adjuster_cons:correspondence:Γ_c
+  Γ_h   adjuster_cons:correspondence:Γ_h
+  𝑔≻    adjuster_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback ====
+STAGE adjuster_cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       ──────────────────────────
+  out  𝑉≻ ∘ 𝑔≻(·, ·, 𝑐, ℎ_choice)
+           : ℝ₊₊ × ℝ₊₊ → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻(·, ·, 𝑐, ℎ_choice))(m, z_d)
+    = 𝑉≻(𝑔≻(m, z_d, 𝑐(m, z_d), ℎ_choice(m, z_d)))
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  23  a_nxt_adj = m - c - (1 + τ)*h_choice  :: [id=savings]
+  24  h_nxt_adj = h_choice                  :: [id=housing]
+  25  z_nxt_adj = z_d                       :: [id=income_state]
+
+Definitions referenced
+  𝑔≻    adjuster_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE adjuster_cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻(·, ·, 𝑐, ℎ_choice)
+          : ℝ₊₊ × ℝ₊₊ → ℝ
+       ──────────────────────────
+  out  𝑉  : ℝ₊₊ × ℝ₊₊ → ℝ
+
+Rule
+  𝑉 = 𝑢(𝑐, ℎ_choice) + β · 𝑉≻(𝑔≻(m, z_d, 𝑐, ℎ_choice))
+  on (m, z_d) ∈ ℝ₊₊ × ℝ₊₊
+
+Conditions
+  𝑉(m, z_d) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  29  V      = 𝑢(c, h_choice) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  β     adjuster_cons:parameter:β
+  𝑢     adjuster_cons:function:𝑢
+  𝑔≻    adjuster_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE adjuster_cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : ℝ₊₊ × ℝ₊₊ → ℝ
+       ──────────────────
+  out  𝑉  : ℝ₊₊ × ℝ₊₊ → ℝ
+
+Rule
+  𝑉 = 𝑢(𝑐, ℎ_choice) + β · 𝑉≻(𝑔≻(m, z_d, 𝑐, ℎ_choice))
+  on (m, z_d) ∈ ℝ₊₊ × ℝ₊₊
+  𝑉 : ℝ₊₊ × ℝ₊₊ → ℝ
+  D_{m}𝑉(m, z_d) = 𝑢_c(𝑐(m, z_d))
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  30  D_{m}V = 𝑢_c(c)  :: [id=marginal_wealth]
+
+Definitions referenced
+  β     adjuster_cons:parameter:β
+  𝑢     adjuster_cons:function:𝑢
+  𝑢_c   adjuster_cons:function:𝑢_c
+  𝑔≻    adjuster_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl ====
+STAGE adjuster_cons / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉   : ℝ₊₊ × ℝ₊₊ → ℝ
+       ────────────────────────────────────────────
+  out  𝑉≺  : ℝ₊₊ × ℝ₊₊ → ℝ
+
+Operations
+  1  Pullback
+     in: 𝑉                              out: 𝑉 ∘ 𝑔≺
+     ──────────────────────────────────────────────
+     rule: (𝑉 ∘ 𝑔≺)(w_adj, z_adj) = 𝑉(𝑔≺(w_adj, z_adj))
+
+  2  Aggregation
+     in: (1)                            out: 𝑉≺
+     ──────────────────────────────────────────────
+     rule: 𝑉≺ = 𝑉(𝑔≺(w_adj, z_adj))              on (w_adj, z_adj) ∈ ℝ₊₊ × ℝ₊₊
+
+  3  Evaluation
+     in: 𝑉≺                             out: 𝑉≺
+     ──────────────────────────────────────────────
+     rule: 𝑉≺ : ℝ₊₊ × ℝ₊₊ → ℝ
+
+Conditions
+  Aggregation  𝑉≺(w_adj, z_adj) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  34  V[<]    = V  :: [id=value]
+
+Definitions referenced
+  𝑔≺    adjuster_cons:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Pullback ====
+STAGE adjuster_cons / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : ℝ₊₊ × ℝ₊₊ → ℝ
+       ──────────────────
+  out  𝑉 ∘ 𝑔≺
+          : ℝ₊₊ × ℝ₊₊ → ℝ
+
+Rule
+  (𝑉 ∘ 𝑔≺)(w_adj, z_adj) = 𝑉(𝑔≺(w_adj, z_adj))
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  18  m   = w_adj
+  19  z_d = z_adj
+
+Definitions referenced
+  𝑔≺    adjuster_cons:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Aggregation ====
+STAGE adjuster_cons / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+  / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉 ∘ 𝑔≺
+           : ℝ₊₊ × ℝ₊₊ → ℝ
+       ───────────────────
+  out  𝑉≺  : ℝ₊₊ × ℝ₊₊ → ℝ
+
+Rule
+  𝑉≺ = 𝑉(𝑔≺(w_adj, z_adj))                       on (w_adj, z_adj) ∈ ℝ₊₊ × ℝ₊₊
+
+Conditions
+  𝑉≺(w_adj, z_adj) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  34  V[<]    = V  :: [id=value]
+
+Definitions referenced
+  𝑔≺    adjuster_cons:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Evaluation ====
+STAGE adjuster_cons / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≺  : ℝ₊₊ × ℝ₊₊ → ℝ
+       ───────────────────
+  out  𝑉≺  : ℝ₊₊ × ℝ₊₊ → ℝ
+
+Rule
+  𝑉≺ = 𝑉(𝑔≺(w_adj, z_adj))                       on (w_adj, z_adj) ∈ ℝ₊₊ × ℝ₊₊
+  𝑉≺ : ℝ₊₊ × ℝ₊₊ → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  𝑔≺    adjuster_cons:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy ====
+STAGE adjuster_cons / POLICY BUILDER policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻             : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       ──────────────────────────────────────────────────────
+  out  (𝑐, ℎ_choice)  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
+                        𝑐(m, z_d) ∈ Γ_c(m),
+                        ℎ_choice(m, z_d) ∈ Γ_h(m − 𝑐(m, z_d))
+
+Where
+  (a_nxt_adj, h_nxt_adj, z_nxt_adj) = 𝑔≻(m, z_d, c, h_choice)
+
+Declared
+  (𝑐(m, z_d), ℎ_choice(m, z_d))
+    ∈ argmax_{c ∈ Γ_c(m), h_choice ∈ Γ_h(m − c)}
+        [𝑢(c, h_choice) + β · 𝑉≻(𝑔≻(m, z_d, c, h_choice))]
+
+Operations
+  1  InvEuler:Aggregation
+     in: 𝑉≻                             out: 𝑐≻
+     ────────────────────────────────────────────────────────
+     rule: 𝑐≻ ≤ 𝑢_c_inv(β · D_{a_nxt_adj}𝑉≻)
+           on (a_nxt_adj, h_nxt_adj, z_nxt_adj) ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊
+
+  2  endoggrid:Aggregation
+     in: 𝑐≻                             out: 𝑚≻
+     ────────────────────────────────────────────────────────
+     rule: 𝑚≻ = a_nxt_adj + 𝑐≻ + (1 + τ) · h_nxt_adj
+           on (a_nxt_adj, h_nxt_adj, z_nxt_adj) ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊
+
+  3  Pullback
+     in: 𝑐≻, 𝑉≻                         out: 𝑐≻ ∘ 𝑔≻, 𝑉≻ ∘ 𝑔≻
+     ────────────────────────────────────────────────────────
+     rule: (𝑐≻ ∘ 𝑔≻)(m, z_d, c, h_choice) = 𝑐≻(𝑔≻(m, z_d, c, h_choice))
+           (𝑉≻ ∘ 𝑔≻)(m, z_d, c, h_choice) = 𝑉≻(𝑔≻(m, z_d, c, h_choice))
+
+  4  choice:Aggregation
+     in: (3), 𝑚≻                        out: (𝑐, ℎ_choice)
+     ────────────────────────────────────────────────────────
+     rule: r₁ = c − 𝑐≻(a_nxt_adj, h_nxt_adj, z_nxt_adj)
+           r₂
+             = (1 + τ) · 𝑢_c(c)
+               − 𝑢_h(h_choice)
+               − β · D_{h_nxt_adj}𝑉≻(a_nxt_adj, h_nxt_adj, z_nxt_adj)
+           on (m, z_d, c, h_choice) ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊
+           (c, h_choice) = solve_{c, h_choice}(r₁, r₂)
+
+  5  Evaluation
+     in: (𝑐, ℎ_choice)                  out: (𝑐, ℎ_choice)
+     ────────────────────────────────────────────────────────
+     rule: (𝑐, ℎ_choice) : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
+           𝑐(m, z_d) ∈ Γ_c(m),  ℎ_choice(m, z_d) ∈ Γ_h(m − 𝑐(m, z_d))
+
+Conditions
+  endoggrid:Aggregation  𝑚≻(a_nxt_adj, h_nxt_adj, z_nxt_adj) ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  38  (c, h_choice) = argmax_{c : Γ_c(m), h_choice :
+        Γ_h(m - c)}(𝑢(c, h_choice) + β*V[>])
+        :: [id=optimality, !doc]
+  39  c[>]          <= 𝑢_c_inv(β*D_{a_nxt_adj}V[>])
+        :: [id=InvEuler]
+  40  m[>]          = a_nxt_adj + c[>] + (1 + τ)*h_nxt_adj
+        :: [id=endoggrid]
+  41  (c, h_choice) = solve_{c, h_choice}(c - c[>], (1 + τ)*𝑢_c(c) -
+        𝑢_h(h_choice) - β*D_{h_nxt_adj}V[>])
+        :: [id=choice]
+
+Definitions referenced
+  β        adjuster_cons:parameter:β
+  τ        adjuster_cons:parameter:τ
+  𝑢        adjuster_cons:function:𝑢
+  𝑢_c      adjuster_cons:function:𝑢_c
+  𝑢_h      adjuster_cons:function:𝑢_h
+  𝑢_c_inv  adjuster_cons:function:𝑢_c_inv
+  Γ_c      adjuster_cons:correspondence:Γ_c
+  Γ_h      adjuster_cons:correspondence:Γ_h
+  𝑔≻       adjuster_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / InvEuler:Aggregation ====
+STAGE adjuster_cons / POLICY BUILDER policy / InvEuler:Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       ──────────────────────────
+  out  𝑐≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ₊₊
+
+Rule
+  𝑐≻ ≤ 𝑢_c_inv(β · D_{a_nxt_adj}𝑉≻)
+  on (a_nxt_adj, h_nxt_adj, z_nxt_adj) ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  39  c[>]          <= 𝑢_c_inv(β*D_{a_nxt_adj}V[>])  :: [id=InvEuler]
+
+Definitions referenced
+  β        adjuster_cons:parameter:β
+  𝑢_c_inv  adjuster_cons:function:𝑢_c_inv
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / endoggrid:Aggregation ====
+STAGE adjuster_cons / POLICY BUILDER policy / endoggrid:Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑐≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ₊₊
+       ──────────────────────────
+  out  𝑚≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ₊₊
+
+Rule
+  𝑚≻ = a_nxt_adj + 𝑐≻ + (1 + τ) · h_nxt_adj
+  on (a_nxt_adj, h_nxt_adj, z_nxt_adj) ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊
+
+Conditions
+  𝑚≻(a_nxt_adj, h_nxt_adj, z_nxt_adj) ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  40  m[>]          = a_nxt_adj + c[>] + (1 + τ)*h_nxt_adj  :: [id=endoggrid]
+
+Definitions referenced
+  τ     adjuster_cons:parameter:τ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback ====
+STAGE adjuster_cons / POLICY BUILDER policy / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑐≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ₊₊
+       𝑉≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       ────────────────────────────────────────────────────
+  out  𝑐≻ ∘ 𝑔≻
+           : {m, z_d, c, h_choice ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ |
+               c ∈ Γ_c(m) ∧ h_choice ∈ Γ_h(m − c)} → ℝ₊₊
+       𝑉≻ ∘ 𝑔≻
+           : {m, z_d, c, h_choice ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ |
+               c ∈ Γ_c(m) ∧ h_choice ∈ Γ_h(m − c)} → ℝ
+
+Rule
+  (𝑐≻ ∘ 𝑔≻)(m, z_d, c, h_choice) = 𝑐≻(𝑔≻(m, z_d, c, h_choice))
+  (𝑉≻ ∘ 𝑔≻)(m, z_d, c, h_choice) = 𝑉≻(𝑔≻(m, z_d, c, h_choice))
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  23  a_nxt_adj = m - c - (1 + τ)*h_choice  :: [id=savings]
+  24  h_nxt_adj = h_choice                  :: [id=housing]
+  25  z_nxt_adj = z_d                       :: [id=income_state]
+
+Definitions referenced
+  Γ_c   adjuster_cons:correspondence:Γ_c
+  Γ_h   adjuster_cons:correspondence:Γ_h
+  𝑔≻    adjuster_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / choice:Aggregation ====
+STAGE adjuster_cons / POLICY BUILDER policy / choice:Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑐≻ ∘ 𝑔≻
+                      : {m, z_d, c, h_choice ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ |
+                          c ∈ Γ_c(m) ∧ h_choice ∈ Γ_h(m − c)} → ℝ₊₊
+       𝑉≻ ∘ 𝑔≻
+                      : {m, z_d, c, h_choice ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ |
+                          c ∈ Γ_c(m) ∧ h_choice ∈ Γ_h(m − c)} → ℝ
+       𝑚≻             : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ₊₊
+       ───────────────────────────────────────────────────────────────
+  out  (𝑐, ℎ_choice)  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
+                        𝑐(m, z_d) ∈ Γ_c(m),
+                        ℎ_choice(m, z_d) ∈ Γ_h(m − 𝑐(m, z_d))
+
+Where
+  (a_nxt_adj, h_nxt_adj, z_nxt_adj) = 𝑔≻(m, z_d, c, h_choice)
+
+Rule
+  r₁ = c − 𝑐≻(a_nxt_adj, h_nxt_adj, z_nxt_adj)
+  r₂
+    = (1 + τ) · 𝑢_c(c)
+      − 𝑢_h(h_choice)
+      − β · D_{h_nxt_adj}𝑉≻(a_nxt_adj, h_nxt_adj, z_nxt_adj)
+  on (m, z_d, c, h_choice) ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊
+  (c, h_choice) = solve_{c, h_choice}(r₁, r₂)
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  41  (c, h_choice) = solve_{c, h_choice}(c - c[>], (1 + τ)*𝑢_c(c) -
+        𝑢_h(h_choice) - β*D_{h_nxt_adj}V[>])
+        :: [id=choice]
+
+Definitions referenced
+  β     adjuster_cons:parameter:β
+  τ     adjuster_cons:parameter:τ
+  𝑢_c   adjuster_cons:function:𝑢_c
+  𝑢_h   adjuster_cons:function:𝑢_h
+  Γ_c   adjuster_cons:correspondence:Γ_c
+  Γ_h   adjuster_cons:correspondence:Γ_h
+  𝑔≻    adjuster_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Evaluation ====
+STAGE adjuster_cons / POLICY BUILDER policy / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (𝑐, ℎ_choice)  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
+                        𝑐(m, z_d) ∈ Γ_c(m),
+                        ℎ_choice(m, z_d) ∈ Γ_h(m − 𝑐(m, z_d))
+       ──────────────────────────────────────────────────────
+  out  (𝑐, ℎ_choice)  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
+                        𝑐(m, z_d) ∈ Γ_c(m),
+                        ℎ_choice(m, z_d) ∈ Γ_h(m − 𝑐(m, z_d))
+
+Where
+  (a_nxt_adj, h_nxt_adj, z_nxt_adj) = 𝑔≻(m, z_d, c, h_choice)
+
+Rule
+  r₁ = c − 𝑐≻(a_nxt_adj, h_nxt_adj, z_nxt_adj)
+  r₂
+    = (1 + τ) · 𝑢_c(c)
+      − 𝑢_h(h_choice)
+      − β · D_{h_nxt_adj}𝑉≻(a_nxt_adj, h_nxt_adj, z_nxt_adj)
+  on (m, z_d, c, h_choice) ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊
+  (c, h_choice) = solve_{c, h_choice}(r₁, r₂)
+  (𝑐, ℎ_choice) : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
+  𝑐(m, z_d) ∈ Γ_c(m),  ℎ_choice(m, z_d) ∈ Γ_h(m − 𝑐(m, z_d))
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  β     adjuster_cons:parameter:β
+  τ     adjuster_cons:parameter:τ
+  𝑢_c   adjuster_cons:function:𝑢_c
+  𝑢_h   adjuster_cons:function:𝑢_h
+  Γ_c   adjuster_cons:correspondence:Γ_c
+  Γ_h   adjuster_cons:correspondence:Γ_h
+  𝑔≻    adjuster_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn ====
+STAGE adjuster_cons / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on ℝ₊₊ × ℝ₊₊
+       ───────────────────────────────────────
+  out  μ   : finite measure on ℝ₊₊ × ℝ₊₊
+
+Operations
+  1  Pushforward
+     in: μ≺                             out: μ
+     ─────────────────────────────────────────
+     rule: μ(B) = μ≺({w_adj≺, z_adj≺ ∈ ℝ₊₊ × ℝ₊₊ | 𝑔≺(w_adj≺, z_adj≺) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  18  m   = w_adj
+  19  z_d = z_adj
+
+Definitions referenced
+  𝑔≺    adjuster_cons:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / Pushforward ====
+STAGE adjuster_cons / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on ℝ₊₊ × ℝ₊₊
+       ─────────────────────────────────
+  out  μ   : finite measure on ℝ₊₊ × ℝ₊₊
+
+Rule
+  μ(B) = μ≺({w_adj≺, z_adj≺ ∈ ℝ₊₊ × ℝ₊₊ | 𝑔≺(w_adj≺, z_adj≺) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  18  m   = w_adj
+  19  z_d = z_adj
+
+Definitions referenced
+  𝑔≺    adjuster_cons:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE adjuster_cons / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on ℝ₊₊ × ℝ₊₊
+       ────────────────────────────────────────
+  out  μ≻  : finite measure on ℝ₊ × ℝ₊₊ × ℝ₊₊
+
+At
+  (𝑐, ℎ_choice)  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
+                   𝑐(m, z_d) ∈ Γ_c(m),
+                   ℎ_choice(m, z_d) ∈ Γ_h(m − 𝑐(m, z_d))
+
+Operations
+  1  Pushforward
+     in: μ                              out: μ≻
+     ──────────────────────────────────────────
+     rule: μ≻(B)
+             = μ({m, z_d ∈ ℝ₊₊ × ℝ₊₊ |
+                   𝑔≻(m, z_d, 𝑐(m, z_d), ℎ_choice(m, z_d)) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  23  a_nxt_adj = m - c - (1 + τ)*h_choice  :: [id=savings]
+  24  h_nxt_adj = h_choice                  :: [id=housing]
+  25  z_nxt_adj = z_d                       :: [id=income_state]
+
+Definitions referenced
+  Γ_c   adjuster_cons:correspondence:Γ_c
+  Γ_h   adjuster_cons:correspondence:Γ_h
+  𝑔≻    adjuster_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE adjuster_cons / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on ℝ₊₊ × ℝ₊₊
+       ──────────────────────────────────────
+  out  μ≻  : finite measure on ℝ₊ × ℝ₊₊ × ℝ₊₊
+
+Rule
+  μ≻(B)
+    = μ({m, z_d ∈ ℝ₊₊ × ℝ₊₊ | 𝑔≻(m, z_d, 𝑐(m, z_d), ℎ_choice(m, z_d)) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  23  a_nxt_adj = m - c - (1 + τ)*h_choice  :: [id=savings]
+  24  h_nxt_adj = h_choice                  :: [id=housing]
+  25  z_nxt_adj = z_d                       :: [id=income_state]
+
+Definitions referenced
+  𝑔≻    adjuster_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:parameter:β ====
+STAGE adjuster_cons / PARAMETER β
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  β  ∈ (0, 1)
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  3  β   : (0,1)  :: ["discount factor"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:parameter:α ====
+STAGE adjuster_cons / PARAMETER α
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  α  ∈ (0, 1)
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  4  α   : (0,1)  :: ["weight of consumption in utility"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:parameter:γ_c ====
+STAGE adjuster_cons / PARAMETER γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  γ_c  ∈ (1, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  5  γ_c : (1, inf)  :: ["curvature of utility from consumption"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:parameter:γ_h ====
+STAGE adjuster_cons / PARAMETER γ_h
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  γ_h  ∈ (1, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  6  γ_h : (1, inf)  :: ["curvature of utility from housing services"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:parameter:κ ====
+STAGE adjuster_cons / PARAMETER κ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  κ  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  7  κ   : ℝ₊₊  :: ["housing services per unit of the housing stock"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:parameter:τ ====
+STAGE adjuster_cons / PARAMETER τ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  τ  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  8  τ   : ℝ₊₊  :: ["cost of adjusting housing, per unit of housing bought"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:function:𝑢 ====
+STAGE adjuster_cons / FUNCTION 𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑢  : ℝ₊₊ × ℝ₊₊ → (−∞, 0),
+       (c, h)
+         ↦ α · c^(1 − γ_c)/(1 − γ_c) + (1 − α) · (κ · h)^(1 − γ_h)/(1 − γ_h)
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  10  𝑢(c : ℝ₊₊, h : ℝ₊₊) := α*c^(1-γ_c)/(1-γ_c) + (1-α)*(κ*h)^(1-γ_h)/(1-γ_h)
+        :: [id=util]
+
+Definitions referenced
+  α     adjuster_cons:parameter:α
+  γ_c   adjuster_cons:parameter:γ_c
+  γ_h   adjuster_cons:parameter:γ_h
+  κ     adjuster_cons:parameter:κ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:function:𝑢_c ====
+STAGE adjuster_cons / FUNCTION 𝑢_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑢_c  : ℝ₊₊ → ℝ₊₊,  c ↦ α · c^(−γ_c)
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  11  𝑢_c(c : ℝ₊₊) := α*c^(-γ_c)  :: [id=marg_util_cons]
+
+Definitions referenced
+  α     adjuster_cons:parameter:α
+  γ_c   adjuster_cons:parameter:γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:function:𝑢_h ====
+STAGE adjuster_cons / FUNCTION 𝑢_h
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑢_h  : ℝ₊₊ → ℝ₊₊,  h ↦ (1 − α) · κ^(1 − γ_h) · h^(−γ_h)
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  12  𝑢_h(h : ℝ₊₊) := (1-α)*κ^(1-γ_h)*h^(-γ_h)  :: [id=marg_util_housing]
+
+Definitions referenced
+  α     adjuster_cons:parameter:α
+  γ_h   adjuster_cons:parameter:γ_h
+  κ     adjuster_cons:parameter:κ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:function:𝑢_c_inv ====
+STAGE adjuster_cons / FUNCTION 𝑢_c_inv
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑢_c_inv  : ℝ₊₊ → ℝ₊₊,  x ↦ (α/x)^(1/γ_c)
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  13  𝑢_c_inv(x : ℝ₊₊) := (α/x)^(1/γ_c)  :: [id=inv_marg_util_cons]
+
+Definitions referenced
+  α     adjuster_cons:parameter:α
+  γ_c   adjuster_cons:parameter:γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:correspondence:Γ_c ====
+STAGE adjuster_cons / CORRESPONDENCE Γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Γ_c  : ℝ₊₊ ⇉ ℝ₊₊,  x ↦ (0, x]
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  14  Γ_c(x : ℝ₊₊) := (0, x]  :: [id=feasible_consumption]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:correspondence:Γ_h ====
+STAGE adjuster_cons / CORRESPONDENCE Γ_h
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Γ_h  : ℝ₊ ⇉ ℝ₊₊,  x ↦ (0, x/(1 + τ)]
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  15  Γ_h(x : ℝ₊) := (0, x/(1 + τ)]  :: [id=feasible_housing]
+
+Definitions referenced
+  τ     adjuster_cons:parameter:τ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.1 ====
+STAGE adjuster_cons / FORWARD BLOCK arvl_to_dcsn / 1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  adjuster_cons_with_egm_lines.bl
+  18  m   = w_adj
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.2 ====
+STAGE adjuster_cons / FORWARD BLOCK arvl_to_dcsn / 2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  adjuster_cons_with_egm_lines.bl
+  19  z_d = z_adj
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.savings ====
+STAGE adjuster_cons / FORWARD BLOCK dcsn_to_cntn / savings
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  adjuster_cons_with_egm_lines.bl
+  23  a_nxt_adj = m - c - (1 + τ)*h_choice  :: [id=savings]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.housing ====
+STAGE adjuster_cons / FORWARD BLOCK dcsn_to_cntn / housing
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  adjuster_cons_with_egm_lines.bl
+  24  h_nxt_adj = h_choice  :: [id=housing]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.income_state ====
+STAGE adjuster_cons / FORWARD BLOCK dcsn_to_cntn / income_state
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  adjuster_cons_with_egm_lines.bl
+  25  z_nxt_adj = z_d  :: [id=income_state]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.value ====
+STAGE adjuster_cons / BACKWARD BLOCK cntn_to_dcsn / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(m, z_d) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  29  V      = 𝑢(c, h_choice) + β*V[>]  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.marginal_wealth ====
+STAGE adjuster_cons / BACKWARD BLOCK cntn_to_dcsn / marginal_wealth
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  30  D_{m}V = 𝑢_c(c)  :: [id=marginal_wealth]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.value ====
+STAGE adjuster_cons / BACKWARD BLOCK dcsn_to_arvl / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉≺(w_adj, z_adj) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  34  V[<]    = V  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== policy.optimality ====
+STAGE adjuster_cons / POLICY BLOCK policy / optimality
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  adjuster_cons_with_egm_lines.bl
+  38  (c, h_choice) = argmax_{c : Γ_c(m), h_choice :
+        Γ_h(m - c)}(𝑢(c, h_choice) + β*V[>])
+        :: [id=optimality, !doc]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== policy.InvEuler ====
+STAGE adjuster_cons / POLICY BLOCK policy / InvEuler
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  adjuster_cons_with_egm_lines.bl
+  39  c[>]          <= 𝑢_c_inv(β*D_{a_nxt_adj}V[>])  :: [id=InvEuler]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== policy.endoggrid ====
+STAGE adjuster_cons / POLICY BLOCK policy / endoggrid
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑚≻(a_nxt_adj, h_nxt_adj, z_nxt_adj) ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  40  m[>]          = a_nxt_adj + c[>] + (1 + τ)*h_nxt_adj  :: [id=endoggrid]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== policy.choice ====
+STAGE adjuster_cons / POLICY BLOCK policy / choice
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  adjuster_cons_with_egm_lines.bl
+  41  (c, h_choice) = solve_{c, h_choice}(c - c[>], (1 + τ)*𝑢_c(c) -
+        𝑢_h(h_choice) - β*D_{h_nxt_adj}V[>])
+        :: [id=choice]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:g:arvl_to_dcsn ====
+STAGE adjuster_cons / LAW OF MOTION arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≺  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,  (w_adj, z_adj) ↦ (w_adj, z_adj)
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  18  m   = w_adj
+  19  z_d = z_adj
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:g:dcsn_to_cntn ====
+STAGE adjuster_cons / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : {m, z_d, c, h_choice ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ |
+          c ∈ Γ_c(m) ∧ h_choice ∈ Γ_h(m − c)} → ℝ₊ × ℝ₊₊ × ℝ₊₊,
+        (m, z_d, c, h_choice) ↦ (m − c − (1 + τ) · h_choice, h_choice, z_d)
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  23  a_nxt_adj = m - c - (1 + τ)*h_choice  :: [id=savings]
+  24  h_nxt_adj = h_choice                  :: [id=housing]
+  25  z_nxt_adj = z_d                       :: [id=income_state]
+
+Definitions referenced
+  τ     adjuster_cons:parameter:τ
+  Γ_c   adjuster_cons:correspondence:Γ_c
+  Γ_h   adjuster_cons:correspondence:Γ_h
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:G:cntn_to_dcsn ====
+STAGE adjuster_cons / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, m, z_d, c, h_choice ∈ ℝ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ |
+          c ∈ Γ_c(m) ∧ h_choice ∈ Γ_h(m − c)} → ℝ,
+        (V≻, m, z_d, c, h_choice) ↦ 𝑢(c, h_choice) + β · V≻
+
+Conditions
+  𝑉(m, z_d) ∈ ℝ
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  29  V      = 𝑢(c, h_choice) + β*V[>]  :: [id=value]
+  30  D_{m}V = 𝑢_c(c)                   :: [id=marginal_wealth]
+
+Definitions referenced
+  β     adjuster_cons:parameter:β
+  𝑢     adjuster_cons:function:𝑢
+  Γ_c   adjuster_cons:correspondence:Γ_c
+  Γ_h   adjuster_cons:correspondence:Γ_h
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:G:dcsn_to_arvl ====
+STAGE adjuster_cons / VALUE AGGREGATOR dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≺  : ℝ × ℝ₊₊ × ℝ₊₊ → ℝ,  (V, w_adj, z_adj) ↦ V
+
+Conditions
+  𝑉≺(w_adj, z_adj) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  34  V[<]    = V  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:G:policy ====
+STAGE adjuster_cons / VALUE AGGREGATOR policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺_InvEuler≻   : ℝ × ℝ₊ × ℝ₊₊ × ℝ₊₊
+                    × UNRESOLVED[D_{a_nxt_adj}(V≻)≻; argument set] → ℝ₊₊,
+                  (V≻, a_nxt_adj, h_nxt_adj, z_nxt_adj, D_{a_nxt_adj}(V≻))
+                    ↦ 𝑢_c_inv(β · D_{a_nxt_adj}(V≻))
+  𝐺_endoggrid≻  : ℝ₊₊ × ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ₊₊,
+                  (c≻, a_nxt_adj, h_nxt_adj, z_nxt_adj)
+                    ↦ a_nxt_adj + c≻ + (1 + τ) · h_nxt_adj
+
+Conditions
+  𝑚≻(a_nxt_adj, h_nxt_adj, z_nxt_adj) ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons_with_egm_lines.bl
+  38  (c, h_choice) = argmax_{c : Γ_c(m), h_choice :
+        Γ_h(m - c)}(𝑢(c, h_choice) + β*V[>])
+        :: [id=optimality, !doc]
+  39  c[>]          <= 𝑢_c_inv(β*D_{a_nxt_adj}V[>])
+        :: [id=InvEuler]
+  40  m[>]          = a_nxt_adj + c[>] + (1 + τ)*h_nxt_adj
+        :: [id=endoggrid]
+  41  (c, h_choice) = solve_{c, h_choice}(c - c[>], (1 + τ)*𝑢_c(c) -
+        𝑢_h(h_choice) - β*D_{h_nxt_adj}V[>])
+        :: [id=choice]
+
+Definitions referenced
+  β        adjuster_cons:parameter:β
+  τ        adjuster_cons:parameter:τ
+  𝑢_c_inv  adjuster_cons:function:𝑢_c_inv
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

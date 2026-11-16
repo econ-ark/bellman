@@ -1513,13 +1513,13 @@ print(
 """
 
 
-def test_trellis_load_item_2_the_first_reading_of_durables_binds_two_verbs_and_prints_its_seconds(
+def test_trellis_load_item_2_the_first_reading_of_durables_binds_three_verbs_and_prints_its_seconds(
     tmp_path,
 ):
     """Item 2: a copy of the durables folder read in a fresh process, whose
     cache folder `XDG_CACHE_HOME` is empty, under `periods 0–2`, binds
-    `methodize` and `configure` and reports `calibrate` refused, since the
-    calibration supplies no value for the tenure stage's `Y`; it shows the
+    `calibrate`, `methodize` and `configure`, with the income functions
+    supplied by their declaration source; it shows the
     ten occurrences of periods 0 to 2. A second fresh process with the same
     cache folder, which then holds the stage views the first process wrote,
     reports the same binding and shows the same ten occurrences. The
@@ -1548,8 +1548,8 @@ def test_trellis_load_item_2_the_first_reading_of_durables_binds_two_verbs_and_p
     first = read_in_a_fresh_process()
     print(f"item 2 first reading: {first['seconds']:.3f} s")
     assert (first["bound"], first["failed"], first["shown"]) == (
-        ["methodize", "configure"],
-        ["calibrate"],
+        ["calibrate", "methodize", "configure"],
+        [],
         10,
     )
     # the first process wrote the stage views into the cache folder
@@ -1557,8 +1557,8 @@ def test_trellis_load_item_2_the_first_reading_of_durables_binds_two_verbs_and_p
     second = read_in_a_fresh_process()
     print(f"item 2 second reading: {second['seconds']:.3f} s")
     assert (second["bound"], second["failed"], second["shown"]) == (
-        ["methodize", "configure"],
-        ["calibrate"],
+        ["calibrate", "methodize", "configure"],
+        [],
         10,
     )
 
@@ -1598,8 +1598,9 @@ def test_trellis_load_item_4_a_new_restriction_copies_nothing_and_a_save_constru
     (`respecify_trellis`; unit L, Task 20), so that the positions changed
     are the keeper's 51. The constructions and the copies are counted by
     patching `construct_stage` and `copy_native` in the factory's module,
-    as `test_item_2` of `packages/bellman/tests/test_amd_fac_002.py` counts
-    the constructions."""
+    as the test
+    `test_elaborate_trellis_places_symbolic_copies_orders_by_fields_and_refuses_a_cycle`
+    of `packages/bellman/tests/test_trellises.py` counts the constructions."""
     durables = shutil.copytree(
         ROOT / "applications/durables",
         tmp_path / "durables",
@@ -1906,8 +1907,8 @@ def records_of(binding: trellis.TrellisBinding) -> tuple:
 
 def test_l_20_a_change_of_one_stage_s_sources_binds_that_stage_alone(tmp_path):
     """Unit L, Task 20 (defect 14 of the UX simulation). On the pension
-    model at its first build of the working years, whose calibration the
-    package refuses at `periods[0] / shocks`: a comment appended to the
+    model at its first build of the working years, with Y removed from the common profile source
+    so that the package refuses calibration at `periods[0] / shocks`: a comment appended to the
     renter's addition, a change of one stage's sources alone, binds the
     renter's occurrences alone, `alone` naming `renter_cons` and the status
     line's loop `for renter_cons`; every other occurrence is the object the
@@ -1919,12 +1920,19 @@ def test_l_20_a_change_of_one_stage_s_sources_binds_that_stage_alone(tmp_path):
     trellis file each bind the whole trellis, `alone` empty, the refusal
     standing."""
     folder_path = pensions_copy(tmp_path / "durables", PENSIONS_WORKING_YEARS)
+    calibration = folder_path / "declaration/calibration/pension_age_profiles.yml"
+    text = calibration.read_text(encoding="utf-8")
+    assert text.count("  Y: [") == text.count("  p_s: [") == 1
+    start, end = text.index("  Y: ["), text.index("  p_s: [")
+    calibration.write_text(text[:start] + text[end:], encoding="utf-8")
     folder, source = model.open_folder(folder_path), recipe.Source("recipe", PENSIONS_RECIPE)
     first = trellis.show_trellis(folder, source).shown
     assert first.alone == () and first.binding.bound == ("methodize",)
     refusal = first.binding.failed["calibrate"]
     assert refusal.occurrences == ((0, "shocks"),)
-    assert "shocks" in model.sentence(refusal)
+    sentence = model.sentence(refusal)
+    assert "stage 'shocks', parameter 'Y'" in sentence
+    assert "the calibration source supplies no value for it" in sentence
     declaration = folder_path / "declaration"
     methods = declaration / "stages/renter_cons/methods.bl"
     methods.write_text(methods.read_text(encoding="utf-8") + COMMENT, encoding="utf-8")
@@ -1951,7 +1959,7 @@ def test_l_20_a_change_of_one_stage_s_sources_binds_that_stage_alone(tmp_path):
     assert "".join(text for text, _ in line).endswith(f" · loop {first.seconds:.2f} s")
 
     # the file of the refused position, and the trellis file: the whole trellis
-    calibration = declaration / "calibration/shocks.yml"
+    calibration = declaration / "calibration/pension_age_profiles.yml"
     calibration.write_text(calibration.read_text(encoding="utf-8") + COMMENT, encoding="utf-8")
     third = trellis.show_trellis(folder, source, previous=again).shown
     assert third.alone == ()
@@ -4897,70 +4905,105 @@ def test_n_7_a_drag_from_a_joined_continuation_port_is_the_move_of_its_cable(tmp
     ), refused.sentence
 
 
-def test_n_7_a_list_with_a_field_unpaired_writes_the_ticked_pairs_and_names_the_draft(scratch_durables):
-    """Unit N, Task 7 (design pass 10 §7; AMD-COMP-001 §3.2). The cable of
-    `tenure`'s branch `adjust` moved to `keeper_cons` in periods[1], its two
-    fields paired with the keeper's decision states, the fields of its entry
-    perch, `w_adj → w_d` and `z_adj → z_d`, and `keeper_cons`'s `h_d` left
-    unpaired, writes the ticked pairs as one entry, releases every pair of
-    the route, and the gesture's report names the draft the package then
-    reports, the incomplete route, in the package's sentence; nothing is
-    certified. The cable of the branch `keep` moved to `tenure` in
-    periods[0] with `z_kp` left unpaired is written: the period's connector
-    authors the branch's three pairs, so the move takes them out with the
-    cable and no pair of `z_kp` is selected again (decision MB-U31; the
-    refusal of a move the package would pair again stands in
-    `test_n_7_a_drag_from_a_joined_continuation_port_is_the_move_of_its_cable`)."""
+def test_n_7_a_state_cable_move_preserves_authored_backward_pairs(scratch_durables):
+    """A state-cable move cannot leave an authored age pair without its route.
+    Both refused moves preserve every declaration file."""
     folder, source, shown = _durables_shown(scratch_durables)
-    (adjust,) = [
-        w for w in trellis.join_wires(shown)
-        if (w["from"], w["to"]) == ("periods[1]/tenure", "periods[1]/adjuster_cons")
-    ]
-    assert (adjust["branch"], adjust["status"]) == ("adjust", "certified")
-    assert [f["field"] for f in adjust["fields"]] == ["w_adj", "z_adj"]
-    arrivals = {name: field_port(shown, "reading", (1, "keeper_cons", name))["id"] for name in ("w_d", "z_d")}
-    event = {
-        "reading": trellis.reading_record(folder, shown),
-        "join": {name: adjust[name] for name in ("source", "sourceHandle", "target", "targetHandle")},
-        "end": "reading",
-        "cable": True,
-        "pairs": [
-            {"sourceHandle": f["writing"], "targetHandle": arrivals[name], "replaced": f["reading"]}
-            for f, name in zip(adjust["fields"], ("w_d", "z_d"))
-        ],
+    before = {
+        path: path.read_bytes() for path in (scratch_durables / "declaration").rglob("*")
+        if path.is_file()
     }
-    move = trellis.removal_edit(shown, event, {})
-    assert move.sentence is None, move.sentence
-    assert "{w_adj: w_d, z_adj: keeper_cons.z_d} written" in move.note, move.note
+    for branch, destination, names, age, original_reader in (
+        ("adjust", (1, "keeper_cons"), ("w_d", "z_d"), "age_adj", "adjuster_cons"),
+        ("keep", (0, "tenure"), ("a", "h"), "age_kp", "keeper_cons"),
+    ):
+        (wire,) = [w for w in trellis.join_wires(shown)
+                   if w["from"] == "periods[1]/tenure" and w["branch"] == branch]
+        assert wire["status"] == "certified"
+        arrivals = [field_port(shown, "reading", (*destination, name))["id"] for name in names]
+        event = {
+            "reading": trellis.reading_record(folder, shown),
+            "join": {name: wire[name] for name in ("source", "sourceHandle", "target", "targetHandle")},
+            "end": "reading", "cable": True,
+            "pairs": [
+                {"sourceHandle": field["writing"], "targetHandle": target,
+                 "replaced": field["reading"]}
+                for field, target in zip(wire["fields"], arrivals)
+            ],
+        }
+        refused = trellis.removal_edit(shown, event, {})
+        assert refused.edits is None and refused.new_files == ()
+        assert refused.sentence == (
+            f"the value pair periods[1].tenure.{age} → periods[1].{original_reader}.age "
+            "has no state route between those stage occurrences for that field"
+        )
+        assert all(path.read_bytes() == text for path, text in before.items())
+
+
+def test_n_7_a_list_with_a_field_unpaired_writes_the_ticked_pairs_and_names_the_draft(tmp_path):
+    """A certified state-only route can be edited to an explicit draft.
+    Moving down to U leaves its third coordinate unpaired. Moving up to
+    the earlier S leaves one output unpaired and releases its authored pair."""
+    root = composition_folder(tmp_path / "composition", repeat=2, branching=True)
+    alternative = root / "U.bl"
+    text = alternative.read_text(encoding="utf-8")
+    header = "(x : ℝ₊, y : ℝ₊) : !arvl"
+    assert text.count(header) == 1
+    alternative.write_text(text.replace(header, "(x : ℝ₊, y : ℝ₊, z : ℝ₊) : !arvl"), encoding="utf-8")
+    trellis_file = root / "trellis.yml"
+    text = trellis_file.read_text(encoding="utf-8")
+    assert text.count("inter_connectors: []") == 1
+    trellis_file.write_text(text.replace("inter_connectors: []", "inter_connectors: [{}]"), encoding="utf-8")
+    folder, source = model.open_folder(root), recipe.Source("trellis", "trellis.yml")
+    shown = trellis.show_trellis(folder, source).shown
+    initial = [route for route in shown.selection.routes if route.source == (1, "S")]
+    assert {(route.branch, route.destination, route.status) for route in initial} == {
+        ("up", (1, "T"), "certified"), ("down", (1, "T"), "certified"),
+    }
+    before = {path: path.read_bytes() for path in root.iterdir() if path.is_file()}
+
+    def moving(branch, destination, targets):
+        (wire,) = [w for w in trellis.join_wires(shown)
+                   if w["from"] == "periods[1]/S" and w["branch"] == branch]
+        arrivals = [field_port(shown, "reading", (*destination, name))["id"] for name in targets]
+        return trellis.removal_edit(shown, {
+            "reading": trellis.reading_record(folder, shown),
+            "join": {name: wire[name] for name in ("source", "sourceHandle", "target", "targetHandle")},
+            "end": "reading", "cable": True,
+            "pairs": [
+                {"sourceHandle": field["writing"], "targetHandle": target,
+                 "replaced": field["reading"]}
+                for field, target in zip(wire["fields"], arrivals)
+            ],
+        }, {})
+
+    move = moving("down", (1, "U"), ("x", "y"))
+    assert move.sentence is None and move.edits is not None, move.sentence
     assert "draft: " in move.note and "route-incomplete" not in move.note, move.note
-    reopened = trellis.show_trellis(folder, source, trellis.parse_restriction("periods 0–2"), previous=shown, unsaved={
+    reopened = trellis.show_trellis(folder, source, previous=shown, unsaved={
         path: trellis.Unsaved(text, 1) for path, text in move.edits.items()
     }).shown
-    routes = [r for r in reopened.selection.routes if r.source == (1, "tenure") and r.branch == "adjust"]
-    assert [r.destination for r in routes] == [(1, "keeper_cons")], routes
-    assert all(route.status != "certified" for route in routes), routes
+    routes = [r for r in reopened.selection.routes if r.source == (1, "S") and r.branch == "down"]
+    assert [r.destination for r in routes] == [(1, "U")]
+    assert all(route.status != "certified" for route in routes)
     assert any(d.rule == "route-incomplete" for d in reopened.selection.diagnostics)
-    # the branch `keep` with `z_kp` unpaired: written, the authored pairs of
-    # the branch taken out with the cable
-    keep = _tenure_keep(shown, 1)
-    arrivals = {name: field_port(shown, "reading", (0, "tenure", name))["id"] for name in ("a", "h")}
-    event = {
-        "reading": trellis.reading_record(folder, shown),
-        "join": {name: keep[name] for name in ("source", "sourceHandle", "target", "targetHandle")},
-        "end": "reading",
-        "cable": True,
-        "pairs": [
-            {"sourceHandle": f["writing"], "targetHandle": arrivals[name], "replaced": f["reading"]}
-            for f, name in zip(keep["fields"][:2], ("a", "h"))
-        ],
+    assert {(p.writing.field, p.reading.field, p.origin) for p in reopened.selection.pairs
+            if p.writing.key == "S" and p.writing.h == 1 and p.writing.field.endswith("_dn")} == {
+        ("x_dn", "x", "authored"), ("y_dn", "y", "authored"),
     }
-    moved = trellis.removal_edit(shown, event, {})
+
+    moved = moving("up", (0, "S"), ("x",))
     assert moved.sentence is None and moved.edits is not None, moved.sentence
-    assert moved.note.startswith("trellis.yml, inter_connectors[0]: w_kp: a, h_kp: h written, periods 0–50"), moved.note
-    assert (
-        "no longer selected: tenure.h_kp → keeper_cons.h_d in periods 1–50, tenure.w_kp → keeper_cons.w_d "
-        "in periods 1–50, tenure.z_kp → keeper_cons.z_d in periods 1–50"
-    ) in moved.note, moved.note
+    assert "no longer selected:" in moved.note and "S.y_up → T.y" in moved.note
+    reopened = trellis.show_trellis(folder, source, previous=shown, unsaved={
+        path: trellis.Unsaved(text, 1) for path, text in moved.edits.items()
+    }).shown
+    assert not any(p.writing.key == "S" and p.writing.field == "y_up"
+                   for p in reopened.selection.pairs)
+    assert any(p.writing.field == "x_up" and p.writing.h == 1
+               and (p.reading.h, p.reading.key, p.reading.field, p.origin) == (0, "S", "x", "authored")
+               for p in reopened.selection.pairs)
+    assert all(path.read_bytes() == text for path, text in before.items())
 
 
 def test_n_7_a_cable_dropped_on_its_own_destination_is_no_split_and_a_writing_end_names_the_sources(

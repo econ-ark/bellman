@@ -1,46 +1,46 @@
 @methods: house_choice
-# Deliberate refusals (aspect A24) on the choice of keeping or adjusting the
-# house, whose stage file is
+# Deliberate refusals on the choice of keeping or adjusting the house, whose
+# stage file is
 # applications/housing-frictions/declaration/stages/house_choice/house_choice.bl.
 # No block of this file belongs to the application's methods; each is written
-# as an author rewriting stages/house_choice/methods.yml might write it by
-# mistake, and each comment names the rule of the union (the proposal's §4)
-# that refuses it. Every method written here takes no parameter, so the file
-# declares no setting. The derivative lines are those methods.house_choice.bl
-# appends, written again so that each block has a body, an empty body being
-# refused.
+# as an author might write it by mistake. The comment above each block says
+# why the package refuses the union of that block with the stage file, and
+# names the refusal rule. Every method written here takes no keyword argument,
+# so the file declares no setting. The derivative lines are those that the
+# application's methods file adds, written again so that each block has a
+# body, since the package refuses a block with an empty body.
 
-# Refused twice. First, two sets on one coordinate: the partial signature
-# gives the choice d the set {adjust, keep}, where the stage's signature of
-# policy gives it {keep, adjust}. The two terms denote one set of labels, but
-# the order of the labels is the order in which (V_kp[>], V_adj[>])[d] selects,
-# so the terms differ in content and rule 4 refuses a coordinate of one name
-# with different content. Second, a line id twice: the line restates the
-# stage's discrete maximization under its id choice, which the stage's block
-# policy already holds (rule 5), and it would define d a second time besides
-# (defined-once, finding F1). The block's own method, written by its relative
-# subject, is admissible.
+# Refused: one line id twice. The line restates the stage's discrete
+# maximization under its id choice, which the stage's block policy already
+# holds (`declared-twice`). The signature that the block writes gives the
+# choice d the set {adjust, keep}, where the stage's signature of policy gives
+# it {keep, adjust}; the two terms denote one set of labels, but the order of
+# the labels is the order in which (V_kp[>], V_adj[>])[d] selects. The
+# package does not refuse that signature: with the line under another id, it
+# admits the union of the block with the stage file. The block's own method,
+# written by its relative path, is admitted as well, and the line id is the
+# only fault of the block.
 [id=policy, method : !max, () -> (d : {adjust, keep} @ !ctrl) : !dcsn] {
     d = argmax_{d}(V_kp[>], V_adj[>])                   :: [id=choice]
 }
 
-# Refused: a subject naming another block. The group places the expectation
-# of the arrival value builder in the decision value builder, whose
-# derivative lines the arrival value's derivative lines read, and its subject
-# begins with dcsn_to_arvl, a block other than the enclosing cntn_to_dcsn
-# (rule 7). The derivative lines are admissible.
+# Refused: a path that names another block. The entry types the expectation
+# of the arrival builder inside the decision builder, whose derivative lines
+# the arrival value's derivative lines read, and its path begins with
+# dcsn_to_arvl, a block other than the enclosing cntn_to_dcsn
+# (`label-not-in-parent`). The derivative lines are admitted.
 [id=cntn_to_dcsn
     | dcsn_to_arvl.E_η.method : !sum] {
     D_{m_f}V = (D_{w_kp}V_kp[>], D_{w_adj}V_adj[>])[d]  :: [id=marginal_financial]
     D_{m_h}V = (D_{h_kp}V_kp[>], D_{w_adj}V_adj[>])[d]  :: [id=marginal_housing]
 }
 
-# Refused: the same slot twice. The relative subject E_η.method and the
-# subject dcsn_to_arvl.E_η.method, whose first segment is the enclosing block
-# and so is read from it (rule 7), name one slot, the method slot of the
-# expectation's occurrences in this block, and fill it with two different
-# methods; rule 4 refuses two entries of one key with different content,
-# naming both. The derivative lines are admissible.
+# Refused: one component written twice. The relative path E_η.method and the
+# path dcsn_to_arvl.E_η.method, whose first segment is the enclosing block,
+# name one component, the method of every occurrence of the expectation in
+# this block, and give it two different methods. The package refuses the
+# second entry and names both (`declared-twice`). The derivative lines are
+# admitted.
 [id=dcsn_to_arvl
     | E_η.method : !sum
     | dcsn_to_arvl.E_η.method : !exact] {
@@ -48,11 +48,11 @@
     D_{y_h}V[<] = E_{η}(D_{m_h}V)                       :: [id=marginal_housing]
 }
 
-# Refused: a line id twice, inside a branch. The nested block is merged by its
-# label keep with the stage's branch of that label (rule 3 read by label under
-# the parent matched by id, finding F19), and its line restates the branch's
-# line housing_kept under the same id (rule 5); it would define h_kp a second
-# time besides (defined-once).
+# Refused: one line id twice, inside a branch. The nested block merges by its
+# label keep with the stage's branch of that label, and its line restates the
+# branch's line housing_kept under the same id (`declared-twice`); under
+# another id, it would define h_kp a second time in the branch
+# (`defined-once`).
 [id=dcsn_to_cntn] {
     [label=keep] {
         h_kp = m_h                                      :: [id=housing_kept]

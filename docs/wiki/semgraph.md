@@ -71,7 +71,9 @@ This page is the terminology home for a semgraph's graphs, grains and wire
 bundles. Using `semgraph` as the Python module name introduces no second
 mathematical representation.
 
-## The four graphs and what they represent
+<a id="the-four-graphs-and-what-they-represent"></a>
+
+## The four graphs
 
 A [[stage]] holds four graphs, and each states which mathematical objects it
 represents. The boxes are operations, the ports are their individual
@@ -135,7 +137,9 @@ builders graph uses transition and distribution definitions; it is not obtained 
 of a reward-bearing [[bellman_operator|Bellman operator]]. See [[backward_builder|backward builder]] and
 [[forward_builder|forward builder]] for the respective mathematical operations.
 
-## Grains expose defining operations
+<a id="grains-expose-defining-operations"></a>
+
+## Grains and defining operations
 
 A **grain** chooses which boxes are opened within a graph.
 It does not change that graph's mathematical objects. Elaboration constructs
@@ -173,7 +177,9 @@ multi-output box is preserved. A sub-builder containing an expectation therefore
 depends on is not drawn at this grain. This is a stopping rule, not a
 fifth graph or a claim that every decomposition has one finest grain.
 
-## How a [[statement|value statement]] is folded
+<a id="how-a-value-statement-is-folded"></a>
+
+## Value statements
 
 A [backward block](../Bellman-Sym/01-stage.md#3-builder-blocks)'s [[statement|statements]] are folded by structural
 recursion on their retained terms into primitive operators of three kinds
@@ -199,7 +205,9 @@ function are queries. A `!node` statement denotes a
 diagram and no wire.
 
 <!-- synth: class=canonical, source=docs/bellman-calculus/APPX-B-INITIAL-ALGEBRA.md, date=2026-09-07 -->
-## Opening a box preserves its operation
+<a id="opening-a-box-preserves-its-operation"></a>
+
+## Operations inside a box
 
 A **builder signature** declares a builder's [[signature|inputs and outputs]]. Opening any
 box must preserve its exact ordered input and output identities and types,
@@ -244,7 +252,9 @@ arrows differently, sorting boxes, or inserting a formal trace does not
 solve the economic problem or establish the existence of a fixed point. Equation addresses and method
 places remain unchanged when the presentation follows dependencies.
 
-## Value bundles preserve their constituents
+<a id="value-bundles-preserve-their-constituents"></a>
+
+## Value bundles
 
 A **value bundle** is the tuple of value objects on one base: the maximal set
 of **parallel wires** of a backward graph that share their base coordinates and
@@ -460,6 +470,10 @@ conditional distribution in which it occurs.
 aggregation G** applies the complete value calculations defined by G and
 yields the value functions or, when a control is bound, the objective functions, using the pulled-back function or an expectation's result as its input (see [[aggregation]]). The policy builder uses the same kinds: its objective or residual is aggregated on the decision coordinates after the pullback along g. On the continuation grid, the inverse-Euler candidate line `c[>]` forms one `Aggregation` whose rule is the line's relation, an inequality or a complementarity included, and the coordinate line `m_d[>]` another, each reading the derivative of the continuation value at the saving by the term `D_{a}V[>]`, with the author's derivative lines and inverse marginal utility and no automatic differentiation. Where the candidate line carries the clause `⟂ a >= 0`, as in `methods.bl`, the methods file beside `cons.bl`, the candidate at each saving is a set: the interior value alone where the saving is positive, and every value up to it at zero saving. The candidate and the coordinate are then correspondences, printed `𝑐≻ : Xa ⇉ ℝ₊₊` and `𝑚_d≻ : Xa ⇉ Xm`. The identification line `c = c[>]` forms the `Pullback` of the policy along the coordinate map `m_d[>]`, equated to the candidate; its rule holds at every value admitted at each saving, the corner, consumption equal to cash on hand, among them ([Constraints](../Bellman-Sym/10-constraints.md) §4.3). The grid line is checked against the law of motion solved for the decision coordinate, and a line that disagrees is refused under the rule `grid-line-consistency`. An operative `argmax` line forms an `Argmax` row, whose output is the set of maximizing policies; and a `solve` line forms one `Aggregation` of its residuals. Expectation
 remains a separate operation. The kinds of the rows are `Pullback`, `Aggregation`, `Expectation`, `Evaluation` and `Argmax` ([operations](../Bellman-Sym/reference/operations.md)): a relation is the rule of a row whose output is among its own unknowns, and no kind of its own. A line attached to an operative line by a dotted id, as the first-order condition `optimality.euler` is attached to the argmax line `optimality`, is that row's property: it forms no row, no address and no method place, and it prints under the row.
+
+A value-type field sent backward, including a constant such as age or a bound, is a wire of the initial backward diagram. The corresponding builders graph carries its representing function. A constant field's empty state dependence does not make it a calibrated parameter.
+
+In a [modular model](../bellman-calculus/APPX-H-MODULARITY.md), repeated declarations share their operators and calibration sources. Their supplied fields may differ, and methods and settings remain separate numerical choices. A stage occurrence's position is an address in the trellis, not an input to its equations.
 
 Parameters belong with definitions and calibration. They are held fixed
 when the functions act on states, controls or supplied functions, and are

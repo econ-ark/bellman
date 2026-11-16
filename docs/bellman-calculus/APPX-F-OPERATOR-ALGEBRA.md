@@ -142,7 +142,7 @@ An optimizing policy must specify its choice on ties, or supply an admissible ra
 
 Nonempty feasible sets, attainment and measurable selection are separate assumptions. Empty feasible sets may be assigned value $-\infty$ in an extended-real convention, but have no feasible policy; this is not automatically the interpretation of a categorical initial object. [Branching](./09-branching.md) develops the economic cases.
 
-**Scope.** Stationary distributions and tail behavior of iterated random transitions require invariant-measure and asymptotic analysis. They do not follow from the finite branching representation alone. A stationary distribution is a fixed point of probability propagation; one may introduce an operator that returns such a fixed point under additional assumptions.
+**Scope.** Stationary distributions and tail behavior of iterated random transitions require invariant-measure and asymptotic analysis. They do not follow from the finite branching representation alone. A stationary distribution is a fixed point of probability propagation; one may introduce an operator that returns such a fixed point under additional assumptions. A forward pair containing an age that increases by one has no fixed point. A stationary cross-section with several ages requires its own population model; it is not the fixed point of one aging cohort.
 
 <a id="f6-the-graded-realisation-tower"></a>
 
@@ -157,7 +157,7 @@ $$
 \longrightarrow\text{package computation}.
 $$
 
-Calibration fixes parameter values in the model, at one point of their admissible set ([Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) §4). Method assignment specifies a numerical procedure; settings choose its resolution or tolerances. A **reference approximation** is the numerical map defined by that procedure and its settings, independently of one implementation. A **handler** is the package routine intended to compute it. Equations and stages are authored in `.bl`, and so are the methods, in a methods file that declares the settings they read; the calibration and the values of the settings are YAML, as Bellman-SYM's rules for [methodization](../wiki/methodization.md) describe.
+Calibration fixes parameter values in the model, at one point of their admissible set. In a modular model this assignment comes from the declaration’s recorded sources at every occurrence ([Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) §4). Method assignment specifies a numerical procedure; settings choose its resolution or tolerances. A **reference approximation** is the numerical map defined by that procedure and its settings, independently of one implementation. A **handler** is the package routine intended to compute it. Equations and stages are authored in `.bl`, and so are the methods, in a methods file that declares the settings they read; the calibration and the values of the settings are YAML, as Bellman-SYM's rules for [methodization](../wiki/methodization.md) describe.
 
 ### 6.1 Conditions on realization
 

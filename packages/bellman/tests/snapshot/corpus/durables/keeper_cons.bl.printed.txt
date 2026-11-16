@@ -1,0 +1,696 @@
+BELLMAN-SYM / STAGE keeper_cons                           [VERSION = SYMBOLIC]
+a stage occurrence of
+applications/durables/declaration/stages/keeper_cons/keeper_cons.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        none
+  ∼ decision       w_d state, h_d state, z_d state, c control, V value, age
+                   value
+  ≻ continuation   a_nxt_kp≻ state, h_nxt_kp≻ state, z_nxt_kp≻ state, V≻
+                   value, age≻ value
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           w_d at decision, h_d at decision, z_d at decision,
+                   a_nxt_kp≻ at continuation, h_nxt_kp≻ at continuation,
+                   z_nxt_kp≻ at continuation
+  controls         c at decision
+  values           V at the decision, continuation perches; age at the
+                   decision, continuation perches
+  shocks           none
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → dcsn_to_cntn   (w_d, h_d, z_d) : !dcsn, at c ->
+                   (a_nxt_kp≻, h_nxt_kp≻, z_nxt_kp≻) : !cntn
+  ← cntn_to_dcsn   (V≻, age≻) : !cntn, at c -> (V, age) : !dcsn
+  ← policy         (V≻) : !cntn -> (c) : !dcsn
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  sets                     1   Age := {20, …, 71}
+  parameters               5   β : (0, 1); α : (0, 1); γ_c : (1, inf);
+                               γ_h : (1, inf); κ : ℝ₊₊
+  functions                4   𝑢 on ℝ₊₊ × ℝ₊₊, 𝑢_c, 𝑢_h, 𝑢_c_inv on ℝ₊₊
+  correspondences          1   Γ : ℝ₊₊ ⇉ ℝ₊₊
+  laws of motion           1   a_nxt_kp = w_d - c; h_nxt_kp = h_d; z_nxt_kp =
+                               z_d
+  value aggregators        2   V = 𝑢(c, h_d) + β*V[>];
+                               c = argmax_{c : Γ(w_d)}(𝑢(c, h_d) + β*V[>])
+  block lines              5   dcsn_to_cntn.savings, dcsn_to_cntn.housing,
+                               dcsn_to_cntn.income_state, cntn_to_dcsn.value,
+                               policy.optimality
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   (𝑉≻, 𝑎𝑔𝑒≻) ↦ 𝑐(w_d, h_d, z_d), 𝑉, 𝑎𝑔𝑒
+                    forward    μ ↦ μ≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ∼ w_d, h_d, z_d  →  ≻ a_nxt_kp≻, h_nxt_kp≻, z_nxt_kp≻
+  backward   ∼ V, age  ←  ≻ V≻, age≻
+  policy     ∼ c  ←  ≻ V≻
+
+==== stage ====
+STAGE keeper_cons
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑉≻    : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+         𝑎𝑔𝑒≻  : {()} → Age
+         ──────────────────────────────────────────
+    out  𝑐     : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ → ℝ₊₊,  𝑐(w_d, h_d, z_d) ∈ Γ(w_d)
+         𝑉     : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+         𝑎𝑔𝑒   : {()} → Age
+  forward
+    in   μ     : finite measure on ℝ₊₊ × ℝ₊₊ × ℝ₊₊
+         ──────────────────────────────────────────
+    out  μ≻    : finite measure on ℝ₊ × ℝ₊₊ × ℝ₊₊
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉≻, 𝑎𝑔𝑒≻                     out: 𝑉, 𝑎𝑔𝑒
+
+    2  policy
+       in: 𝑉≻                           out: 𝑐
+
+  forward
+    1  dcsn_to_cntn
+       in: μ                            out: μ≻
+
+Conditions
+  cntn_to_dcsn:Aggregation  𝑉(w_d, h_d, z_d) ∈ ℝ
+  cntn_to_dcsn:Aggregation  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  keeper_cons.bl
+  18  a_nxt_kp = w_d - c                           :: [id=savings]
+  19  h_nxt_kp = h_d                               :: [id=housing]
+  20  z_nxt_kp = z_d                               :: [id=income_state]
+  24  V = 𝑢(c, h_d) + β*V[>]                       :: [id=value]
+  28  c = argmax_{c : Γ(w_d)}(𝑢(c, h_d) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  Age   keeper_cons:set:Age
+  Γ     keeper_cons:correspondence:Γ
+
+File
+  applications/durables/declaration/stages/keeper_cons/keeper_cons.bl
+
+Perches
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE keeper_cons / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻    : {V≻, age≻}
+       age≻  : {age≻}
+       ──────────────────
+  out  V     : {V, age}
+       age   : {age}
+
+Conditions
+  𝑉(w_d, h_d, z_d) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  keeper_cons.bl
+  24  V = 𝑢(c, h_d) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  Age   keeper_cons:set:Age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward policy ====
+STAGE keeper_cons / POLICY BLOCK policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻, age≻}
+       ────────────────
+  out  c   : {c}
+──────────────────────────────────────────────────────────────────────────────
+Source  keeper_cons.bl
+  28  c = argmax_{c : Γ(w_d)}(𝑢(c, h_d) + β*V[>])  :: [id=optimality]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE keeper_cons / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   w_d        : {w_d, h_d, z_d}
+       h_d        : {w_d, h_d, z_d}
+       z_d        : {w_d, h_d, z_d}
+       ──────────────────────────────────────────────
+  out  a_nxt_kp≻  : {a_nxt_kp≻, h_nxt_kp≻, z_nxt_kp≻}
+       h_nxt_kp≻  : {h_nxt_kp≻, z_nxt_kp≻}
+       z_nxt_kp≻  : {h_nxt_kp≻, z_nxt_kp≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  keeper_cons.bl
+  18  a_nxt_kp = w_d - c  :: [id=savings]
+  19  h_nxt_kp = h_d      :: [id=housing]
+  20  z_nxt_kp = z_d      :: [id=income_state]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE keeper_cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻    : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒≻  : {()} → Age
+       ─────────────────────────────────────────────────────────
+  out  𝑉     : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒   : {()} → Age
+
+At
+  𝑐  : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ → ℝ₊₊,  𝑐(w_d, h_d, z_d) ∈ Γ(w_d)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻(·, ·, ·, 𝑐)
+     ───────────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻(·, ·, ·, 𝑐))(w_d, h_d, z_d)
+             = 𝑉≻(𝑔≻(w_d, h_d, z_d, 𝑐(w_d, h_d, z_d)))
+
+  2  Aggregation
+     in: (1), 𝑎𝑔𝑒≻                      out: 𝑉, 𝑎𝑔𝑒
+     ───────────────────────────────────────────────────────────
+     rule: 𝑉 = 𝑢(𝑐, h_d) + β · 𝑉≻(𝑔≻(w_d, h_d, z_d, 𝑐))
+           on (w_d, h_d, z_d) ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊
+           𝑎𝑔𝑒 = 𝑎𝑔𝑒≻()                   on (w_d, h_d, z_d) ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊
+
+  3  Evaluation
+     in: 𝑉, 𝑎𝑔𝑒                         out: 𝑉, 𝑎𝑔𝑒
+     ───────────────────────────────────────────────────────────
+     rule: 𝑉 : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+           𝑎𝑔𝑒 : {()} → Age
+
+Conditions
+  Aggregation  𝑉(w_d, h_d, z_d) ∈ ℝ
+  Aggregation  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  keeper_cons.bl
+  24  V = 𝑢(c, h_d) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  Age   keeper_cons:set:Age
+  β     keeper_cons:parameter:β
+  𝑢     keeper_cons:function:𝑢
+  Γ     keeper_cons:correspondence:Γ
+  𝑔≻    keeper_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback ====
+STAGE keeper_cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       ─────────────────────────
+  out  𝑉≻ ∘ 𝑔≻(·, ·, ·, 𝑐)
+           : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻(·, ·, ·, 𝑐))(w_d, h_d, z_d)
+    = 𝑉≻(𝑔≻(w_d, h_d, z_d, 𝑐(w_d, h_d, z_d)))
+──────────────────────────────────────────────────────────────────────────────
+Source  keeper_cons.bl
+  18  a_nxt_kp = w_d - c  :: [id=savings]
+  19  h_nxt_kp = h_d      :: [id=housing]
+  20  z_nxt_kp = z_d      :: [id=income_state]
+
+Definitions referenced
+  𝑔≻    keeper_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE keeper_cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻(·, ·, ·, 𝑐)
+             : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒≻  : {()} → Age
+       ─────────────────────────────
+  out  𝑉     : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒   : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ → Age
+
+Rule
+  𝑉 = 𝑢(𝑐, h_d) + β · 𝑉≻(𝑔≻(w_d, h_d, z_d, 𝑐))
+  on (w_d, h_d, z_d) ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊
+  𝑎𝑔𝑒 = 𝑎𝑔𝑒≻()                            on (w_d, h_d, z_d) ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊
+
+Conditions
+  𝑉(w_d, h_d, z_d) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  keeper_cons.bl
+  24  V = 𝑢(c, h_d) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  Age   keeper_cons:set:Age
+  β     keeper_cons:parameter:β
+  𝑢     keeper_cons:function:𝑢
+  𝑔≻    keeper_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE keeper_cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉    : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒  : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ → Age
+       ────────────────────────────
+  out  𝑉    : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒  : {()} → Age
+
+Rule
+  𝑉 = 𝑢(𝑐, h_d) + β · 𝑉≻(𝑔≻(w_d, h_d, z_d, 𝑐))
+  on (w_d, h_d, z_d) ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊
+  𝑉 : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+  𝑎𝑔𝑒 = 𝑎𝑔𝑒≻()                            on (w_d, h_d, z_d) ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊
+  𝑎𝑔𝑒 : {()} → Age
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Age   keeper_cons:set:Age
+  β     keeper_cons:parameter:β
+  𝑢     keeper_cons:function:𝑢
+  𝑔≻    keeper_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy ====
+STAGE keeper_cons / POLICY BUILDER policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       ────────────────────────────────────────────────────────────────
+  out  𝑐   : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ → ℝ₊₊,  𝑐(w_d, h_d, z_d) ∈ Γ(w_d)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻
+     ──────────────────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻)(w_d, h_d, z_d, c) = 𝑉≻(𝑔≻(w_d, h_d, z_d, c))
+
+  2  optimality:Aggregation
+     in: (1)
+     out: (w_d, h_d, z_d, c) ↦ 𝑢(c, h_d) + β · 𝑉≻(𝑔≻(w_d, h_d, z_d, c))
+     ──────────────────────────────────────────────────────────────────
+     rule: (w_d, h_d, z_d, c) ↦ 𝑢(c, h_d) + β · 𝑉≻(𝑔≻(w_d, h_d, z_d, c))
+
+  3  optimality:Argmax
+     in: (2)                            out: 𝑐
+     ──────────────────────────────────────────────────────────────────
+     rule: 𝑐(w_d, h_d, z_d)
+             ∈ argmax_{c ∈ Γ(w_d)} [𝑢(c, h_d) + β · 𝑉≻(𝑔≻(w_d, h_d, z_d, c))]
+
+  4  Evaluation
+     in: 𝑐                              out: 𝑐
+     ──────────────────────────────────────────────────────────────────
+     rule: 𝑐 : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ → ℝ₊₊,  𝑐(w_d, h_d, z_d) ∈ Γ(w_d)
+──────────────────────────────────────────────────────────────────────────────
+Source  keeper_cons.bl
+  28  c = argmax_{c : Γ(w_d)}(𝑢(c, h_d) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  β     keeper_cons:parameter:β
+  𝑢     keeper_cons:function:𝑢
+  Γ     keeper_cons:correspondence:Γ
+  𝑔≻    keeper_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback ====
+STAGE keeper_cons / POLICY BUILDER policy / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       ─────────────────────────────────────────────────────────────────
+  out  𝑉≻ ∘ 𝑔≻
+           : {w_d, h_d, z_d, c ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ | c ∈ Γ(w_d)} → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻)(w_d, h_d, z_d, c) = 𝑉≻(𝑔≻(w_d, h_d, z_d, c))
+──────────────────────────────────────────────────────────────────────────────
+Source  keeper_cons.bl
+  18  a_nxt_kp = w_d - c  :: [id=savings]
+  19  h_nxt_kp = h_d      :: [id=housing]
+  20  z_nxt_kp = z_d      :: [id=income_state]
+
+Definitions referenced
+  Γ     keeper_cons:correspondence:Γ
+  𝑔≻    keeper_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / optimality:Aggregation ====
+STAGE keeper_cons / POLICY BUILDER policy / optimality:Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻
+         : {w_d, h_d, z_d, c ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ | c ∈ Γ(w_d)} → ℝ
+       ───────────────────────────────────────────────────────────────
+  out  (w_d, h_d, z_d, c) ↦ 𝑢(c, h_d) + β · 𝑉≻(𝑔≻(w_d, h_d, z_d, c))
+         : {w_d, h_d, z_d, c ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ | c ∈ Γ(w_d)} → ℝ
+
+Rule
+  (w_d, h_d, z_d, c) ↦ 𝑢(c, h_d) + β · 𝑉≻(𝑔≻(w_d, h_d, z_d, c))
+──────────────────────────────────────────────────────────────────────────────
+Source  keeper_cons.bl
+  28  c = argmax_{c : Γ(w_d)}(𝑢(c, h_d) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  β     keeper_cons:parameter:β
+  𝑢     keeper_cons:function:𝑢
+  Γ     keeper_cons:correspondence:Γ
+  𝑔≻    keeper_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / optimality:Argmax ====
+STAGE keeper_cons / POLICY BUILDER policy / optimality:Argmax
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (w_d, h_d, z_d, c) ↦ 𝑢(c, h_d) + β · 𝑉≻(𝑔≻(w_d, h_d, z_d, c))
+          : {w_d, h_d, z_d, c ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ | c ∈ Γ(w_d)} → ℝ
+       ────────────────────────────────────────────────────────────────
+  out  𝑐  : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ → ℝ₊₊,  𝑐(w_d, h_d, z_d) ∈ Γ(w_d)
+
+Rule
+  𝑐(w_d, h_d, z_d)
+    ∈ argmax_{c ∈ Γ(w_d)} [𝑢(c, h_d) + β · 𝑉≻(𝑔≻(w_d, h_d, z_d, c))]
+──────────────────────────────────────────────────────────────────────────────
+Source  keeper_cons.bl
+  28  c = argmax_{c : Γ(w_d)}(𝑢(c, h_d) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  β     keeper_cons:parameter:β
+  𝑢     keeper_cons:function:𝑢
+  Γ     keeper_cons:correspondence:Γ
+  𝑔≻    keeper_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Evaluation ====
+STAGE keeper_cons / POLICY BUILDER policy / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑐  : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ → ℝ₊₊,  𝑐(w_d, h_d, z_d) ∈ Γ(w_d)
+       ──────────────────────────────────────────────────────
+  out  𝑐  : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ → ℝ₊₊,  𝑐(w_d, h_d, z_d) ∈ Γ(w_d)
+
+Rule
+  𝑐(w_d, h_d, z_d)
+    ∈ argmax_{c ∈ Γ(w_d)} [𝑢(c, h_d) + β · 𝑉≻(𝑔≻(w_d, h_d, z_d, c))]
+  𝑐 : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ → ℝ₊₊,  𝑐(w_d, h_d, z_d) ∈ Γ(w_d)
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  β     keeper_cons:parameter:β
+  𝑢     keeper_cons:function:𝑢
+  Γ     keeper_cons:correspondence:Γ
+  𝑔≻    keeper_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE keeper_cons / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on ℝ₊₊ × ℝ₊₊ × ℝ₊₊
+       ────────────────────────────────────────
+  out  μ≻  : finite measure on ℝ₊ × ℝ₊₊ × ℝ₊₊
+
+At
+  𝑐  : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ → ℝ₊₊,  𝑐(w_d, h_d, z_d) ∈ Γ(w_d)
+
+Operations
+  1  Pushforward
+     in: μ                              out: μ≻
+     ──────────────────────────────────────────
+     rule: μ≻(B)
+             = μ({w_d, h_d, z_d ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ |
+                   𝑔≻(w_d, h_d, z_d, 𝑐(w_d, h_d, z_d)) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  keeper_cons.bl
+  18  a_nxt_kp = w_d - c  :: [id=savings]
+  19  h_nxt_kp = h_d      :: [id=housing]
+  20  z_nxt_kp = z_d      :: [id=income_state]
+
+Definitions referenced
+  Γ     keeper_cons:correspondence:Γ
+  𝑔≻    keeper_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE keeper_cons / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on ℝ₊₊ × ℝ₊₊ × ℝ₊₊
+       ───────────────────────────────────────
+  out  μ≻  : finite measure on ℝ₊ × ℝ₊₊ × ℝ₊₊
+
+Rule
+  μ≻(B)
+    = μ({w_d, h_d, z_d ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ |
+          𝑔≻(w_d, h_d, z_d, 𝑐(w_d, h_d, z_d)) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  keeper_cons.bl
+  18  a_nxt_kp = w_d - c  :: [id=savings]
+  19  h_nxt_kp = h_d      :: [id=housing]
+  20  z_nxt_kp = z_d      :: [id=income_state]
+
+Definitions referenced
+  𝑔≻    keeper_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== keeper_cons:set:Age ====
+STAGE keeper_cons / SET Age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Age  = {20, …, 71}
+──────────────────────────────────────────────────────────────────────────────
+Source  keeper_cons.bl
+  3  Age := {20, …, 71}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== keeper_cons:parameter:β ====
+STAGE keeper_cons / PARAMETER β
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  β  ∈ (0, 1)
+──────────────────────────────────────────────────────────────────────────────
+Source  keeper_cons.bl
+  5  β   : (0,1)  :: ["discount factor"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== keeper_cons:parameter:α ====
+STAGE keeper_cons / PARAMETER α
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  α  ∈ (0, 1)
+──────────────────────────────────────────────────────────────────────────────
+Source  keeper_cons.bl
+  6  α   : (0,1)  :: ["weight of consumption in utility"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== keeper_cons:parameter:γ_c ====
+STAGE keeper_cons / PARAMETER γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  γ_c  ∈ (1, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  keeper_cons.bl
+  7  γ_c : (1, inf)  :: ["curvature of utility from consumption"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== keeper_cons:parameter:γ_h ====
+STAGE keeper_cons / PARAMETER γ_h
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  γ_h  ∈ (1, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  keeper_cons.bl
+  8  γ_h : (1, inf)  :: ["curvature of utility from housing services"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== keeper_cons:parameter:κ ====
+STAGE keeper_cons / PARAMETER κ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  κ  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  keeper_cons.bl
+  9  κ   : ℝ₊₊  :: ["housing services per unit of the housing stock"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== keeper_cons:function:𝑢 ====
+STAGE keeper_cons / FUNCTION 𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑢  : ℝ₊₊ × ℝ₊₊ → (−∞, 0),
+       (c, h)
+         ↦ α · c^(1 − γ_c)/(1 − γ_c) + (1 − α) · (κ · h)^(1 − γ_h)/(1 − γ_h)
+──────────────────────────────────────────────────────────────────────────────
+Source  keeper_cons.bl
+  11  𝑢(c : ℝ₊₊, h : ℝ₊₊) := α*c^(1-γ_c)/(1-γ_c) + (1-α)*(κ*h)^(1-γ_h)/(1-γ_h)
+        :: [id=util]
+
+Definitions referenced
+  α     keeper_cons:parameter:α
+  γ_c   keeper_cons:parameter:γ_c
+  γ_h   keeper_cons:parameter:γ_h
+  κ     keeper_cons:parameter:κ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== keeper_cons:function:𝑢_c ====
+STAGE keeper_cons / FUNCTION 𝑢_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑢_c  : ℝ₊₊ → ℝ₊₊,  c ↦ α · c^(−γ_c)
+──────────────────────────────────────────────────────────────────────────────
+Source  keeper_cons.bl
+  12  𝑢_c(c : ℝ₊₊) := α*c^(-γ_c)  :: [id=marg_util_cons]
+
+Definitions referenced
+  α     keeper_cons:parameter:α
+  γ_c   keeper_cons:parameter:γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== keeper_cons:function:𝑢_h ====
+STAGE keeper_cons / FUNCTION 𝑢_h
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑢_h  : ℝ₊₊ → ℝ₊₊,  h ↦ (1 − α) · κ^(1 − γ_h) · h^(−γ_h)
+──────────────────────────────────────────────────────────────────────────────
+Source  keeper_cons.bl
+  13  𝑢_h(h : ℝ₊₊) := (1-α)*κ^(1-γ_h)*h^(-γ_h)  :: [id=marg_util_housing]
+
+Definitions referenced
+  α     keeper_cons:parameter:α
+  γ_h   keeper_cons:parameter:γ_h
+  κ     keeper_cons:parameter:κ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== keeper_cons:function:𝑢_c_inv ====
+STAGE keeper_cons / FUNCTION 𝑢_c_inv
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑢_c_inv  : ℝ₊₊ → ℝ₊₊,  x ↦ (α/x)^(1/γ_c)
+──────────────────────────────────────────────────────────────────────────────
+Source  keeper_cons.bl
+  14  𝑢_c_inv(x : ℝ₊₊) := (α/x)^(1/γ_c)  :: [id=inv_marg_util_cons]
+
+Definitions referenced
+  α     keeper_cons:parameter:α
+  γ_c   keeper_cons:parameter:γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== keeper_cons:correspondence:Γ ====
+STAGE keeper_cons / CORRESPONDENCE Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Γ  : ℝ₊₊ ⇉ ℝ₊₊,  x ↦ (0, x]
+──────────────────────────────────────────────────────────────────────────────
+Source  keeper_cons.bl
+  15  Γ(x : ℝ₊₊) := (0, x]  :: [id=feasible]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.savings ====
+STAGE keeper_cons / FORWARD BLOCK dcsn_to_cntn / savings
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  keeper_cons.bl
+  18  a_nxt_kp = w_d - c  :: [id=savings]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.housing ====
+STAGE keeper_cons / FORWARD BLOCK dcsn_to_cntn / housing
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  keeper_cons.bl
+  19  h_nxt_kp = h_d  :: [id=housing]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.income_state ====
+STAGE keeper_cons / FORWARD BLOCK dcsn_to_cntn / income_state
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  keeper_cons.bl
+  20  z_nxt_kp = z_d  :: [id=income_state]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.value ====
+STAGE keeper_cons / BACKWARD BLOCK cntn_to_dcsn / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(w_d, h_d, z_d) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  keeper_cons.bl
+  24  V = 𝑢(c, h_d) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  Age   keeper_cons:set:Age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== policy.optimality ====
+STAGE keeper_cons / POLICY BLOCK policy / optimality
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  keeper_cons.bl
+  28  c = argmax_{c : Γ(w_d)}(𝑢(c, h_d) + β*V[>])  :: [id=optimality]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== keeper_cons:g:dcsn_to_cntn ====
+STAGE keeper_cons / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : {w_d, h_d, z_d, c ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ | c ∈ Γ(w_d)}
+          → ℝ₊ × ℝ₊₊ × ℝ₊₊,
+        (w_d, h_d, z_d, c) ↦ (w_d − c, h_d, z_d)
+──────────────────────────────────────────────────────────────────────────────
+Source  keeper_cons.bl
+  18  a_nxt_kp = w_d - c  :: [id=savings]
+  19  h_nxt_kp = h_d      :: [id=housing]
+  20  z_nxt_kp = z_d      :: [id=income_state]
+
+Definitions referenced
+  Γ     keeper_cons:correspondence:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== keeper_cons:G:cntn_to_dcsn ====
+STAGE keeper_cons / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, age≻, w_d, h_d, z_d, c ∈ ℝ × Age × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ |
+          c ∈ Γ(w_d)} → ℝ × Age,
+        (V≻, age, w_d, h_d, z_d, c) ↦ (𝑢(c, h_d) + β · V≻, age)
+
+Conditions
+  𝑉(w_d, h_d, z_d) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  keeper_cons.bl
+  24  V = 𝑢(c, h_d) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  Age   keeper_cons:set:Age
+  β     keeper_cons:parameter:β
+  𝑢     keeper_cons:function:𝑢
+  Γ     keeper_cons:correspondence:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== keeper_cons:G:policy ====
+STAGE keeper_cons / VALUE AGGREGATOR policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, w_d, h_d, z_d, c ∈ ℝ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ | c ∈ Γ(w_d)} → ℝ,
+        (V≻, w_d, h_d, z_d, c) ↦ 𝑢(c, h_d) + β · V≻
+──────────────────────────────────────────────────────────────────────────────
+Source  keeper_cons.bl
+  28  c = argmax_{c : Γ(w_d)}(𝑢(c, h_d) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  β     keeper_cons:parameter:β
+  𝑢     keeper_cons:function:𝑢
+  Γ     keeper_cons:correspondence:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

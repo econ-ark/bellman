@@ -1,0 +1,776 @@
+BELLMAN-SYM / STAGE bellman                               [VERSION = SYMBOLIC]
+a stage occurrence of applications/benhabib-2019/declaration/stages/
+benhabib_bellman/benhabib_bellman.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        none
+  ∼ decision       m state, c control, V value, age value
+  ≻ continuation   age≻ value, a≻ state, V≻ value
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           m at decision, a≻ at continuation
+  controls         c at decision
+  values           V at the decision, continuation perches; age at the
+                   decision, continuation perches
+  shocks           none
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → dcsn_to_cntn   (m : !dcsn, age≻ : !cntn), at c -> (a≻) : !cntn
+  ← cntn_to_dcsn   (V≻, age≻) : !cntn, at c -> (V, age) : !dcsn
+  ← policy         (V≻, age≻) : !cntn -> (c) : !dcsn
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  sets                     4   Xa := ℝ₊,
+                               Tau :=
+                               {q1, q2, q3, q4, q5, q6, q7, q8, q9, q10},
+                               R_type := {r1, r2, r3, r4, r5},
+                               Age := {25, …, 61}
+  parameters               8   β : (0, 1); σ : ℝ₊₊ \ {1}; μ : ℝ₊ \ {1};
+                               A : ℝ₊; wage_fn : Age × Tau → ℝ₊;
+                               R_vec : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊;
+                               tau : Tau; r_type : R_type
+  correspondences          1   Γ_c : Xa ⇉ ℝ₊
+  laws of motion           1   a = R_vec[r_type]*(m - c) +
+                               wage_fn[age[>]][tau]
+  value aggregators        2   V = c^(1 - σ)/(1 - σ) + β*V[>], age = age[>] -
+                               1;
+                               c = argmax_{cp : Γ_c(m)}(cp^(1 - σ)/(1 - σ) +
+                               β*V[>])
+  block lines              4   dcsn_to_cntn.savings, cntn_to_dcsn.value,
+                               cntn_to_dcsn.age, policy.optimality
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   (𝑎𝑔𝑒≻, 𝑉≻) ↦ 𝑐(m), 𝑉, 𝑎𝑔𝑒
+                    forward    μ ↦ μ≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ∼ m  and  ≻ age≻  →  ≻ a≻
+  backward   ∼ V, age  ←  ≻ V≻, age≻
+  policy     ∼ c  ←  ≻ V≻, age≻
+
+==== stage ====
+STAGE bellman
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑎𝑔𝑒≻  : {()} → Age
+         𝑉≻    : Xa → ℝ
+         ──────────────────────────────────────────
+    out  𝑐     : Xa → ℝ₊,  𝑐(m) ∈ Γ_c(m)
+         𝑉     : Xa → ℝ
+         𝑎𝑔𝑒   : {()} → Age
+  forward
+    in   μ     : finite measure on Xa
+         ──────────────────────────────────────────
+    out  μ≻    : finite measure on Xa
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉≻, 𝑎𝑔𝑒≻                     out: 𝑉, 𝑎𝑔𝑒
+
+    2  policy
+       in: 𝑉≻, 𝑎𝑔𝑒≻                     out: 𝑐
+
+  forward
+    1  dcsn_to_cntn
+       in: μ                            out: μ≻
+
+Conditions
+  cntn_to_dcsn:Aggregation       ¬(1 − σ = 0)
+  cntn_to_dcsn:Aggregation       𝑐(m) > 0
+  cntn_to_dcsn:Aggregation       𝑉(m) ∈ ℝ
+  cntn_to_dcsn:Aggregation       𝑎𝑔𝑒 ∈ Age
+  policy.optimality:Aggregation  cp ∈ ℝ₊₊
+  policy.optimality:Aggregation  c > 0
+  dcsn_to_cntn:Pushforward       ¬(¬(R_vec[r_type] ∈ ℝ) ∧ m − c ∈ [0, 0])
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  20  a = R_vec[r_type] * (m - c) + wage_fn[age[>]][tau]  :: [id=savings]
+  25  V = c^(1-σ)/(1-σ) + β*V[>]                          :: [id=value]
+  26  age = age[>] - 1                                    :: [id=age]
+  30  c = argmax_{cp : Γ_c(m)}(cp^(1-σ)/(1-σ) + β*V[>])   :: [id=optimality]
+
+Definitions referenced
+  Xa     bellman:set:Xa
+  Age    bellman:set:Age
+  σ      bellman:parameter:σ
+  R_vec  bellman:parameter:R_vec
+  Γ_c    bellman:correspondence:Γ_c
+
+File
+  applications/benhabib-2019/declaration/stages/benhabib_bellman/
+  benhabib_bellman.bl
+
+Perches
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE bellman / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻    : {age≻, V≻}
+       age≻  : {age≻}
+       ──────────────────
+  out  V     : {V, age}
+       age   : {age}
+
+Conditions
+  𝑉(m) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  25  V = c^(1-σ)/(1-σ) + β*V[>]  :: [id=value]
+  26  age = age[>] - 1            :: [id=age]
+
+Definitions referenced
+  Age   bellman:set:Age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward policy ====
+STAGE bellman / POLICY BLOCK policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻    : {age≻, V≻}
+       age≻  : {age≻}
+       ──────────────────
+  out  c     : {c}
+
+Conditions
+  ¬(1 − σ = 0)
+  cp ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  30  c = argmax_{cp : Γ_c(m)}(cp^(1-σ)/(1-σ) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  σ     bellman:parameter:σ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE bellman / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   m     : {m}
+       age≻  : {age≻}
+       ──────────────
+  out  a≻    : {a≻}
+
+Conditions
+  ¬(¬(R_vec[r_type] ∈ ℝ) ∧ m − c ∈ [0, 0])
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  20  a = R_vec[r_type] * (m - c) + wage_fn[age[>]][tau]  :: [id=savings]
+
+Definitions referenced
+  R_vec  bellman:parameter:R_vec
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE bellman / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻    : Xa → ℝ
+       𝑎𝑔𝑒≻  : {()} → Age
+       ─────────────────────────────────────────────────────────
+  out  𝑉     : Xa → ℝ
+       𝑎𝑔𝑒   : {()} → Age
+
+At
+  𝑐  : Xa → ℝ₊,  𝑐(m) ∈ Γ_c(m)
+
+Operations
+  1  Pullback
+     in: 𝑉≻, 𝑎𝑔𝑒≻                       out: 𝑉≻ ∘ 𝑔≻(·, 𝑐, 𝑎𝑔𝑒≻)
+     ───────────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻(·, 𝑐, 𝑎𝑔𝑒≻))(m) = 𝑉≻(𝑔≻(m, 𝑐(m), 𝑎𝑔𝑒≻()))
+
+  2  Aggregation
+     in: (1), 𝑎𝑔𝑒≻                      out: 𝑉, 𝑎𝑔𝑒
+     ───────────────────────────────────────────────────────────
+     rule: 𝑉(m) = 𝑐(m)^(1 − σ)/(1 − σ) + β · 𝑉≻(𝑔≻(m, 𝑐(m), 𝑎𝑔𝑒≻()))
+           𝑎𝑔𝑒(m) = 𝑎𝑔𝑒≻ − 1
+
+  3  Evaluation
+     in: 𝑉, 𝑎𝑔𝑒                         out: 𝑉, 𝑎𝑔𝑒
+     ───────────────────────────────────────────────────────────
+     rule: 𝑉 : Xa → ℝ
+           𝑎𝑔𝑒 : {()} → Age
+
+Conditions
+  Aggregation  ¬(1 − σ = 0)
+  Aggregation  𝑐(m) > 0
+  Aggregation  𝑉(m) ∈ ℝ
+  Aggregation  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  25  V = c^(1-σ)/(1-σ) + β*V[>]  :: [id=value]
+  26  age = age[>] - 1            :: [id=age]
+
+Definitions referenced
+  Xa    bellman:set:Xa
+  Age   bellman:set:Age
+  β     bellman:parameter:β
+  σ     bellman:parameter:σ
+  Γ_c   bellman:correspondence:Γ_c
+  𝑔≻    bellman:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback ====
+STAGE bellman / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻    : Xa → ℝ
+       𝑎𝑔𝑒≻  : {()} → Age
+       ───────────────────
+  out  𝑉≻ ∘ 𝑔≻(·, 𝑐, 𝑎𝑔𝑒≻)
+             : Xa → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻(·, 𝑐, 𝑎𝑔𝑒≻))(m) = 𝑉≻(𝑔≻(m, 𝑐(m), 𝑎𝑔𝑒≻()))
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  20  a = R_vec[r_type] * (m - c) + wage_fn[age[>]][tau]  :: [id=savings]
+
+Definitions referenced
+  Xa    bellman:set:Xa
+  Age   bellman:set:Age
+  𝑔≻    bellman:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE bellman / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻(·, 𝑐, 𝑎𝑔𝑒≻)
+             : Xa → ℝ
+       𝑎𝑔𝑒≻  : {()} → Age
+       ───────────────────
+  out  𝑉     : Xa → ℝ
+       𝑎𝑔𝑒   : Xa → Age
+
+Rule
+  𝑉(m) = 𝑐(m)^(1 − σ)/(1 − σ) + β · 𝑉≻(𝑔≻(m, 𝑐(m), 𝑎𝑔𝑒≻()))
+  𝑎𝑔𝑒(m) = 𝑎𝑔𝑒≻ − 1
+
+Conditions
+  ¬(1 − σ = 0)
+  𝑐(m) > 0
+  𝑉(m) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  25  V = c^(1-σ)/(1-σ) + β*V[>]  :: [id=value]
+  26  age = age[>] - 1            :: [id=age]
+
+Definitions referenced
+  Xa    bellman:set:Xa
+  Age   bellman:set:Age
+  β     bellman:parameter:β
+  σ     bellman:parameter:σ
+  𝑔≻    bellman:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE bellman / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉    : Xa → ℝ
+       𝑎𝑔𝑒  : Xa → Age
+       ─────────────────
+  out  𝑉    : Xa → ℝ
+       𝑎𝑔𝑒  : {()} → Age
+
+Rule
+  𝑉(m) = 𝑐(m)^(1 − σ)/(1 − σ) + β · 𝑉≻(𝑔≻(m, 𝑐(m), 𝑎𝑔𝑒≻()))
+  𝑉 : Xa → ℝ
+  𝑎𝑔𝑒(m) = 𝑎𝑔𝑒≻ − 1
+  𝑎𝑔𝑒 : {()} → Age
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xa    bellman:set:Xa
+  Age   bellman:set:Age
+  β     bellman:parameter:β
+  σ     bellman:parameter:σ
+  𝑔≻    bellman:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy ====
+STAGE bellman / POLICY BUILDER policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻    : Xa → ℝ
+       𝑎𝑔𝑒≻  : {()} → Age
+       ─────────────────────────────────────────────────────────
+  out  𝑐     : Xa → ℝ₊,  𝑐(m) ∈ Γ_c(m)
+
+Operations
+  1  Pullback
+     in: 𝑉≻, 𝑎𝑔𝑒≻                       out: 𝑉≻ ∘ 𝑔≻(·, ·, 𝑎𝑔𝑒≻)
+     ───────────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻(·, ·, 𝑎𝑔𝑒≻))(m, c) = 𝑉≻(𝑔≻(m, c, 𝑎𝑔𝑒≻()))
+
+  2  optimality:Aggregation
+     in: (1)
+     out: (m, c) ↦ c^(1 − σ)/(1 − σ) + β · 𝑉≻(𝑔≻(m, c, 𝑎𝑔𝑒≻()))
+     ───────────────────────────────────────────────────────────
+     rule: (m, c) ↦ c^(1 − σ)/(1 − σ) + β · 𝑉≻(𝑔≻(m, c, 𝑎𝑔𝑒≻()))
+
+  3  optimality:Argmax
+     in: (2)                            out: 𝑐
+     ───────────────────────────────────────────────────────────
+     rule: 𝑐(m)
+             ∈ argmax_{cp ∈ Γ_c(m)}
+                 [cp^(1 − σ)/(1 − σ) + β · 𝑉≻(𝑔≻(m, cp, 𝑎𝑔𝑒≻()))]
+
+  4  Evaluation
+     in: 𝑐                              out: 𝑐
+     ───────────────────────────────────────────────────────────
+     rule: 𝑐 : Xa → ℝ₊,  𝑐(m) ∈ Γ_c(m)
+
+Conditions
+  optimality:Aggregation  ¬(1 − σ = 0)
+  optimality:Aggregation  cp ∈ ℝ₊₊
+  optimality:Aggregation  c > 0
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  30  c = argmax_{cp : Γ_c(m)}(cp^(1-σ)/(1-σ) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xa    bellman:set:Xa
+  Age   bellman:set:Age
+  β     bellman:parameter:β
+  σ     bellman:parameter:σ
+  Γ_c   bellman:correspondence:Γ_c
+  𝑔≻    bellman:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback ====
+STAGE bellman / POLICY BUILDER policy / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻    : Xa → ℝ
+       𝑎𝑔𝑒≻  : {()} → Age
+       ─────────────────────────────────────────
+  out  𝑉≻ ∘ 𝑔≻(·, ·, 𝑎𝑔𝑒≻)
+             : {m, c ∈ Xa × ℝ₊ | c ∈ Γ_c(m)} → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻(·, ·, 𝑎𝑔𝑒≻))(m, c) = 𝑉≻(𝑔≻(m, c, 𝑎𝑔𝑒≻()))
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  20  a = R_vec[r_type] * (m - c) + wage_fn[age[>]][tau]  :: [id=savings]
+
+Definitions referenced
+  Xa    bellman:set:Xa
+  Age   bellman:set:Age
+  Γ_c   bellman:correspondence:Γ_c
+  𝑔≻    bellman:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / optimality:Aggregation ====
+STAGE bellman / POLICY BUILDER policy / optimality:Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻(·, ·, 𝑎𝑔𝑒≻)
+         : {m, c ∈ Xa × ℝ₊ | c ∈ Γ_c(m)} → ℝ
+       ─────────────────────────────────────────────────────
+  out  (m, c) ↦ c^(1 − σ)/(1 − σ) + β · 𝑉≻(𝑔≻(m, c, 𝑎𝑔𝑒≻()))
+         : {m, c ∈ Xa × ℝ₊ | c ∈ Γ_c(m)} → ℝ
+
+Rule
+  (m, c) ↦ c^(1 − σ)/(1 − σ) + β · 𝑉≻(𝑔≻(m, c, 𝑎𝑔𝑒≻()))
+
+Conditions
+  ¬(1 − σ = 0)
+  cp ∈ ℝ₊₊
+  c > 0
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  30  c = argmax_{cp : Γ_c(m)}(cp^(1-σ)/(1-σ) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xa    bellman:set:Xa
+  β     bellman:parameter:β
+  σ     bellman:parameter:σ
+  Γ_c   bellman:correspondence:Γ_c
+  𝑔≻    bellman:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / optimality:Argmax ====
+STAGE bellman / POLICY BUILDER policy / optimality:Argmax
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (m, c) ↦ c^(1 − σ)/(1 − σ) + β · 𝑉≻(𝑔≻(m, c, 𝑎𝑔𝑒≻()))
+          : {m, c ∈ Xa × ℝ₊ | c ∈ Γ_c(m)} → ℝ
+       ─────────────────────────────────────────────────────
+  out  𝑐  : Xa → ℝ₊,  𝑐(m) ∈ Γ_c(m)
+
+Rule
+  𝑐(m) ∈ argmax_{cp ∈ Γ_c(m)} [cp^(1 − σ)/(1 − σ) + β · 𝑉≻(𝑔≻(m, cp, 𝑎𝑔𝑒≻()))]
+
+Conditions
+  ¬(1 − σ = 0)
+  cp ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  30  c = argmax_{cp : Γ_c(m)}(cp^(1-σ)/(1-σ) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xa    bellman:set:Xa
+  β     bellman:parameter:β
+  σ     bellman:parameter:σ
+  Γ_c   bellman:correspondence:Γ_c
+  𝑔≻    bellman:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Evaluation ====
+STAGE bellman / POLICY BUILDER policy / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑐  : Xa → ℝ₊,  𝑐(m) ∈ Γ_c(m)
+       ────────────────────────────
+  out  𝑐  : Xa → ℝ₊,  𝑐(m) ∈ Γ_c(m)
+
+Rule
+  𝑐(m) ∈ argmax_{cp ∈ Γ_c(m)} [cp^(1 − σ)/(1 − σ) + β · 𝑉≻(𝑔≻(m, cp, 𝑎𝑔𝑒≻()))]
+  𝑐 : Xa → ℝ₊,  𝑐(m) ∈ Γ_c(m)
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xa    bellman:set:Xa
+  β     bellman:parameter:β
+  σ     bellman:parameter:σ
+  Γ_c   bellman:correspondence:Γ_c
+  𝑔≻    bellman:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE bellman / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on Xa
+       ────────────────────────────────────────
+  out  μ≻  : finite measure on Xa
+
+At
+  𝑐  : Xa → ℝ₊,  𝑐(m) ∈ Γ_c(m)
+
+Operations
+  1  Pushforward
+     in: μ                              out: μ≻
+     ──────────────────────────────────────────
+     rule: μ≻(B) = μ({m ∈ Xa | 𝑔≻(m, 𝑐(m), 𝑎𝑔𝑒≻()) ∈ B})
+
+Conditions
+  Pushforward  ¬(¬(R_vec[r_type] ∈ ℝ) ∧ m − c ∈ [0, 0])
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  20  a = R_vec[r_type] * (m - c) + wage_fn[age[>]][tau]  :: [id=savings]
+
+Definitions referenced
+  Xa     bellman:set:Xa
+  R_vec  bellman:parameter:R_vec
+  Γ_c    bellman:correspondence:Γ_c
+  𝑔≻     bellman:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE bellman / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on Xa
+       ──────────────────────────
+  out  μ≻  : finite measure on Xa
+
+Rule
+  μ≻(B) = μ({m ∈ Xa | 𝑔≻(m, 𝑐(m), 𝑎𝑔𝑒≻()) ∈ B})
+
+Conditions
+  ¬(¬(R_vec[r_type] ∈ ℝ) ∧ m − c ∈ [0, 0])
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  20  a = R_vec[r_type] * (m - c) + wage_fn[age[>]][tau]  :: [id=savings]
+
+Definitions referenced
+  Xa     bellman:set:Xa
+  R_vec  bellman:parameter:R_vec
+  𝑔≻     bellman:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bellman:set:Xa ====
+STAGE bellman / SET Xa
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xa  = ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  3  Xa     := ℝ₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bellman:set:Tau ====
+STAGE bellman / SET Tau
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Tau  = {q1, q2, q3, q4, q5, q6, q7, q8, q9, q10}
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  4  Tau    := {q1, q2, q3, q4, q5, q6, q7, q8, q9, q10}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bellman:set:R_type ====
+STAGE bellman / SET R_type
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  R_type  = {r1, r2, r3, r4, r5}
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  5  R_type := {r1, r2, r3, r4, r5}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bellman:set:Age ====
+STAGE bellman / SET Age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Age  = {25, …, 61}
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  6  Age    := {25, …, 61}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bellman:parameter:β ====
+STAGE bellman / PARAMETER β
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  β  ∈ (0, 1)
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  8  β       : (0,1)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bellman:parameter:σ ====
+STAGE bellman / PARAMETER σ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  σ  ∈ ℝ₊₊ ∖ {1}
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  9  σ       : ℝ₊₊ \ {1}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bellman:parameter:μ ====
+STAGE bellman / PARAMETER μ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  μ  ∈ ℝ₊ ∖ {1}
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  10  μ       : ℝ₊ \ {1}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bellman:parameter:A ====
+STAGE bellman / PARAMETER A
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  A  ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  11  A       : ℝ₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bellman:parameter:wage_fn ====
+STAGE bellman / PARAMETER wage_fn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  wage_fn  ∈ Age × Tau → ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  12  wage_fn : Age × Tau → ℝ₊
+
+Definitions referenced
+  Tau   bellman:set:Tau
+  Age   bellman:set:Age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bellman:parameter:R_vec ====
+STAGE bellman / PARAMETER R_vec
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  R_vec  ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  13  R_vec   : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bellman:parameter:tau ====
+STAGE bellman / PARAMETER tau
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  tau  ∈ Tau
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  14  tau     : Tau
+
+Definitions referenced
+  Tau   bellman:set:Tau
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bellman:parameter:r_type ====
+STAGE bellman / PARAMETER r_type
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  r_type  ∈ R_type
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  15  r_type  : R_type
+
+Definitions referenced
+  R_type  bellman:set:R_type
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bellman:correspondence:Γ_c ====
+STAGE bellman / CORRESPONDENCE Γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Γ_c  : Xa ⇉ ℝ₊,  x ↦ [0, x]
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  17  Γ_c(x : Xa) := [0, x]
+
+Definitions referenced
+  Xa    bellman:set:Xa
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.savings ====
+STAGE bellman / FORWARD BLOCK dcsn_to_cntn / savings
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  ¬(¬(R_vec[r_type] ∈ ℝ) ∧ m − c ∈ [0, 0])
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  20  a = R_vec[r_type] * (m - c) + wage_fn[age[>]][tau]  :: [id=savings]
+
+Definitions referenced
+  R_vec  bellman:parameter:R_vec
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.value ====
+STAGE bellman / BACKWARD BLOCK cntn_to_dcsn / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(m) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  25  V = c^(1-σ)/(1-σ) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  Age   bellman:set:Age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.age ====
+STAGE bellman / BACKWARD BLOCK cntn_to_dcsn / age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(m) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  26  age = age[>] - 1  :: [id=age]
+
+Definitions referenced
+  Age   bellman:set:Age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== policy.optimality ====
+STAGE bellman / POLICY BLOCK policy / optimality
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  ¬(1 − σ = 0)
+  cp ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  30  c = argmax_{cp : Γ_c(m)}(cp^(1-σ)/(1-σ) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  σ     bellman:parameter:σ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bellman:g:dcsn_to_cntn ====
+STAGE bellman / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : {m, c, age≻ ∈ Xa × ℝ₊ × Age | c ∈ Γ_c(m)} → Xa,
+        (m, c, age) ↦ R_vec[r_type] · (m − c) + wage_fn[age][tau]
+
+Conditions
+  ¬(¬(R_vec[r_type] ∈ ℝ) ∧ m − c ∈ [0, 0])
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  20  a = R_vec[r_type] * (m - c) + wage_fn[age[>]][tau]  :: [id=savings]
+
+Definitions referenced
+  Xa       bellman:set:Xa
+  Age      bellman:set:Age
+  wage_fn  bellman:parameter:wage_fn
+  R_vec    bellman:parameter:R_vec
+  Γ_c      bellman:correspondence:Γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bellman:G:cntn_to_dcsn ====
+STAGE bellman / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, age≻, m, c ∈ ℝ × Age × Xa × ℝ₊ | c ∈ Γ_c(m)} → ℝ × Age,
+        (V≻, age≻, m, c) ↦ (c^(1 − σ)/(1 − σ) + β · V≻, age≻ − 1)
+
+Conditions
+  𝑉(m) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  25  V = c^(1-σ)/(1-σ) + β*V[>]  :: [id=value]
+  26  age = age[>] - 1            :: [id=age]
+
+Definitions referenced
+  Xa    bellman:set:Xa
+  Age   bellman:set:Age
+  β     bellman:parameter:β
+  σ     bellman:parameter:σ
+  Γ_c   bellman:correspondence:Γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bellman:G:policy ====
+STAGE bellman / VALUE AGGREGATOR policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, m, c ∈ ℝ × Xa × ℝ₊ | c ∈ Γ_c(m)} → ℝ,
+        (V≻, m, c) ↦ c^(1 − σ)/(1 − σ) + β · V≻
+
+Conditions
+  ¬(1 − σ = 0)
+  cp ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  benhabib_bellman.bl
+  30  c = argmax_{cp : Γ_c(m)}(cp^(1-σ)/(1-σ) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xa    bellman:set:Xa
+  β     bellman:parameter:β
+  σ     bellman:parameter:σ
+  Γ_c   bellman:correspondence:Γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

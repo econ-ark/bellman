@@ -1,0 +1,9 @@
+!trellis
+name: life_cycle
+periods:
+  - stages: [entry, mortality, draw, consumption, terminal]
+    connectors:
+      - {consumption.age_next: terminal.age}
+  - {template: period.yml, repeat: 7}
+inter_connectors:
+  - {z_4: z_0, a_4: a_0, consumption.age_next: entry.age}

@@ -105,7 +105,8 @@ class Sort(frobenius.Ob):
     its sites (a named-set reference, an inline interval or an intersection
     as written), None when no site declares one; and `coordinates`, the
     ordered identities of the coordinates a function is written in or a
-    measure is on, `()` for a field wire; and `derivatives`, the ordered
+    measure is on, or the states a value field depends on; `constant` records
+    its information-independent classifier; and `derivatives`, the ordered
     identities of the coordinates in which the block's derivative lines state
     a derivative of the value a function wire carries (AMD-MB-001 §5.1), `()`
     where none is stated. A
@@ -121,8 +122,11 @@ class Sort(frobenius.Ob):
     identity is built with a different kind, perch, role, domain or
     coordinates."""
 
+    constant = False
+
     def __init__(
-        self, identity, kind, *, perch=None, role=None, domain=None, coordinates=(), derivatives=()
+        self, identity, kind, *, perch=None, role=None, domain=None, coordinates=(),
+        derivatives=(), constant=False,
     ):
         if not isinstance(identity, Identity):
             raise TypeError(
@@ -155,6 +159,7 @@ class Sort(frobenius.Ob):
             coordinates,
         )
         self.derivatives = derivatives
+        self.constant = constant
         _validate_typing(self)
 
     def _typing(self):
@@ -166,6 +171,7 @@ class Sort(frobenius.Ob):
             domain=self.domain,
             coordinates=self.coordinates,
             derivatives=self.derivatives,
+            constant=self.constant,
         )
 
     def __eq__(self, other):
@@ -235,6 +241,7 @@ class _Typing(NamedTuple):
     domain: object
     coordinates: tuple
     derivatives: tuple
+    constant: bool
 
 
 def _validate_typing(sort):
@@ -964,7 +971,7 @@ def _broken_at_spaces(text, room):
     return broken
 
 
-def setting_names(term):
+def setting_names(term, *, declared=()):
     """The names of the settings a component's term reads, in written order:
     the names among the keyword arguments of a method word, at any depth of
     its tuples and nested words; the bounds and the counts of a grid's
@@ -974,35 +981,43 @@ def setting_names(term):
     file declares, a set the stage defines or, for a listed factor, an
     expectation operator, told apart by the reader; and those of the base
     and the fibre of `!Fibred` (specification 0.7 D1, D5; AMD-MT-003 build
-    contract §2)."""
+    contract §2). For a sum, only an unmarked operand in `declared`
+    can be a setting."""
     if isinstance(term, Components):
         for held in (term.method, term.grid):
-            yield from setting_names(held)
+            yield from setting_names(held, declared=declared)
     elif isinstance(term, T.Word):
         for keyword in term.arguments:
-            yield from setting_names(keyword.value)
+            yield from setting_names(keyword.value, declared=declared)
     elif isinstance(term, T.Name):
         yield term.name
+    elif isinstance(term, T.ExpressionArgument) and isinstance(term.value, T.Add):
+        for operand in (term.value.left, term.value.right):
+            if (
+                isinstance(operand, T.Sym) and isinstance(operand.symbol, T.Constant)
+                and operand.symbol.name in declared
+            ):
+                yield operand.symbol.name
     elif isinstance(term, T.Values):
         for item in term.items:
-            yield from setting_names(item)
+            yield from setting_names(item, declared=declared)
     elif isinstance(term, T.Nested):
-        yield from setting_names(term.word)
+        yield from setting_names(term.word, declared=declared)
     elif isinstance(term, T.Cartesian):
         for factor in term.factors:
-            yield from setting_names(factor)
+            yield from setting_names(factor, declared=declared)
     elif isinstance(term, T.PointGrid):
         if term.nodes is not None:
             yield term.nodes
     elif isinstance(term, T.Fibred):
-        yield from setting_names(term.base)
-        yield from setting_names(term.fibre)
+        yield from setting_names(term.base, declared=declared)
+        yield from setting_names(term.fibre, declared=declared)
     elif isinstance(term, T.Spaced):
         for argument in (term.lower, term.upper, term.count):
-            yield from setting_names(argument)
-        yield from setting_names(term.spacing)
+            yield from setting_names(argument, declared=declared)
+        yield from setting_names(term.spacing, declared=declared)
     elif isinstance(term, T.Feasible):
-        yield from setting_names(term.count)
+        yield from setting_names(term.count, declared=declared)
     elif isinstance(term, T.Listed):
         yield term.nodes
 
@@ -1393,9 +1408,10 @@ class BlockData(Record):
     nodes: tuple
     branch_labels: tuple
     unread_inputs: tuple = ()
+    input_spellings: tuple = ()
 
     def __post_init__(self):
-        require_tuple(self, "statements_outside_nodes", "nodes", "branch_labels", "unread_inputs")
+        require_tuple(self, "statements_outside_nodes", "nodes", "branch_labels", "unread_inputs", "input_spellings")
         for node in self.nodes:
             if not isinstance(node, NodeData):
                 raise TypeError(
@@ -1449,13 +1465,22 @@ class BlockHeader(Record):
     fields table and the perch rule. `unread` holds the sorts of the value
     inputs the header lists and no line of the block reads, in header order:
     they are no inputs of the block, and the stage records each as a
-    diagnostic (`block_lines.unread_inputs_of`; AAS, 17 October 2026)."""
+    diagnostic (`block_lines.unread_inputs_of`; AAS, 17 October 2026).
+    `input_spellings` retains each input's authored name, including its mark.
+    Semantic identities alone do not distinguish a bare continuation name
+    from the same name written with `[>]`."""
 
     inputs: tuple
     unread: tuple = ()
+    input_spellings: tuple = ()
 
     def __post_init__(self):
-        require_tuple(self, "inputs", "unread")
+        require_tuple(self, "inputs", "unread", "input_spellings")
+        if self.input_spellings and (
+            len(self.input_spellings) != len(self.inputs)
+            or not all(isinstance(name, str) and name for name in self.input_spellings)
+        ):
+            raise ValueError("BlockHeader.input_spellings has one authored name per input")
 
 
 # The roles of a statement record: a node (a box of its own inside the

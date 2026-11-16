@@ -85,6 +85,7 @@ ROLE_WORD = {
     VALUE: "vlu",
     SHOCK: "shck",
 }
+CONSTANCY_WORD = "cnst"
 
 # the role words retired by AMD-MB-001 §4.1, which a header may not write: a
 # derivative of a value is the term `D_{x}V`, and the lowering refuses the

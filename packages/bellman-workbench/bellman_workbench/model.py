@@ -63,6 +63,7 @@ from bellman.stage import (
     dcsn,
     elaborate_text,
     graph_refusal,
+    header_fields,
     header_line,
     header_of,
     node_place,
@@ -2673,15 +2674,17 @@ _ROLE_OF_TEXT = {"!" + word: role for role, word in ROLE_WORD.items()}
 
 class _Listed(NamedTuple):
     """One listing of a field as the text alone gives it (R-D57):
-    `listing`; `block`, the block whose header writes it; `label`, the
-    branch whose nested block writes it, None on a block's own side;
-    `output`, whether it stands on an output side; `stem`, the field's
+    `listing`; `address`, the address the span table gives it,
+    `cntn_to_dcsn.in.V[>]`; `block`, the block whose header writes it;
+    `label`, the branch whose nested block writes it, None on a block's own
+    side; `output`, whether it stands on an output side; `stem`, the field's
     name without its mark; `placed`, the perch its mark or its own perch
     word names, None for neither; `side`, the perch word its side writes
     after its fields, None for none; and `role`, the role its role word
     names, None for none."""
 
     listing: Listing
+    address: str
     block: str
     label: str | None
     output: bool
@@ -2765,6 +2768,7 @@ def _listed_in_text(spans, lines: list) -> list:
                 found.append(
                     _Listed(
                         listing=listing,
+                        address=f"{side}.{listing.name}",
                         block=block,
                         label=label or None,
                         output=output,
@@ -2783,14 +2787,19 @@ def _text_reading(stage, spans, text: str) -> _Reading:
     construction of a text is refused, its rows are read from the text, so
     that a write lands in the text as it is). A field is a name with its
     perch, its identity `<stage>:<perch>:<name>` under the name of
-    `stage`, the last construction of the file. Its role is the one its
-    first role word in the headers names, else the role `stage` gives a
-    field of that name, as for a role a top-level declaration writes, else
-    `state`; a role no table holds, a shock or a multiplier, has no row. A
-    control stands at the decision perch, and any other field at the perch
-    its mark or its own perch word names, else at the perch its side
-    writes; a listing that none of these places has no row, so that no
-    perch is guessed. A row's listings are those of its field, in the
+    `stage`, the last construction of the file. The role and the perch of
+    a listing are those the package reads the headers of `text` to give it
+    (`_placed_by_the_package`), so that a constant a forward block lists
+    among its inputs stands at the continuation perch, where the stage
+    holds it. Where the package refuses the headers of `text`, a listing is
+    placed from its own words: its role is the one its first role word in
+    the headers names, else the role `stage` gives a field of that name, as
+    for a role a top-level declaration writes, else `state`; a control
+    stands at the decision perch, and any other field at the perch its mark
+    or its own perch word names, else at the perch its side writes; a
+    listing that none of these places has no row, so that no perch is
+    guessed. A role no table holds, a shock or a multiplier, has no row. A
+    row's listings are those of its field, in the
     order of the text. Its set is the one `stage` prints for the field
     where the field's listings write the sets they write in the text
     `stage` was elaborated from (`_printed_sets`), the meet of the sets
@@ -2809,10 +2818,19 @@ def _text_reading(stage, spans, text: str) -> _Reading:
     for each in listed:
         if each.role is not None:
             roles.setdefault(each.stem, each.role)
+    native = _placed_by_the_package(text, stage.provenance.get("origin"))
+    # the role and the perch of each listing, by its address
+    where = {}
+    for each in listed:
+        held = native.get(each.address)
+        if held is not None:
+            where[each.address] = (held.role, held.identity.perch)
+        else:
+            role = roles.get(each.stem) or known_roles.get(each.stem, "state")
+            where[each.address] = (role, dcsn if role == "control" else each.placed or each.side)
     fields, labels = {}, {}
     for each in listed:
-        role = roles.get(each.stem) or known_roles.get(each.stem, "state")
-        perch = dcsn if role == "control" else each.placed or each.side
+        role, perch = where[each.address]
         if role not in ROLE_CLASS or perch not in TABLE_PERCHES:
             continue
         identity = f"{stage.name}:{perch}:{each.stem}"
@@ -2853,11 +2871,25 @@ def _text_reading(stage, spans, text: str) -> _Reading:
             if each.block in branching
             and each.label is None
             and not each.output
-            and (roles.get(each.stem) or known_roles.get(each.stem)) == "control"
+            and where[each.address][0] == "control"
         ),
         None,
     )
     return _Reading(rows, tuple(labels), control)
+
+
+def _placed_by_the_package(text: str, origin: str | None):
+    """The field the package reads each listing of the block headers of
+    `text` to name, by the address the span table gives the listing
+    (`header_fields`): its role, and its identity, whose perch is the perch
+    of the listing. Empty where the package refuses the headers of the
+    text, as a side without a perch word whose field nothing places; the
+    listings of such a text are placed from their own words
+    (`_text_reading`)."""
+    try:
+        return header_fields(text, origin)
+    except ConstructionError:
+        return {}
 
 
 def named_rows(groups, places) -> dict:

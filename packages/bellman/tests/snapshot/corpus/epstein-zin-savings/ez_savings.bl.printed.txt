@@ -1,0 +1,902 @@
+BELLMAN-SYM / STAGE ez_savings                            [VERSION = SYMBOLIC]
+a stage occurrence of
+applications/epstein-zin-savings/declaration/stages/ez_savings/ez_savings.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        none
+  ∼ decision       m_d state, c control, V value
+  ≻ continuation   a≻ state, V≻ value
+  ∼ → ≻            Ψ drawn after decision, before continuation
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           m_d at decision, a≻ at continuation
+  controls         c at decision
+  values           V at the decision, continuation perches
+  shocks           Ψ, drawn between decision and continuation
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → dcsn_to_cntn   (m_d, Ψ) : !dcsn, at c -> (a≻) : !cntn
+  ← cntn_to_dcsn   (V≻) : !cntn, at c -> (V) : !dcsn
+  ← policy         (V≻) : !cntn -> (c) : !dcsn
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  distributions            1   Ψ
+  parameters               5   β : (0, 1); ρ : ℝ₊₊ \ {1}; γ : ℝ₊₊ \ {1};
+                               μ_Ψ : ℝ; σ_Ψ : ℝ₊
+  derived parameters       1   q : (0, 1) :=
+                               (β*exp((1 - ρ)*(μ_Ψ + (1 - γ)*σ_Ψ^2/2)))^(1/ρ)
+  correspondences          1   Γ : ℝ₊₊ ⇉ ℝ₊₊
+  laws of motion           1   a = (m_d - c)*Ψ
+  value aggregators        2   cntn_to_dcsn, two kernels; policy, two kernels
+  block lines              3   dcsn_to_cntn.savings, cntn_to_dcsn.value,
+                               policy.objective
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   𝑉≻ ↦ 𝑐(m_d), 𝑉
+                    forward    μ ↦ μ≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ∼ m_d  → Ψ drawn →  ≻ a≻
+  backward   ∼ V  ←  ≻ V≻
+  policy     ∼ c  ←  ≻ V≻
+
+==== stage ====
+STAGE ez_savings
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑉≻  : ℝ₊₊ → ℝ
+         ──────────────────────────────────────
+    out  𝑐   : ℝ₊₊ → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
+         𝑉   : ℝ₊₊ → ℝ
+  forward
+    in   μ   : finite measure on ℝ₊₊
+         ──────────────────────────────────────
+    out  μ≻  : finite measure on ℝ₊₊
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉≻                           out: 𝑉
+
+    2  policy
+       in: 𝑉≻                           out: 𝑐
+
+  forward
+    1  dcsn_to_cntn
+       in: μ                            out: μ≻
+
+Conditions
+  cntn_to_dcsn.value:Aggregation:1  𝑉≻(𝑔≻(m_d, 𝑐(m_d), Ψ)) > 0
+  cntn_to_dcsn:Aggregation          (1 − β) · 𝑐(m_d)^(1 − ρ)
+                                      + β · value:Expectation:1(m_d)^((1 − ρ)
+                                          /(1 − γ))
+                                      > 0
+  cntn_to_dcsn:Aggregation          value:Expectation:1(m_d) > 0
+  cntn_to_dcsn:Aggregation          ¬(1 − γ = 0)
+  cntn_to_dcsn:Aggregation          ¬(1 − ρ = 0)
+  cntn_to_dcsn:Aggregation          𝑉(m_d) ∈ ℝ
+  policy.objective:Aggregation:1    𝑉≻(𝑔≻(m_d, c, Ψ)) > 0
+  policy.objective:Aggregation
+    (1 − β) · c^(1 − ρ)
+      + β · objective:Expectation:1(m_d, c)^((1 − ρ)/(1 − γ))
+      ∈ ℝ₊₊
+  policy.objective:Aggregation      c ∈ ℝ₊₊
+  policy.objective:Aggregation      objective:Expectation:1(m_d, c) > 0
+  policy.objective:Aggregation
+    (1 − β) · c^(1 − ρ)
+      + β · objective:Expectation:1(m_d, c)^((1 − ρ)/(1 − γ))
+      > 0
+  q                                 q ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  11  Ψ ~ LogNormal(μ_Ψ, σ_Ψ)
+  16  a = (m_d - c)*Ψ
+        :: [id=savings, "resources carried forward, scaled by the gross return
+        drawn after the decision"]
+  20  V = ((1-β)*c^(1-ρ) + β*E_{Ψ}(V[>]^(1-γ))^((1-ρ)/(1-γ)))^(1/(1-ρ))
+        :: [id=value]
+  24  c = argmax_{c : Γ(m_d)}(((1-β)*c^(1-ρ) +
+        β*E_{Ψ}(V[>]^(1-γ))^((1-ρ)/(1-γ)))^(1/(1-ρ)))
+        :: [id=objective]
+
+Definitions referenced
+  β     ez_savings:parameter:β
+  ρ     ez_savings:parameter:ρ
+  γ     ez_savings:parameter:γ
+  q     ez_savings:derived:q
+  Ψ     ez_savings:distribution:Ψ
+  Γ     ez_savings:correspondence:Γ
+  𝑔≻    ez_savings:g:dcsn_to_cntn
+
+File
+  applications/epstein-zin-savings/declaration/stages/ez_savings/ez_savings.bl
+
+Perches
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE ez_savings / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻}
+       ──────────
+  out  V   : {V}
+
+Conditions
+  𝑉(m_d) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  20  V = ((1-β)*c^(1-ρ) + β*E_{Ψ}(V[>]^(1-γ))^((1-ρ)/(1-γ)))^(1/(1-ρ))
+        :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward policy ====
+STAGE ez_savings / POLICY BLOCK policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻}
+       ──────────
+  out  c   : {c}
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  24  c = argmax_{c : Γ(m_d)}(((1-β)*c^(1-ρ) +
+        β*E_{Ψ}(V[>]^(1-γ))^((1-ρ)/(1-γ)))^(1/(1-ρ)))
+        :: [id=objective]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE ez_savings / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   m_d  : {m_d}
+       Ψ    : {Ψ}
+       ────────────
+  out  a≻   : {a≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  16  a = (m_d - c)*Ψ
+        :: [id=savings, "resources carried forward, scaled by the gross return
+        drawn after the decision"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE ez_savings / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊₊ → ℝ
+       ──────────────────────────────────────────────────────────────
+  out  𝑉   : ℝ₊₊ → ℝ
+
+At
+  𝑐  : ℝ₊₊ → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻(·, 𝑐, ·)
+     ────────────────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻(·, 𝑐, ·))(m_d, Ψ) = 𝑉≻(𝑔≻(m_d, 𝑐(m_d), Ψ))
+
+  2  value:Aggregation:1
+     in: (1)
+     out: (m_d, Ψ) ↦ 𝑉≻(𝑔≻(m_d, 𝑐(m_d), Ψ))^(1 − γ)
+     ────────────────────────────────────────────────────────────────
+     rule: (m_d, Ψ) ↦ 𝑉≻(𝑔≻(m_d, 𝑐(m_d), Ψ))^(1 − γ)
+
+  3  value:Expectation:1
+     in: (2)                            out: m_d ↦ E_{Ψ}[(2)(m_d, Ψ)]
+     ────────────────────────────────────────────────────────────────
+     rule: (3)(m_d) = E_{Ψ}[(2)(m_d, Ψ)]
+
+  4  Aggregation
+     in: (3)                            out: 𝑉
+     ────────────────────────────────────────────────────────────────
+     rule: 𝑉(m_d)
+             = ((1 − β) · 𝑐(m_d)^(1 − ρ)
+               + β · E_{Ψ}[𝑉≻(𝑔≻(m_d, 𝑐(m_d), Ψ))^(1 − γ)]^((1 − ρ)/(1
+                     − γ)))^(1/(1 − ρ))
+
+  5  Evaluation
+     in: 𝑉                              out: 𝑉
+     ────────────────────────────────────────────────────────────────
+     rule: 𝑉 : ℝ₊₊ → ℝ
+
+Conditions
+  value:Aggregation:1  𝑉≻(𝑔≻(m_d, 𝑐(m_d), Ψ)) > 0
+  Aggregation          (1 − β) · 𝑐(m_d)^(1 − ρ)
+                         + β · (3)(m_d)^((1 − ρ)/(1 − γ))
+                         > 0
+  Aggregation          (3)(m_d) > 0
+  Aggregation          ¬(1 − γ = 0)
+  Aggregation          ¬(1 − ρ = 0)
+  Aggregation          𝑉(m_d) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  20  V = ((1-β)*c^(1-ρ) + β*E_{Ψ}(V[>]^(1-γ))^((1-ρ)/(1-γ)))^(1/(1-ρ))
+        :: [id=value]
+
+Definitions referenced
+  β     ez_savings:parameter:β
+  ρ     ez_savings:parameter:ρ
+  γ     ez_savings:parameter:γ
+  Ψ     ez_savings:distribution:Ψ
+  Γ     ez_savings:correspondence:Γ
+  𝑔≻    ez_savings:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback ====
+STAGE ez_savings / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊₊ → ℝ
+       ───────────────────
+  out  𝑉≻ ∘ 𝑔≻(·, 𝑐, ·)
+           : ℝ₊₊ × ℝ₊₊ → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻(·, 𝑐, ·))(m_d, Ψ) = 𝑉≻(𝑔≻(m_d, 𝑐(m_d), Ψ))
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  16  a = (m_d - c)*Ψ
+        :: [id=savings, "resources carried forward, scaled by the gross return
+        drawn after the decision"]
+
+Definitions referenced
+  Ψ     ez_savings:distribution:Ψ
+  𝑔≻    ez_savings:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / value:Aggregation:1 ====
+STAGE ez_savings / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / value:Aggregation:1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻(·, 𝑐, ·)
+         : ℝ₊₊ × ℝ₊₊ → ℝ
+       ─────────────────────────────────────────
+  out  (m_d, Ψ) ↦ 𝑉≻(𝑔≻(m_d, 𝑐(m_d), Ψ))^(1 − γ)
+         : ℝ₊₊ × ℝ₊₊ → ℝ
+
+Rule
+  (m_d, Ψ) ↦ 𝑉≻(𝑔≻(m_d, 𝑐(m_d), Ψ))^(1 − γ)
+
+Conditions
+  𝑉≻(𝑔≻(m_d, 𝑐(m_d), Ψ)) > 0
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  20  V = ((1-β)*c^(1-ρ) + β*E_{Ψ}(V[>]^(1-γ))^((1-ρ)/(1-γ)))^(1/(1-ρ))
+        :: [id=value]
+
+Definitions referenced
+  γ     ez_savings:parameter:γ
+  Ψ     ez_savings:distribution:Ψ
+  𝑔≻    ez_savings:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / value:Expectation:1 ====
+STAGE ez_savings / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / value:Expectation:1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (m_d, Ψ) ↦ 𝑉≻(𝑔≻(m_d, 𝑐(m_d), Ψ))^(1 − γ)
+         : ℝ₊₊ × ℝ₊₊ → ℝ
+       ─────────────────────────────────────────
+  out  m_d ↦ E_{Ψ}[value:Aggregation:1(m_d, Ψ)]
+         : ℝ₊₊ → ℝ
+
+Rule
+  value:Expectation:1(m_d) = E_{Ψ}[value:Aggregation:1(m_d, Ψ)]
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  11  Ψ ~ LogNormal(μ_Ψ, σ_Ψ)
+  20  V = ((1-β)*c^(1-ρ) + β*E_{Ψ}(V[>]^(1-γ))^((1-ρ)/(1-γ)))^(1/(1-ρ))
+        :: [id=value]
+
+Definitions referenced
+  γ     ez_savings:parameter:γ
+  Ψ     ez_savings:distribution:Ψ
+  𝑔≻    ez_savings:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE ez_savings / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   m_d ↦ E_{Ψ}[value:Aggregation:1(m_d, Ψ)]
+          : ℝ₊₊ → ℝ
+       ────────────────────────────────────────
+  out  𝑉  : ℝ₊₊ → ℝ
+
+Rule
+  𝑉(m_d)
+    = ((1 − β) · 𝑐(m_d)^(1 − ρ)
+      + β · E_{Ψ}[𝑉≻(𝑔≻(m_d, 𝑐(m_d), Ψ))^(1 − γ)]^((1 − ρ)/(1 − γ)))^(1/(1
+        − ρ))
+
+Conditions
+  (1 − β) · 𝑐(m_d)^(1 − ρ) + β · value:Expectation:1(m_d)^((1 − ρ)/(1 − γ))
+    > 0
+  value:Expectation:1(m_d) > 0
+  ¬(1 − γ = 0)
+  ¬(1 − ρ = 0)
+  𝑉(m_d) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  20  V = ((1-β)*c^(1-ρ) + β*E_{Ψ}(V[>]^(1-γ))^((1-ρ)/(1-γ)))^(1/(1-ρ))
+        :: [id=value]
+
+Definitions referenced
+  β     ez_savings:parameter:β
+  ρ     ez_savings:parameter:ρ
+  γ     ez_savings:parameter:γ
+  Ψ     ez_savings:distribution:Ψ
+  𝑔≻    ez_savings:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE ez_savings / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : ℝ₊₊ → ℝ
+       ────────────
+  out  𝑉  : ℝ₊₊ → ℝ
+
+Rule
+  𝑉(m_d)
+    = ((1 − β) · 𝑐(m_d)^(1 − ρ)
+      + β · E_{Ψ}[𝑉≻(𝑔≻(m_d, 𝑐(m_d), Ψ))^(1 − γ)]^((1 − ρ)/(1 − γ)))^(1/(1
+        − ρ))
+  𝑉 : ℝ₊₊ → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  β     ez_savings:parameter:β
+  ρ     ez_savings:parameter:ρ
+  γ     ez_savings:parameter:γ
+  Ψ     ez_savings:distribution:Ψ
+  𝑔≻    ez_savings:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy ====
+STAGE ez_savings / POLICY BUILDER policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊₊ → ℝ
+       ──────────────────────────────────────────────────────────────────────
+  out  𝑐   : ℝ₊₊ → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻
+     ────────────────────────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻)(m_d, c, Ψ) = 𝑉≻(𝑔≻(m_d, c, Ψ))
+
+  2  objective:Aggregation:1
+     in: (1)
+     out: (m_d, c, Ψ) ↦ 𝑉≻(𝑔≻(m_d, c, Ψ))^(1 − γ)
+     ────────────────────────────────────────────────────────────────────────
+     rule: (m_d, c, Ψ) ↦ 𝑉≻(𝑔≻(m_d, c, Ψ))^(1 − γ)
+
+  3  objective:Expectation:1
+     in: (2)                            out: (m_d, c) ↦ E_{Ψ}[(2)(m_d, c, Ψ)]
+     ────────────────────────────────────────────────────────────────────────
+     rule: (3)(m_d, c) = E_{Ψ}[(2)(m_d, c, Ψ)]
+
+  4  objective:Aggregation
+     in: (3)
+     out: (m_d, c)
+            ↦ ((1 − β) · c^(1 − ρ) + β · (3)(m_d, c)^((1 − ρ)/(1 − γ)))^(1/(1
+                − ρ))
+     ────────────────────────────────────────────────────────────────────────
+     rule: (m_d, c)
+             ↦ ((1 − β) · c^(1 − ρ) + β · (3)(m_d, c)^((1 − ρ)/(1 − γ)))^(1/(1
+                 − ρ))
+
+  5  objective:Argmax
+     in: (4)                            out: 𝑐
+     ────────────────────────────────────────────────────────────────────────
+     rule: 𝑐(m_d)
+             ∈ argmax_{c ∈ Γ(m_d)}
+                 [((1 − β) · c^(1 − ρ)
+                    + β · E_{Ψ}[𝑉≻(𝑔≻(m_d, c, Ψ))^(1 − γ)]^((1 − ρ)/(1
+                          − γ)))^(1/(1 − ρ))]
+
+  6  Evaluation
+     in: 𝑐                              out: 𝑐
+     ────────────────────────────────────────────────────────────────────────
+     rule: 𝑐 : ℝ₊₊ → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
+
+Conditions
+  objective:Aggregation:1  𝑉≻(𝑔≻(m_d, c, Ψ)) > 0
+  objective:Aggregation    (1 − β) · c^(1 − ρ)
+                             + β · (3)(m_d, c)^((1 − ρ)/(1 − γ))
+                             ∈ ℝ₊₊
+  objective:Aggregation    c ∈ ℝ₊₊
+  objective:Aggregation    (3)(m_d, c) > 0
+  objective:Aggregation    (1 − β) · c^(1 − ρ)
+                             + β · (3)(m_d, c)^((1 − ρ)/(1 − γ))
+                             > 0
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  24  c = argmax_{c : Γ(m_d)}(((1-β)*c^(1-ρ) +
+        β*E_{Ψ}(V[>]^(1-γ))^((1-ρ)/(1-γ)))^(1/(1-ρ)))
+        :: [id=objective]
+
+Definitions referenced
+  β     ez_savings:parameter:β
+  ρ     ez_savings:parameter:ρ
+  γ     ez_savings:parameter:γ
+  Ψ     ez_savings:distribution:Ψ
+  Γ     ez_savings:correspondence:Γ
+  𝑔≻    ez_savings:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback ====
+STAGE ez_savings / POLICY BUILDER policy / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊₊ → ℝ
+       ────────────────────────────────────────────────────
+  out  𝑉≻ ∘ 𝑔≻
+           : {m_d, c, Ψ ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ | c ∈ Γ(m_d)} → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻)(m_d, c, Ψ) = 𝑉≻(𝑔≻(m_d, c, Ψ))
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  16  a = (m_d - c)*Ψ
+        :: [id=savings, "resources carried forward, scaled by the gross return
+        drawn after the decision"]
+
+Definitions referenced
+  Ψ     ez_savings:distribution:Ψ
+  Γ     ez_savings:correspondence:Γ
+  𝑔≻    ez_savings:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / objective:Aggregation:1 ====
+STAGE ez_savings / POLICY BUILDER policy / objective:Aggregation:1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻
+         : {m_d, c, Ψ ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ | c ∈ Γ(m_d)} → ℝ
+       ──────────────────────────────────────────────────
+  out  (m_d, c, Ψ) ↦ 𝑉≻(𝑔≻(m_d, c, Ψ))^(1 − γ)
+         : {m_d, c, Ψ ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ | c ∈ Γ(m_d)} → ℝ
+
+Rule
+  (m_d, c, Ψ) ↦ 𝑉≻(𝑔≻(m_d, c, Ψ))^(1 − γ)
+
+Conditions
+  𝑉≻(𝑔≻(m_d, c, Ψ)) > 0
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  24  c = argmax_{c : Γ(m_d)}(((1-β)*c^(1-ρ) +
+        β*E_{Ψ}(V[>]^(1-γ))^((1-ρ)/(1-γ)))^(1/(1-ρ)))
+        :: [id=objective]
+
+Definitions referenced
+  γ     ez_savings:parameter:γ
+  Ψ     ez_savings:distribution:Ψ
+  Γ     ez_savings:correspondence:Γ
+  𝑔≻    ez_savings:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / objective:Expectation:1 ====
+STAGE ez_savings / POLICY BUILDER policy / objective:Expectation:1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (m_d, c, Ψ) ↦ 𝑉≻(𝑔≻(m_d, c, Ψ))^(1 − γ)
+         : {m_d, c, Ψ ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ | c ∈ Γ(m_d)} → ℝ
+       ────────────────────────────────────────────────────
+  out  (m_d, c) ↦ E_{Ψ}[objective:Aggregation:1(m_d, c, Ψ)]
+         : {m_d, c ∈ ℝ₊₊ × ℝ₊₊ | c ∈ Γ(m_d)} → ℝ
+
+Rule
+  objective:Expectation:1(m_d, c) = E_{Ψ}[objective:Aggregation:1(m_d, c, Ψ)]
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  11  Ψ ~ LogNormal(μ_Ψ, σ_Ψ)
+  24  c = argmax_{c : Γ(m_d)}(((1-β)*c^(1-ρ) +
+        β*E_{Ψ}(V[>]^(1-γ))^((1-ρ)/(1-γ)))^(1/(1-ρ)))
+        :: [id=objective]
+
+Definitions referenced
+  γ     ez_savings:parameter:γ
+  Ψ     ez_savings:distribution:Ψ
+  Γ     ez_savings:correspondence:Γ
+  𝑔≻    ez_savings:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / objective:Aggregation ====
+STAGE ez_savings / POLICY BUILDER policy / objective:Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (m_d, c) ↦ E_{Ψ}[objective:Aggregation:1(m_d, c, Ψ)]
+         : {m_d, c ∈ ℝ₊₊ × ℝ₊₊ | c ∈ Γ(m_d)} → ℝ
+       ──────────────────────────────────────────────────────────────────
+  out  (m_d, c)
+         ↦ ((1 − β) · c^(1 − ρ)
+           + β · objective:Expectation:1(m_d, c)^((1 − ρ)/(1 − γ)))^(1/(1
+             − ρ))
+         : {m_d, c ∈ ℝ₊₊ × ℝ₊₊ | c ∈ Γ(m_d)} → ℝ
+
+Rule
+  (m_d, c)
+    ↦ ((1 − β) · c^(1 − ρ)
+      + β · objective:Expectation:1(m_d, c)^((1 − ρ)/(1 − γ)))^(1/(1 − ρ))
+
+Conditions
+  (1 − β) · c^(1 − ρ) + β · objective:Expectation:1(m_d, c)^((1 − ρ)/(1 − γ))
+    ∈ ℝ₊₊
+  c ∈ ℝ₊₊
+  objective:Expectation:1(m_d, c) > 0
+  (1 − β) · c^(1 − ρ) + β · objective:Expectation:1(m_d, c)^((1 − ρ)/(1 − γ))
+    > 0
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  24  c = argmax_{c : Γ(m_d)}(((1-β)*c^(1-ρ) +
+        β*E_{Ψ}(V[>]^(1-γ))^((1-ρ)/(1-γ)))^(1/(1-ρ)))
+        :: [id=objective]
+
+Definitions referenced
+  β     ez_savings:parameter:β
+  ρ     ez_savings:parameter:ρ
+  γ     ez_savings:parameter:γ
+  Ψ     ez_savings:distribution:Ψ
+  Γ     ez_savings:correspondence:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / objective:Argmax ====
+STAGE ez_savings / POLICY BUILDER policy / objective:Argmax
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (m_d, c)
+         ↦ ((1 − β) · c^(1 − ρ)
+           + β · objective:Expectation:1(m_d, c)^((1 − ρ)/(1 − γ)))^(1/(1
+             − ρ))
+          : {m_d, c ∈ ℝ₊₊ × ℝ₊₊ | c ∈ Γ(m_d)} → ℝ
+       ──────────────────────────────────────────────────────────────────
+  out  𝑐  : ℝ₊₊ → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
+
+Rule
+  𝑐(m_d)
+    ∈ argmax_{c ∈ Γ(m_d)}
+        [((1 − β) · c^(1 − ρ)
+           + β · E_{Ψ}[𝑉≻(𝑔≻(m_d, c, Ψ))^(1 − γ)]^((1 − ρ)/(1 − γ)))^(1/(1
+             − ρ))]
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  24  c = argmax_{c : Γ(m_d)}(((1-β)*c^(1-ρ) +
+        β*E_{Ψ}(V[>]^(1-γ))^((1-ρ)/(1-γ)))^(1/(1-ρ)))
+        :: [id=objective]
+
+Definitions referenced
+  β     ez_savings:parameter:β
+  ρ     ez_savings:parameter:ρ
+  γ     ez_savings:parameter:γ
+  Ψ     ez_savings:distribution:Ψ
+  Γ     ez_savings:correspondence:Γ
+  𝑔≻    ez_savings:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Evaluation ====
+STAGE ez_savings / POLICY BUILDER policy / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑐  : ℝ₊₊ → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
+       ────────────────────────────────
+  out  𝑐  : ℝ₊₊ → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
+
+Rule
+  𝑐(m_d)
+    ∈ argmax_{c ∈ Γ(m_d)}
+        [((1 − β) · c^(1 − ρ)
+           + β · E_{Ψ}[𝑉≻(𝑔≻(m_d, c, Ψ))^(1 − γ)]^((1 − ρ)/(1 − γ)))^(1/(1
+             − ρ))]
+  𝑐 : ℝ₊₊ → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  β     ez_savings:parameter:β
+  ρ     ez_savings:parameter:ρ
+  γ     ez_savings:parameter:γ
+  Ψ     ez_savings:distribution:Ψ
+  Γ     ez_savings:correspondence:Γ
+  𝑔≻    ez_savings:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE ez_savings / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on ℝ₊₊
+       ───────────────────────────────────────────
+  out  μ≻  : finite measure on ℝ₊₊
+
+At
+  𝑐  : ℝ₊₊ → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
+
+Operations
+  1  DistributionExtension:Ψ
+     in: μ                              out: μ⊗P_Ψ
+     ─────────────────────────────────────────────
+     rule: μ⊗P_Ψ(B) = ∫_{m_d ∈ ℝ₊₊} [P_Ψ({Ψ ∈ ℝ₊₊ | (m_d, Ψ) ∈ B})] μ(dm_d)
+
+  2  Pushforward
+     in: (1)                            out: μ≻
+     ─────────────────────────────────────────────
+     rule: μ≻(B) = μ⊗P_Ψ({m_d, Ψ ∈ ℝ₊₊ × ℝ₊₊ | 𝑔≻(m_d, 𝑐(m_d), Ψ) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  16  a = (m_d - c)*Ψ
+        :: [id=savings, "resources carried forward, scaled by the gross return
+        drawn after the decision"]
+
+Definitions referenced
+  Ψ     ez_savings:distribution:Ψ
+  P_Ψ   ez_savings:distribution:Ψ
+  Γ     ez_savings:correspondence:Γ
+  𝑔≻    ez_savings:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / DistributionExtension:Ψ ====
+STAGE ez_savings / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+  / DistributionExtension:Ψ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ  : finite measure on ℝ₊₊
+       ────────────────────────────────
+  out  μ⊗P_Ψ
+          : finite measure on ℝ₊₊ × ℝ₊₊
+
+Rule
+  μ⊗P_Ψ(B) = ∫_{m_d ∈ ℝ₊₊} [P_Ψ({Ψ ∈ ℝ₊₊ | (m_d, Ψ) ∈ B})] μ(dm_d)
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  11  Ψ ~ LogNormal(μ_Ψ, σ_Ψ)
+
+Definitions referenced
+  Ψ     ez_savings:distribution:Ψ
+  P_Ψ   ez_savings:distribution:Ψ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE ez_savings / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ⊗P_Ψ
+           : finite measure on ℝ₊₊ × ℝ₊₊
+       ─────────────────────────────────
+  out  μ≻  : finite measure on ℝ₊₊
+
+Rule
+  μ≻(B) = μ⊗P_Ψ({m_d, Ψ ∈ ℝ₊₊ × ℝ₊₊ | 𝑔≻(m_d, 𝑐(m_d), Ψ) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  16  a = (m_d - c)*Ψ
+        :: [id=savings, "resources carried forward, scaled by the gross return
+        drawn after the decision"]
+
+Definitions referenced
+  Ψ     ez_savings:distribution:Ψ
+  P_Ψ   ez_savings:distribution:Ψ
+  𝑔≻    ez_savings:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== ez_savings:parameter:β ====
+STAGE ez_savings / PARAMETER β
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  β  ∈ (0, 1)
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  3  β : (0,1)  :: ["discount factor"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== ez_savings:parameter:ρ ====
+STAGE ez_savings / PARAMETER ρ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  ρ  ∈ ℝ₊₊ ∖ {1}
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  4  ρ : ℝ₊₊ \ {1}
+       :: ["1/ρ is the elasticity of intertemporal substitution; ρ differs
+       from 1"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== ez_savings:parameter:γ ====
+STAGE ez_savings / PARAMETER γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  γ  ∈ ℝ₊₊ ∖ {1}
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  5  γ : ℝ₊₊ \ {1}  :: ["relative risk aversion; γ differs from 1"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== ez_savings:parameter:μ_Ψ ====
+STAGE ez_savings / PARAMETER μ_Ψ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  μ_Ψ  ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  6  μ_Ψ : ℝ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== ez_savings:parameter:σ_Ψ ====
+STAGE ez_savings / PARAMETER σ_Ψ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  σ_Ψ  ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  7  σ_Ψ : ℝ₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== ez_savings:derived:q ====
+STAGE ez_savings / DERIVED PARAMETER q
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  q  ∈ (0, 1),  := (β · exp((1 − ρ) · (μ_Ψ + (1 − γ) · σ_Ψ²/2)))^(1/ρ)
+
+Conditions
+  q ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  8  q : (0,1) := (β*exp((1-ρ)*(μ_Ψ + (1-γ)*σ_Ψ^2/2)))^(1/ρ)
+       :: ["return patience factor (β*R)^(1/ρ)/R at R =
+       exp(μ_Ψ + (1-γ)*σ_Ψ^2/2), the certainty-equivalent return
+       E_{Ψ}(Ψ^(1-γ))^(1/(1-γ)) of the lognormal return; q < 1, equivalently β
+       < E_{Ψ}(Ψ^(1-γ))^((ρ-1)/(1-γ)), is the restriction under which an
+       optimal plan exists"]
+
+Definitions referenced
+  β     ez_savings:parameter:β
+  ρ     ez_savings:parameter:ρ
+  γ     ez_savings:parameter:γ
+  μ_Ψ   ez_savings:parameter:μ_Ψ
+  σ_Ψ   ez_savings:parameter:σ_Ψ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== ez_savings:distribution:Ψ ====
+STAGE ez_savings / DISTRIBUTION Ψ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Ψ    ~ LogNormal(μ_Ψ, σ_Ψ)
+  P_Ψ  = measure on (0, ∞) given by
+           B
+             ↦ ∫_{z ∈ {z ∈ ℝ | exp(μ_Ψ + σ_Ψ · z) ∈ B}}
+                 [exp(−z²/2)/(2 · pi)^(1/2)] Lebesgue(dz)
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  11  Ψ ~ LogNormal(μ_Ψ, σ_Ψ)
+
+Definitions referenced
+  μ_Ψ   ez_savings:parameter:μ_Ψ
+  σ_Ψ   ez_savings:parameter:σ_Ψ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== ez_savings:correspondence:Γ ====
+STAGE ez_savings / CORRESPONDENCE Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Γ  : ℝ₊₊ ⇉ ℝ₊₊,  m_d ↦ (0, m_d]
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  13  Γ(m_d : ℝ₊₊) := (0, m_d]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.savings ====
+STAGE ez_savings / FORWARD BLOCK dcsn_to_cntn / savings
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  ez_savings.bl
+  16  a = (m_d - c)*Ψ
+        :: [id=savings, "resources carried forward, scaled by the gross return
+        drawn after the decision"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.value ====
+STAGE ez_savings / BACKWARD BLOCK cntn_to_dcsn / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(m_d) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  20  V = ((1-β)*c^(1-ρ) + β*E_{Ψ}(V[>]^(1-γ))^((1-ρ)/(1-γ)))^(1/(1-ρ))
+        :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== policy.objective ====
+STAGE ez_savings / POLICY BLOCK policy / objective
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  ez_savings.bl
+  24  c = argmax_{c : Γ(m_d)}(((1-β)*c^(1-ρ) +
+        β*E_{Ψ}(V[>]^(1-γ))^((1-ρ)/(1-γ)))^(1/(1-ρ)))
+        :: [id=objective]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== ez_savings:g:dcsn_to_cntn ====
+STAGE ez_savings / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : {m_d, c, Ψ ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ | c ∈ Γ(m_d)} → ℝ₊₊,
+        (m_d, c, Ψ) ↦ (m_d − c) · Ψ
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  16  a = (m_d - c)*Ψ
+        :: [id=savings, "resources carried forward, scaled by the gross return
+        drawn after the decision"]
+
+Definitions referenced
+  Ψ     ez_savings:distribution:Ψ
+  Γ     ez_savings:correspondence:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== ez_savings:G:cntn_to_dcsn ====
+STAGE ez_savings / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺_value≻  : {V≻, m_d, c, Ψ ∈ ℝ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ | c ∈ Γ(m_d)}
+                → UNRESOLVED[𝐺; result set],
+              (V≻, m_d, c, Ψ) ↦ V≻^(1 − γ)
+  𝐺_value≻  : {cntn_to_dcsn.value:Expectation:1, m_d, c ∈ ℝ × ℝ₊₊ × ℝ₊₊ |
+                c ∈ Γ(m_d)} → ℝ,
+              (w, m_d, c)
+                ↦ ((1 − β) · c^(1 − ρ) + β · w^((1 − ρ)/(1 − γ)))^(1/(1 − ρ))
+
+Conditions
+  𝑉(m_d) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  20  V = ((1-β)*c^(1-ρ) + β*E_{Ψ}(V[>]^(1-γ))^((1-ρ)/(1-γ)))^(1/(1-ρ))
+        :: [id=value]
+
+Definitions referenced
+  β     ez_savings:parameter:β
+  ρ     ez_savings:parameter:ρ
+  γ     ez_savings:parameter:γ
+  Ψ     ez_savings:distribution:Ψ
+  Γ     ez_savings:correspondence:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== ez_savings:G:policy ====
+STAGE ez_savings / VALUE AGGREGATOR policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺_objective≻  : {V≻, m_d, c, Ψ ∈ ℝ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ | c ∈ Γ(m_d)}
+                    → UNRESOLVED[𝐺; result set],
+                  (V≻, m_d, c, Ψ) ↦ V≻^(1 − γ)
+  𝐺_objective≻  : {policy.objective:Expectation:1, m_d, c ∈ ℝ × ℝ₊₊ × ℝ₊₊ |
+                    c ∈ Γ(m_d)} → ℝ,
+                  (w, m_d, c)
+                    ↦ ((1 − β) · c^(1 − ρ) + β · w^((1 − ρ)/(1 − γ)))^(1/(1
+                        − ρ))
+──────────────────────────────────────────────────────────────────────────────
+Source  ez_savings.bl
+  24  c = argmax_{c : Γ(m_d)}(((1-β)*c^(1-ρ) +
+        β*E_{Ψ}(V[>]^(1-γ))^((1-ρ)/(1-γ)))^(1/(1-ρ)))
+        :: [id=objective]
+
+Definitions referenced
+  β     ez_savings:parameter:β
+  ρ     ez_savings:parameter:ρ
+  γ     ez_savings:parameter:γ
+  Ψ     ez_savings:distribution:Ψ
+  Γ     ez_savings:correspondence:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

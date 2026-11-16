@@ -1,0 +1,869 @@
+BELLMAN-SYM / STAGE cons                                  [VERSION = SYMBOLIC]
+a stage occurrence of
+applications/portfolio-choice/declaration/stages/cons/cons.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        m≺ state, l≺ state, V≺ value
+  ∼ decision       m_d state, c control, V value
+  ≻ continuation   a≻ state, V≻ value
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           m≺ at arrival, l≺ at arrival, m_d at decision, a≻ at
+                   continuation
+  controls         c at decision
+  values           V at every perch
+  shocks           none
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → arvl_to_dcsn   (m≺, l≺) : !arvl -> (m_d) : !dcsn
+  → dcsn_to_cntn   (m_d) : !dcsn, at c -> (a≻) : !cntn
+  ← cntn_to_dcsn   (V≻) : !cntn, at c -> (V) : !dcsn
+  ← dcsn_to_arvl   (V) : !dcsn -> (V≺) : !arvl
+  ← policy         (V≻) : !cntn -> (c) : !dcsn
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  sets                     2   Xm := ℝ₊₊, Xa := ℝ₊
+  parameters               1   ρ : [1, inf)
+  functions                2   𝑢, 𝑑𝑢 on ℝ₊₊
+  correspondences          1   Γ : ℝ₊₊ ⇉ ℝ₊₊
+  laws of motion           2   m_d = m; a = m_d - c
+  value aggregators        3   V = 𝑢(c) + V[>], D_{m_d}(V) = 𝑑𝑢(c); V[<] = V;
+                               c = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])
+  block lines              6   arvl_to_dcsn.1, dcsn_to_cntn.1,
+                               cntn_to_dcsn.value, cntn_to_dcsn.marginal,
+                               dcsn_to_arvl.value, policy.optimality
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   𝑉≻ ↦ 𝑉≺, 𝑐(m_d)
+                    forward    μ≺ ↦ μ≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ≺ m≺, l≺  →  ∼ m_d  →  ≻ a≻
+  backward   ≺ V≺  ←  ∼ V  ←  ≻ V≻
+  policy     ∼ c  ←  ≻ V≻
+
+==== stage ====
+STAGE cons
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑉≻  : Xa → [−∞, ∞)
+         ──────────────────────────────────────
+    out  𝑉≺  : Xm → ℝ
+         𝑐   : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
+  forward
+    in   μ≺  : finite measure on Xm × ℝ₊
+         ──────────────────────────────────────
+    out  μ≻  : finite measure on Xa
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉≻                           out: 𝑉
+
+    2  dcsn_to_arvl
+       in: 𝑉                            out: 𝑉≺
+
+    3  policy
+       in: 𝑉≻                           out: 𝑐
+
+  forward
+    1  arvl_to_dcsn
+       in: μ≺                           out: μ
+
+    2  dcsn_to_cntn
+       in: μ                            out: μ≻
+
+Conditions
+  cntn_to_dcsn:Aggregation       𝑉(m_d) ∈ [−∞, ∞)
+  dcsn_to_arvl:Aggregation       𝑉≺(m) ∈ ℝ
+  dcsn_to_arvl:Aggregation       𝑉≺(m, l) ∈ ℝ
+  policy.optimality:Aggregation  ¬(𝑢(cp) ∈ [∞, ∞] ∧ V[>] ∈ [−∞, −∞])
+  𝑢                              ¬(1 − ρ = 0)
+  cntn_to_dcsn.marginal          marginal-reading: the right side of each
+                                   derivative line equals the derivative, in
+                                   the named coordinate, of the value the
+                                   builder writes, under the envelope
+                                   conditions: concavity of the continuation
+                                   value, interiority of the maximizer or the
+                                   multiplier's term at a binding constraint,
+                                   differentiability of the reward in the
+                                   control, a measurable selection of the
+                                   policy, and differentiability of the value
+                                   at the point read; listed and not checked
+                                   [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  13  m_d = m
+  17  a = m_d - c
+  21  V        = 𝑢(c) + V[>]                       :: [id=value]
+  22  D_{m_d}V = 𝑑𝑢(c)                             :: [id=marginal]
+  26  V[<] = V                                     :: [id=value]
+  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xm    cons:set:Xm
+  Xa    cons:set:Xa
+  ρ     cons:parameter:ρ
+  𝑢     cons:function:𝑢
+  Γ     cons:correspondence:Γ
+
+File
+  applications/portfolio-choice/declaration/stages/cons/cons.bl
+
+Perches
+  ≺  arrival, written [<]
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE cons / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻}
+       ──────────
+  out  V   : {V}
+
+Conditions
+  𝑉(m_d) ∈ [−∞, ∞)
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  21  V        = 𝑢(c) + V[>]  :: [id=value]
+  22  D_{m_d}V = 𝑑𝑢(c)        :: [id=marginal]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward dcsn_to_arvl ====
+STAGE cons / BACKWARD BLOCK dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V   : {V}
+       ──────────
+  out  V≺  : {V≺}
+
+Conditions
+  𝑉≺(m) ∈ ℝ
+  𝑉≺(m, l) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  26  V[<] = V  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward policy ====
+STAGE cons / POLICY BLOCK policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻}
+       ──────────
+  out  c   : {c}
+
+Conditions
+  ¬(𝑢(cp) ∈ [∞, ∞] ∧ V[>] ∈ [−∞, −∞])
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]
+
+Definitions referenced
+  𝑢     cons:function:𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward arvl_to_dcsn ====
+STAGE cons / FORWARD BLOCK arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   m≺   : {m≺}
+       l≺   : {m≺, l≺}
+       ───────────────
+  out  m_d  : {m_d}
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  13  m_d = m
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE cons / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   m_d  : {m_d}
+       ────────────
+  out  a≻   : {a≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  17  a = m_d - c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xa → [−∞, ∞)
+       ───────────────────────────────────────────────────
+  out  𝑉   : Xm → [−∞, ∞)
+
+At
+  𝑐  : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻(·, 𝑐)
+     ─────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻(·, 𝑐))(m_d) = 𝑉≻(𝑔≻(m_d, 𝑐(m_d)))
+
+  2  Aggregation
+     in: (1)                            out: 𝑉
+     ─────────────────────────────────────────────────────
+     rule: 𝑉(m_d) = 𝑢(𝑐(m_d)) + 𝑉≻(𝑔≻(m_d, 𝑐(m_d)))
+
+  3  Evaluation
+     in: 𝑉                              out: 𝑉
+     ─────────────────────────────────────────────────────
+     rule: 𝑉 : Xm → [−∞, ∞)
+           D_{m_d}𝑉(m_d) = 𝑑𝑢(𝑐(m_d))
+
+Conditions
+  Aggregation  𝑉(m_d) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  21  V        = 𝑢(c) + V[>]  :: [id=value]
+  22  D_{m_d}V = 𝑑𝑢(c)        :: [id=marginal]
+
+Definitions referenced
+  Xm    cons:set:Xm
+  Xa    cons:set:Xa
+  𝑢     cons:function:𝑢
+  𝑑𝑢    cons:function:𝑑𝑢
+  Γ     cons:correspondence:Γ
+  𝑔≻    cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback ====
+STAGE cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xa → [−∞, ∞)
+       ──────────────────
+  out  𝑉≻ ∘ 𝑔≻(·, 𝑐)
+           : Xm → [−∞, ∞)
+
+Rule
+  (𝑉≻ ∘ 𝑔≻(·, 𝑐))(m_d) = 𝑉≻(𝑔≻(m_d, 𝑐(m_d)))
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  17  a = m_d - c
+
+Definitions referenced
+  Xm    cons:set:Xm
+  Xa    cons:set:Xa
+  𝑔≻    cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻(·, 𝑐)
+          : Xm → [−∞, ∞)
+       ─────────────────
+  out  𝑉  : Xm → [−∞, ∞)
+
+Rule
+  𝑉(m_d) = 𝑢(𝑐(m_d)) + 𝑉≻(𝑔≻(m_d, 𝑐(m_d)))
+
+Conditions
+  𝑉(m_d) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  21  V        = 𝑢(c) + V[>]  :: [id=value]
+
+Definitions referenced
+  Xm    cons:set:Xm
+  𝑢     cons:function:𝑢
+  𝑔≻    cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : Xm → [−∞, ∞)
+       ─────────────────
+  out  𝑉  : Xm → [−∞, ∞)
+
+Rule
+  𝑉(m_d) = 𝑢(𝑐(m_d)) + 𝑉≻(𝑔≻(m_d, 𝑐(m_d)))
+  𝑉 : Xm → [−∞, ∞)
+  D_{m_d}𝑉(m_d) = 𝑑𝑢(𝑐(m_d))
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  22  D_{m_d}V = 𝑑𝑢(c)  :: [id=marginal]
+
+Definitions referenced
+  Xm    cons:set:Xm
+  𝑢     cons:function:𝑢
+  𝑑𝑢    cons:function:𝑑𝑢
+  𝑔≻    cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl ====
+STAGE cons / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉   : Xm → [−∞, ∞)
+       ────────────────────────────────────────────
+  out  𝑉≺  : Xm → ℝ
+
+Operations
+  1  Pullback
+     in: 𝑉                              out: 𝑉 ∘ 𝑔≺
+     ──────────────────────────────────────────────
+     rule: (𝑉 ∘ 𝑔≺)(m, l) = 𝑉(𝑔≺(m, l))
+
+  2  Aggregation
+     in: (1)                            out: 𝑉≺
+     ──────────────────────────────────────────────
+     rule: 𝑉≺ = 𝑉(𝑔≺(m, l))                                on (m, l) ∈ Xm × ℝ₊
+
+  3  Evaluation
+     in: 𝑉≺                             out: 𝑉≺
+     ──────────────────────────────────────────────
+     rule: 𝑉≺ : Xm → ℝ
+
+Conditions
+  Aggregation  𝑉≺(m) ∈ ℝ
+  Aggregation  𝑉≺(m, l) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  26  V[<] = V  :: [id=value]
+
+Definitions referenced
+  Xm    cons:set:Xm
+  𝑔≺    cons:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Pullback ====
+STAGE cons / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : Xm → [−∞, ∞)
+       ──────────────────────
+  out  𝑉 ∘ 𝑔≺
+          : Xm × ℝ₊ → [−∞, ∞)
+
+Rule
+  (𝑉 ∘ 𝑔≺)(m, l) = 𝑉(𝑔≺(m, l))
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  13  m_d = m
+
+Definitions referenced
+  Xm    cons:set:Xm
+  𝑔≺    cons:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Aggregation ====
+STAGE cons / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉 ∘ 𝑔≺
+           : Xm × ℝ₊ → [−∞, ∞)
+       ───────────────────────
+  out  𝑉≺  : Xm × ℝ₊ → ℝ
+
+Rule
+  𝑉≺ = 𝑉(𝑔≺(m, l))                                         on (m, l) ∈ Xm × ℝ₊
+
+Conditions
+  𝑉≺(m) ∈ ℝ
+  𝑉≺(m, l) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  26  V[<] = V  :: [id=value]
+
+Definitions referenced
+  Xm    cons:set:Xm
+  𝑔≺    cons:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Evaluation ====
+STAGE cons / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≺  : Xm × ℝ₊ → ℝ
+       ─────────────────
+  out  𝑉≺  : Xm → ℝ
+
+Rule
+  𝑉≺ = 𝑉(𝑔≺(m, l))                                         on (m, l) ∈ Xm × ℝ₊
+  𝑉≺ : Xm → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xm    cons:set:Xm
+  𝑔≺    cons:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy ====
+STAGE cons / POLICY BUILDER policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xa → [−∞, ∞)
+       ──────────────────────────────────────────────────────────────────────
+  out  𝑐   : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻
+     ────────────────────────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻)(m_d, c) = 𝑉≻(𝑔≻(m_d, c))
+
+  2  optimality:Aggregation
+     in: (1)                            out: (m_d, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m_d, c))
+     ────────────────────────────────────────────────────────────────────────
+     rule: (m_d, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m_d, c))
+
+  3  optimality:Argmax
+     in: (2)                            out: 𝑐
+     ────────────────────────────────────────────────────────────────────────
+     rule: 𝑐(m_d) ∈ argmax_{cp ∈ Γ(m_d)} [𝑢(cp) + 𝑉≻(𝑔≻(m_d, cp))]
+
+  4  Evaluation
+     in: 𝑐                              out: 𝑐
+     ────────────────────────────────────────────────────────────────────────
+     rule: 𝑐 : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
+
+Conditions
+  optimality:Aggregation  ¬(𝑢(cp) ∈ [∞, ∞] ∧ V[>] ∈ [−∞, −∞])
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xm    cons:set:Xm
+  Xa    cons:set:Xa
+  𝑢     cons:function:𝑢
+  Γ     cons:correspondence:Γ
+  𝑔≻    cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback ====
+STAGE cons / POLICY BUILDER policy / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xa → [−∞, ∞)
+       ────────────────────────────────────────────────
+  out  𝑉≻ ∘ 𝑔≻
+           : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → [−∞, ∞)
+
+Rule
+  (𝑉≻ ∘ 𝑔≻)(m_d, c) = 𝑉≻(𝑔≻(m_d, c))
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  17  a = m_d - c
+
+Definitions referenced
+  Xm    cons:set:Xm
+  Xa    cons:set:Xa
+  Γ     cons:correspondence:Γ
+  𝑔≻    cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / optimality:Aggregation ====
+STAGE cons / POLICY BUILDER policy / optimality:Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻
+         : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → [−∞, ∞)
+       ──────────────────────────────────────────────
+  out  (m_d, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m_d, c))
+         : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → [−∞, ∞)
+
+Rule
+  (m_d, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m_d, c))
+
+Conditions
+  ¬(𝑢(cp) ∈ [∞, ∞] ∧ V[>] ∈ [−∞, −∞])
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xm    cons:set:Xm
+  𝑢     cons:function:𝑢
+  Γ     cons:correspondence:Γ
+  𝑔≻    cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / optimality:Argmax ====
+STAGE cons / POLICY BUILDER policy / optimality:Argmax
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (m_d, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m_d, c))
+          : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → [−∞, ∞)
+       ───────────────────────────────────────────────
+  out  𝑐  : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
+
+Rule
+  𝑐(m_d) ∈ argmax_{cp ∈ Γ(m_d)} [𝑢(cp) + 𝑉≻(𝑔≻(m_d, cp))]
+
+Conditions
+  ¬(𝑢(cp) ∈ [∞, ∞] ∧ V[>] ∈ [−∞, −∞])
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xm    cons:set:Xm
+  𝑢     cons:function:𝑢
+  Γ     cons:correspondence:Γ
+  𝑔≻    cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Evaluation ====
+STAGE cons / POLICY BUILDER policy / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑐  : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
+       ───────────────────────────────
+  out  𝑐  : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
+
+Rule
+  𝑐(m_d) ∈ argmax_{cp ∈ Γ(m_d)} [𝑢(cp) + 𝑉≻(𝑔≻(m_d, cp))]
+  𝑐 : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xm    cons:set:Xm
+  𝑢     cons:function:𝑢
+  Γ     cons:correspondence:Γ
+  𝑔≻    cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn ====
+STAGE cons / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Xm × ℝ₊
+       ───────────────────────────────────────
+  out  μ   : finite measure on Xm
+
+Operations
+  1  Pushforward
+     in: μ≺                             out: μ
+     ─────────────────────────────────────────
+     rule: μ(B) = μ≺({m≺, l≺ ∈ Xm × ℝ₊ | 𝑔≺(m≺, l≺) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  13  m_d = m
+
+Definitions referenced
+  Xm    cons:set:Xm
+  𝑔≺    cons:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / Pushforward ====
+STAGE cons / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Xm × ℝ₊
+       ───────────────────────────────
+  out  μ   : finite measure on Xm
+
+Rule
+  μ(B) = μ≺({m≺, l≺ ∈ Xm × ℝ₊ | 𝑔≺(m≺, l≺) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  13  m_d = m
+
+Definitions referenced
+  Xm    cons:set:Xm
+  𝑔≺    cons:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE cons / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on Xm
+       ────────────────────────────────────────
+  out  μ≻  : finite measure on Xa
+
+At
+  𝑐  : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
+
+Operations
+  1  Pushforward
+     in: μ                              out: μ≻
+     ──────────────────────────────────────────
+     rule: μ≻(B) = μ({m_d ∈ Xm | 𝑔≻(m_d, 𝑐(m_d)) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  17  a = m_d - c
+
+Definitions referenced
+  Xm    cons:set:Xm
+  Xa    cons:set:Xa
+  Γ     cons:correspondence:Γ
+  𝑔≻    cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE cons / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on Xm
+       ──────────────────────────
+  out  μ≻  : finite measure on Xa
+
+Rule
+  μ≻(B) = μ({m_d ∈ Xm | 𝑔≻(m_d, 𝑐(m_d)) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  17  a = m_d - c
+
+Definitions referenced
+  Xm    cons:set:Xm
+  Xa    cons:set:Xa
+  𝑔≻    cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons:set:Xm ====
+STAGE cons / SET Xm
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xm  = ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  3  Xm := ℝ₊₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons:set:Xa ====
+STAGE cons / SET Xa
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xa  = ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  4  Xa := ℝ₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons:parameter:ρ ====
+STAGE cons / PARAMETER ρ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  ρ  ∈ [1, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  6  ρ : [1, inf)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons:function:𝑢 ====
+STAGE cons / FUNCTION 𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑢  : ℝ₊₊ → ℝ,  c ↦ c^(1 − ρ)/(1 − ρ)
+
+Conditions
+  ¬(1 − ρ = 0)
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  8  𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)  :: [id=util]
+
+Definitions referenced
+  ρ     cons:parameter:ρ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons:function:𝑑𝑢 ====
+STAGE cons / FUNCTION 𝑑𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑑𝑢  : ℝ₊₊ → ℝ₊₊,  c ↦ c^(−ρ)
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  9  𝑑𝑢(c : ℝ₊₊) := c^(-ρ)  :: [id=marginal_utility]
+
+Definitions referenced
+  ρ     cons:parameter:ρ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons:correspondence:Γ ====
+STAGE cons / CORRESPONDENCE Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Γ  : ℝ₊₊ ⇉ ℝ₊₊,  x ↦ (0, x]
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  10  Γ(x : ℝ₊₊) := (0, x]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.1 ====
+STAGE cons / FORWARD BLOCK arvl_to_dcsn / 1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  cons.bl
+  13  m_d = m
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.1 ====
+STAGE cons / FORWARD BLOCK dcsn_to_cntn / 1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  cons.bl
+  17  a = m_d - c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.value ====
+STAGE cons / BACKWARD BLOCK cntn_to_dcsn / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(m_d) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  21  V        = 𝑢(c) + V[>]  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.marginal ====
+STAGE cons / BACKWARD BLOCK cntn_to_dcsn / marginal
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  22  D_{m_d}V = 𝑑𝑢(c)  :: [id=marginal]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.value ====
+STAGE cons / BACKWARD BLOCK dcsn_to_arvl / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉≺(m) ∈ ℝ
+  𝑉≺(m, l) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  26  V[<] = V  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== policy.optimality ====
+STAGE cons / POLICY BLOCK policy / optimality
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  ¬(𝑢(cp) ∈ [∞, ∞] ∧ V[>] ∈ [−∞, −∞])
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]
+
+Definitions referenced
+  𝑢     cons:function:𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons:g:arvl_to_dcsn ====
+STAGE cons / LAW OF MOTION arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≺  : Xm × ℝ₊ → Xm,  (m, l) ↦ m
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  13  m_d = m
+
+Definitions referenced
+  Xm    cons:set:Xm
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons:g:dcsn_to_cntn ====
+STAGE cons / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → Xa,  (m_d, c) ↦ m_d − c
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  17  a = m_d - c
+
+Definitions referenced
+  Xm    cons:set:Xm
+  Xa    cons:set:Xa
+  Γ     cons:correspondence:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons:G:cntn_to_dcsn ====
+STAGE cons / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, m_d, c ∈ [−∞, ∞) × Xm × ℝ₊₊ | c ∈ Γ(m_d)} → [−∞, ∞),
+        (V≻, m_d, c) ↦ 𝑢(c) + V≻
+
+Conditions
+  𝑉(m_d) ∈ [−∞, ∞)
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  21  V        = 𝑢(c) + V[>]  :: [id=value]
+  22  D_{m_d}V = 𝑑𝑢(c)        :: [id=marginal]
+
+Definitions referenced
+  Xm    cons:set:Xm
+  𝑢     cons:function:𝑢
+  Γ     cons:correspondence:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons:G:dcsn_to_arvl ====
+STAGE cons / VALUE AGGREGATOR dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≺  : [−∞, ∞) × Xm × ℝ₊ → ℝ,  (V, m, l) ↦ V
+
+Conditions
+  𝑉≺(m) ∈ ℝ
+  𝑉≺(m, l) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  26  V[<] = V  :: [id=value]
+
+Definitions referenced
+  Xm    cons:set:Xm
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons:G:policy ====
+STAGE cons / VALUE AGGREGATOR policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, m_d, c ∈ [−∞, ∞) × Xm × ℝ₊₊ | c ∈ Γ(m_d)} → [−∞, ∞),
+        (V≻, m_d, c) ↦ 𝑢(c) + V≻
+
+Conditions
+  ¬(𝑢(cp) ∈ [∞, ∞] ∧ V[>] ∈ [−∞, −∞])
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xm    cons:set:Xm
+  𝑢     cons:function:𝑢
+  Γ     cons:correspondence:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

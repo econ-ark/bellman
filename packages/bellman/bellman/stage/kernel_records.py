@@ -14,13 +14,16 @@ from __future__ import annotations
 
 import collections
 import dataclasses
+from itertools import zip_longest
 
 from bellman.fold.block_lines import header_of
 from bellman.fold.declared_sets import definedness_condition
 from bellman.fold.stage_fold import law_of_motion_equations
-from bellman.fold.stage_names import StageNames, branches_of
+from bellman.fold.stage_names import StageNames, branches_of, lines_of
 from bellman.fold.wire_terms import (
+    case_guards,
     expectation_nodes,
+    guarded_term_nodes,
     is_wire_symbol,
     label_case,
     symbol_occurrences,
@@ -30,6 +33,7 @@ from bellman.fold.wire_terms import (
 )
 from bellman.native.identity import Identity
 from bellman.native.labels import italic, wire_spelling
+from bellman.native.predicates import Not, Or
 from bellman.native.provenance import source_file
 from bellman.refusals import construction_error
 from bellman.stage.boxes import builder_rows_of
@@ -39,12 +43,14 @@ from bellman.stage.term_operations import relation_of
 from bellman.syntax import terms as T
 from bellman.syntax.source import to_source
 from bellman.syntax.vocabulary import (
-    WRITTEN_MARK,
+    ALIAS,
     PERCH_MARK,
     SHCK,
     VALUE,
+    WRITTEN_MARK,
 )
-from bellman.typing.typed_expressions import predicate_text
+from bellman.typing import sets
+from bellman.typing.typed_expressions import Unresolved, predicate_text
 
 # --- the kernel records of g and G ---
 
@@ -91,6 +97,10 @@ class _KernelRecord:
     # the derivative terms of value wires the terms read, each with the key
     # of the argument that stands for it, `(node, key)` (MB-A16, MB-A19)
     derivative_terms: tuple = ()
+    boolean: bool = False
+    activation: object = None
+    expectations: tuple = ()
+    fallback: "_KernelRecord | None" = None
 
 
 @dataclasses.dataclass(frozen=True)
@@ -139,8 +149,9 @@ def law_of_motion_kernel(stage, identity, label=None, letter=None):
     (`defining_expressions.section_identity`): the law's title and argument
     names, its arguments the law's but the label coordinate, as the card's
     `Where` section defines the section, and its outputs the fields the
-    branch writes, in the declared order, each with the law's own component;
-    the arguments no component reads and what each reads are the section's
+    branch writes, in the declared order, each with the law's own component.
+    A constant is an argument of the section where one of those components
+    reads it. The other unused arguments and the reads are the section's
     (unit K of model interface spec 0.4, Task 14; decision K-I203)."""
     ctx = StageNames(stage)
     record = stage.definitions[identity]
@@ -152,7 +163,7 @@ def law_of_motion_kernel(stage, identity, label=None, letter=None):
     equations = law_of_motion_equations(
         ctx, block, tuple(stage.definitions[address].equations[0] for address in record.equations)
     )
-    for address, core in zip(record.equations, equations):
+    for core, address in zip_longest(equations, record.equations, fillvalue=block):
         equation = relation_of(core)
         defined = ctx.defined(equation, block)
         if defined and defined[0] in outputs:
@@ -163,6 +174,12 @@ def law_of_motion_kernel(stage, identity, label=None, letter=None):
     read = {
         ctx.resolve(name, block, side) for term in terms for name, side in symbol_occurrences(term)
     }
+    read.update(
+        ctx.resolve(node.fun, block)
+        for term in terms
+        for node in term_nodes(term)
+        if isinstance(node, T.Call) and isinstance(node.fun, str)
+    )
     # a shock is an argument where a line reads it, and the shock that selects
     # a branch where none does, the branch's section being g at its label
     keys = tuple(
@@ -174,17 +191,21 @@ def law_of_motion_kernel(stage, identity, label=None, letter=None):
                 ctx.role(ob.identity) == "shock"
                 and (ob.identity in read or ctx.labels(ob.identity))
             )
+            or (ob.identity in read and getattr(ctx.ports.get(ob.identity), "constant", False))
         )
     )
     names = _argument_names([(key, key.field) for key in keys], ctx.parameter_names)
     if label is not None:
-        # the section at `label` holds the components of the fields its branch
-        # writes and reads every argument of the law but the label coordinate
+        # The section fixes the label and includes only its own constant inputs.
         written = dict(branches_of(stage, box))[label]
         chosen = tuple(position for position, output in enumerate(produced) if output in written)
         produced = tuple(produced[position] for position in chosen)
         terms = tuple(terms[position] for position in chosen)
-        keys = tuple(key for key in keys if not ctx.labels(key))
+        used = set().union(*(_names_read(term, names, ctx, block) for term in terms))
+        keys = tuple(
+            key for key in keys
+            if not ctx.labels(key) and (not ctx.ports[key].constant or key in used)
+        )
     displayed = tuple(_displayed(term, names, ctx, block) for term in terms)
     reads = tuple(_names_read(term, names, ctx, block) for term in terms)
     output_names = tuple(wire_spelling(output) for output in produced)
@@ -216,6 +237,8 @@ def aggregator_kernel(stage, row):
     arguments named by `_value_argument_names`, an expectation's result by its
     authored sub-expression and a sub-builder's output by its declared name,
     then its coordinates; one output per component, in the row's order."""
+    from bellman.stage.carriers import result_set
+
     ctx = StageNames(stage)
     block = row.builder
     rows_open, rows_closed = builder_rows_of(stage, block)
@@ -239,7 +262,19 @@ def aggregator_kernel(stage, row):
     # the coordinate names the author wrote, which a chosen letter must
     # not take
     written = tuple(coordinate.field for coordinate in coordinates if coordinate not in inputs)
-    letters = _value_argument_names(wire_table(stage), ordinary, written)
+    rendering = wire_table(stage)
+    letters = _value_argument_names(rendering, ordinary, written)
+    kept = {
+        term.symbol.name
+        for term, output in zip(row.maps, row.outputs)
+        if is_wire_symbol(term) and term.symbol.name.field == output.field
+    }
+    for wire in ordinary:
+        sort = rendering.sort_of(wire)
+        if getattr(sort, "constant", False) and (
+            wire in kept or sets.callable_set(sort.domain, ctx.set_terms) is not None
+        ):
+            letters[wire] = wire.field
     given = [(wire, wire.field if wire in node_outputs else letters[wire]) for wire in inputs]
     given += [
         (coordinate, coordinate.field) for coordinate in coordinates if coordinate not in inputs
@@ -276,8 +311,16 @@ def aggregator_kernel(stage, row):
         if len(row.statements) == len(row.outputs)
         else (address,) * len(row.outputs)
     )
-    rendering = wire_table(stage)
     parts = _kernel_parts(letter, keys, shown, outputs, displayed, reads, always_outputs=True)
+    input_sets = {
+        key: result_set(ctx, sort) if key.kind == "Expectation" else sort.domain
+        for key in inputs
+        if (sort := rendering.sort_of(key)) is not None
+    }
+    # an expectation whose result set is not derived is given no set here
+    input_sets = {
+        key: None if isinstance(found, Unresolved) else found for key, found in input_sets.items()
+    }
     return _KernelRecord(
         letter="G",
         title=title,
@@ -292,17 +335,105 @@ def aggregator_kernel(stage, row):
         lines=_formula_lines(title, parts),
         sources=sources,
         argument_sets=tuple(
-            rendering.sort_of(key).domain
-            if key in inputs
+            input_sets[key]
+            if key in input_sets
             else None
             if key.kind == "function"
             else ctx.declared_set(key)
             for key in keys
         ),
-        output_sets=tuple(_evaluated_output_set(rendering, output) for output in row.outputs),
+        output_sets=tuple(_evaluated_output_set(ctx, rendering, output) for output in row.outputs),
         parts=parts,
         shown=tuple(shown[key] for key in keys),
         derivative_terms=derivative_terms,
+    )
+
+
+def aggregation_output_record(stage, record, position):
+    """One output formula and the arguments needed to evaluate it."""
+    ctx = StageNames(stage)
+    term = record.terms[position]
+    keys = tuple(sorted(record.index, key=record.index.get))
+    names = dict(zip(keys, record.names))
+    shown = dict(zip(keys, record.shown or record.names))
+    read = _names_read(term, names, ctx, record.builder)
+    selected = tuple(key for key in keys if key in read)
+    if len(record.terms) == 1 and selected == keys:
+        return record
+    output = (record.outputs[position],)
+    displayed = (_displayed(term, shown, ctx, record.builder),)
+    parts = _kernel_parts(
+        italic(record.letter), selected, shown, output, displayed, (read,), always_outputs=True
+    )
+    return dataclasses.replace(
+        record,
+        names=tuple(names[key] for key in selected),
+        index={key: position for position, key in enumerate(selected)},
+        outputs=output,
+        terms=(term,),
+        lines=_formula_lines(record.title, parts),
+        sources=(record.sources[position],),
+        argument_sets=tuple(record.argument_sets[record.index[key]] for key in selected),
+        output_sets=(record.output_sets[position],),
+        parts=parts,
+        shown=tuple(shown[key] for key in selected),
+    )
+
+
+def guard_kernel_record(stage, builder, subject, predicate, term, scope):
+    """An explicit Boolean kernel on the coordinates the guard reads."""
+    ctx = StageNames(stage)
+    table = wire_table(stage)
+    known = {} if scope is None else scope.index
+    arguments = {}
+    for node in term_nodes(term):
+        if is_wire_symbol(node):
+            key = node.symbol.name
+        elif isinstance(node, T.Sym) and isinstance(node.symbol, (T.Constant, T.Variable)):
+            key = _argument_identity(node, ctx, builder)
+        elif isinstance(node, T.Call):
+            key = node.fun if isinstance(node.fun, Identity) else ctx.resolve(node.fun, builder)
+        elif isinstance(node, T.Key):
+            key = ctx.resolve(node.at, builder)
+        else:
+            continue
+        retained_expectation = (
+            scope is not None and isinstance(key, Identity)
+            and _expectation_source(stage, key) is not None
+        )
+        if key in known or key in ctx.ports or key in table.produced or retained_expectation:
+            arguments[key] = (
+                scope.names[known[key]] if key in known else key.field or str(key)
+            )
+    names = _argument_names(tuple(arguments.items()), ctx.parameter_names)
+    keys = tuple(names)
+    shown = names
+    keys, names, shown, terms, _ = _derivative_arguments(
+        stage, keys, names, shown, (term,), ctx, builder
+    )
+    read = _names_read(terms[0], names, ctx, builder)
+    keys = tuple(key for key in keys if key in read)
+    title = f"guard of {subject}"
+    return _KernelRecord(
+        letter="guard",
+        title=title,
+        segment=subject,
+        identity=subject,
+        address=builder,
+        builder=builder,
+        names=tuple(names[key] for key in keys),
+        index={key: position for position, key in enumerate(keys)},
+        outputs=("active",),
+        terms=terms,
+        lines=(title, predicate_text(predicate)),
+        sources=(builder,),
+        argument_sets=tuple(
+            scope.argument_sets[known[key]] if key in known else table.sort_of(key).domain
+            for key in keys
+        ),
+        output_sets=(None,),
+        parts=None,
+        boolean=True,
     )
 
 
@@ -338,100 +469,222 @@ def _replaced(term, replacements):
 _SIDE_OF_PERCH = {"arvl": T.Arrival(), "cntn": T.Continuation()}
 
 
+def _derivative_source(stage, block, term, address):
+    """A derivative with local aliases resolved and expectations identified."""
+    aliases = {}
+    for _, line in lines_of(stage, block_box(stage, block)):
+        if line.role != ALIAS or not isinstance(line.core, T.Equation):
+            continue
+        left = line.core.lhs
+        if isinstance(left, T.Sym) and isinstance(left.symbol, T.Constant):
+            aliases[left.symbol.name] = (line.address, line.core.rhs)
+    order = {
+        id(node): Identity("Expectation", address=place, occurrence=number)
+        for place, body in ((address, term), *aliases.values())
+        for number, node in enumerate(expectation_nodes(body), 1)
+    }
+    identities = {}
+
+    def expand(node, active=frozenset()):
+        if isinstance(node, T.Sym) and isinstance(node.symbol, T.Constant):
+            name = node.symbol.name
+            if name in aliases and name not in active:
+                return expand(aliases[name][1], active | {name})
+        if isinstance(node, tuple):
+            return tuple(expand(item, active) for item in node)
+        if not dataclasses.is_dataclass(node) or isinstance(node, type):
+            return node
+        resolved = dataclasses.replace(
+            node,
+            **{field.name: expand(getattr(node, field.name), active)
+               for field in dataclasses.fields(node)},
+        )
+        if id(node) in order:
+            identities[id(resolved)] = order[id(node)]
+        return resolved
+
+    return expand(term), identities
+
+
+def _derivative_expectation_terms(term, identities):
+    """The derivative's integrands and the terms reading their results."""
+    from bellman.stage.stage_answers import _add_primitive_guard
+
+    scopes, guards = {}, {}
+
+    def read(node, guard=None):
+        if isinstance(node, T.Operator) and node.head == "E":
+            integrand = read(node.args[0], guard)
+            occurrence = identities[id(node)]
+            result = dataclasses.replace(occurrence, mark="result")
+            shocks = tuple(sub.var if isinstance(sub, T.In) else sub.name for sub in node.subs)
+            fallback = _without_expectations(node.args[0])
+            scopes.setdefault(occurrence, (result, shocks, integrand, fallback))
+            _add_primitive_guard(guards, occurrence, guard)
+            return wire_symbol(result)
+        if isinstance(node, T.Conditional):
+            test = read(node.test, guard)
+            then, otherwise = case_guards(test, guard)
+            return T.Conditional(test, read(node.then, then), read(node.otherwise, otherwise))
+        if dataclasses.is_dataclass(node) and not isinstance(node, type):
+            return dataclasses.replace(
+                node,
+                **{field.name: read(getattr(node, field.name), guard)
+                   for field in dataclasses.fields(node)},
+            )
+        if isinstance(node, tuple):
+            return tuple(read(item, guard) for item in node)
+        return node
+
+    value = read(term)
+    return value, tuple(
+        (occurrence, result, shocks, integrand, guards[occurrence], fallback)
+        for occurrence, (result, shocks, integrand, fallback) in scopes.items()
+    )
+
+
+def _without_expectations(term):
+    """The derivative where its local expectations are inactive."""
+    if not expectation_nodes(term):
+        return term
+    if not isinstance(term, T.Conditional) or expectation_nodes(term.test):
+        return None
+    then, otherwise = _without_expectations(term.then), _without_expectations(term.otherwise)
+    if then is None:
+        return otherwise
+    if otherwise is None:
+        return then
+    return T.Conditional(term.test, then, otherwise)
+
+
 def derivative_kernel(stage, evaluation, entry, aggregation):
-    """The kernel of one stated derivative of a value builder, the piece
-    `<line id>:Derivative:1` (AMD-MB-001 §4.3; decisions MB-A14 and MB-A18):
-    its arguments are those of the builder's G, the kernel of `aggregation`,
-    then one argument for each derivative term of a value the right side
-    reads, named by the term's printed form, `D_{m_next}V[>]`, as the G takes
-    the value itself; its one output is the stated derivative's value, the
-    author's right side evaluated at the arguments. Where the right side is
-    one expectation over the stage's shocks, `E_{Ψ,θ}(f)`, the rule is the
-    integrand `f`, the arguments are the G inputs the integrand reads, then the
-    shocks of the subscript, then the derivative terms, and the record names
-    the shocks under `integrated`, so that a quadrature method bound at the
-    line's expectation applies to the piece as to the value's expectation.
-    Nothing is differentiated: the right side of the line is the rule. `entry`
-    is one entry of the Evaluation row's `derivatives`, and the output is
-    named for the value the entry's line names, `D_{m}L` for `D_{m}L = 0` in
-    a block that writes `V` and `L`."""
+    """The stated derivative, with separate records for distinct expectations.
+
+    A sole expectation at the root keeps the existing integrand calling
+    convention. Other expectations have their original occurrence identities,
+    and their results are arguments to the terms that read them.
+    """
     coordinate, term, address, source, value = entry
     base = aggregator_kernel(stage, aggregation)
     ctx = StageNames(stage)
     block = evaluation.builder
-    base_keys = sorted(base.index, key=base.index.get)
-    sets = dict(zip(base_keys, base.argument_sets))
+    base_keys = tuple(sorted(base.index, key=base.index.get))
+    declared = dict(zip(base_keys, base.argument_sets))
     names = dict(zip(base_keys, base.names))
     shown = dict(zip(base_keys, base.shown or base.names))
-    # the right side as the rule, or the integrand of its one expectation with
-    # the shocks the expectation integrates
-    rule_source, integrated = term, []
-    if isinstance(term, T.Operator) and term.head == "E" and len(term.args) == 1:
-        for sub in term.subs:
-            name = sub.var if isinstance(sub, T.In) else sub.name
-            key = ctx.resolve(name, block, None)
-            integrated.append(key)
-            names[key] = shown[key] = name
-            sets[key] = ctx.declared_set(key)
-        rule_source = term.args[0]
-    # the value inputs of G, written in the line by their authored spelling,
-    # read as the wires G takes
+    term, identities = _derivative_source(stage, block, term, address)
+    expectations = expectation_nodes(term)
+    fused = len(expectations) == 1 and expectations[0] is term
+    shocks, extracted = (), ()
+    if fused:
+        shocks = tuple(sub.var if isinstance(sub, T.In) else sub.name for sub in term.subs)
+        rule = term.args[0]
+    elif expectations:
+        rule, extracted = _derivative_expectation_terms(term, identities)
+    else:
+        rule = term
     replacements = {
         term_of_name(key.field, _SIDE_OF_PERCH.get(key.perch)): wire_symbol(key)
         for key in aggregation.inputs
         if key in base.index and key.field
     }
-    # each derivative term of a value the right side reads is one more argument
     derivative_keys = []
-    for node in term_nodes(rule_source):
+    for node in term_nodes(term):
         if not derivative_term_of_field(node) or node in replacements:
             continue
         printed = to_source(node)
-        symbol = node.args[0].symbol
-        perch = (
-            ctx.resolve(symbol.name, block, symbol.when.side).perch
-            if isinstance(symbol, T.Variable) and isinstance(symbol.when, T.At)
-            else ctx.resolve(symbol.name, block, None).perch
-        )
+        name, side = spelling(node.args[0])
+        perch = ctx.resolve(name, block, side).perch
         key = Identity("function", stage=stage.name, perch=perch, field=printed)
         derivative_keys.append(key)
         names[key] = shown[key] = printed
-        sets[key] = None
+        declared[key] = None
         replacements[node] = wire_symbol(key)
-    rule = _replaced(rule_source, replacements)
-    read = _names_read(rule, names, ctx, block)
-    if integrated:
-        keys = [key for key in base_keys if key in read] + integrated + derivative_keys
-    else:
-        keys = base_keys + derivative_keys
+
+    def coordinate_key(name, side=None):
+        key = ctx.resolve(name, block, side)
+        if key not in names:
+            names[key] = shown[key] = name
+            declared[key] = ctx.declared_set(key)
+        return key
+
+    if extracted:
+        for node in term_nodes(term):
+            if isinstance(node, T.Sym) and isinstance(node.symbol, (T.Constant, T.Variable)):
+                name, side = spelling(node)
+                if isinstance(name, str) and ctx.resolve(name, block, side) in ctx.ports:
+                    coordinate_key(name, side)
+        for _, result, _, _, _, _ in extracted:
+            names[result] = str(result)
+            shown[result] = _expectation_source(stage, result) or names[result]
+            declared[result] = None
+    elif fused:
+        for name in shocks:
+            coordinate_key(name)
+
+    def record(source_term, output, segment, integrated=(), *, activation=None, exact=True):
+        source_term = _replaced(source_term, replacements)
+        shock_keys = tuple(coordinate_key(name) for name in integrated)
+        read = _names_read(source_term, names, ctx, block)
+        if exact:
+            keys = tuple(key for key in names if key in read and key not in shock_keys)
+            arguments = (
+                tuple(key for key in keys if key not in derivative_keys)
+                + shock_keys
+                + tuple(key for key in derivative_keys if key in read)
+            )
+        else:
+            arguments = base_keys + tuple(derivative_keys)
+        displayed = (_displayed(source_term, shown, ctx, block),)
+        title = f"derivative of {block} stated at {address}"
+        if integrated:
+            title += f", the integrand over {', '.join(integrated)}"
+        parts = _kernel_parts(
+            output, arguments, shown, (output,), displayed, (read,), always_outputs=True
+        )
+        lines = _formula_lines(title, parts)
+        if integrated:
+            lines += (f"integrated over {', '.join(integrated)}",)
+        return _KernelRecord(
+            letter="D",
+            title=title,
+            segment=segment,
+            identity=base.identity,
+            address=address,
+            builder=block,
+            names=tuple(names[key] for key in arguments),
+            index={key: position for position, key in enumerate(arguments)},
+            outputs=(output,),
+            terms=(source_term,),
+            lines=lines,
+            sources=(address,),
+            argument_sets=tuple(declared[key] for key in arguments),
+            output_sets=(None,),
+            parts=parts,
+            shown=tuple(shown[key] for key in arguments),
+            integrated=integrated,
+            activation=None if activation is None else _replaced(activation, replacements),
+        )
+
     output = f"D_{{{coordinate.field}}}{value.field}{WRITTEN_MARK.get(value.perch, '')}"
-    displayed = (_displayed(rule, shown, ctx, block),)
-    reads = (read,)
-    title = f"derivative of {block} stated at {address}"
-    if integrated:
-        title += f", the integrand over {', '.join(names[key] for key in integrated)}"
-    parts = _kernel_parts(output, keys, shown, (output,), displayed, reads, always_outputs=True)
-    lines = _formula_lines(title, parts)
-    if integrated:
-        lines += (f"integrated over {', '.join(names[key] for key in integrated)}",)
-    return _KernelRecord(
-        letter="D",
-        title=title,
-        segment=evaluation.identity,
-        identity=base.identity,
-        address=address,
-        builder=block,
-        names=tuple(names[key] for key in keys),
-        index={key: position for position, key in enumerate(keys)},
-        outputs=(output,),
-        terms=(rule,),
-        lines=lines,
-        sources=(address,),
-        argument_sets=tuple(sets[key] for key in keys),
-        output_sets=(None,),
-        parts=parts,
-        shown=tuple(shown[key] for key in keys),
-        integrated=tuple(names[key] for key in integrated),
+    outer = record(rule, output, evaluation.identity, shocks, exact=bool(expectations))
+    if not extracted:
+        return outer
+    parts = []
+    for occurrence, result, integrated, integrand, activation, fallback in extracted:
+        part = record(integrand, names[result], occurrence, integrated, activation=activation)
+        if fallback is not None:
+            # A fallback is meaningful only for an integrand that reads a child result.
+            if any(key.kind == "Expectation" for key in part.index):
+                part = dataclasses.replace(
+                    part, fallback=record(fallback, names[result], occurrence)
+                )
+        parts.append(part)
+    fallback = _without_expectations(term)
+    return dataclasses.replace(
+        outer,
+        expectations=tuple(parts),
+        fallback=None if fallback is None else record(fallback, output, evaluation.identity),
     )
 
 
@@ -500,11 +753,15 @@ def _restrictions(displayed, arguments):
     and not the domain, and stays under WHERE where the card prints it."""
     found = []
     for term in displayed:
-        for node in term_nodes(term):
-            guard = definedness_condition(node)
-            if guard is None or not {name for name, _ in symbol_occurrences(guard)} & arguments:
+        for node, guard in guarded_term_nodes(term):
+            condition = definedness_condition(node)
+            if condition is None:
                 continue
-            text = predicate_text(guard)
+            if guard is not None:
+                condition = Or(Not(guard), condition)
+            if not {name for name, _ in symbol_occurrences(condition)} & arguments:
+                continue
+            text = predicate_text(condition)
             if text not in found:
                 found.append(text)
     return tuple(found)
@@ -554,6 +811,10 @@ def _displayed(term, names, ctx, block):
     argument written by its display name."""
     if is_wire_symbol(term):
         return T.Sym(T.Constant(names[term.symbol.name]))
+    if isinstance(term, T.Call):
+        identity = term.fun if isinstance(term.fun, Identity) else ctx.resolve(term.fun, block)
+        function = names.get(identity, term.fun)
+        return T.Call(function, tuple(_displayed(arg, names, ctx, block) for arg in term.args))
     if isinstance(term, T.Key):
         identity = ctx.resolve(term.at, block)
         return T.Key(names.get(identity, term.at))
@@ -602,6 +863,10 @@ def _names_read(term, names, ctx, block):
                 found |= _names_read(case, names, ctx, block)
         if is_wire_symbol(node):
             found.add(node.symbol.name)
+        elif isinstance(node, T.Call):
+            identity = node.fun if isinstance(node.fun, Identity) else ctx.resolve(node.fun, block)
+            if identity in names:
+                found.add(identity)
         elif isinstance(node, T.Key):
             identity = ctx.resolve(node.at, block)
             if identity in names:
@@ -790,6 +1055,8 @@ def _wires_named(term):
     """`term` with each wire symbol replaced by the constant that names it."""
     if is_wire_symbol(term):
         return T.Sym(T.Constant(_wire_symbol_name(term.symbol.name)))
+    if isinstance(term, T.Call) and isinstance(term.fun, Identity):
+        return T.Call(_wire_symbol_name(term.fun), tuple(_wires_named(arg) for arg in term.args))
     if isinstance(term, tuple):
         return tuple(_wires_named(t) for t in term)
     if dataclasses.is_dataclass(term) and not isinstance(term, type):
@@ -810,9 +1077,10 @@ def _wire_symbol_name(identity):
     return str(identity)
 
 
-def _evaluated_output_set(rendering, output):
-    """The declared result of a right side whose following evaluation
-    names it."""
+def _evaluated_output_set(ctx, rendering, output):
+    """The declared result of an evaluated expression or maximand."""
+    from bellman.stage.carriers import policy_objective_field
+
     value = rendering.sort_of(output).domain
     if value is not None:
         return value
@@ -826,7 +1094,7 @@ def _evaluated_output_set(rendering, output):
     )
     if evaluation is not None:
         return rendering.sort_of(evaluation.outputs[evaluation.inputs.index(output)]).domain
-    return None
+    return ctx.declared_set(policy_objective_field(ctx, rendering, output))
 
 
 # --- the names of a point and the arguments of a distribution ---

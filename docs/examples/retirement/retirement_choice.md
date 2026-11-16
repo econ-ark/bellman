@@ -381,7 +381,9 @@ computable_together(period)
 
 ## 5 The trellis
 
-A **trellis** is the sequence of periods, indexed backward from the last date: `periods[0]` is the terminal period, and `periods[h+1]` is the period one date before `periods[h]` ([Trellis syntax](../../Bellman-Sym/07-trellis.md)). The trellis file is `applications/retirement-choice/declaration/trellis.yml`:
+A trellis is a diagram of periods joined by connections. Repeated uses of a period retain the same declarations and calibration sources in a [modular model](../../bellman-calculus/APPX-H-MODULARITY.md). The user supplies terminal data for every backward field when realizing the model; this application declares no age field.
+
+The Python representation lists the periods backward from the last date: `periods[0]` is the terminal period, and `periods[h+1]` is the period one date before `periods[h]` ([Trellis syntax](../../Bellman-Sym/07-trellis.md)). The trellis file is `applications/retirement-choice/declaration/trellis.yml`:
 
 ```yaml
 !trellis

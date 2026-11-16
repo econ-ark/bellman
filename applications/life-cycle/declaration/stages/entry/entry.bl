@@ -1,0 +1,27 @@
+@stage: entry
+# Entry carries the supplied states and continuation fields through unchanged.
+
+Xa := ℝ₊                  :: ["assets"]
+J : ℤ @ [1, inf)          :: ["number of ages"]
+Ages := {0, …, J - 1}
+Z := {1, 2, 3}
+
+[id=arvl_to_dcsn, (z_0 : Z, a_0 : Xa) : !arvl -> (z_e : Z, a_e : Xa) : !dcsn] {
+    z_e = z_0
+    a_e = a_0
+}
+
+[id=dcsn_to_cntn, (z_e, a_e) : !dcsn -> (z_1 : Z, a_1 : Xa) : !cntn] {
+    z_1 = z_e
+    a_1 = a_e
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, age : Ages @ !vlu @ !cnst) : !cntn -> (V : ℝ @ !vlu, age) : !dcsn] {
+    V = V[>]                       :: [id=value]
+    D_{a_e}V = D_{a_1}V[>]  :: [id=marginal_decision]
+}
+
+[id=dcsn_to_arvl, (V, age) : !dcsn -> (V[<] : ℝ @ !vlu, age) : !arvl] {
+    V[<] = V                       :: [id=value]
+    D_{a_0}V[<] = D_{a_e}V  :: [id=marginal_arrival]
+}

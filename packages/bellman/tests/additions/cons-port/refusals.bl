@@ -1,8 +1,8 @@
 @methods: cons
-# Four additions to cons.bl that the union of §4 must refuse, each a mistake a
-# writer could make in translating the YAML files of cons-port. They are not
-# methods of the application and stand apart from the methods files. The comment
-# above each item names the rule that refuses it.
+# Four additions to cons.bl that the package refuses, each a mistake that an
+# author could make in writing the methods of cons-port. They are not methods
+# of the application and stand apart from its methods files. The comment above
+# each item says why the package refuses it, and names the refusal rule.
 
 𝑑𝑢(c : ℝ₊₊) := c^(-ρ)
 𝑑𝑢𝑖𝑛𝑣(x : ℝ₊₊) := x^(-1/ρ)
@@ -14,27 +14,27 @@ n_m : ℕ              :: ["number of points of the grid of resources"]
 m_min : Xm           :: ["lower bound of the grid of resources"]
 m_max : Xm           :: ["upper bound of the grid of resources"]
 
-# Refused by rule 2, a name defined in both files with different content, which
-# gives the coordinate a two sets: cons.bl defines its set as Xa := ℝ₊, and the
-# writer narrows it because the savings grid begins at a_min > 0, taking the
-# method's grid for the model's domain. The elaborator refuses the union by
-# declared-once, a space being defined once.
+# Refused: a name defined in both files with different content. cons.bl
+# defines the set of the savings as Xa := ℝ₊, and the author narrows it because
+# the savings grid begins at a_min > 0, taking the method's grid for the
+# model's domain. A name is defined once, or identically in each file, so the
+# package refuses the second definition (`declared-twice`).
 Xa := ℝ₊₊
 
-# Refused by rule 5, a line id written in both files: the inverse Euler equation
-# of cons_egm.bl given the id optimality, which the maximization of cons.bl
-# already carries in policy. The parser refuses the union, since one id names
-# one line of a block.
+# Refused: one line id in both files. The inverse Euler line takes the id
+# optimality, which the maximization of cons.bl already carries in the block
+# policy. A line id names one line of a block, so the package refuses the
+# union (`declared-twice`).
 [id=policy] {
     c[>] <= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>]) ⟂ a >= 0      :: [id=optimality]
     m[>] = a + c[>]                          :: [id=grid]
 }
 
-# Refused by rule 4, the same slot filled twice with different content: the
-# Evaluation of the decision value typed by the linear basis and by the
-# shape-preserving cubic, the second basis that AAS's question of 24 October
-# 2026 in methods/cons.yml asked how to declare. A slot holds one entry; D4
-# refines a slot by the object it evaluates, never by a second basis.
+# Refused: one component written twice. Two entries type the method of the
+# Evaluation of the decision value, as `!Linear` and as `!pchip`, the
+# shape-preserving cubic. A component holds one entry over the files of a
+# stage, so the package refuses the second entry and names both
+# (`declared-twice`).
 [id=cntn_to_dcsn
     | evaluate.method : !Linear
     | evaluate.method : !pchip
@@ -42,11 +42,11 @@ Xa := ℝ₊₊
     D_{m}V = 𝑑𝑢(c)                           :: [id=envelope]
 }
 
-# Refused by rule 7, a subject inside a block naming another block: the block
-# egm of cons_egm.bl copied with its own id, and the method of the policy
-# builder written inside it. Without that entry the union would keep egm as a
-# new block (rule 3), a second builder from the continuation perch to the
-# decision perch that writes c, and the elaborator accepts that union.
+# Refused: a path inside a block that names another block. The block egm types
+# the method and the handler of the policy builder inside it
+# (`label-not-in-parent`). Without those two entries, the union keeps egm as
+# a second builder from the continuation perch to the decision perch that
+# writes c, which the package refuses as well (`one-builder-per-output`).
 [id=egm, policy.method : !egm,
     (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn
     | policy.handler : "cons-port:egm"] {

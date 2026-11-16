@@ -900,12 +900,12 @@
   "from_message": false
  },
  {
-  "study": "A-buffer-stock-pension",
+  "study": "buffer-stock-pension",
   "additions": [
-   "packages/bellman/tests/additions/new-applications/A-buffer-stock-pension/additions/pension.bl",
-   "packages/bellman/tests/additions/new-applications/A-buffer-stock-pension/additions/egm.bl"
+   "packages/bellman/tests/additions/models-for-the-tests/buffer-stock-pension/additions/pension.bl",
+   "packages/bellman/tests/additions/models-for-the-tests/buffer-stock-pension/additions/egm.bl"
   ],
-  "stage": "packages/bellman/tests/additions/new-applications/A-buffer-stock-pension/stage/buffer_stock.bl",
+  "stage": "packages/bellman/tests/additions/models-for-the-tests/buffer-stock-pension/stage/buffer_stock.bl",
   "places": 49,
   "created": [
    "D",
@@ -935,12 +935,12 @@
   "from_message": false
  },
  {
-  "study": "A-buffer-stock-pension",
+  "study": "buffer-stock-pension",
   "additions": [
-   "packages/bellman/tests/additions/new-applications/A-buffer-stock-pension/additions/pension.bl",
-   "packages/bellman/tests/additions/new-applications/A-buffer-stock-pension/additions/vfi.bl"
+   "packages/bellman/tests/additions/models-for-the-tests/buffer-stock-pension/additions/pension.bl",
+   "packages/bellman/tests/additions/models-for-the-tests/buffer-stock-pension/additions/vfi.bl"
   ],
-  "stage": "packages/bellman/tests/additions/new-applications/A-buffer-stock-pension/stage/buffer_stock.bl",
+  "stage": "packages/bellman/tests/additions/models-for-the-tests/buffer-stock-pension/stage/buffer_stock.bl",
   "places": 44,
   "created": [
    "D",
@@ -965,11 +965,11 @@
   "from_message": false
  },
  {
-  "study": "B-retirement-choice-pension",
+  "study": "retirement-choice-pension",
   "additions": [
-   "packages/bellman/tests/additions/new-applications/B-retirement-choice-pension/additions/pension_choice.bl"
+   "packages/bellman/tests/additions/models-for-the-tests/retirement-choice-pension/additions/pension_choice.bl"
   ],
-  "stage": "packages/bellman/tests/additions/new-applications/B-retirement-choice-pension/stage/choice.bl",
+  "stage": "packages/bellman/tests/additions/models-for-the-tests/retirement-choice-pension/stage/choice.bl",
   "places": 38,
   "created": [
    "D",

@@ -22,12 +22,12 @@ import pathlib
 import sys
 
 _REPO = pathlib.Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(_REPO / "packages" / "bellman" / "tests" / "tools"))
+sys.path.insert(0, str(_REPO / "applications"))
 
 import pytest
 
 from stage_ast import arvl, check, cntn, describes, parsed, run_checks, sym
-from stage_types import (
+from bellman.syntax.terms import (
     Add, Annotation, Assignment, At, Block, Call, Cartesian, Closed, Constant,
     Continuation, Control, Coordinate, CorrDef, Declaration, Declare, Decision,
     Domain, Equation, FiniteSet, Ge, Grid, In, Inequality, Infoset, Interval,
@@ -35,7 +35,7 @@ from stage_types import (
     Open, Operator, Pow, Range, Role, Segment, Select, Signature, Space, Spaced,
     Statement, Sub, Subject, Tuple, Typer, Value, Var, Word,
 )
-from stage_types import Path as TermPath
+from bellman.syntax.terms import Path as TermPath
 
 
 # the folder of the model's stage folders

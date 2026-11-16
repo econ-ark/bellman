@@ -720,6 +720,8 @@ def membership(stage, definitions, setexpr, value, values, active=frozenset(), p
         )
     if isinstance(setexpr, T.Functions):
         indexed = sets.index_sets(setexpr, set_terms)
+        if indexed is None:
+            return (_UNDECIDED, "") if callable(value) else outside(to_source(setexpr))
         first, rest = indexed
         members = sets.finite_members(first, values, set_terms)
         if members is None:

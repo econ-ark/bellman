@@ -1,0 +1,44 @@
+!trellis
+# The stationary model of Cagetti and De Nardi (2006) repeats one year. This
+# trellis has n = 3 years, periods[0] terminal; any other length changes the
+# `repeat` count alone, since every inter-period mapping is the same. The
+# terminal year is written out as its own entry: the ten stages of
+# period.yml, the four terminal stages, which take the continuation value of
+# each of the four households whose problems end the year, the twelve
+# connectors of period.yml, and one connector from the four households'
+# continuation fields to the terminal stages' arrival fields. An entry's
+# `connectors` replaces the template's, so the twelve are written again.
+name: cagetti_denardi_2006
+periods:
+  - stages: [worker_ageing, entrepreneur_ageing, entrepreneur_death, retiree_death,
+             young_choice, old_choice, young_entrepreneur, old_entrepreneur, worker, retiree,
+             terminal_worker, terminal_young_entrepreneur, terminal_old_entrepreneur, terminal_retiree]
+    connectors:
+      - {a_wa_yc: a_yc, y_wa_yc: y_yc, θ_wa_yc: θ_yc}
+      - {a_ea_yc: a_yc, y_ea_yc: y_yc, θ_ea_yc: θ_yc}
+      - {a_ed_yc: a_yc, y_ed_yc: y_yc, θ_ed_yc: θ_yc}
+      - {a_rd_yc: a_yc, y_rd_yc: y_yc, θ_rd_yc: θ_yc}
+      - {a_ea_oc: a_oc, θ_ea_oc: θ_oc}
+      - {a_ed_oc: a_oc, θ_ed_oc: θ_oc}
+      - {a_yc_wk: a_wk, y_yc_wk: y_wk, θ_yc_wk: θ_wk}
+      - {a_ye_wk: a_wk, y_ye_wk: y_wk, θ_ye_wk: θ_wk}
+      - {a_wa_rt: a_rt}
+      - {a_rd_rt: a_rt}
+      - {a_oc_rt: a_rt}
+      - {a_oe_rt: a_rt}
+      # The terminal connector: each household's end-of-year fields to its
+      # terminal stage, the tags tw, ty, to and tr in place of wa, ea, ed and rd.
+      - {a_wk_wa: a_tw, y_wk_wa: y_tw, θ_wk_wa: θ_tw,
+         a_ye_ea: a_ty, y_ye_ea: y_ty, θ_ye_ea: θ_ty,
+         a_oe_ed: a_to, θ_oe_ed: θ_to,
+         a_rt_rd: a_tr}
+  - {template: period.yml, repeat: 2}
+inter_connectors:
+  # One mapping stands for every adjacent pair: the end-of-year assets and
+  # abilities of the four households of period h+1 are the arrival fields of
+  # the demographic stages of period h, h = 0 included, since the terminal
+  # stages arrive at names no mapping reaches.
+  - {a_wk_wa: a_wa, y_wk_wa: y_wa, θ_wk_wa: θ_wa,
+     a_ye_ea: a_ea, y_ye_ea: y_ea, θ_ye_ea: θ_ea,
+     a_oe_ed: a_ed, θ_oe_ed: θ_ed,
+     a_rt_rd: a_rd}

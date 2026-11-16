@@ -36,6 +36,7 @@ import contextlib
 import dataclasses
 from typing import NamedTuple
 
+from bellman.distributions.edges import shock_application
 from bellman.native.identity import Identity
 from bellman.native.records import ExpressionType, ResolvedName, Sort, construction_typing_table
 from bellman.refusals import NotConstructed
@@ -43,6 +44,7 @@ from bellman.syntax import terms
 from bellman.syntax.source import comprehension_text, condition_text, to_source
 from bellman.syntax.vocabulary import (
     CONTINUATION,
+    CONTROL,
     DECISION,
     DOC,
     PRIMITIVE_SETS,
@@ -138,6 +140,16 @@ _NUMBER_ADVICE = {
 # declaration that writes no set.
 _REAL_TYPE = ExpressionType("scalar", "primitive:real")
 _EXTENDED_REAL = ExpressionType("scalar", "primitive:extended-real")
+# the words of the refusal of two parts of different kinds (`_cast`): the
+# part read, the part it is compared with, and the rule they break
+_SIDES = "the two sides of a line are of one kind"
+_BRANCHES = "the branches of a formula by cases are of one kind"
+_CAST_WORDS = {
+    "left": ("the left side", "the right side", _SIDES),
+    "right": ("the right side", "the left side", _SIDES),
+    "then": ("the branch after `then`", "the branch after `else`", _BRANCHES),
+    "else": ("the branch after `else`", "the branch after `then`", _BRANCHES),
+}
 _BOOLEAN = ExpressionType("scalar", "primitive:boolean")
 # The name of the domain of each spelling of a primitive set whose members are
 # numbers, read from the one table of the primitive sets
@@ -199,7 +211,7 @@ class TypingContext:
             self.domain_terms[domain_id] = tuple(field.domain_terms)
             self.inputs[identity] = ResolvedName(
                 identity=identity,
-                value_type=ExpressionType(self._value_kind(tuple(field.domain_terms)), domain_id),
+                value_type=self._value_type(tuple(field.domain_terms), domain_id, str(identity)),
                 role=declarations.field_roles[field.stem],
                 perch=field.perch,
             )
@@ -214,7 +226,7 @@ class TypingContext:
                 )
                 self.inputs[identity] = ResolvedName(
                     identity=identity,
-                    value_type=ExpressionType(self._value_kind(term), domain_id),
+                    value_type=self._value_type(term, domain_id, declaration.address),
                     role="parameter",
                     perch=None,
                 )
@@ -598,17 +610,44 @@ class TypingContext:
             for subject in subjects
         )
         domain_id = f"{identity}:subjects"
+        formals = self.declarations.parameterized_laws.get(name, ())
+        actuals = self.declarations.law_actuals.get(name, ())
+        parameters = ()
+        if actuals:
+            local = tuple(
+                (formal, self.inputs[actual])
+                for formal, actual in zip(formals, actuals, strict=True)
+            )
+        else:
+            parameters = tuple(
+                ResolvedName(
+                    identity=Identity(
+                        "function-parameter", owner=identity, occurrence=i, field=formal
+                    ),
+                    value_type=ExpressionType("opaque", _binder_set(address, ("law", i))),
+                    role="argument",
+                    perch=None,
+                )
+                for i, formal in enumerate(formals)
+            )
+            local = tuple(zip(formals, parameters, strict=True))
         with self._walking_at(
             address,
             law_head=term.fun if isinstance(term, terms.Call) else None,
             law_result=ExpressionType("distribution", domain_id),
         ):
-            context, values = self._typed_expression(term, address=address, position=("law",))
+            context, values = self._typed_expression(
+                term, address=address, position=("law",), local=local
+            )
+            if actuals:
+                context = _merge((context, tuple(port for _, port in local)))
+            else:
+                context = tuple(port for port in context if port not in parameters)
             definition = _TypedDefinition(
                 identity=identity,
                 address=address,
                 kind="law",
-                parameters=(),
+                parameters=parameters,
                 context=context,
                 value_types=values,
                 subjects=subject_ids,
@@ -651,6 +690,12 @@ class TypingContext:
             args = tuple(visit(item, ("items", i)) for i, item in enumerate(expr.items))
             value = ExpressionType("state", self._domain(expr, address, position, local=local))
             return _Typed(_merge(arg.inputs for arg in args), (value,))
+        shock = shock_application(expr, self.declarations.parameterized_laws)
+        if shock is not None:
+            name, arguments = shock
+            draw = self._typed_symbol(terms.Sym(terms.Constant(name)), address=address, local=local)
+            supplied = tuple(visit(arg, ("law-argument", i)) for i, arg in enumerate(arguments))
+            return _Typed(_merge((draw.inputs, *(arg.inputs for arg in supplied))), draw.results)
         if isinstance(expr, terms.Select):
             return self._typed_selection(expr, **where)
         if isinstance(expr, terms.Call):
@@ -664,12 +709,6 @@ class TypingContext:
         if isinstance(expr, (terms.Rel, terms.Between)):
             return self._typed_relation(expr, **where)
         if isinstance(expr, terms.Conditional):
-            # a definition by cases reads what its test and its two branches
-            # read; its value is a real number, or an extended real where a
-            # branch is one. The two sides of the test are numbers for every
-            # relation, `=` among them, as the operands of arithmetic are: a
-            # label of a finite set there is refused under `well-typed`
-            # (AMD-GRAM-006)
             sides = self._numeric_arguments(
                 expr.test,
                 (expr.test.left, expr.test.right),
@@ -679,17 +718,22 @@ class TypingContext:
                 ),
                 address=address,
             )
-            parts = (
-                *sides,
-                visit(expr.then, ("then",)),
-                visit(expr.otherwise, ("otherwise",)),
-            )
-            result = (
-                _EXTENDED_REAL
-                if any(_EXTENDED_REAL in part.results for part in parts[2:])
-                else _REAL_TYPE
-            )
-            return _Typed(_merge(part.inputs for part in parts), (result,))
+            then = visit(expr.then, ("then",))
+            otherwise = visit(expr.otherwise, ("otherwise",))
+            if self.block_id is None:
+                then, otherwise = self._numeric_arguments(
+                    expr, (expr.then, expr.otherwise), (then, otherwise), address=address
+                )
+            results = then.results
+            if any(value.kind == "opaque" for value in results):
+                self._cast(then, otherwise.results, address, expr, "then")
+                results = otherwise.results
+            else:
+                self._cast(otherwise, results, address, expr, "else")
+            if then.results == (_EXTENDED_REAL,) or otherwise.results == (_EXTENDED_REAL,):
+                results = (_EXTENDED_REAL,)
+            inputs = _merge(part.inputs for part in (*sides, then, otherwise))
+            return _Typed(inputs, results)
         raise self.declarations.error(
             "readable-form",
             address,
@@ -787,6 +831,10 @@ class TypingContext:
             else:
                 value = self._selected_type(family.results[0], expr.sel)
             return _Typed(_merge((family.inputs,)), (value,))
+        if isinstance(expr.sel, terms.Term):
+            value = self._selected_type(family.results[0], expr.sel)
+            key = visit(expr.sel.at, ("sel", "at"))
+            return _Typed(_merge((family.inputs, key.inputs)), (value,))
         if isinstance(expr.sel, terms.Key):
             value = self._selected_type(family.results[0], expr.sel)
             try:
@@ -847,6 +895,18 @@ class TypingContext:
         if expr.fun in ("evaluate", "upper_env"):
             _, values, _ = self._called_definition(expr.fun, types)
             return _Typed(_merge(arg.inputs for arg in args), values)
+        if expr.fun not in self.declarations.functions and expr.fun not in CALL_OPERATORS:
+            try:
+                callee = self._input_named(terms.Constant(expr.fun), local)
+            except KeyError:
+                pass
+            else:
+                if callee.value_type.kind == "function":
+                    self._check_arguments(expr.fun, types, callee.value_type.arguments)
+                    return _Typed(
+                        _merge(((callee,), *(arg.inputs for arg in args))),
+                        callee.value_type.results,
+                    )
         reference, values, external = self._called_definition(expr.fun, types)
         if not external:
             self._note_call(reference)
@@ -1264,18 +1324,6 @@ class TypingContext:
                 )
             return _Typed(_merge(arg.inputs for arg in args), (value,))
         if isinstance(setexpr, terms.Functions):
-            if not sets.is_index_set(setexpr.domain, self.declarations.space_terms):
-                raise self.declarations.error(
-                    "readable-form",
-                    address,
-                    (
-                        f"the set {to_source(setexpr)} declares functions on "
-                        f"{to_source(setexpr.domain)}, which is no finite index set; a "
-                        "collection is declared on a set of labels, an integer range, a listed "
-                        "set of numbers or a product of these, `δ : L_J → ℝ` with "
-                        "`L_J := {1, …, J}`"
-                    ),
-                )
             args = tuple(
                 self._typed_set_expression(
                     part, address=address, position=position + (name,), local=local
@@ -1396,6 +1444,29 @@ class TypingContext:
         )
 
     # -- the lookups the walk reads --
+
+    def _value_type(self, term, domain_id, address, position=(), local=()):
+        """The value type, with domain and codomain if callable."""
+        candidates = term if isinstance(term, tuple) else (term,)
+        for candidate in candidates:
+            function = sets.callable_set(candidate, self.declarations.space_terms)
+            if function is None:
+                continue
+            argument_position = position + ("function-domain", domain_id)
+            result_position = position + ("function-codomain", domain_id)
+            argument = self._domain(function.domain, address, argument_position, local=local)
+            result = self._domain(function.codomain, address, result_position, local=local)
+            return ExpressionType(
+                "function",
+                None,
+                arguments=(
+                    self._value_type(function.domain, argument, address, argument_position, local),
+                ),
+                results=(
+                    self._value_type(function.codomain, result, address, result_position, local),
+                ),
+            )
+        return ExpressionType(self._value_kind(term), domain_id)
 
     def _value_kind(self, term, active=frozenset()):
         """The kind of a coordinate's value by its set: `state` for a
@@ -1534,34 +1605,38 @@ class TypingContext:
             expected = tuple(p.value_type for p in definition.parameters)
             if definition.kind == "function_alias" and values[0].kind == "function":
                 expected, values = values[0].arguments, values[0].results
-            if len(argument_types) != len(expected):
-                raise self.declarations.error(
-                    "well-typed",
-                    self.address,
-                    (
-                        f"the call to {name} gives it {len(argument_types)} "
-                        f"arguments, and {name} takes {len(expected)}; write "
-                        f"one argument for each formal argument of {name}"
-                    ),
-                )
-            for i, (actual, required) in enumerate(zip(argument_types, expected)):
-                admitted = (actual.kind, required.kind) == ("scalar", "opaque")
-                if actual.kind != required.kind and actual.kind != "opaque" and not admitted:
-                    raise self.declarations.error(
-                        "well-typed",
-                        self.address,
-                        (
-                            f"argument {i + 1} of the call to {name} is "
-                            f"{_KIND_WORDS[actual.kind]}, and {name} takes "
-                            f"{_KIND_WORDS[required.kind]} there; write an argument of that kind"
-                        ),
-                    )
+            self._check_arguments(name, argument_types, expected)
             return definition.identity, values, False
         if name in CALL_OPERATORS:
             return name, (_REAL_TYPE,), False
         identity = Identity("external", field=name)
         result = Identity("external", field=name, mark="result")
         return identity, (ExpressionType("opaque", result),), True
+
+    def _check_arguments(self, name, argument_types, expected):
+        """The arity and kinds of a function call's arguments."""
+        if len(argument_types) != len(expected):
+            raise self.declarations.error(
+                "well-typed",
+                self.address,
+                (
+                    f"the call to {name} gives it {len(argument_types)} "
+                    f"arguments, and {name} takes {len(expected)}; write "
+                    f"one argument for each formal argument of {name}"
+                ),
+            )
+        for i, (actual, required) in enumerate(zip(argument_types, expected)):
+            admitted = (actual.kind, required.kind) == ("scalar", "opaque")
+            if actual.kind != required.kind and actual.kind != "opaque" and not admitted:
+                raise self.declarations.error(
+                    "well-typed",
+                    self.address,
+                    (
+                        f"argument {i + 1} of the call to {name} is "
+                        f"{_KIND_WORDS[actual.kind]}, and {name} takes "
+                        f"{_KIND_WORDS[required.kind]} there; write an argument of that kind"
+                    ),
+                )
 
     def _numeric(self, domain):
         """Whether the values of a domain are numbers, by the one decision
@@ -1684,14 +1759,13 @@ class TypingContext:
             if isinstance(term, terms.setexpr)
             else None
         )
-        if indexed is not None and isinstance(selector, terms.Key):
+        if indexed is not None and isinstance(selector, (terms.Key, terms.Term)):
             # one key of a collection fixed: the entry lies in the entry set,
             # or in the collection on the remaining factors
             _, rest = indexed
-            return ExpressionType(
-                self._value_kind(rest),
-                self._domain(rest, self.address, ("selected", selector.at), local=local),
-            )
+            position = ("selected", selector.at)
+            domain = self._domain(rest, self.address, position, local=local)
+            return self._value_type(rest, domain, self.address, position, local)
         if isinstance(term, terms.Product) and isinstance(selector, terms.Pos):
             factor = term.factors[selector.at - 1]
             return ExpressionType(
@@ -1762,7 +1836,9 @@ class TypingContext:
     def _cast(self, result, values, address, core, side):
         """The result of one side of the line `core`, the side `side` names
         (`left` or `right`), read at the types the other side requires; two
-        sides of different kinds are refused under `well-typed`."""
+        sides of different kinds are refused under `well-typed`. For a
+        formula by cases `core`, `side` names one of its two branches
+        (`then` or `else`), read at the types of the other branch."""
         context, old = result
         if old == values:
             return result
@@ -1775,14 +1851,11 @@ class TypingContext:
                 " and ".join(_KIND_WORDS.get(t.kind, t.kind) for t in kinds) or "nothing"
                 for kinds in (old, values)
             )
+            here, there, rule = _CAST_WORDS[side]
             raise self.declarations.error(
                 "well-typed",
                 address,
-                (
-                    f"the {side} side of `{to_source(core)}` is {this}, "
-                    f"and the {'right' if side == 'left' else 'left'} side "
-                    f"{other}; the two sides of a line are of one kind"
-                ),
+                f"{here} of `{to_source(core)}` is {this}, and {there} {other}; {rule}",
             )
         return _Typed(context, values)
 
@@ -1882,8 +1955,8 @@ def _builder_nodes(box, nodes, *, boundary, declarations, calls, definitions) ->
     Parameters and function definitions remain in each line's typed inputs. The
     order of a node's inputs is the order of the interior's wires: the names of
     the builder's two sides, then every node's outputs in the order of the
-    nodes, then every state or shock a node reads that its block does not list,
-    in the order the walk meets them.
+    nodes, then each unlisted state, shock or decision control read by a
+    node, in the order of first use.
 
     The checks of the interior stand here, on the records: two nodes producing
     one identity is refused under `declared-once`, and a node reading an
@@ -1905,6 +1978,10 @@ def _builder_nodes(box, nodes, *, boundary, declarations, calls, definitions) ->
             for output in record.outputs:
                 aliases.setdefault(output.identity, []).append(record.address)
     producers = _node_producers(nodes, lines, declarations)
+    at_policy = (
+        declarations.block_is_backward(box.name)
+        and declarations.backward_perches(box.name)[1] == DECISION
+    )
     for identity in producers:
         if identity not in known:
             known.add(identity)
@@ -1925,10 +2002,10 @@ def _builder_nodes(box, nodes, *, boundary, declarations, calls, definitions) ->
             if identity not in known:
                 if port.role in ("parameter", "function", "set"):
                     continue
-                if port.role in ("state", "shock"):
-                    # a state or shock the node reads without the block listing
-                    # it: a captured field in the initial diagram, a bound
-                    # coordinate of the node's function in the functional view
+                if port.role in (STATE, SHOCK) or (
+                    at_policy and port.role == CONTROL and identity.perch == DECISION
+                ):
+                    # A declared shock law can read the control at which the builder is stated.
                     known.add(identity)
                     identities.append(identity)
                     inputs.add(identity)

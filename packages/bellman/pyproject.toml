@@ -23,15 +23,17 @@ dependencies = [
 
 [project.optional-dependencies]
 # The tests, run in parallel by pytest-xdist; the acceptance tests of the
-# compiled kernels as functions, tests/cat/test_kernel_functions.py, which
+# compiled kernels as functions, tests/test_kernels.py, which
 # compile the kernels with Numba and save them with cloudpickle (numba,
 # cloudpickle); the formatter and linter (ruff); the two generators of the
 # term classes from the ASDL listings, gen_types.py and gen_semantic_types.py
-# (pyasdl); and the strict build of the grammar that certifies it free of
-# parser-table conflicts and lexer collisions, tests/test_spec07_u1_grammar.py
-# (interegular, which Lark's strict mode requires).
+# (pyasdl); the strict build of the grammar that certifies it free of
+# parser-table conflicts and lexer collisions, tests/test_parsing.py
+# (interegular, which Lark's strict mode requires); and the record of the
+# lines of the package that the tests run (coverage).
 dev = [
     "cloudpickle==3.1.2",
+    "coverage==7.17.3",
     "interegular==0.3.3",
     "mpmath==1.3.0",
     "numba==0.63.1",
@@ -71,9 +73,12 @@ namespaces = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-# Every package test runs by default. `-m sweep` selects corpus checks.
+# The package and asva of the checkout that holds the tests, whatever copy the
+# environment has installed.
+pythonpath = [".", "../asva"]
+# A plain run skips each case marked complete_set; `--complete` runs every case.
 markers = [
-    "sweep: checks corpus stages, the refusal catalogue or a whole trellis; selected by -m sweep",
+    "complete_set: runs only with --complete: every row but one of a table, a whole registry, a program started outside the test's process, a build or a check of the documentation, or a compilation",
 ]
 
 [tool.ruff]

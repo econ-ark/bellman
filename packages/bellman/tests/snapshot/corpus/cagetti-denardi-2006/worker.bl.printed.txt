@@ -1,0 +1,965 @@
+BELLMAN-SYM / STAGE worker                                [VERSION = SYMBOLIC]
+a stage occurrence of
+applications/cagetti-denardi-2006/declaration/stages/worker/worker.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        a_wk≺ state, y_wk≺ state, θ_wk≺ state, V≺ value
+  ∼ decision       m state, y state, θ state, c control, V value
+  ≻ continuation   a_wk_wa≻ state, y_wk_wa≻ state, θ_wk_wa≻ state, V≻ value
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           a_wk≺ at arrival, y_wk≺ at arrival, θ_wk≺ at arrival, m at
+                   decision, y at decision, θ at decision, a_wk_wa≻ at
+                   continuation, y_wk_wa≻ at continuation, θ_wk_wa≻ at
+                   continuation
+  controls         c at decision
+  values           V at every perch
+  shocks           none
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → arvl_to_dcsn   (a_wk≺, y_wk≺, θ_wk≺) : !arvl -> (m, y, θ) : !dcsn
+  → dcsn_to_cntn   (m, y, θ) : !dcsn, at c -> (a_wk_wa≻, y_wk_wa≻, θ_wk_wa≻) :
+                   !cntn
+  ← cntn_to_dcsn   (V≻) : !cntn, at c -> (V) : !dcsn
+  ← dcsn_to_arvl   (V) : !dcsn -> (V≺) : !arvl
+  ← policy         (V≻) : !cntn -> (c) : !dcsn
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  sets                     4   Xa := ℝ₊, Xm := ℝ₊₊, Y := ℝ₊₊, Θ := ℝ₊
+  parameters               4   σ : ℝ₊₊ \ {1}; r : (-1, inf); w : ℝ₊₊;
+                               τ : [0, 1)
+  functions                1   𝑢 on ℝ₊₊
+  correspondences          1   Γ : ℝ₊₊ ⇉ ℝ₊₊
+  laws of motion           2   m = (1 + r)*a_wk + (1 - τ)*w*y_wk; y = y_wk; θ
+                               = θ_wk;
+                               a_wk_wa = m - c; y_wk_wa = y; θ_wk_wa = θ
+  value aggregators        3   V = 𝑢(c) + V[>]; V[<] = V;
+                               c = argmax_{c : Γ(m)}(𝑢(c) + V[>])
+  block lines              9   arvl_to_dcsn.cash_on_hand, arvl_to_dcsn.2,
+                               arvl_to_dcsn.3, dcsn_to_cntn.savings,
+                               dcsn_to_cntn.2, dcsn_to_cntn.3,
+                               cntn_to_dcsn.value, dcsn_to_arvl.value,
+                               policy.choice
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   𝑉≻ ↦ 𝑉≺, 𝑐(m, y, θ)
+                    forward    μ≺ ↦ μ≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ≺ a_wk≺, y_wk≺, θ_wk≺  →  ∼ m, y, θ  →  ≻ a_wk_wa≻, y_wk_wa≻,
+             θ_wk_wa≻
+  backward   ≺ V≺  ←  ∼ V  ←  ≻ V≻
+  policy     ∼ c  ←  ≻ V≻
+
+==== stage ====
+STAGE worker
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑉≻  : Xa × Y × Θ → ℝ
+         ──────────────────────────────────────
+    out  𝑉≺  : Xa × Y × Θ → ℝ
+         𝑐   : Xm × Y × Θ → ℝ₊₊,  𝑐(m, y, θ) ∈ Γ(m)
+  forward
+    in   μ≺  : finite measure on Xa × Y × Θ
+         ──────────────────────────────────────
+    out  μ≻  : finite measure on Xa × Y × Θ
+
+Where
+  (m, y, θ) = 𝑔≺(a_wk, y_wk, θ_wk)
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉≻                           out: 𝑉
+
+    2  dcsn_to_arvl
+       in: 𝑉                            out: 𝑉≺
+
+    3  policy
+       in: 𝑉≻                           out: 𝑐
+
+  forward
+    1  arvl_to_dcsn
+       in: μ≺                           out: μ
+
+    2  dcsn_to_cntn
+       in: μ                            out: μ≻
+
+Conditions
+  cntn_to_dcsn:Aggregation  𝑉(m, y, θ) ∈ ℝ
+  dcsn_to_arvl:Aggregation  𝑉≺(a_wk, y_wk, θ_wk) ∈ ℝ
+  𝑢                         ¬(1 − σ = 0)
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  17  m = (1 + r)*a_wk + (1 - τ)*w*y_wk   :: [id=cash_on_hand]
+  18  y = y_wk
+  19  θ = θ_wk
+  23  a_wk_wa = m - c                     :: [id=savings]
+  24  y_wk_wa = y
+  25  θ_wk_wa = θ
+  29  V = 𝑢(c) + V[>]                     :: [id=value]
+  33  V[<] = V                            :: [id=value]
+  37  c = argmax_{c : Γ(m)}(𝑢(c) + V[>])  :: [id=choice]
+
+Definitions referenced
+  Xa    worker:set:Xa
+  Xm    worker:set:Xm
+  Y     worker:set:Y
+  Θ     worker:set:Θ
+  σ     worker:parameter:σ
+  𝑢     worker:function:𝑢
+  Γ     worker:correspondence:Γ
+  𝑔≺    worker:g:arvl_to_dcsn
+
+File
+  applications/cagetti-denardi-2006/declaration/stages/worker/worker.bl
+
+Perches
+  ≺  arrival, written [<]
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE worker / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻}
+       ──────────
+  out  V   : {V}
+
+Conditions
+  𝑉(m, y, θ) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  29  V = 𝑢(c) + V[>]  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward dcsn_to_arvl ====
+STAGE worker / BACKWARD BLOCK dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V   : {V}
+       ──────────
+  out  V≺  : {V≺}
+
+Conditions
+  𝑉≺(a_wk, y_wk, θ_wk) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  33  V[<] = V  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward policy ====
+STAGE worker / POLICY BLOCK policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻}
+       ──────────
+  out  c   : {c}
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  37  c = argmax_{c : Γ(m)}(𝑢(c) + V[>])  :: [id=choice]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward arvl_to_dcsn ====
+STAGE worker / FORWARD BLOCK arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a_wk≺  : {a_wk≺, y_wk≺, θ_wk≺}
+       y_wk≺  : {y_wk≺}
+       θ_wk≺  : {a_wk≺, y_wk≺, θ_wk≺}
+       ──────────────────────────────
+  out  m      : {m, y}
+       y      : {m, y}
+       θ      : {m, y, θ}
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  17  m = (1 + r)*a_wk + (1 - τ)*w*y_wk  :: [id=cash_on_hand]
+  18  y = y_wk
+  19  θ = θ_wk
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE worker / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   m         : {m, y}
+       y         : {m, y}
+       θ         : {m, y, θ}
+       ──────────────────────────────────────────
+  out  a_wk_wa≻  : {a_wk_wa≻, y_wk_wa≻, θ_wk_wa≻}
+       y_wk_wa≻  : {y_wk_wa≻}
+       θ_wk_wa≻  : {a_wk_wa≻, y_wk_wa≻, θ_wk_wa≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  23  a_wk_wa = m - c  :: [id=savings]
+  24  y_wk_wa = y
+  25  θ_wk_wa = θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE worker / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xa × Y × Θ → ℝ
+       ─────────────────────────────────────────────────────────
+  out  𝑉   : Xm × Y × Θ → ℝ
+
+At
+  𝑐  : Xm × Y × Θ → ℝ₊₊,  𝑐(m, y, θ) ∈ Γ(m)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻(·, ·, ·, 𝑐)
+     ───────────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻(·, ·, ·, 𝑐))(m, y, θ) = 𝑉≻(𝑔≻(m, y, θ, 𝑐(m, y, θ)))
+
+  2  Aggregation
+     in: (1)                            out: 𝑉
+     ───────────────────────────────────────────────────────────
+     rule: 𝑉 = 𝑢(𝑐) + 𝑉≻(𝑔≻(m, y, θ, 𝑐))             on (m, y, θ) ∈ Xm × Y × Θ
+
+  3  Evaluation
+     in: 𝑉                              out: 𝑉
+     ───────────────────────────────────────────────────────────
+     rule: 𝑉 : Xm × Y × Θ → ℝ
+
+Conditions
+  Aggregation  𝑉(m, y, θ) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  29  V = 𝑢(c) + V[>]  :: [id=value]
+
+Definitions referenced
+  Xa    worker:set:Xa
+  Xm    worker:set:Xm
+  Y     worker:set:Y
+  Θ     worker:set:Θ
+  𝑢     worker:function:𝑢
+  Γ     worker:correspondence:Γ
+  𝑔≻    worker:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback ====
+STAGE worker / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xa × Y × Θ → ℝ
+       ────────────────────
+  out  𝑉≻ ∘ 𝑔≻(·, ·, ·, 𝑐)
+           : Xm × Y × Θ → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻(·, ·, ·, 𝑐))(m, y, θ) = 𝑉≻(𝑔≻(m, y, θ, 𝑐(m, y, θ)))
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  23  a_wk_wa = m - c  :: [id=savings]
+  24  y_wk_wa = y
+  25  θ_wk_wa = θ
+
+Definitions referenced
+  Xa    worker:set:Xa
+  Xm    worker:set:Xm
+  Y     worker:set:Y
+  Θ     worker:set:Θ
+  𝑔≻    worker:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE worker / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻(·, ·, ·, 𝑐)
+          : Xm × Y × Θ → ℝ
+       ───────────────────
+  out  𝑉  : Xm × Y × Θ → ℝ
+
+Rule
+  𝑉 = 𝑢(𝑐) + 𝑉≻(𝑔≻(m, y, θ, 𝑐))                      on (m, y, θ) ∈ Xm × Y × Θ
+
+Conditions
+  𝑉(m, y, θ) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  29  V = 𝑢(c) + V[>]  :: [id=value]
+
+Definitions referenced
+  Xm    worker:set:Xm
+  Y     worker:set:Y
+  Θ     worker:set:Θ
+  𝑢     worker:function:𝑢
+  𝑔≻    worker:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE worker / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : Xm × Y × Θ → ℝ
+       ───────────────────
+  out  𝑉  : Xm × Y × Θ → ℝ
+
+Rule
+  𝑉 = 𝑢(𝑐) + 𝑉≻(𝑔≻(m, y, θ, 𝑐))                      on (m, y, θ) ∈ Xm × Y × Θ
+  𝑉 : Xm × Y × Θ → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xm    worker:set:Xm
+  Y     worker:set:Y
+  Θ     worker:set:Θ
+  𝑢     worker:function:𝑢
+  𝑔≻    worker:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl ====
+STAGE worker / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉   : Xm × Y × Θ → ℝ
+       ────────────────────────────────────────────
+  out  𝑉≺  : Xa × Y × Θ → ℝ
+
+Operations
+  1  Pullback
+     in: 𝑉                              out: 𝑉 ∘ 𝑔≺
+     ──────────────────────────────────────────────
+     rule: (𝑉 ∘ 𝑔≺)(a_wk, y_wk, θ_wk) = 𝑉(𝑔≺(a_wk, y_wk, θ_wk))
+
+  2  Aggregation
+     in: (1)                            out: 𝑉≺
+     ──────────────────────────────────────────────
+     rule: 𝑉≺ = 𝑉(𝑔≺(a_wk, y_wk, θ_wk))     on (a_wk, y_wk, θ_wk) ∈ Xa × Y × Θ
+
+  3  Evaluation
+     in: 𝑉≺                             out: 𝑉≺
+     ──────────────────────────────────────────────
+     rule: 𝑉≺ : Xa × Y × Θ → ℝ
+
+Conditions
+  Aggregation  𝑉≺(a_wk, y_wk, θ_wk) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  33  V[<] = V  :: [id=value]
+
+Definitions referenced
+  Xa    worker:set:Xa
+  Xm    worker:set:Xm
+  Y     worker:set:Y
+  Θ     worker:set:Θ
+  𝑔≺    worker:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Pullback ====
+STAGE worker / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : Xm × Y × Θ → ℝ
+       ───────────────────
+  out  𝑉 ∘ 𝑔≺
+          : Xa × Y × Θ → ℝ
+
+Rule
+  (𝑉 ∘ 𝑔≺)(a_wk, y_wk, θ_wk) = 𝑉(𝑔≺(a_wk, y_wk, θ_wk))
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  17  m = (1 + r)*a_wk + (1 - τ)*w*y_wk  :: [id=cash_on_hand]
+  18  y = y_wk
+  19  θ = θ_wk
+
+Definitions referenced
+  Xa    worker:set:Xa
+  Xm    worker:set:Xm
+  Y     worker:set:Y
+  Θ     worker:set:Θ
+  𝑔≺    worker:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Aggregation ====
+STAGE worker / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉 ∘ 𝑔≺
+           : Xa × Y × Θ → ℝ
+       ────────────────────
+  out  𝑉≺  : Xa × Y × Θ → ℝ
+
+Rule
+  𝑉≺ = 𝑉(𝑔≺(a_wk, y_wk, θ_wk))              on (a_wk, y_wk, θ_wk) ∈ Xa × Y × Θ
+
+Conditions
+  𝑉≺(a_wk, y_wk, θ_wk) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  33  V[<] = V  :: [id=value]
+
+Definitions referenced
+  Xa    worker:set:Xa
+  Y     worker:set:Y
+  Θ     worker:set:Θ
+  𝑔≺    worker:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Evaluation ====
+STAGE worker / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≺  : Xa × Y × Θ → ℝ
+       ────────────────────
+  out  𝑉≺  : Xa × Y × Θ → ℝ
+
+Rule
+  𝑉≺ = 𝑉(𝑔≺(a_wk, y_wk, θ_wk))              on (a_wk, y_wk, θ_wk) ∈ Xa × Y × Θ
+  𝑉≺ : Xa × Y × Θ → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xa    worker:set:Xa
+  Y     worker:set:Y
+  Θ     worker:set:Θ
+  𝑔≺    worker:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy ====
+STAGE worker / POLICY BUILDER policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xa × Y × Θ → ℝ
+       ─────────────────────────────────────────────
+  out  𝑐   : Xm × Y × Θ → ℝ₊₊,  𝑐(m, y, θ) ∈ Γ(m)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻
+     ───────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻)(m, y, θ, c) = 𝑉≻(𝑔≻(m, y, θ, c))
+
+  2  choice:Aggregation
+     in: (1)
+     out: (m, y, θ, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m, y, θ, c))
+     ───────────────────────────────────────────────
+     rule: (m, y, θ, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m, y, θ, c))
+
+  3  choice:Argmax
+     in: (2)                            out: 𝑐
+     ───────────────────────────────────────────────
+     rule: 𝑐(m, y, θ) ∈ argmax_{c ∈ Γ(m)} [𝑢(c) + 𝑉≻(𝑔≻(m, y, θ, c))]
+
+  4  Evaluation
+     in: 𝑐                              out: 𝑐
+     ───────────────────────────────────────────────
+     rule: 𝑐 : Xm × Y × Θ → ℝ₊₊,  𝑐(m, y, θ) ∈ Γ(m)
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  37  c = argmax_{c : Γ(m)}(𝑢(c) + V[>])  :: [id=choice]
+
+Definitions referenced
+  Xa    worker:set:Xa
+  Xm    worker:set:Xm
+  Y     worker:set:Y
+  Θ     worker:set:Θ
+  𝑢     worker:function:𝑢
+  Γ     worker:correspondence:Γ
+  𝑔≻    worker:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback ====
+STAGE worker / POLICY BUILDER policy / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xa × Y × Θ → ℝ
+       ────────────────────────────────────────────────────
+  out  𝑉≻ ∘ 𝑔≻
+           : {m, y, θ, c ∈ Xm × Y × Θ × ℝ₊₊ | c ∈ Γ(m)} → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻)(m, y, θ, c) = 𝑉≻(𝑔≻(m, y, θ, c))
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  23  a_wk_wa = m - c  :: [id=savings]
+  24  y_wk_wa = y
+  25  θ_wk_wa = θ
+
+Definitions referenced
+  Xa    worker:set:Xa
+  Xm    worker:set:Xm
+  Y     worker:set:Y
+  Θ     worker:set:Θ
+  Γ     worker:correspondence:Γ
+  𝑔≻    worker:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / choice:Aggregation ====
+STAGE worker / POLICY BUILDER policy / choice:Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻
+         : {m, y, θ, c ∈ Xm × Y × Θ × ℝ₊₊ | c ∈ Γ(m)} → ℝ
+       ──────────────────────────────────────────────────
+  out  (m, y, θ, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m, y, θ, c))
+         : {m, y, θ, c ∈ Xm × Y × Θ × ℝ₊₊ | c ∈ Γ(m)} → ℝ
+
+Rule
+  (m, y, θ, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m, y, θ, c))
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  37  c = argmax_{c : Γ(m)}(𝑢(c) + V[>])  :: [id=choice]
+
+Definitions referenced
+  Xm    worker:set:Xm
+  Y     worker:set:Y
+  Θ     worker:set:Θ
+  𝑢     worker:function:𝑢
+  Γ     worker:correspondence:Γ
+  𝑔≻    worker:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / choice:Argmax ====
+STAGE worker / POLICY BUILDER policy / choice:Argmax
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (m, y, θ, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m, y, θ, c))
+          : {m, y, θ, c ∈ Xm × Y × Θ × ℝ₊₊ | c ∈ Γ(m)} → ℝ
+       ───────────────────────────────────────────────────
+  out  𝑐  : Xm × Y × Θ → ℝ₊₊,  𝑐(m, y, θ) ∈ Γ(m)
+
+Rule
+  𝑐(m, y, θ) ∈ argmax_{c ∈ Γ(m)} [𝑢(c) + 𝑉≻(𝑔≻(m, y, θ, c))]
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  37  c = argmax_{c : Γ(m)}(𝑢(c) + V[>])  :: [id=choice]
+
+Definitions referenced
+  Xm    worker:set:Xm
+  Y     worker:set:Y
+  Θ     worker:set:Θ
+  𝑢     worker:function:𝑢
+  Γ     worker:correspondence:Γ
+  𝑔≻    worker:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Evaluation ====
+STAGE worker / POLICY BUILDER policy / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑐  : Xm × Y × Θ → ℝ₊₊,  𝑐(m, y, θ) ∈ Γ(m)
+       ─────────────────────────────────────────
+  out  𝑐  : Xm × Y × Θ → ℝ₊₊,  𝑐(m, y, θ) ∈ Γ(m)
+
+Rule
+  𝑐(m, y, θ) ∈ argmax_{c ∈ Γ(m)} [𝑢(c) + 𝑉≻(𝑔≻(m, y, θ, c))]
+  𝑐 : Xm × Y × Θ → ℝ₊₊,  𝑐(m, y, θ) ∈ Γ(m)
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xm    worker:set:Xm
+  Y     worker:set:Y
+  Θ     worker:set:Θ
+  𝑢     worker:function:𝑢
+  Γ     worker:correspondence:Γ
+  𝑔≻    worker:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn ====
+STAGE worker / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Xa × Y × Θ
+       ───────────────────────────────────────
+  out  μ   : finite measure on Xm × Y × Θ
+
+Operations
+  1  Pushforward
+     in: μ≺                             out: μ
+     ─────────────────────────────────────────
+     rule: μ(B)
+             = μ≺({a_wk≺, y_wk≺, θ_wk≺ ∈ Xa × Y × Θ |
+                    𝑔≺(a_wk≺, y_wk≺, θ_wk≺) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  17  m = (1 + r)*a_wk + (1 - τ)*w*y_wk  :: [id=cash_on_hand]
+  18  y = y_wk
+  19  θ = θ_wk
+
+Definitions referenced
+  Xa    worker:set:Xa
+  Xm    worker:set:Xm
+  Y     worker:set:Y
+  Θ     worker:set:Θ
+  𝑔≺    worker:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / Pushforward ====
+STAGE worker / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Xa × Y × Θ
+       ──────────────────────────────────
+  out  μ   : finite measure on Xm × Y × Θ
+
+Rule
+  μ(B) = μ≺({a_wk≺, y_wk≺, θ_wk≺ ∈ Xa × Y × Θ | 𝑔≺(a_wk≺, y_wk≺, θ_wk≺) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  17  m = (1 + r)*a_wk + (1 - τ)*w*y_wk  :: [id=cash_on_hand]
+  18  y = y_wk
+  19  θ = θ_wk
+
+Definitions referenced
+  Xa    worker:set:Xa
+  Xm    worker:set:Xm
+  Y     worker:set:Y
+  Θ     worker:set:Θ
+  𝑔≺    worker:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE worker / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on Xm × Y × Θ
+       ────────────────────────────────────────
+  out  μ≻  : finite measure on Xa × Y × Θ
+
+At
+  𝑐  : Xm × Y × Θ → ℝ₊₊,  𝑐(m, y, θ) ∈ Γ(m)
+
+Operations
+  1  Pushforward
+     in: μ                              out: μ≻
+     ──────────────────────────────────────────
+     rule: μ≻(B) = μ({m, y, θ ∈ Xm × Y × Θ | 𝑔≻(m, y, θ, 𝑐(m, y, θ)) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  23  a_wk_wa = m - c  :: [id=savings]
+  24  y_wk_wa = y
+  25  θ_wk_wa = θ
+
+Definitions referenced
+  Xa    worker:set:Xa
+  Xm    worker:set:Xm
+  Y     worker:set:Y
+  Θ     worker:set:Θ
+  Γ     worker:correspondence:Γ
+  𝑔≻    worker:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE worker / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on Xm × Y × Θ
+       ──────────────────────────────────
+  out  μ≻  : finite measure on Xa × Y × Θ
+
+Rule
+  μ≻(B) = μ({m, y, θ ∈ Xm × Y × Θ | 𝑔≻(m, y, θ, 𝑐(m, y, θ)) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  23  a_wk_wa = m - c  :: [id=savings]
+  24  y_wk_wa = y
+  25  θ_wk_wa = θ
+
+Definitions referenced
+  Xa    worker:set:Xa
+  Xm    worker:set:Xm
+  Y     worker:set:Y
+  Θ     worker:set:Θ
+  𝑔≻    worker:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker:set:Xa ====
+STAGE worker / SET Xa
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xa  = ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  3  Xa := ℝ₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker:set:Xm ====
+STAGE worker / SET Xm
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xm  = ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  4  Xm := ℝ₊₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker:set:Y ====
+STAGE worker / SET Y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Y  = ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  5  Y  := ℝ₊₊
+       :: ["working ability; the positive reals stand in for its finite grid,
+       whose number of points is a numerical choice"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker:set:Θ ====
+STAGE worker / SET Θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Θ  = ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  6  Θ  := ℝ₊
+       :: ["entrepreneurial ability; the nonnegative reals stand in for its
+       two levels, 0 and θ_e"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker:parameter:σ ====
+STAGE worker / PARAMETER σ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  σ  ∈ ℝ₊₊ ∖ {1}
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  8  σ : ℝ₊₊ \ {1}
+       :: ["relative risk aversion; the utility formula requires σ different
+       from 1"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker:parameter:r ====
+STAGE worker / PARAMETER r
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  r  ∈ (−1, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  9  r : (-1, inf)
+       :: ["risk-free interest rate, a price fixed by the stationary
+       equilibrium"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker:parameter:w ====
+STAGE worker / PARAMETER w
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  w  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  10  w : ℝ₊₊  :: ["wage rate, a price fixed by the stationary equilibrium"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker:parameter:τ ====
+STAGE worker / PARAMETER τ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  τ  ∈ [0, 1)
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  11  τ : [0,1)
+        :: ["proportional payroll tax financing social security, fixed by the
+        government budget"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker:function:𝑢 ====
+STAGE worker / FUNCTION 𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑢  : ℝ₊₊ → ℝ,  c ↦ c^(1 − σ)/(1 − σ)
+
+Conditions
+  ¬(1 − σ = 0)
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  13  𝑢(c : ℝ₊₊) := c^(1-σ)/(1-σ)  :: [id=util]
+
+Definitions referenced
+  σ     worker:parameter:σ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker:correspondence:Γ ====
+STAGE worker / CORRESPONDENCE Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Γ  : ℝ₊₊ ⇉ ℝ₊₊,  x ↦ (0, x]
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  14  Γ(x : ℝ₊₊) := (0, x]  :: [id=feasible]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.cash_on_hand ====
+STAGE worker / FORWARD BLOCK arvl_to_dcsn / cash_on_hand
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  worker.bl
+  17  m = (1 + r)*a_wk + (1 - τ)*w*y_wk  :: [id=cash_on_hand]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.2 ====
+STAGE worker / FORWARD BLOCK arvl_to_dcsn / 2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  worker.bl
+  18  y = y_wk
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.3 ====
+STAGE worker / FORWARD BLOCK arvl_to_dcsn / 3
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  worker.bl
+  19  θ = θ_wk
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.savings ====
+STAGE worker / FORWARD BLOCK dcsn_to_cntn / savings
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  worker.bl
+  23  a_wk_wa = m - c  :: [id=savings]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.2 ====
+STAGE worker / FORWARD BLOCK dcsn_to_cntn / 2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  worker.bl
+  24  y_wk_wa = y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.3 ====
+STAGE worker / FORWARD BLOCK dcsn_to_cntn / 3
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  worker.bl
+  25  θ_wk_wa = θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.value ====
+STAGE worker / BACKWARD BLOCK cntn_to_dcsn / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(m, y, θ) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  29  V = 𝑢(c) + V[>]  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.value ====
+STAGE worker / BACKWARD BLOCK dcsn_to_arvl / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉≺(a_wk, y_wk, θ_wk) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  33  V[<] = V  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== policy.choice ====
+STAGE worker / POLICY BLOCK policy / choice
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  worker.bl
+  37  c = argmax_{c : Γ(m)}(𝑢(c) + V[>])  :: [id=choice]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker:g:arvl_to_dcsn ====
+STAGE worker / LAW OF MOTION arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≺  : Xa × Y × Θ → Xm × Y × Θ,
+        (a_wk, y_wk, θ_wk) ↦ ((1 + r) · a_wk + (1 − τ) · w · y_wk, y_wk, θ_wk)
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  17  m = (1 + r)*a_wk + (1 - τ)*w*y_wk  :: [id=cash_on_hand]
+  18  y = y_wk
+  19  θ = θ_wk
+
+Definitions referenced
+  Xa    worker:set:Xa
+  Xm    worker:set:Xm
+  Y     worker:set:Y
+  Θ     worker:set:Θ
+  r     worker:parameter:r
+  w     worker:parameter:w
+  τ     worker:parameter:τ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker:g:dcsn_to_cntn ====
+STAGE worker / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : {m, y, θ, c ∈ Xm × Y × Θ × ℝ₊₊ | c ∈ Γ(m)} → Xa × Y × Θ,
+        (m, y, θ, c) ↦ (m − c, y, θ)
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  23  a_wk_wa = m - c  :: [id=savings]
+  24  y_wk_wa = y
+  25  θ_wk_wa = θ
+
+Definitions referenced
+  Xa    worker:set:Xa
+  Xm    worker:set:Xm
+  Y     worker:set:Y
+  Θ     worker:set:Θ
+  Γ     worker:correspondence:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker:G:cntn_to_dcsn ====
+STAGE worker / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, m, y, θ, c ∈ ℝ × Xm × Y × Θ × ℝ₊₊ | c ∈ Γ(m)} → ℝ,
+        (V≻, m, y, θ, c) ↦ 𝑢(c) + V≻
+
+Conditions
+  𝑉(m, y, θ) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  29  V = 𝑢(c) + V[>]  :: [id=value]
+
+Definitions referenced
+  Xm    worker:set:Xm
+  Y     worker:set:Y
+  Θ     worker:set:Θ
+  𝑢     worker:function:𝑢
+  Γ     worker:correspondence:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker:G:dcsn_to_arvl ====
+STAGE worker / VALUE AGGREGATOR dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≺  : ℝ × Xa × Y × Θ → ℝ,  (V, a_wk, y_wk, θ_wk) ↦ V
+
+Conditions
+  𝑉≺(a_wk, y_wk, θ_wk) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  33  V[<] = V  :: [id=value]
+
+Definitions referenced
+  Xa    worker:set:Xa
+  Y     worker:set:Y
+  Θ     worker:set:Θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker:G:policy ====
+STAGE worker / VALUE AGGREGATOR policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, m, y, θ, c ∈ ℝ × Xm × Y × Θ × ℝ₊₊ | c ∈ Γ(m)} → ℝ,
+        (V≻, m, y, θ, c) ↦ 𝑢(c) + V≻
+──────────────────────────────────────────────────────────────────────────────
+Source  worker.bl
+  37  c = argmax_{c : Γ(m)}(𝑢(c) + V[>])  :: [id=choice]
+
+Definitions referenced
+  Xm    worker:set:Xm
+  Y     worker:set:Y
+  Θ     worker:set:Θ
+  𝑢     worker:function:𝑢
+  Γ     worker:correspondence:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

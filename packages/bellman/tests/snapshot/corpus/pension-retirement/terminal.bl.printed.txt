@@ -1,0 +1,469 @@
+BELLMAN-SYM / STAGE terminal                              [VERSION = SYMBOLIC]
+a stage occurrence of
+applications/pension-retirement/declaration/stages/terminal/terminal.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        y_f_T≺ state, y_p_T≺ state, V≺ value
+  ∼ decision       y_f_d state, y_p_d state, V value
+  ≻ continuation   V≻ value
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           y_f_T≺ at arrival, y_p_T≺ at arrival, y_f_d at decision,
+                   y_p_d at decision
+  controls         none
+  values           V at every perch
+  shocks           none
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → arvl_to_dcsn   (y_f_T≺, y_p_T≺) : !arvl -> (y_f_d, y_p_d) : !dcsn
+  ← cntn_to_dcsn   (V≻) : !cntn -> (V) : !dcsn
+  ← dcsn_to_arvl   (V) : !dcsn -> (V≺) : !arvl
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  sets                     2   Xf := ℝ₊, Xp := ℝ₊
+  laws of motion           1   y_f_d = y_f_T; y_p_d = y_p_T
+  value aggregators        2   V = V[>]; V[<] = V
+  block lines              4   arvl_to_dcsn.financial, arvl_to_dcsn.pension,
+                               cntn_to_dcsn.value, dcsn_to_arvl.value
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   𝑉≻ ↦ 𝑉≺
+                    forward    μ≺ ↦ μ
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ≺ y_f_T≺, y_p_T≺  →  ∼ y_f_d, y_p_d
+  backward   ≺ V≺  ←  ∼ V  ←  ≻ V≻
+
+==== stage ====
+STAGE terminal
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑉≻  : {()} → ℝ
+         ──────────────────────────────────────
+    out  𝑉≺  : {()} → ℝ
+  forward
+    in   μ≺  : finite measure on Xf × Xp
+         ──────────────────────────────────────
+    out  μ   : finite measure on Xf × Xp
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉≻                           out: 𝑉
+
+    2  dcsn_to_arvl
+       in: 𝑉                            out: 𝑉≺
+
+  forward
+    1  arvl_to_dcsn
+       in: μ≺                           out: μ
+
+Conditions
+  cntn_to_dcsn:Aggregation  𝑉 ∈ ℝ
+  dcsn_to_arvl:Aggregation  𝑉≺ ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  25  y_f_d = y_f_T  :: [id=financial]
+  26  y_p_d = y_p_T  :: [id=pension]
+  31  V = V[>]       :: [id=value]
+  35  V[<] = V       :: [id=value]
+
+Definitions referenced
+  Xf    terminal:set:Xf
+  Xp    terminal:set:Xp
+
+File
+  applications/pension-retirement/declaration/stages/terminal/terminal.bl
+
+Perches
+  ≺  arrival, written [<]
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE terminal / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻}
+       ──────────
+  out  V   : {V}
+
+Conditions
+  𝑉 ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  31  V = V[>]  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward dcsn_to_arvl ====
+STAGE terminal / BACKWARD BLOCK dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V   : {V}
+       ──────────
+  out  V≺  : {V≺}
+
+Conditions
+  𝑉≺ ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  35  V[<] = V  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward arvl_to_dcsn ====
+STAGE terminal / FORWARD BLOCK arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   y_f_T≺  : {y_f_T≺, y_p_T≺}
+       y_p_T≺  : {y_f_T≺, y_p_T≺}
+       ──────────────────────────
+  out  y_f_d   : {y_f_d, y_p_d}
+       y_p_d   : {y_f_d, y_p_d}
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  25  y_f_d = y_f_T  :: [id=financial]
+  26  y_p_d = y_p_T  :: [id=pension]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE terminal / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : {()} → ℝ
+       ───────────────────────────────────────
+  out  𝑉   : {()} → ℝ
+
+Operations
+  1  Aggregation
+     in: 𝑉≻                             out: 𝑉
+     ─────────────────────────────────────────
+     rule: 𝑉 = 𝑉≻                                  on (y_f_d, y_p_d) ∈ Xf × Xp
+
+  2  Evaluation
+     in: 𝑉                              out: 𝑉
+     ─────────────────────────────────────────
+     rule: 𝑉 : {()} → ℝ
+
+Conditions
+  Aggregation  𝑉 ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  31  V = V[>]  :: [id=value]
+
+Definitions referenced
+  Xf    terminal:set:Xf
+  Xp    terminal:set:Xp
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE terminal / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : {()} → ℝ
+       ─────────────────
+  out  𝑉   : Xf × Xp → ℝ
+
+Rule
+  𝑉 = 𝑉≻                                           on (y_f_d, y_p_d) ∈ Xf × Xp
+
+Conditions
+  𝑉 ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  31  V = V[>]  :: [id=value]
+
+Definitions referenced
+  Xf    terminal:set:Xf
+  Xp    terminal:set:Xp
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE terminal / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : Xf × Xp → ℝ
+       ────────────────
+  out  𝑉  : {()} → ℝ
+
+Rule
+  𝑉 = 𝑉≻                                           on (y_f_d, y_p_d) ∈ Xf × Xp
+  𝑉 : {()} → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xf    terminal:set:Xf
+  Xp    terminal:set:Xp
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl ====
+STAGE terminal / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉   : {()} → ℝ
+       ──────────────────────────────────────────────────────────────
+  out  𝑉≺  : {()} → ℝ
+
+Where
+  (y_f_d, y_p_d) = 𝑔≺(y_f_T, y_p_T)
+
+Operations
+  1  Pullback
+     in: 𝑉
+     out: (y_f_T, y_p_T) ↦ 𝑉(((y_f_d, y_p_d) ↦ ())(𝑔≺(y_f_T, y_p_T)))
+     ────────────────────────────────────────────────────────────────
+     rule: (y_f_T, y_p_T) ↦ 𝑉(((y_f_d, y_p_d) ↦ ())(𝑔≺(y_f_T, y_p_T)))
+
+  2  Aggregation
+     in: (1)                            out: 𝑉≺
+     ────────────────────────────────────────────────────────────────
+     rule: 𝑉≺ = 𝑉(((y_f_d, y_p_d) ↦ ())(𝑔≺(y_f_T, y_p_T)))
+           on (y_f_T, y_p_T) ∈ Xf × Xp
+
+  3  Evaluation
+     in: 𝑉≺                             out: 𝑉≺
+     ────────────────────────────────────────────────────────────────
+     rule: 𝑉≺ : {()} → ℝ
+
+Conditions
+  Aggregation  𝑉≺ ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  35  V[<] = V  :: [id=value]
+
+Definitions referenced
+  Xf    terminal:set:Xf
+  Xp    terminal:set:Xp
+  𝑔≺    terminal:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Pullback ====
+STAGE terminal / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : {()} → ℝ
+       ───────────────────────────────────────────────────────────
+  out  (y_f_T, y_p_T) ↦ 𝑉(((y_f_d, y_p_d) ↦ ())(𝑔≺(y_f_T, y_p_T)))
+          : Xf × Xp → ℝ
+
+Where
+  (y_f_d, y_p_d) = 𝑔≺(y_f_T, y_p_T)
+
+Rule
+  (y_f_T, y_p_T) ↦ 𝑉(((y_f_d, y_p_d) ↦ ())(𝑔≺(y_f_T, y_p_T)))
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  25  y_f_d = y_f_T  :: [id=financial]
+  26  y_p_d = y_p_T  :: [id=pension]
+
+Definitions referenced
+  Xf    terminal:set:Xf
+  Xp    terminal:set:Xp
+  𝑔≺    terminal:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Aggregation ====
+STAGE terminal / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (y_f_T, y_p_T) ↦ 𝑉(((y_f_d, y_p_d) ↦ ())(𝑔≺(y_f_T, y_p_T)))
+           : Xf × Xp → ℝ
+       ───────────────────────────────────────────────────────────
+  out  𝑉≺  : Xf × Xp → ℝ
+
+Where
+  (y_f_d, y_p_d) = 𝑔≺(y_f_T, y_p_T)
+
+Rule
+  𝑉≺ = 𝑉(((y_f_d, y_p_d) ↦ ())(𝑔≺(y_f_T, y_p_T)))  on (y_f_T, y_p_T) ∈ Xf × Xp
+
+Conditions
+  𝑉≺ ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  35  V[<] = V  :: [id=value]
+
+Definitions referenced
+  Xf    terminal:set:Xf
+  Xp    terminal:set:Xp
+  𝑔≺    terminal:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Evaluation ====
+STAGE terminal / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≺  : Xf × Xp → ℝ
+       ─────────────────
+  out  𝑉≺  : {()} → ℝ
+
+Rule
+  𝑉≺ = 𝑉(((y_f_d, y_p_d) ↦ ())(𝑔≺(y_f_T, y_p_T)))  on (y_f_T, y_p_T) ∈ Xf × Xp
+  𝑉≺ : {()} → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xf    terminal:set:Xf
+  Xp    terminal:set:Xp
+  𝑔≺    terminal:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn ====
+STAGE terminal / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Xf × Xp
+       ───────────────────────────────────────
+  out  μ   : finite measure on Xf × Xp
+
+Operations
+  1  Pushforward
+     in: μ≺                             out: μ
+     ─────────────────────────────────────────
+     rule: μ(B) = μ≺({y_f_T≺, y_p_T≺ ∈ Xf × Xp | 𝑔≺(y_f_T≺, y_p_T≺) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  25  y_f_d = y_f_T  :: [id=financial]
+  26  y_p_d = y_p_T  :: [id=pension]
+
+Definitions referenced
+  Xf    terminal:set:Xf
+  Xp    terminal:set:Xp
+  𝑔≺    terminal:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / Pushforward ====
+STAGE terminal / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Xf × Xp
+       ───────────────────────────────
+  out  μ   : finite measure on Xf × Xp
+
+Rule
+  μ(B) = μ≺({y_f_T≺, y_p_T≺ ∈ Xf × Xp | 𝑔≺(y_f_T≺, y_p_T≺) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  25  y_f_d = y_f_T  :: [id=financial]
+  26  y_p_d = y_p_T  :: [id=pension]
+
+Definitions referenced
+  Xf    terminal:set:Xf
+  Xp    terminal:set:Xp
+  𝑔≺    terminal:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== terminal:set:Xf ====
+STAGE terminal / SET Xf
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xf  = ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  3  Xf := ℝ₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== terminal:set:Xp ====
+STAGE terminal / SET Xp
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xp  = ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  4  Xp := ℝ₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.financial ====
+STAGE terminal / FORWARD BLOCK arvl_to_dcsn / financial
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  terminal.bl
+  25  y_f_d = y_f_T  :: [id=financial]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.pension ====
+STAGE terminal / FORWARD BLOCK arvl_to_dcsn / pension
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  terminal.bl
+  26  y_p_d = y_p_T  :: [id=pension]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.value ====
+STAGE terminal / BACKWARD BLOCK cntn_to_dcsn / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉 ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  31  V = V[>]  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.value ====
+STAGE terminal / BACKWARD BLOCK dcsn_to_arvl / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉≺ ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  35  V[<] = V  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== terminal:g:arvl_to_dcsn ====
+STAGE terminal / LAW OF MOTION arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≺  : Xf × Xp → Xf × Xp,  (y_f_T, y_p_T) ↦ (y_f_T, y_p_T)
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  25  y_f_d = y_f_T  :: [id=financial]
+  26  y_p_d = y_p_T  :: [id=pension]
+
+Definitions referenced
+  Xf    terminal:set:Xf
+  Xp    terminal:set:Xp
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== terminal:G:cntn_to_dcsn ====
+STAGE terminal / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : ℝ × Xf × Xp → ℝ,  (V≻, y_f_d, y_p_d) ↦ V≻
+
+Conditions
+  𝑉 ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  31  V = V[>]  :: [id=value]
+
+Definitions referenced
+  Xf    terminal:set:Xf
+  Xp    terminal:set:Xp
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== terminal:G:dcsn_to_arvl ====
+STAGE terminal / VALUE AGGREGATOR dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≺  : ℝ × Xf × Xp → ℝ,  (V, y_f_T, y_p_T) ↦ V
+
+Conditions
+  𝑉≺ ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  35  V[<] = V  :: [id=value]
+
+Definitions referenced
+  Xf    terminal:set:Xf
+  Xp    terminal:set:Xp
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

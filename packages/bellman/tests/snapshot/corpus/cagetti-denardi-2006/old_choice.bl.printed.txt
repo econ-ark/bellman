@@ -1,0 +1,952 @@
+BELLMAN-SYM / STAGE old_choice                            [VERSION = SYMBOLIC]
+a stage occurrence of
+applications/cagetti-denardi-2006/declaration/stages/old_choice/old_choice.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        a_oc≺ state, θ_oc≺ state, V≺ value
+  ∼ decision       a state, θ state, d control, V value
+  ≻ continuation   a_oe≻ state, θ_oe≻ state, a_oc_rt≻ state, W_e≻ value, W_r≻
+                   value
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           a_oc≺ at arrival, θ_oc≺ at arrival, a at decision, θ at
+                   decision, a_oe≻ at continuation, θ_oe≻ at continuation,
+                   a_oc_rt≻ at continuation
+  controls         d at decision
+  values           V at the arrival, decision perches; W_e at the continuation
+                   perch; W_r at the continuation perch
+  shocks           none
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → arvl_to_dcsn   (a_oc≺, θ_oc≺) : !arvl -> (a, θ) : !dcsn
+  → dcsn_to_cntn   (a, θ) : !dcsn, at d -> (a_oe≻, θ_oe≻, a_oc_rt≻) : !cntn
+  ← cntn_to_dcsn   (W_e≻, W_r≻) : !cntn, at d -> (V) : !dcsn
+  ← dcsn_to_arvl   (V) : !dcsn -> (V≺) : !arvl
+  ← policy         (W_e≻, W_r≻) : !cntn -> (d) : !dcsn
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  sets                     2   Xa := ℝ₊, Θ := ℝ₊
+  laws of motion           2   a = a_oc; θ = θ_oc;
+                               a_oe = a; θ_oe = θ; a_oc_rt = a
+  value aggregators        3   V = (W_e[>], W_r[>])[d]; V[<] = V;
+                               d = argmax_{d}(W_e[>], W_r[>])
+  block lines              8   arvl_to_dcsn.1, arvl_to_dcsn.2,
+                               dcsn_to_cntn.entrepreneur.1,
+                               dcsn_to_cntn.entrepreneur.2,
+                               dcsn_to_cntn.retiree.1,
+                               cntn_to_dcsn.choice_value, dcsn_to_arvl.value,
+                               policy.choice
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   (𝑊_e≻, 𝑊_r≻) ↦ 𝑉≺, 𝑑(a, θ)
+                    forward    μ≺ ↦ μ_entrepreneur≻, μ_retiree≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ≺ a_oc≺, θ_oc≺  →  ∼ a, θ  →  ≻ a_oe≻, θ_oe≻, a_oc_rt≻
+  backward   ≺ V≺  ←  ∼ V  ←  ≻ W_e≻, W_r≻
+  policy     ∼ d  ←  ≻ W_e≻, W_r≻
+
+==== stage ====
+STAGE old_choice
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑊_e≻             : Xa × Θ → ℝ
+         𝑊_r≻             : Xa → ℝ
+         ───────────────────────────────────────────────────────────────
+    out  𝑉≺               : Xa × Θ → ℝ
+         𝑑                : Xa × Θ → {entrepreneur, retiree}
+  forward
+    in   μ≺               : finite measure on Xa × Θ
+         ───────────────────────────────────────────────────────────────
+    out  μ_entrepreneur≻  : finite measure on Xa × Θ
+         μ_retiree≻       : finite measure on Xa
+
+Where
+  (a, θ) = 𝑔≺(a_oc, θ_oc)
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑊_e≻, 𝑊_r≻                   out: 𝑉
+
+    2  dcsn_to_arvl
+       in: 𝑉                            out: 𝑉≺
+
+    3  policy
+       in: 𝑊_e≻, 𝑊_r≻                   out: 𝑑
+
+  forward
+    1  arvl_to_dcsn
+       in: μ≺                           out: μ
+
+    2  dcsn_to_cntn
+       in: μ                            out: μ_entrepreneur≻, μ_retiree≻
+
+Conditions
+  cntn_to_dcsn:Aggregation  𝑉(a, θ) ∈ ℝ
+  dcsn_to_arvl:Aggregation  𝑉≺(a_oc, θ_oc) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  7   a = a_oc
+  8   θ = θ_oc
+  13  a_oe = a
+  14  θ_oe = θ
+  17  a_oc_rt = a
+  22  V = (W_e[>], W_r[>])[d]         :: [id=choice_value]
+  26  V[<] = V                        :: [id=value]
+  30  d = argmax_{d}(W_e[>], W_r[>])  :: [id=choice]
+
+Definitions referenced
+  Xa    old_choice:set:Xa
+  Θ     old_choice:set:Θ
+  𝑔≺    old_choice:g:arvl_to_dcsn
+
+File
+  applications/cagetti-denardi-2006/declaration/stages/old_choice/
+  old_choice.bl
+
+Perches
+  ≺  arrival, written [<]
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE old_choice / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   W_e≻  : {W_e≻, W_r≻}
+       W_r≻  : {W_e≻, W_r≻}
+       ────────────────────
+  out  V     : {V}
+
+Conditions
+  𝑉(a, θ) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  22  V = (W_e[>], W_r[>])[d]  :: [id=choice_value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward dcsn_to_arvl ====
+STAGE old_choice / BACKWARD BLOCK dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V   : {V}
+       ──────────
+  out  V≺  : {V≺}
+
+Conditions
+  𝑉≺(a_oc, θ_oc) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  26  V[<] = V  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward policy ====
+STAGE old_choice / POLICY BLOCK policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   W_e≻  : {W_e≻, W_r≻}
+       W_r≻  : {W_e≻, W_r≻}
+       ────────────────────
+  out  d     : {d}
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  30  d = argmax_{d}(W_e[>], W_r[>])  :: [id=choice]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward arvl_to_dcsn ====
+STAGE old_choice / FORWARD BLOCK arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a_oc≺  : {a_oc≺, θ_oc≺}
+       θ_oc≺  : {a_oc≺, θ_oc≺}
+       ───────────────────────
+  out  a      : {a, θ}
+       θ      : {a, θ}
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  7  a = a_oc
+  8  θ = θ_oc
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE old_choice / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a         : {a, θ}
+       θ         : {a, θ}
+       ────────────────────────────────────
+  out  a_oe≻     : {a_oe≻, θ_oe≻, a_oc_rt≻}
+       θ_oe≻     : {a_oe≻, θ_oe≻, a_oc_rt≻}
+       a_oc_rt≻  : {a_oe≻, θ_oe≻, a_oc_rt≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  13  a_oe = a
+  14  θ_oe = θ
+  17  a_oc_rt = a
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn / entrepreneur ====
+STAGE old_choice / FORWARD BLOCK dcsn_to_cntn / entrepreneur
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a      : {a, θ}
+       θ      : {a, θ}
+       ─────────────────────────────────
+  out  a_oe≻  : {a_oe≻, θ_oe≻, a_oc_rt≻}
+       θ_oe≻  : {a_oe≻, θ_oe≻, a_oc_rt≻}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn / retiree ====
+STAGE old_choice / FORWARD BLOCK dcsn_to_cntn / retiree
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a         : {a, θ}
+       ────────────────────────────────────
+  out  a_oc_rt≻  : {a_oe≻, θ_oe≻, a_oc_rt≻}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE old_choice / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑊_e≻  : Xa × Θ → ℝ
+       𝑊_r≻  : Xa → ℝ
+       ────────────────────────────────────────────────────────────
+  out  𝑉     : Xa × Θ → ℝ
+
+At
+  𝑑  : Xa × Θ → {entrepreneur, retiree}
+
+Where
+  𝑔_entrepreneur≻  : Xa × Θ → Xa × Θ,
+                     𝑔_entrepreneur≻(a, θ) = 𝑔≻(a, θ, entrepreneur)
+  𝑔_retiree≻       : Xa × Θ → Xa,  𝑔_retiree≻(a, θ) = 𝑔≻(a, θ, retiree)
+
+Operations
+  1  Pullback:entrepreneur
+     in: 𝑊_e≻                           out: 𝑊_e≻ ∘ 𝑔_entrepreneur≻
+     ──────────────────────────────────────────────────────────────
+     rule: (𝑊_e≻ ∘ 𝑔_entrepreneur≻)(a, θ) = 𝑊_e≻(𝑔_entrepreneur≻(a, θ))
+
+  2  Pullback:retiree
+     in: 𝑊_r≻                           out: 𝑊_r≻ ∘ 𝑔_retiree≻
+     ──────────────────────────────────────────────────────────────
+     rule: (𝑊_r≻ ∘ 𝑔_retiree≻)(a, θ) = 𝑊_r≻(𝑔_retiree≻(a, θ))
+
+  3  Aggregation
+     in: (1), (2)                       out: 𝑉
+     ──────────────────────────────────────────────────────────────
+     rule: 𝑉 = (𝑊_e≻(𝑔_entrepreneur≻(a, θ)), 𝑊_r≻(𝑔_retiree≻(a, θ)))[𝑑]
+           on (a, θ) ∈ Xa × Θ
+
+  4  Evaluation
+     in: 𝑉                              out: 𝑉
+     ──────────────────────────────────────────────────────────────
+     rule: 𝑉 : Xa × Θ → ℝ
+
+Conditions
+  Aggregation  𝑉(a, θ) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  22  V = (W_e[>], W_r[>])[d]  :: [id=choice_value]
+
+Definitions referenced
+  Xa    old_choice:set:Xa
+  Θ     old_choice:set:Θ
+  𝑔≻    old_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback:entrepreneur ====
+STAGE old_choice / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Pullback:entrepreneur
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑊_e≻  : Xa × Θ → ℝ
+       ──────────────────────
+  out  𝑊_e≻ ∘ 𝑔_entrepreneur≻
+             : Xa × Θ → ℝ
+
+Where
+  𝑔_entrepreneur≻  : Xa × Θ → Xa × Θ,
+                     𝑔_entrepreneur≻(a, θ) = 𝑔≻(a, θ, entrepreneur)
+
+Rule
+  (𝑊_e≻ ∘ 𝑔_entrepreneur≻)(a, θ) = 𝑊_e≻(𝑔_entrepreneur≻(a, θ))
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  13  a_oe = a
+  14  θ_oe = θ
+  17  a_oc_rt = a
+
+Definitions referenced
+  Xa    old_choice:set:Xa
+  Θ     old_choice:set:Θ
+  𝑔≻    old_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback:retiree ====
+STAGE old_choice / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Pullback:retiree
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑊_r≻  : Xa → ℝ
+       ──────────────────
+  out  𝑊_r≻ ∘ 𝑔_retiree≻
+             : Xa × Θ → ℝ
+
+Where
+  𝑔_retiree≻  : Xa × Θ → Xa,  𝑔_retiree≻(a, θ) = 𝑔≻(a, θ, retiree)
+
+Rule
+  (𝑊_r≻ ∘ 𝑔_retiree≻)(a, θ) = 𝑊_r≻(𝑔_retiree≻(a, θ))
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  13  a_oe = a
+  14  θ_oe = θ
+  17  a_oc_rt = a
+
+Definitions referenced
+  Xa    old_choice:set:Xa
+  Θ     old_choice:set:Θ
+  𝑔≻    old_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE old_choice / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑊_e≻ ∘ 𝑔_entrepreneur≻
+          : Xa × Θ → ℝ
+       𝑊_r≻ ∘ 𝑔_retiree≻
+          : Xa × Θ → ℝ
+       ──────────────────────
+  out  𝑉  : Xa × Θ → ℝ
+
+Where
+  𝑔_entrepreneur≻  : Xa × Θ → Xa × Θ,
+                     𝑔_entrepreneur≻(a, θ) = 𝑔≻(a, θ, entrepreneur)
+  𝑔_retiree≻       : Xa × Θ → Xa,  𝑔_retiree≻(a, θ) = 𝑔≻(a, θ, retiree)
+
+Rule
+  𝑉 = (𝑊_e≻(𝑔_entrepreneur≻(a, θ)), 𝑊_r≻(𝑔_retiree≻(a, θ)))[𝑑]
+  on (a, θ) ∈ Xa × Θ
+
+Conditions
+  𝑉(a, θ) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  22  V = (W_e[>], W_r[>])[d]  :: [id=choice_value]
+
+Definitions referenced
+  Xa    old_choice:set:Xa
+  Θ     old_choice:set:Θ
+  𝑔≻    old_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE old_choice / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : Xa × Θ → ℝ
+       ───────────────
+  out  𝑉  : Xa × Θ → ℝ
+
+Where
+  𝑔_entrepreneur≻  : Xa × Θ → Xa × Θ,
+                     𝑔_entrepreneur≻(a, θ) = 𝑔≻(a, θ, entrepreneur)
+  𝑔_retiree≻       : Xa × Θ → Xa,  𝑔_retiree≻(a, θ) = 𝑔≻(a, θ, retiree)
+
+Rule
+  𝑉 = (𝑊_e≻(𝑔_entrepreneur≻(a, θ)), 𝑊_r≻(𝑔_retiree≻(a, θ)))[𝑑]
+  on (a, θ) ∈ Xa × Θ
+  𝑉 : Xa × Θ → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xa    old_choice:set:Xa
+  Θ     old_choice:set:Θ
+  𝑔≻    old_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl ====
+STAGE old_choice / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉   : Xa × Θ → ℝ
+       ────────────────────────────────────────────
+  out  𝑉≺  : Xa × Θ → ℝ
+
+Operations
+  1  Pullback
+     in: 𝑉                              out: 𝑉 ∘ 𝑔≺
+     ──────────────────────────────────────────────
+     rule: (𝑉 ∘ 𝑔≺)(a_oc, θ_oc) = 𝑉(𝑔≺(a_oc, θ_oc))
+
+  2  Aggregation
+     in: (1)                            out: 𝑉≺
+     ──────────────────────────────────────────────
+     rule: 𝑉≺ = 𝑉(𝑔≺(a_oc, θ_oc))                     on (a_oc, θ_oc) ∈ Xa × Θ
+
+  3  Evaluation
+     in: 𝑉≺                             out: 𝑉≺
+     ──────────────────────────────────────────────
+     rule: 𝑉≺ : Xa × Θ → ℝ
+
+Conditions
+  Aggregation  𝑉≺(a_oc, θ_oc) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  26  V[<] = V  :: [id=value]
+
+Definitions referenced
+  Xa    old_choice:set:Xa
+  Θ     old_choice:set:Θ
+  𝑔≺    old_choice:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Pullback ====
+STAGE old_choice / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : Xa × Θ → ℝ
+       ───────────────
+  out  𝑉 ∘ 𝑔≺
+          : Xa × Θ → ℝ
+
+Rule
+  (𝑉 ∘ 𝑔≺)(a_oc, θ_oc) = 𝑉(𝑔≺(a_oc, θ_oc))
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  7  a = a_oc
+  8  θ = θ_oc
+
+Definitions referenced
+  Xa    old_choice:set:Xa
+  Θ     old_choice:set:Θ
+  𝑔≺    old_choice:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Aggregation ====
+STAGE old_choice / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉 ∘ 𝑔≺
+           : Xa × Θ → ℝ
+       ────────────────
+  out  𝑉≺  : Xa × Θ → ℝ
+
+Rule
+  𝑉≺ = 𝑉(𝑔≺(a_oc, θ_oc))                              on (a_oc, θ_oc) ∈ Xa × Θ
+
+Conditions
+  𝑉≺(a_oc, θ_oc) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  26  V[<] = V  :: [id=value]
+
+Definitions referenced
+  Xa    old_choice:set:Xa
+  Θ     old_choice:set:Θ
+  𝑔≺    old_choice:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Evaluation ====
+STAGE old_choice / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≺  : Xa × Θ → ℝ
+       ────────────────
+  out  𝑉≺  : Xa × Θ → ℝ
+
+Rule
+  𝑉≺ = 𝑉(𝑔≺(a_oc, θ_oc))                              on (a_oc, θ_oc) ∈ Xa × Θ
+  𝑉≺ : Xa × Θ → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xa    old_choice:set:Xa
+  Θ     old_choice:set:Θ
+  𝑔≺    old_choice:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy ====
+STAGE old_choice / POLICY BUILDER policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑊_e≻  : Xa × Θ → ℝ
+       𝑊_r≻  : Xa → ℝ
+       ───────────────────────────────────────────────────────────────────────
+  out  𝑑     : Xa × Θ → {entrepreneur, retiree}
+
+Where
+  𝑔_entrepreneur≻  : Xa × Θ → Xa × Θ,
+                     𝑔_entrepreneur≻(a, θ) = 𝑔≻(a, θ, entrepreneur)
+  𝑔_retiree≻       : Xa × Θ → Xa,  𝑔_retiree≻(a, θ) = 𝑔≻(a, θ, retiree)
+
+Operations
+  1  Pullback:entrepreneur
+     in: 𝑊_e≻                           out: 𝑊_e≻ ∘ 𝑔_entrepreneur≻
+     ─────────────────────────────────────────────────────────────────────────
+     rule: (𝑊_e≻ ∘ 𝑔_entrepreneur≻)(a, θ) = 𝑊_e≻(𝑔_entrepreneur≻(a, θ))
+
+  2  Pullback:retiree
+     in: 𝑊_r≻                           out: 𝑊_r≻ ∘ 𝑔_retiree≻
+     ─────────────────────────────────────────────────────────────────────────
+     rule: (𝑊_r≻ ∘ 𝑔_retiree≻)(a, θ) = 𝑊_r≻(𝑔_retiree≻(a, θ))
+
+  3  choice:Aggregation
+     in: (1), (2)
+     out: (a, θ, d) ↦ (𝑊_e≻(𝑔_entrepreneur≻(a, θ)), 𝑊_r≻(𝑔_retiree≻(a, θ)))[d]
+     ─────────────────────────────────────────────────────────────────────────
+     rule: (a, θ, d)
+             ↦ (𝑊_e≻(𝑔_entrepreneur≻(a, θ)), 𝑊_r≻(𝑔_retiree≻(a, θ)))[d]
+
+  4  choice:Argmax
+     in: (3)                            out: 𝑑
+     ─────────────────────────────────────────────────────────────────────────
+     rule: 𝑑(a, θ)
+             ∈ argmax_{d ∈ {entrepreneur, retiree}}
+                 [(𝑊_e≻(𝑔_entrepreneur≻(a, θ)), 𝑊_r≻(𝑔_retiree≻(a, θ)))[d]]
+
+  5  Evaluation
+     in: 𝑑                              out: 𝑑
+     ─────────────────────────────────────────────────────────────────────────
+     rule: 𝑑 : Xa × Θ → {entrepreneur, retiree}
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  30  d = argmax_{d}(W_e[>], W_r[>])  :: [id=choice]
+
+Definitions referenced
+  Xa    old_choice:set:Xa
+  Θ     old_choice:set:Θ
+  𝑔≻    old_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback:entrepreneur ====
+STAGE old_choice / POLICY BUILDER policy / Pullback:entrepreneur
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑊_e≻  : Xa × Θ → ℝ
+       ──────────────────────
+  out  𝑊_e≻ ∘ 𝑔_entrepreneur≻
+             : Xa × Θ → ℝ
+
+Where
+  𝑔_entrepreneur≻  : Xa × Θ → Xa × Θ,
+                     𝑔_entrepreneur≻(a, θ) = 𝑔≻(a, θ, entrepreneur)
+
+Rule
+  (𝑊_e≻ ∘ 𝑔_entrepreneur≻)(a, θ) = 𝑊_e≻(𝑔_entrepreneur≻(a, θ))
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  13  a_oe = a
+  14  θ_oe = θ
+  17  a_oc_rt = a
+
+Definitions referenced
+  Xa    old_choice:set:Xa
+  Θ     old_choice:set:Θ
+  𝑔≻    old_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback:retiree ====
+STAGE old_choice / POLICY BUILDER policy / Pullback:retiree
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑊_r≻  : Xa → ℝ
+       ──────────────────
+  out  𝑊_r≻ ∘ 𝑔_retiree≻
+             : Xa × Θ → ℝ
+
+Where
+  𝑔_retiree≻  : Xa × Θ → Xa,  𝑔_retiree≻(a, θ) = 𝑔≻(a, θ, retiree)
+
+Rule
+  (𝑊_r≻ ∘ 𝑔_retiree≻)(a, θ) = 𝑊_r≻(𝑔_retiree≻(a, θ))
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  13  a_oe = a
+  14  θ_oe = θ
+  17  a_oc_rt = a
+
+Definitions referenced
+  Xa    old_choice:set:Xa
+  Θ     old_choice:set:Θ
+  𝑔≻    old_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / choice:Aggregation ====
+STAGE old_choice / POLICY BUILDER policy / choice:Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑊_e≻ ∘ 𝑔_entrepreneur≻
+         : Xa × Θ → ℝ
+       𝑊_r≻ ∘ 𝑔_retiree≻
+         : Xa × Θ → ℝ
+       ────────────────────────────────────────────────────────────────────
+  out  (a, θ, d) ↦ (𝑊_e≻(𝑔_entrepreneur≻(a, θ)), 𝑊_r≻(𝑔_retiree≻(a, θ)))[d]
+         : Xa × Θ × {entrepreneur, retiree} → ℝ
+
+Where
+  𝑔_entrepreneur≻  : Xa × Θ → Xa × Θ,
+                     𝑔_entrepreneur≻(a, θ) = 𝑔≻(a, θ, entrepreneur)
+  𝑔_retiree≻       : Xa × Θ → Xa,  𝑔_retiree≻(a, θ) = 𝑔≻(a, θ, retiree)
+
+Rule
+  (a, θ, d) ↦ (𝑊_e≻(𝑔_entrepreneur≻(a, θ)), 𝑊_r≻(𝑔_retiree≻(a, θ)))[d]
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  30  d = argmax_{d}(W_e[>], W_r[>])  :: [id=choice]
+
+Definitions referenced
+  Xa    old_choice:set:Xa
+  Θ     old_choice:set:Θ
+  𝑔≻    old_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / choice:Argmax ====
+STAGE old_choice / POLICY BUILDER policy / choice:Argmax
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (a, θ, d) ↦ (𝑊_e≻(𝑔_entrepreneur≻(a, θ)), 𝑊_r≻(𝑔_retiree≻(a, θ)))[d]
+          : Xa × Θ × {entrepreneur, retiree} → ℝ
+       ────────────────────────────────────────────────────────────────────
+  out  𝑑  : Xa × Θ → {entrepreneur, retiree}
+
+Where
+  𝑔_entrepreneur≻  : Xa × Θ → Xa × Θ,
+                     𝑔_entrepreneur≻(a, θ) = 𝑔≻(a, θ, entrepreneur)
+  𝑔_retiree≻       : Xa × Θ → Xa,  𝑔_retiree≻(a, θ) = 𝑔≻(a, θ, retiree)
+
+Rule
+  𝑑(a, θ)
+    ∈ argmax_{d ∈ {entrepreneur, retiree}}
+        [(𝑊_e≻(𝑔_entrepreneur≻(a, θ)), 𝑊_r≻(𝑔_retiree≻(a, θ)))[d]]
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  30  d = argmax_{d}(W_e[>], W_r[>])  :: [id=choice]
+
+Definitions referenced
+  Xa    old_choice:set:Xa
+  Θ     old_choice:set:Θ
+  𝑔≻    old_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Evaluation ====
+STAGE old_choice / POLICY BUILDER policy / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑑  : Xa × Θ → {entrepreneur, retiree}
+       ─────────────────────────────────────
+  out  𝑑  : Xa × Θ → {entrepreneur, retiree}
+
+Where
+  𝑔_entrepreneur≻  : Xa × Θ → Xa × Θ,
+                     𝑔_entrepreneur≻(a, θ) = 𝑔≻(a, θ, entrepreneur)
+  𝑔_retiree≻       : Xa × Θ → Xa,  𝑔_retiree≻(a, θ) = 𝑔≻(a, θ, retiree)
+
+Rule
+  𝑑(a, θ)
+    ∈ argmax_{d ∈ {entrepreneur, retiree}}
+        [(𝑊_e≻(𝑔_entrepreneur≻(a, θ)), 𝑊_r≻(𝑔_retiree≻(a, θ)))[d]]
+  𝑑 : Xa × Θ → {entrepreneur, retiree}
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xa    old_choice:set:Xa
+  Θ     old_choice:set:Θ
+  𝑔≻    old_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn ====
+STAGE old_choice / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Xa × Θ
+       ───────────────────────────────────────
+  out  μ   : finite measure on Xa × Θ
+
+Operations
+  1  Pushforward
+     in: μ≺                             out: μ
+     ─────────────────────────────────────────
+     rule: μ(B) = μ≺({a_oc≺, θ_oc≺ ∈ Xa × Θ | 𝑔≺(a_oc≺, θ_oc≺) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  7  a = a_oc
+  8  θ = θ_oc
+
+Definitions referenced
+  Xa    old_choice:set:Xa
+  Θ     old_choice:set:Θ
+  𝑔≺    old_choice:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / Pushforward ====
+STAGE old_choice / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Xa × Θ
+       ──────────────────────────────
+  out  μ   : finite measure on Xa × Θ
+
+Rule
+  μ(B) = μ≺({a_oc≺, θ_oc≺ ∈ Xa × Θ | 𝑔≺(a_oc≺, θ_oc≺) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  7  a = a_oc
+  8  θ = θ_oc
+
+Definitions referenced
+  Xa    old_choice:set:Xa
+  Θ     old_choice:set:Θ
+  𝑔≺    old_choice:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE old_choice / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ                : finite measure on Xa × Θ
+       ─────────────────────────────────────────────────────────────────
+  out  μ_entrepreneur≻  : finite measure on Xa × Θ
+       μ_retiree≻       : finite measure on Xa
+
+At
+  𝑑  : Xa × Θ → {entrepreneur, retiree}
+
+Where
+  𝑔_entrepreneur≻  : Xa × Θ → Xa × Θ,
+                     𝑔_entrepreneur≻(a, θ) = 𝑔≻(a, θ, entrepreneur)
+  𝑔_retiree≻       : Xa × Θ → Xa,  𝑔_retiree≻(a, θ) = 𝑔≻(a, θ, retiree)
+
+Operations
+  1  Pushforward
+     in: μ                              out: μ_entrepreneur≻, μ_retiree≻
+     ───────────────────────────────────────────────────────────────────
+     rule: μ_entrepreneur≻(B)
+             = μ({a, θ ∈ Xa × Θ |
+                   𝑑(a, θ) = entrepreneur ∧ 𝑔_entrepreneur≻(a, θ) ∈ B})
+           μ_retiree≻(B)
+             = μ({a, θ ∈ Xa × Θ | 𝑑(a, θ) = retiree ∧ 𝑔_retiree≻(a, θ) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  13  a_oe = a
+  14  θ_oe = θ
+  17  a_oc_rt = a
+
+Definitions referenced
+  Xa    old_choice:set:Xa
+  Θ     old_choice:set:Θ
+  𝑔≻    old_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE old_choice / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ                : finite measure on Xa × Θ
+       ───────────────────────────────────────────
+  out  μ_entrepreneur≻  : finite measure on Xa × Θ
+       μ_retiree≻       : finite measure on Xa
+
+Where
+  𝑔_entrepreneur≻  : Xa × Θ → Xa × Θ,
+                     𝑔_entrepreneur≻(a, θ) = 𝑔≻(a, θ, entrepreneur)
+  𝑔_retiree≻       : Xa × Θ → Xa,  𝑔_retiree≻(a, θ) = 𝑔≻(a, θ, retiree)
+
+Rule
+  μ_entrepreneur≻(B)
+    = μ({a, θ ∈ Xa × Θ | 𝑑(a, θ) = entrepreneur ∧ 𝑔_entrepreneur≻(a, θ) ∈ B})
+  μ_retiree≻(B)
+    = μ({a, θ ∈ Xa × Θ | 𝑑(a, θ) = retiree ∧ 𝑔_retiree≻(a, θ) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  13  a_oe = a
+  14  θ_oe = θ
+  17  a_oc_rt = a
+
+Definitions referenced
+  Xa    old_choice:set:Xa
+  Θ     old_choice:set:Θ
+  𝑔≻    old_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== old_choice:set:Xa ====
+STAGE old_choice / SET Xa
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xa  = ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  3  Xa := ℝ₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== old_choice:set:Θ ====
+STAGE old_choice / SET Θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Θ  = ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  4  Θ  := ℝ₊
+       :: ["entrepreneurial ability; the nonnegative reals stand in for its
+       two levels, 0 and θ_e"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.1 ====
+STAGE old_choice / FORWARD BLOCK arvl_to_dcsn / 1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  old_choice.bl
+  7  a = a_oc
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.2 ====
+STAGE old_choice / FORWARD BLOCK arvl_to_dcsn / 2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  old_choice.bl
+  8  θ = θ_oc
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.entrepreneur.1 ====
+STAGE old_choice / FORWARD BLOCK dcsn_to_cntn / entrepreneur.1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  old_choice.bl
+  13  a_oe = a
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.entrepreneur.2 ====
+STAGE old_choice / FORWARD BLOCK dcsn_to_cntn / entrepreneur.2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  old_choice.bl
+  14  θ_oe = θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.retiree.1 ====
+STAGE old_choice / FORWARD BLOCK dcsn_to_cntn / retiree.1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  old_choice.bl
+  17  a_oc_rt = a
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.choice_value ====
+STAGE old_choice / BACKWARD BLOCK cntn_to_dcsn / choice_value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(a, θ) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  22  V = (W_e[>], W_r[>])[d]  :: [id=choice_value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.value ====
+STAGE old_choice / BACKWARD BLOCK dcsn_to_arvl / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉≺(a_oc, θ_oc) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  26  V[<] = V  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== policy.choice ====
+STAGE old_choice / POLICY BLOCK policy / choice
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  old_choice.bl
+  30  d = argmax_{d}(W_e[>], W_r[>])  :: [id=choice]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== old_choice:g:arvl_to_dcsn ====
+STAGE old_choice / LAW OF MOTION arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≺  : Xa × Θ → Xa × Θ,  (a_oc, θ_oc) ↦ (a_oc, θ_oc)
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  7  a = a_oc
+  8  θ = θ_oc
+
+Definitions referenced
+  Xa    old_choice:set:Xa
+  Θ     old_choice:set:Θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== old_choice:g:dcsn_to_cntn ====
+STAGE old_choice / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : Xa × Θ × {entrepreneur, retiree} → (Xa × Θ, Xa)[d],
+        (a, θ, d) ↦ ((a, θ), a)[d]
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  13  a_oe = a
+  14  θ_oe = θ
+  17  a_oc_rt = a
+
+Definitions referenced
+  Xa    old_choice:set:Xa
+  Θ     old_choice:set:Θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== old_choice:G:cntn_to_dcsn ====
+STAGE old_choice / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : ℝ × ℝ × Xa × Θ × {entrepreneur, retiree} → ℝ,
+        (W_e≻, W_r≻, a, θ, d) ↦ (W_e≻, W_r≻)[d]
+
+Conditions
+  𝑉(a, θ) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  22  V = (W_e[>], W_r[>])[d]  :: [id=choice_value]
+
+Definitions referenced
+  Xa    old_choice:set:Xa
+  Θ     old_choice:set:Θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== old_choice:G:dcsn_to_arvl ====
+STAGE old_choice / VALUE AGGREGATOR dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≺  : ℝ × Xa × Θ → ℝ,  (V, a_oc, θ_oc) ↦ V
+
+Conditions
+  𝑉≺(a_oc, θ_oc) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  26  V[<] = V  :: [id=value]
+
+Definitions referenced
+  Xa    old_choice:set:Xa
+  Θ     old_choice:set:Θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== old_choice:G:policy ====
+STAGE old_choice / VALUE AGGREGATOR policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : ℝ × ℝ × Xa × Θ × {entrepreneur, retiree} → ℝ,
+        (W_e≻, W_r≻, a, θ, d) ↦ (W_e≻, W_r≻)[d]
+──────────────────────────────────────────────────────────────────────────────
+Source  old_choice.bl
+  30  d = argmax_{d}(W_e[>], W_r[>])  :: [id=choice]
+
+Definitions referenced
+  Xa    old_choice:set:Xa
+  Θ     old_choice:set:Θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

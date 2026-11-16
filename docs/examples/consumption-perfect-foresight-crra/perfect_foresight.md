@@ -6,7 +6,7 @@ topic: [applications]
 # Perfect foresight consumption with CRRA utility
 
 > [!note] Source
-> Application folder: [`applications/consumption-perfect-foresight-crra/`](https://github.com/econ-ark/bellman/tree/main/applications/consumption-perfect-foresight-crra), which holds the model's stage file, `declaration/stages/perfect_foresight/perfect_foresight.bl`, beside it two methods files, `methods.bl`, an addition to the stage file that solves the model in closed form, and `methods.egm.bl`, which solves it by the endogenous grid method, and its calibration file, `declaration/calibration/perfect_foresight.yml`, in the layout of [Model directory layout](../../Bellman-Sym/reference/model-directory-layout.md). The folder's `economics.md` states the economics in full: the problem in levels and normalized by permanent income, the closed-form solution and its domain, and the conditions under which the solution exists.
+> The [application folder](https://github.com/econ-ark/bellman/tree/main/applications/consumption-perfect-foresight-crra) holds the stage, both methods selections, and calibration in the [model directory layout](../../Bellman-Sym/reference/model-directory-layout.md). Its `economics.md` gives the problem in levels and normalized units, the stationary solution, and its domain and conditions.
 
 **The consumption-savings model without uncertainty, normalized by permanent income, whose consumption function is known in closed form.**
 
@@ -106,27 +106,15 @@ A single stage per period: the arrival state $k$, the saving of the previous per
 
 ## 6 Stage file
 
-The stage file, `declaration/stages/perfect_foresight/perfect_foresight.bl`, states the model: the sets of resources and savings, which are the whole real line since the household may borrow against its future income, the four parameters with their descriptions, the three derived parameters, utility and the set of feasible consumption, the two forward blocks, the two value blocks and the policy block, whose line is the maximization alone.
+The stage file declares resources and savings on the real line, since the household may borrow against future income. It states four parameters, the derived return patience factor, utility, and feasible consumption. Its blocks give two forward transitions, two backward value operations, and the consumption choice.
 
 ```bl
 @stage: perfect_foresight
 
-# The unconstrained perfect foresight consumption model with CRRA utility,
-# normalized by permanent income: one state, market resources m, one control,
-# consumption c, and no shock. It is the buffer-stock stage of
-# applications/buffer-stock/ without its two income shocks. Two declared sets
-# state the model's two conditions: the upper bound R^(ρ-1) of the discount
-# factor is the return impatience condition, and the upper bound R of the
-# growth factor is the finite human wealth condition. Three derived
-# parameters, constants the stage defines from its parameters and the
-# calibration does not supply, state the model's quantities: the return
-# patience factor q, which is below one exactly under the return impatience
-# condition, human wealth h, the present value of permanent income, and the
-# natural borrowing limit L = 1 - h. Total wealth m - L, resources less this
-# period's income plus human wealth, is positive exactly above the limit, and
-# the feasible set is consumption below total wealth. The consumption
-# function is known in closed form, c = κ(m - L) with κ = 1 - q, on m > L
-# (economics.md).
+# Perfect foresight consumption with human wealth sent backward.
+# The decision field h includes this period's income; h[>] is the present
+# value of the next period's human wealth. The stage sends h*Γ/R backward.
+# The last period takes in zero. Feasibility reads h[>], with bound -h[>].
 
 Xm := ℝ
 Xa := ℝ
@@ -134,18 +122,13 @@ Xa := ℝ
 β : ℝ₊₊ @ (0, R^(ρ-1))   :: ["discount factor; its upper bound R^(ρ-1) is the return impatience condition, q < 1"]
 ρ : (1, inf)               :: ["coefficient of relative risk aversion, greater than one"]
 R : ℝ₊₊                    :: ["gross interest factor"]
-Γ : (0, R)                 :: ["permanent income growth factor; its upper bound R is the finite human wealth condition"]
+Γ : ℝ₊₊                    :: ["permanent income growth factor"]
 
 q : (0,1) := (β*R)^(1/ρ)/R   :: ["the return patience factor; the return impatience condition is q < 1"]
-h := 1/(1 - Γ/R)     :: ["human wealth, the present discounted value of permanent income"]
-L := 1 - h           :: ["the natural borrowing limit on market resources, above which total wealth m - L is positive"]
-
-# q needs to be fixed as a condition. 
-# 12 November 2026: the definition of q above now carries the set (0,1), which calibration holds.
 
 𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)         :: [id=util]
 
-Γ_c(x : Xm) := {c : ℝ₊₊ | c < x - L}   :: [id=feasible_consumption]
+Γ_c(x : Xm) := {c : ℝ₊₊ | c < x + h[>]}   :: [id=feasible_consumption]
 
 [id=arvl_to_dcsn, (k : Xa) : !arvl -> (m : Xm) : !dcsn] {
     m = R*k/Γ + 1                   :: [id=market_resources]
@@ -155,15 +138,17 @@ L := 1 - h           :: ["the natural borrowing limit on market resources, above
     a = m - c                       :: [id=savings]
 }
 
-[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, h[>] : ℝ₊ @ !vlu @ !cnst, c) : !cntn -> (V : ℝ @ !vlu, h : ℝ₊ @ !vlu @ !cnst) : !dcsn] {
     V = 𝑢(c) + β*V[>]               :: [id=value]
+    h = 1 + h[>]                    :: [id=human_wealth]
 }
 
-[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+[id=dcsn_to_arvl, (V, h) : !dcsn -> (V[<] : ℝ @ !vlu, h[<] : ℝ₊ @ !vlu @ !cnst) : !arvl] {
     V[<] = Γ^(1-ρ) * V              :: [id=value]
+    h[<] = h*Γ/R                    :: [id=human_wealth]
 }
 
-[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+[id=policy, (V[>] : ℝ @ !vlu, h[>] : ℝ₊ @ !vlu @ !cnst) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
     c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])     :: [id=optimality]
 }
 ```
@@ -174,68 +159,65 @@ The arrival block `arvl_to_dcsn` writes $m = Rk/\Gamma + 1$: the return $R$ on t
 
 ### 6.2 Derived parameters
 
-The lines `q : (0,1) := …`, `h := …` and `L := …` define three **derived parameters**, constants that the stage defines from its parameters and that the calibration does not supply: the return patience factor $q$, human wealth $h$ and the natural borrowing limit $L$. Their definitions follow the rule [`derived-parameter`](../../Bellman-Sym/reference/refusals.md#derived-parameter), and a calibration that names one of them is refused. The definition of $q$ declares the set `(0,1)` in which its value lies, which is the return impatience condition, and `calibrate` refuses a calibration at which the value of $q$ lies outside that set (§11). `stage.par` lists them after the four declared parameters, with their definitions and, once a calibration is bound, their values (§7.3). The declared set of the growth factor, `Γ : (0, R)`, is an interval whose upper endpoint is the interest factor: the bound is the finite human wealth condition, and `calibrate` refuses a growth factor at or above the interest factor, naming the set (§11).
+The stage defines one derived parameter, `q : (0,1) := (β*R)^(1/ρ)/R`. Its declared set imposes return impatience. Calibration supplies the four underlying parameters, and refuses a supplied value for `q`.
+
+Human wealth is a constant field: `!cnst` states that it does not depend on state. The stage takes in `h[>]`, computes `h = 1 + h[>]`, and sends `h[<] = h*Γ/R`. Feasibility reads the supplied continuation wealth. The stationary constants `h_lim` and `L_lim` belong to the closed-form methods (§7.1).
 
 ### 6.3 Builders
 
-- `cntn_to_dcsn`, the decision value builder: $V = u(c) + \beta V^{>}$, at the consumption the policy chooses.
-- `policy`, the policy builder: the maximization of $u(c') + \beta V^{>}$ over consumption $0 < c' < m - L$.
-- `dcsn_to_arvl`, the arrival value builder: $V^{<} = \Gamma^{1-\rho}\, V$, which puts the decision value in the units of the previous period's permanent income, as the buffer stock stage writes $(\Gamma\psi)^{1-\rho}$ inside its expectation; here there is nothing to take an expectation over.
+- `cntn_to_dcsn`, the decision value builder: $V = u(c) + \beta V^{>}$ at the chosen consumption, and `h = 1 + h[>]`.
+- `policy`, the policy builder: the maximization of $u(c') + \beta V^{>}$ over consumption `0 < cp < m + h[>]`.
+- `dcsn_to_arvl`, the arrival value builder: $V^{<} = \Gamma^{1-\rho}\, V$ puts value in the previous period's income units. It also sends `h[<] = h*Γ/R`. There is no expectation because income growth is known.
 
 The stage file states no derivative and no numerical method: the two methods files beside it state the solutions, as the next section shows.
 
 ## 7 Methods and settings
 
-Two methods files stand beside the stage file. Each is a `.bl` file read by the same grammar, whose blocks name the stage's blocks by their ids and add to them ([Methodization](../../Bellman-Sym/04-methodization.md)), and the stage is bound with one of them at a time: `methods.egm.bl` is given to the stage in place of `methods.bl`, not beside it.
+Two methods files stand beside the stage. Each uses the same grammar and names the stage's blocks by their ids ([Methodization](../../Bellman-Sym/04-methodization.md)). The stage binds one selection at a time: `methods.egm.bl` replaces `methods.bl`.
 
 ### 7.1 Closed form
 
-The addition `methods.bl` defines the marginal propensity to consume `κ = 1 - q`, the method's coefficient, as a derived parameter, and types [`!explicit`](../../Bellman-Sym/reference/methods.md#explicit) on the policy builder and on the two value builders. The line of each block writes the builder's output as an explicit function of the state of its own perch, the parameters and the derived parameters: the consumption function at the policy builder, the decision value at `cntn_to_dcsn` and the arrival value at `dcsn_to_arvl`, the last with the law of motion and the normalization $\Gamma^{1-\rho}$ written out. Each value block also writes its marginal in closed form, $\kappa^{-\rho}(m - L)^{-\rho}$ at the decision perch and $R\,\Gamma^{-\rho}$ times it at the resources $Rk/\Gamma + 1$ at the arrival perch, since a representation offers a derivative only where a line writes it. At the operative level, the builders the stage computes with, each line stands in place of the builder's declared line, the maximization or the value aggregation, which `stage.declared` keeps ([Methodization](../../Bellman-Sym/04-methodization.md) §5). `!explicit` gives the [Evaluation](../../Bellman-Sym/reference/operations.md#evaluation) of each of these builders the closed form, [`!closed_form`](../../Bellman-Sym/reference/methods.md#closed-form). The power `κ^(-ρ)` is defined for every $\rho > 1$ only at $\kappa > 0$, so `calibrate` refuses a calibration at which the return impatience condition $q < 1$ fails. The closed form reads no setting, and the folder holds no settings file.
+The addition `methods.bl` defines `κ = 1 - q`, `h_lim`, and `L_lim` as derived parameters. Its positive `h_lim` requires `Γ < R`. It types [`!explicit`](../../Bellman-Sym/reference/methods.md#explicit) on the policy builder and both value builders.
+
+Each block writes its outputs as functions of its own perch's state and the parameters. The policy block gives consumption. The value blocks give decision and arrival values, their marginals, and stationary human wealth. The arrival formula includes the law of motion and the normalization $\Gamma^{1-\rho}$.
+
+The operative equations replace the declared equations for computation. `stage.declared` retains the maximization and original value equations ([Methodization](../../Bellman-Sym/04-methodization.md) §5). Each builder's [Evaluation](../../Bellman-Sym/reference/operations.md#evaluation) uses [`!closed_form`](../../Bellman-Sym/reference/methods.md#closed-form). Derivatives are available only where the file supplies their equations.
+
+The power `κ^(-ρ)` requires `κ > 0`. Calibration therefore enforces return impatience, `q < 1`. The closed form reads no setting.
 
 ```bl
 @methods: perfect_foresight
-# The closed-form solution of the perfect foresight stage, an addition to
-# perfect_foresight.bl, the stage file beside this one (economics.md, "The
-# solution in closed form"). The marginal propensity to consume κ = 1 - q is
-# the method's coefficient and is defined here; the return patience factor q,
-# human wealth h and the natural borrowing limit L = 1 - h are the stage's.
-# Each of the three builders that the closed form solves is typed !explicit,
-# and the lines of its block write its outputs as explicit functions of its
-# own perch's state: the consumption function c = κ(m - L) at the policy
-# builder, the decision value κ^(-ρ) (m - L)^(1-ρ)/(1-ρ) and its marginal at
-# the decision value builder, and the arrival value, the decision value at
-# the resources R*k/Γ + 1 normalized by Γ^(1-ρ), and its marginal at the
-# arrival value builder, whose id arrival_marginal the module reads. At the
-# operative level each line stands in place of the builder's declared line,
-# which stage.declared keeps. !explicit gives the Evaluation of each builder
-# the closed form, !closed_form. The power κ^(-ρ) is defined for every ρ > 1
-# only at κ > 0, which is the return impatience condition q < 1, the upper
-# bound of the discount factor in the stage file: calibrate refuses a
-# calibration outside that bound, and one at which the computed κ is not
-# positive. The functions hold on total wealth
-# m - L > 0, and at the arrival perch on k > L; the application's module
-# refuses an evaluation elsewhere.
+# The stationary closed form. The stage defines human wealth recursively;
+# these methods state its fixed point. The declared set of h_lim requires Γ < R.
 
 κ := 1 - q    :: ["the marginal propensity to consume, one minus the return patience factor"]
+h_lim : ℝ₊₊ := 1/(1 - Γ/R)   :: ["human wealth at the infinite horizon, the value that h = 1 + h*Γ/R maps to itself; positive exactly where Γ < R, the finite human wealth condition"]
+L_lim := 1 - h_lim           :: ["the natural borrowing limit on market resources at the infinite horizon"]
 
 [id=policy, policy.method : !explicit] {
-    c = κ*(m - L)                                        :: [id=consumption]
+    c = κ*(m - L_lim)                                        :: [id=consumption]
 }
 
 [id=cntn_to_dcsn, cntn_to_dcsn.method : !explicit] {
-    V = κ^(-ρ)*(m - L)^(1-ρ)/(1-ρ)                       :: [id=closed_value]
-    D_{m}V = κ^(-ρ)*(m - L)^(-ρ)                         :: [id=marginal]
+    V = κ^(-ρ)*(m - L_lim)^(1-ρ)/(1-ρ)                       :: [id=closed_value]
+    D_{m}V = κ^(-ρ)*(m - L_lim)^(-ρ)                         :: [id=marginal]
+    h = h_lim                                                :: [id=closed_human_wealth]
 }
 
 [id=dcsn_to_arvl, dcsn_to_arvl.method : !explicit] {
-    V[<] = Γ^(1-ρ)*κ^(-ρ)*(R*k/Γ + 1 - L)^(1-ρ)/(1-ρ)    :: [id=closed_value]
-    D_{k}V[<] = R*Γ^(-ρ)*κ^(-ρ)*(R*k/Γ + 1 - L)^(-ρ)     :: [id=arrival_marginal]
+    V[<] = Γ^(1-ρ)*κ^(-ρ)*(R*k/Γ + 1 - L_lim)^(1-ρ)/(1-ρ)    :: [id=closed_value]
+    D_{k}V[<] = R*Γ^(-ρ)*κ^(-ρ)*(R*k/Γ + 1 - L_lim)^(-ρ)     :: [id=arrival_marginal]
+    h[<] = h_lim*Γ/R                                         :: [id=closed_human_wealth]
 }
 ```
 
 ### 7.2 Endogenous grid method
 
-The methods file `methods.egm.bl` declares the three settings of the grid of savings with their sets, a count in ℕ and a bound a point of `Xa`, and names the endogenous grid method, [`!egm`](../../Bellman-Sym/reference/methods.md#egm), as the policy builder's method, with the exogenous grid of savings, `!Cartesian(a=(a_min, a_max, n_a))`, as its grid. Its three lines, the inverted Euler equation with the inverse marginal utility written out, the inverted law of motion and the identification of the chosen consumption with the candidate, stand in place of the maximization when the stage is solved. The consumption function is read by linear interpolation at the policy builder's Evaluation, `policy.evaluate`, between the pairs the method computes; those pairs give its nodes, so the entry writes no grid there. Each value builder gains its derivative line: the envelope condition `D_{m}V = c^(-ρ)` of the decision value, and the derivative of the arrival value, whose factor $R\,\Gamma^{-\rho}$ comes from the factor $R/\Gamma$ of the law of motion and the normalization $\Gamma^{1-\rho}$ of the value. The application's module supplies the three settings, so the folder holds no settings file.
+The methods file `methods.egm.bl` declares the savings grid's bounds and count. Its policy builder uses the endogenous grid method, [`!egm`](../../Bellman-Sym/reference/methods.md#egm), on `!Cartesian(a=(a_min, a_max, n_a))`. The program supplies those three settings.
+
+The method writes the inverse Euler equation, computes resources from savings and candidate consumption, and selects those pairs. Linear interpolation evaluates consumption between the pairs. Its Evaluation reads the pairs as nodes, so no separate grid is needed there.
+
+The decision value builder gains the envelope equation `D_{m}V = c^(-ρ)`. The arrival derivative is `D_{k}V[<] = R*Γ^(-ρ)*D_{m}V`. The factor combines the derivative `R/Γ` of the law of motion with the normalization `Γ^(1-ρ)`.
 
 ```bl
 @methods: perfect_foresight
@@ -277,34 +259,33 @@ a_max : Xa           :: ["upper bound of the savings grid"]
 
 ### 7.3 Binding the closed form
 
-The folder holds no recipe, so `load_stage` is given the stage file and its addition `methods.bl` together; `calibrate` then binds the calibration file, and `configure` binds an empty settings source, since the closed form reads no setting:
+The application binds the four steps separately. The methods file supplies the stationary constants as well as the explicit expressions:
 
 ```python
 from bellman.stage import elaborate_stage, load_stage
 
 declaration = "applications/consumption-perfect-foresight-crra/declaration"
 stage = elaborate_stage(load_stage(
-    f"{declaration}/stages/perfect_foresight/perfect_foresight.bl",
-    [f"{declaration}/stages/perfect_foresight/methods.bl"],
-))
+    f"{declaration}/stages/perfect_foresight/perfect_foresight.bl"))
+stage.methodize(f"{declaration}/stages/perfect_foresight/methods.bl")
 stage.calibrate(f"{declaration}/calibration/perfect_foresight.yml")
 stage.configure({"settings": {}})
 print(stage.par)
 ```
 
 ```text
-name  set                      value                describes
-β     ℝ₊₊ @ (0, R^(ρ - 1))     0.9615384615384616   discount factor; its upper bound R^(ρ-1) is the return impatience condition, q < 1
-ρ     (1, inf)                 2.0                  coefficient of relative risk aversion, greater than one
-R     ℝ₊₊                      1.04                 gross interest factor
-Γ     (0, R)                   1.02                 permanent income growth factor; its upper bound R is the finite human wealth condition
-q     (0, 1) := (β*R)^(1/ρ)/R  0.9615384615384615   the return patience factor; the return impatience condition is q < 1
-h     1/(1 - Γ/R)              51.999999999999886   human wealth, the present discounted value of permanent income
-L     1 - h                    -50.999999999999886  the natural borrowing limit on market resources, above which total wealth m - L is positive
-κ     1 - q                    0.03846153846153855  the marginal propensity to consume, one minus the return patience factor
+name   set                      value                describes
+β      ℝ₊₊ @ (0, R^(ρ - 1))     0.9615384615384616   discount factor; its upper bound R^(ρ-1) is the return impatience condition, q < 1
+ρ      (1, inf)                 2.0                  coefficient of relative risk aversion, greater than one
+R      ℝ₊₊                      1.04                 gross interest factor
+Γ      ℝ₊₊                      1.02                 permanent income growth factor
+q      (0, 1) := (β*R)^(1/ρ)/R  0.9615384615384615   the return patience factor; the return impatience condition is q < 1
+κ      1 - q                    0.03846153846153855  the marginal propensity to consume, one minus the return patience factor
+h_lim  ℝ₊₊ := 1/(1 - Γ/R)       51.999999999999886   human wealth at the infinite horizon, the value that h = 1 + h*Γ/R maps to itself; positive exactly where Γ < R, the finite human wealth condition
+L_lim  1 - h_lim                -50.999999999999886  the natural borrowing limit on market resources at the infinite horizon
 ```
 
-`stage.par` lists the four declared parameters with their sets and values, then the three derived parameters of the stage file and the coefficient `κ` of the methods file, each with its definition in the column of the sets, after the declared set `(0, 1)` in the row of `q`, and its value at the calibration: $q = 1/1.04$, $h = 52$, $L = -51$ and $\kappa = 0.04/1.04$, evaluated in floating point. `stage.methods` lists the three builders typed `!explicit` and the closed form of each builder's Evaluation, generated from the builder's method entry:
+The stage defines `q`; the methods define `κ`, `h_lim`, and `L_lim`. Human wealth `h` is a field, so `stage.par["h"]` is no longer a parameter query. `stage.methods` lists the three builders typed `!explicit` and the closed form of each builder's Evaluation, generated from the builder's method entry:
 
 ```python
 print(stage.methods)
@@ -323,11 +304,19 @@ The endogenous grid method is bound in the same way from `methods.egm.bl`, with 
 
 ## 8 Period and trellis
 
-The model is stationary: every period holds the one stage with the same parameters, and the saving $a$ of one period is the arrival state $k$ of the next. The application holds no recipe and no trellis file; [Trellises](../../Bellman-Sym/07-trellis.md) states how a trellis is written. Over a finite horizon of $N$ periods, human wealth and the marginal propensity to consume depend on $N$, and in the last period the household consumes its resources, $c = m$; repeating the stationary stage with constant $h$ and $\kappa$ does not construct that problem, and the application makes no claim about a finite horizon.
+The stationary solution repeats one stage declaration with the same calibration sources and requires every backward field at its fixed point, including human wealth and the value field. Savings from one period become arrival assets in the next. The application holds no recipe or trellis file; [Trellises](../../Bellman-Sym/07-trellis.md) describes that declaration.
+
+Human wealth also has a finite backward recursion. With zero supplied continuation wealth, the stage computes `h = 1`. Each preceding period adds current income to discounted future wealth. At the stationary calibration, the recursion is `51 → 52 → 51`.
+
+The strict feasibility inequality excludes consuming all resources in the last period. With increasing utility and zero continuation value, that problem has no maximizer. The stationary coefficient `κ` also differs from its finite-horizon counterpart. The human-wealth check alone does not solve finite-horizon consumption.
 
 ## 9 Solution methods
 
-**Closed form.** The module `code/closed_form_check.py` of the application binds `methods.bl` through `elaborate`, `methodize`, `calibrate` and `configure`, and reads the consumption function, the decision value and the arrival value from the compiled kernels of the three explicit blocks, the numerical functions the package compiles from their lines ([A builder](../../Bellman-Sym/API/stage/04-builder.md) §5); it writes no formula of them. It checks them against the stage file's own blocks, through their compiled kernels: the residual of the Bellman equation, the residual of the arrival value's normalization, the relative residual of the Euler equation, feasibility and the present-value budget. The three functions hold on total wealth $m - L > 0$, and at the arrival perch on $k > L$, and the module refuses an evaluation elsewhere.
+Every route checks the complete continuation mapping before constructing kernels or grids, including under `!explicit`. The mapping supplies `V[>]` and `h[>]`. The returned `input_conditions` retain callable conditions that the package cannot decide.
+
+**Closed form.** The module `code/closed_form_check.py` binds all four construction steps. It evaluates consumption, decision value, and arrival value through compiled kernels ([A builder](../../Bellman-Sym/API/stage/04-builder.md) §5).
+
+The module compares the solution with the declared Bellman equation and arrival normalization. It also checks the relative Euler residual, feasibility, and present-value budget. The value functions require positive total wealth, $m > L$ at decision and $k > L$ at arrival. The module refuses evaluations elsewhere.
 
 **Endogenous grid method.** The module binds `methods.egm.bl` with the three settings of the grid of savings and iterates the method to its fixed point on the compiled kernels of its lines, from a first iterate that consumes half of total wealth. One iteration applies the lines in the stage's backward order:
 
@@ -338,7 +327,9 @@ The model is stationary: every period holds the one stage with the same paramete
 5. **Arrival marginal** (the derivative line of `dcsn_to_arvl`): $dV^{<}(k) = R\,\Gamma^{-\rho}\, dV(Rk/\Gamma + 1)$, which is the next iteration's continuation marginal value at $k = a$.
 6. **Iterate** until convergence.
 
-Calibration refuses a calibration at which $q \ge 1$, by the declared set of the discount factor and by the set that the definition of $q$ declares. The module refuses a return patience factor that computes to one or more, a grid of savings that starts at or below $L$, an intermediate value that is not finite, an extrapolation that leaves the feasible set and an iteration that reaches its limit without converging. The consumption function is linear in $m$, and the linear interpolant of a linear function is exact, so the gridded route reaches the closed form on a grid of five points as on one of five hundred. The test of interpolation accuracy is therefore the comparison of the value function's interpolation by the module's linear and PCHIP (piecewise cubic Hermite) evaluators on 5, 50 and 500 nodes. The notebook `code/closed-form-and-grid.ipynb` shows each step and each comparison.
+Calibration refuses a calibration at which $q \ge 1$, by the declared set of the discount factor and by the set that the definition of $q$ declares. The module refuses savings grids that start at or below $L$ and intermediate values that are not finite. It also refuses infeasible extrapolation and iterations that exhaust their limit without convergence. The consumption function is linear in $m$, and the linear interpolant of a linear function is exact, so the gridded route reaches the closed form on a grid of five points as on one of five hundred. The test of interpolation accuracy is therefore the comparison of the value function's interpolation by the module's linear and PCHIP (piecewise cubic Hermite) evaluators on 5, 50 and 500 nodes. The notebook `code/closed-form-and-grid.ipynb` shows each step and each comparison.
+
+The function `gridded_step` computes one backward step for supplied continuation value, human wealth, and marginal value. It admits finite inputs when `Γ >= R`. The stationary function `gridded_route` and the closed-form methods require `Γ < R`.
 
 ## 10 Calibration
 
@@ -381,9 +372,9 @@ Two conditions, the chapter's equations (15) and (16), make the infinite-horizon
 
 The closed form needs neither the growth impatience condition nor a normalized discount factor $\beta\,\Gamma^{1-\rho} < 1$, and it holds for every $\rho > 1$; logarithmic utility, $\rho = 1$, needs its own utility and is not this stage. The files state each condition so that a calibration that breaks it is refused, with the condition named:
 
-| Condition | How it is stated | Where it is refused |
+| Condition | Declaration | Refusal |
 |---|---|---|
-| $\Gamma < R$ | the declared set of the growth factor, `Γ : (0, R)` | `calibrate` |
+| $\Gamma < R$ | `h_lim : ℝ₊₊ := 1/(1 - Γ/R)` in the closed-form methods | `calibrate` with those methods; the stationary grid route also requires this condition |
 | $q < 1$ | the declared set of the discount factor, `β : ℝ₊₊ @ (0, R^(ρ-1))`, whose upper bound $R^{\rho-1}$ is the condition written for $\beta$, and the set that the definition of the return patience factor declares, `q : (0,1) := (β*R)^(1/ρ)/R` | `calibrate`, under each methods file |
 | $\rho > 1$ | the declared set `ρ : (1, inf)` | `calibrate` |
 | finite parameters | the declared sets of the four parameters | `calibrate` |

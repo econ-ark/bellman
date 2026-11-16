@@ -1,0 +1,440 @@
+==== wires ====
+Sort('cons:cntn:V', 'field', perch='cntn', role='value', domain='[-inf, inf)', coordinates=('cons:cntn:a',), derivatives=())
+Sort('cons:dcsn:V', 'field', perch='dcsn', role='value', domain='[-inf, inf)', coordinates=('cons:dcsn:m_d',), derivatives=())
+Sort('cons:arvl:V', 'field', perch='arvl', role='value', domain='ℝ', coordinates=('cons:arvl:m',), derivatives=())
+Sort('cons:dcsn:c', 'field', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=(), derivatives=())
+Sort('cons:dcsn:m_d', 'field', perch='dcsn', role='state', domain='Xm', coordinates=(), derivatives=())
+Sort('cons:arvl:m', 'field', perch='arvl', role='state', domain='Xm', coordinates=(), derivatives=())
+Sort('cons:arvl:l', 'field', perch='arvl', role='state', domain='ℝ₊', coordinates=(), derivatives=())
+Sort('cons:cntn:a', 'field', perch='cntn', role='state', domain='Xa', coordinates=(), derivatives=())
+Sort('cons:function:cntn:V', 'function', perch='cntn', role='value', domain='[-inf, inf)', coordinates=('cons:cntn:a',), derivatives=())
+Sort('cons:function:dcsn:V', 'function', perch='dcsn', role='value', domain='[-inf, inf)', coordinates=('cons:dcsn:m_d',), derivatives=('cons:dcsn:m_d',))
+Sort('cons:function:arvl:V', 'function', perch='arvl', role='value', domain='ℝ', coordinates=('cons:arvl:m',), derivatives=())
+Sort('policy:Evaluation:c:result', 'function', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=('cons:dcsn:m_d',), derivatives=())
+Sort('cons:function:cntn:V:g', 'function', perch='cntn', role='value', domain='[-inf, inf)', coordinates=('cons:dcsn:m_d',), derivatives=())
+Sort('cntn_to_dcsn:Aggregation:V:result', 'function', perch=None, role='value', domain=None, coordinates=('cons:dcsn:m_d',), derivatives=())
+Sort('cons:function:dcsn:V:g', 'function', perch='dcsn', role='value', domain='[-inf, inf)', coordinates=('cons:arvl:m', 'cons:arvl:l'), derivatives=())
+Sort('dcsn_to_arvl:Aggregation:V:result', 'function', perch=None, role='value', domain=None, coordinates=('cons:arvl:m', 'cons:arvl:l'), derivatives=())
+Sort('cons:function:cntn:V:g:policy', 'function', perch='cntn', role='value', domain='[-inf, inf)', coordinates=('cons:dcsn:m_d', 'cons:dcsn:c'), derivatives=())
+Sort('policy.optimality:Aggregation:result', 'function', perch=None, role='value', domain=None, coordinates=('cons:dcsn:m_d', 'cons:dcsn:c'), derivatives=())
+Sort('policy.optimality:Argmax:c:result', 'function', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=('cons:dcsn:m_d',), derivatives=())
+Sort('cons:measure:arvl', 'measure', perch='arvl', role='measure', domain=None, coordinates=('cons:arvl:m', 'cons:arvl:l'), derivatives=())
+Sort('cons:measure:dcsn', 'measure', perch='dcsn', role='measure', domain=None, coordinates=('cons:dcsn:m_d',), derivatives=())
+Sort('cons:measure:cntn', 'measure', perch='cntn', role='measure', domain=None, coordinates=('cons:cntn:a',), derivatives=())
+
+==== conditions of the stage ====
+arithmetic-definedness (required): cons:function:𝑢; ¬(1 - ρ = 0)
+    The divisor 1 - ρ at cons:function:𝑢 must be nonzero.
+finite-real-arithmetic (required): policy.optimality; Add; ¬(𝑢(cp) ∈ [inf, inf] ∧ V[>] ∈ [-inf, -inf])
+    The operands of Add at policy.optimality must have a defined result.
+aggregation-admissibility (required): cntn_to_dcsn:Aggregation; cntn_to_dcsn.value; cntn_to_dcsn:Aggregation:V:result; V(m_d) ∈ [-inf, inf)
+    The equations at cntn_to_dcsn.value must define cntn_to_dcsn:Aggregation on its declared inputs with values in its declared output sets.
+marginal-reading (required): cntn_to_dcsn.marginal
+    the right side of each derivative line equals the derivative, in the named coordinate, of the value the builder writes, under the envelope conditions: concavity of the continuation value, interiority of the maximizer or the multiplier's term at a binding constraint, differentiability of the reward in the control, a measurable selection of the policy, and differentiability of the value at the point read; listed and not checked
+aggregation-admissibility (required): dcsn_to_arvl:Aggregation; dcsn_to_arvl.value; dcsn_to_arvl:Aggregation:V:result; V≺(m) ∈ ℝ
+    The equations at dcsn_to_arvl.value must define dcsn_to_arvl:Aggregation on its declared inputs with values in its declared output sets.
+range-compatibility (established): dcsn_to_cntn.1; ℝ₊; Xa; m_d − c(m_d) ∈ Xa
+    The restricted law of motion takes values in its declared output set.
+range-compatibility (required): dcsn_to_arvl.value; [-inf, inf); ℝ; V≺(m, l) ∈ ℝ
+    V[<] is declared in ℝ while V is declared in [-inf, inf), so the construction assumes every value the line dcsn_to_arvl.value writes lies in ℝ
+continuation-input (required): cons:cntn:V; [-inf, inf); cons:cntn:a
+    The representing function for V[>] must be measurable on its declared domain, depend only on (a) in that order, and take values in [-inf, inf).
+
+==== initial backward: conditions ====
+arithmetic-definedness (required): cons:function:𝑢; ¬(1 - ρ = 0)
+    The divisor 1 - ρ at cons:function:𝑢 must be nonzero.
+finite-real-arithmetic (required): policy.optimality; Add; ¬(𝑢(cp) ∈ [inf, inf] ∧ V[>] ∈ [-inf, -inf])
+    The operands of Add at policy.optimality must have a defined result.
+aggregation-admissibility (required): cntn_to_dcsn:Aggregation; cntn_to_dcsn.value; cntn_to_dcsn:Aggregation:V:result; V(m_d) ∈ [-inf, inf)
+    The equations at cntn_to_dcsn.value must define cntn_to_dcsn:Aggregation on its declared inputs with values in its declared output sets.
+marginal-reading (required): cntn_to_dcsn.marginal
+    the right side of each derivative line equals the derivative, in the named coordinate, of the value the builder writes, under the envelope conditions: concavity of the continuation value, interiority of the maximizer or the multiplier's term at a binding constraint, differentiability of the reward in the control, a measurable selection of the policy, and differentiability of the value at the point read; listed and not checked
+aggregation-admissibility (required): dcsn_to_arvl:Aggregation; dcsn_to_arvl.value; dcsn_to_arvl:Aggregation:V:result; V≺(m) ∈ ℝ
+    The equations at dcsn_to_arvl.value must define dcsn_to_arvl:Aggregation on its declared inputs with values in its declared output sets.
+range-compatibility (required): dcsn_to_arvl.value; [-inf, inf); ℝ; V≺(m, l) ∈ ℝ
+    V[<] is declared in ℝ while V is declared in [-inf, inf), so the construction assumes every value the line dcsn_to_arvl.value writes lies in ℝ
+continuation-input (required): cons:cntn:V; [-inf, inf); cons:cntn:a
+    The representing function for V[>] must be measurable on its declared domain, depend only on (a) in that order, and take values in [-inf, inf).
+
+==== initial backward builder: listing ====
+cntn_to_dcsn
+  cntn_to_dcsn.value
+  cntn_to_dcsn.marginal
+dcsn_to_arvl
+  dcsn_to_arvl.value
+policy
+  policy.optimality
+
+==== initial backward builder: wiring ====
+inputs: cons:cntn:V
+outputs: cons:arvl:V, cons:dcsn:c
+cntn_to_dcsn
+    reads: cons:cntn:V
+    writes: cons:dcsn:V
+    declares: cons:cntn:V, cons:dcsn:c
+    inside:
+        inputs: cons:cntn:V
+        outputs: cons:dcsn:V
+        cntn_to_dcsn.value
+            reads: cons:cntn:V
+            writes: cons:dcsn:V
+        cntn_to_dcsn.marginal
+            reads: cons:dcsn:V
+            writes: none
+dcsn_to_arvl
+    reads: cons:dcsn:V
+    writes: cons:arvl:V
+    declares: cons:dcsn:V
+    inside:
+        inputs: cons:dcsn:V
+        outputs: cons:arvl:V
+        dcsn_to_arvl.value
+            reads: cons:dcsn:V
+            writes: cons:arvl:V
+policy
+    reads: cons:cntn:V
+    writes: cons:dcsn:c
+    declares: cons:cntn:V
+    inside:
+        inputs: cons:cntn:V
+        outputs: cons:dcsn:c
+        policy.optimality
+            reads: cons:cntn:V, cons:dcsn:m_d
+            writes: cons:dcsn:c
+
+==== initial backward sub-builder: listing ====
+cntn_to_dcsn.value
+cntn_to_dcsn.marginal
+dcsn_to_arvl.value
+policy.optimality
+
+==== initial backward sub-builder: wiring ====
+inputs: cons:cntn:V
+outputs: cons:arvl:V, cons:dcsn:c
+cntn_to_dcsn.value
+    reads: cons:cntn:V
+    writes: cons:dcsn:V
+cntn_to_dcsn.marginal
+    reads: cons:dcsn:V
+    writes: none
+dcsn_to_arvl.value
+    reads: cons:dcsn:V
+    writes: cons:arvl:V
+policy.optimality
+    reads: cons:cntn:V, cons:dcsn:m_d
+    writes: cons:dcsn:c
+
+==== initial backward primitive: listing ====
+the same as initial backward sub-builder: listing
+
+==== initial backward primitive: wiring ====
+the same as initial backward sub-builder: wiring
+
+==== initial backward combined: listing ====
+cntn_to_dcsn.value
+dcsn_to_arvl.value
+policy.optimality
+
+==== initial backward combined: wiring ====
+inputs: cons:cntn:V
+outputs: cons:arvl:V, cons:dcsn:c
+cntn_to_dcsn.value
+    reads: cons:cntn:V
+    writes: cons:dcsn:V
+dcsn_to_arvl.value
+    reads: cons:dcsn:V
+    writes: cons:arvl:V
+policy.optimality
+    reads: cons:cntn:V, cons:dcsn:m_d
+    writes: cons:dcsn:c
+
+==== initial backward factored: listing ====
+the same as initial backward sub-builder: listing
+
+==== initial backward factored: wiring ====
+the same as initial backward sub-builder: wiring
+
+==== initial forward: conditions ====
+arithmetic-definedness (required): cons:function:𝑢; ¬(1 - ρ = 0)
+    The divisor 1 - ρ at cons:function:𝑢 must be nonzero.
+range-compatibility (established): dcsn_to_cntn.1; ℝ₊; Xa; m_d − c(m_d) ∈ Xa
+    The restricted law of motion takes values in its declared output set.
+continuation-input (required): cons:cntn:V; [-inf, inf); cons:cntn:a
+    The representing function for V[>] must be measurable on its declared domain, depend only on (a) in that order, and take values in [-inf, inf).
+
+==== initial forward builder: listing ====
+arvl_to_dcsn
+  arvl_to_dcsn.1
+dcsn_to_cntn
+  dcsn_to_cntn.1
+
+==== initial forward builder: wiring ====
+inputs: cons:arvl:m, cons:arvl:l
+outputs: cons:cntn:a
+arvl_to_dcsn
+    reads: cons:arvl:m, cons:arvl:l
+    writes: cons:dcsn:m_d
+    declares: cons:arvl:m, cons:arvl:l
+    inside:
+        inputs: cons:arvl:m, cons:arvl:l
+        outputs: cons:dcsn:m_d
+        arvl_to_dcsn.1
+            reads: cons:arvl:m
+            writes: cons:dcsn:m_d
+dcsn_to_cntn
+    reads: cons:dcsn:m_d
+    writes: cons:cntn:a
+    declares: cons:dcsn:m_d, cons:dcsn:c
+    inside:
+        inputs: cons:dcsn:m_d
+        outputs: cons:cntn:a
+        dcsn_to_cntn.1
+            reads: cons:dcsn:m_d
+            writes: cons:cntn:a
+
+==== initial forward sub-builder: listing ====
+arvl_to_dcsn.1
+dcsn_to_cntn.1
+
+==== initial forward sub-builder: wiring ====
+inputs: cons:arvl:m, cons:arvl:l
+outputs: cons:cntn:a
+arvl_to_dcsn.1
+    reads: cons:arvl:m
+    writes: cons:dcsn:m_d
+dcsn_to_cntn.1
+    reads: cons:dcsn:m_d
+    writes: cons:cntn:a
+
+==== initial forward primitive: listing ====
+the same as initial forward sub-builder: listing
+
+==== initial forward primitive: wiring ====
+the same as initial forward sub-builder: wiring
+
+==== initial forward combined: listing ====
+the same as initial forward sub-builder: listing
+
+==== initial forward combined: wiring ====
+the same as initial forward sub-builder: wiring
+
+==== initial forward factored: listing ====
+the same as initial forward sub-builder: listing
+
+==== initial forward factored: wiring ====
+the same as initial forward sub-builder: wiring
+
+==== builders backward: conditions ====
+the same as initial backward: conditions
+
+==== builders backward builder: listing ====
+cntn_to_dcsn
+  Pullback of 𝑉≻ along 𝑔 at 𝑐
+  Value aggregation 𝐺
+  Evaluation of 𝑉
+dcsn_to_arvl
+  Pullback of 𝑉 along the law of motion 𝑔
+  Value aggregation 𝐺
+  Evaluation of 𝑉≺
+policy
+  Pullback of 𝑉≻ along the law of motion 𝑔
+  Apply 𝐺 of the statement optimality
+  Argmax of the statement optimality
+  Evaluation of 𝑐
+
+==== builders backward builder: wiring ====
+inputs: cons:function:cntn:V
+outputs: cons:function:arvl:V, policy:Evaluation:c:result
+cntn_to_dcsn
+    reads: cons:function:cntn:V
+    writes: cons:function:dcsn:V
+    inside:
+        inputs: cons:function:cntn:V
+        outputs: cons:function:dcsn:V
+        cntn_to_dcsn:Pullback [Pullback]
+            reads: cons:function:cntn:V
+            writes: cons:function:cntn:V:g
+            refers to: cons:g:dcsn_to_cntn, cons:function:dcsn:c
+        cntn_to_dcsn:Aggregation [Aggregation]
+            reads: cons:function:cntn:V:g
+            writes: cntn_to_dcsn:Aggregation:V:result
+            refers to: cons:G:cntn_to_dcsn, cons:function:dcsn:c
+        cntn_to_dcsn:Evaluation [Evaluation]
+            reads: cntn_to_dcsn:Aggregation:V:result
+            writes: cons:function:dcsn:V
+dcsn_to_arvl
+    reads: cons:function:dcsn:V
+    writes: cons:function:arvl:V
+    inside:
+        inputs: cons:function:dcsn:V
+        outputs: cons:function:arvl:V
+        dcsn_to_arvl:Pullback [Pullback]
+            reads: cons:function:dcsn:V
+            writes: cons:function:dcsn:V:g
+            refers to: cons:g:arvl_to_dcsn
+        dcsn_to_arvl:Aggregation [Aggregation]
+            reads: cons:function:dcsn:V:g
+            writes: dcsn_to_arvl:Aggregation:V:result
+            refers to: cons:G:dcsn_to_arvl
+        dcsn_to_arvl:Evaluation [Evaluation]
+            reads: dcsn_to_arvl:Aggregation:V:result
+            writes: cons:function:arvl:V
+policy
+    reads: cons:function:cntn:V
+    writes: policy:Evaluation:c:result
+    inside:
+        inputs: cons:function:cntn:V
+        outputs: policy:Evaluation:c:result
+        policy:Pullback [Pullback]
+            reads: cons:function:cntn:V
+            writes: cons:function:cntn:V:g:policy
+            refers to: cons:g:dcsn_to_cntn
+        policy.optimality:Aggregation [Aggregation]
+            reads: cons:function:cntn:V:g:policy
+            writes: policy.optimality:Aggregation:result
+            refers to: cons:G:policy
+        policy.optimality:Argmax [Argmax]
+            reads: policy.optimality:Aggregation:result
+            writes: policy.optimality:Argmax:c:result
+            refers to: policy.optimality
+        policy:Evaluation [Evaluation]
+            reads: policy.optimality:Argmax:c:result
+            writes: policy:Evaluation:c:result
+
+==== builders backward sub-builder: listing ====
+Pullback of 𝑉≻ along 𝑔 at 𝑐
+Value aggregation 𝐺
+Evaluation of 𝑉
+Pullback of 𝑉 along the law of motion 𝑔
+Value aggregation 𝐺
+Evaluation of 𝑉≺
+Pullback of 𝑉≻ along the law of motion 𝑔
+Apply 𝐺 of the statement optimality
+Argmax of the statement optimality
+Evaluation of 𝑐
+
+==== builders backward sub-builder: wiring ====
+inputs: cons:function:cntn:V
+outputs: cons:function:arvl:V, policy:Evaluation:c:result
+cntn_to_dcsn:Pullback [Pullback]
+    reads: cons:function:cntn:V
+    writes: cons:function:cntn:V:g
+    refers to: cons:g:dcsn_to_cntn, cons:function:dcsn:c
+cntn_to_dcsn:Aggregation [Aggregation]
+    reads: cons:function:cntn:V:g
+    writes: cntn_to_dcsn:Aggregation:V:result
+    refers to: cons:G:cntn_to_dcsn, cons:function:dcsn:c
+cntn_to_dcsn:Evaluation [Evaluation]
+    reads: cntn_to_dcsn:Aggregation:V:result
+    writes: cons:function:dcsn:V
+dcsn_to_arvl:Pullback [Pullback]
+    reads: cons:function:dcsn:V
+    writes: cons:function:dcsn:V:g
+    refers to: cons:g:arvl_to_dcsn
+dcsn_to_arvl:Aggregation [Aggregation]
+    reads: cons:function:dcsn:V:g
+    writes: dcsn_to_arvl:Aggregation:V:result
+    refers to: cons:G:dcsn_to_arvl
+dcsn_to_arvl:Evaluation [Evaluation]
+    reads: dcsn_to_arvl:Aggregation:V:result
+    writes: cons:function:arvl:V
+policy:Pullback [Pullback]
+    reads: cons:function:cntn:V
+    writes: cons:function:cntn:V:g:policy
+    refers to: cons:g:dcsn_to_cntn
+policy.optimality:Aggregation [Aggregation]
+    reads: cons:function:cntn:V:g:policy
+    writes: policy.optimality:Aggregation:result
+    refers to: cons:G:policy
+policy.optimality:Argmax [Argmax]
+    reads: policy.optimality:Aggregation:result
+    writes: policy.optimality:Argmax:c:result
+    refers to: policy.optimality
+policy:Evaluation [Evaluation]
+    reads: policy.optimality:Argmax:c:result
+    writes: policy:Evaluation:c:result
+
+==== builders backward primitive: listing ====
+the same as builders backward sub-builder: listing
+
+==== builders backward primitive: wiring ====
+the same as builders backward sub-builder: wiring
+
+==== builders backward combined: listing ====
+the same as builders backward sub-builder: listing
+
+==== builders backward combined: wiring ====
+the same as builders backward sub-builder: wiring
+
+==== builders backward factored: listing ====
+the same as builders backward sub-builder: listing
+
+==== builders backward factored: wiring ====
+the same as builders backward sub-builder: wiring
+
+==== builders forward: conditions ====
+the same as initial forward: conditions
+
+==== builders forward builder: listing ====
+arvl_to_dcsn
+  Push-forward through the law of motion 𝑔
+dcsn_to_cntn
+  Push-forward through 𝑔 at 𝑐
+
+==== builders forward builder: wiring ====
+inputs: cons:measure:arvl
+outputs: cons:measure:cntn
+arvl_to_dcsn
+    reads: cons:measure:arvl
+    writes: cons:measure:dcsn
+    inside:
+        inputs: cons:measure:arvl
+        outputs: cons:measure:dcsn
+        arvl_to_dcsn:Pushforward [Pushforward]
+            reads: cons:measure:arvl
+            writes: cons:measure:dcsn
+            refers to: cons:g:arvl_to_dcsn
+dcsn_to_cntn
+    reads: cons:measure:dcsn
+    writes: cons:measure:cntn
+    inside:
+        inputs: cons:measure:dcsn
+        outputs: cons:measure:cntn
+        dcsn_to_cntn:Pushforward [Pushforward]
+            reads: cons:measure:dcsn
+            writes: cons:measure:cntn
+            refers to: cons:g:dcsn_to_cntn, cons:function:dcsn:c
+
+==== builders forward sub-builder: listing ====
+Push-forward through the law of motion 𝑔
+Push-forward through 𝑔 at 𝑐
+
+==== builders forward sub-builder: wiring ====
+inputs: cons:measure:arvl
+outputs: cons:measure:cntn
+arvl_to_dcsn:Pushforward [Pushforward]
+    reads: cons:measure:arvl
+    writes: cons:measure:dcsn
+    refers to: cons:g:arvl_to_dcsn
+dcsn_to_cntn:Pushforward [Pushforward]
+    reads: cons:measure:dcsn
+    writes: cons:measure:cntn
+    refers to: cons:g:dcsn_to_cntn, cons:function:dcsn:c
+
+==== builders forward primitive: listing ====
+the same as builders forward sub-builder: listing
+
+==== builders forward primitive: wiring ====
+the same as builders forward sub-builder: wiring
+
+==== builders forward combined: listing ====
+the same as builders forward sub-builder: listing
+
+==== builders forward combined: wiring ====
+the same as builders forward sub-builder: wiring
+
+==== builders forward factored: listing ====
+the same as builders forward sub-builder: listing
+
+==== builders forward factored: wiring ====
+the same as builders forward sub-builder: wiring

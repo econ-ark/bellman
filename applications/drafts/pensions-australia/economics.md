@@ -15,9 +15,10 @@ topic: [applications]
 > eleven stages the model is written in, how they are joined into a period
 > and the periods into a life cycle of 85 periods, the calibration, what the
 > stage files cannot state, and the numerical methods that fit each block.
-> Nothing is built yet: the stage files are to be written in the Workbench
-> from this page, and the lines below written in the language's spelling are
-> the lines an author copies.
+> This is a design draft, not an executable declaration of the whole model.
+> Its fragments include legacy syntax and require validation as complete
+> stages before use. The synthetic pension examples used to check Workbench
+> operations are separate from the paper's calibration.
 
 ## The model and its source
 
@@ -131,11 +132,10 @@ and continuation. A block of a stage file denotes a **builder**, the operator
 that carries the block's equations: backward, on value functions, for the two
 blocks `cntn_to_dcsn` and `dcsn_to_arvl` and the policy block; forward, on
 distributions of households, for `arvl_to_dcsn` and `dcsn_to_cntn`
-([Stages](../../docs/Bellman-Sym/01-stage.md) §5). The model has eleven
-stages; a working year before 65 holds nine of them, a retirement year seven,
-the first year eight, with the plan choice and without the survival draw and
-the bequest, the year of retirement eight with the payout, and the period
-after the last age two.
+([Stages](../../../docs/Bellman-Sym/01-stage.md) §5). The model has eleven
+stages. The trellis joins the enrollment year, working years after
+enrollment, the retirement year, later retirement years and the period
+after the last age.
 
 | Stage key | What happens in it | Where in the paper |
 |---|---|---|
@@ -159,7 +159,7 @@ any order, because none reads another; `tenure` then compares their arrival
 values, `allocation` and `contribution` add their costs and choose,
 `survival` weights the two routes, and `shocks` integrates over the period's
 draws. The order of the stages is derived from their fields and not from the
-list in the period file ([Periods](../../docs/Bellman-Sym/06-period.md) §3).
+list in the period file ([Periods](../../../docs/Bellman-Sym/06-period.md) §3).
 The order follows the paper's main text, Section 4.F: the plan at t₀ by
 (15), then each period the contribution by (18), the share by (20) and the
 continuous choices inside (20); Appendix D.2 and the code place the share
@@ -167,29 +167,33 @@ choice after the continuous choices, inside the expectation of the
 consumption Euler equation, and "Assumptions to confirm" puts that
 difference to AAS.
 
-### The spellings used
+<a id="the-spellings-used"></a>
 
-Every line below written in the language's spelling is one the pages or the
-application files show. Where a construct of the paper has no shown spelling,
-the line is prose, and the section "What the stage files cannot state" lists
-it.
+### Draft notation
 
-| Spelling | Shown in |
+The fragments below record the proposed decomposition. Some retain legacy
+syntax, including `!mrgnvl`, and are not directly executable stage files.
+Validate each fragment as part of a complete stage against the current
+language reference. Where a construct of the paper has no shown spelling,
+the line is prose; the section "Remaining modelling gaps" lists it. The
+survival fragment below uses the current field and derivative notation.
+
+| Draft notation | Reference |
 |---|---|
-| a declaration `name : set :: ["…"]`, a named set `X := ℝ₊`, a finite set of labels `{DB, DC}`, a bound as a second set written after `@`, `ρ : ℝ @ (-inf, 1)` | [Symbol conventions](../../docs/Bellman-Sym/reference/symbols-conventions.md) §9 |
-| a function `𝑢(c : ℝ₊₊, h : ℝ₊₊) := …` with a state passed as an argument; a correspondence `Γ(x : ℝ₊₊) := (0, x]`, with two arguments `Γ(x : ℝ₊₊, h : ℝ₊) := (0, x + θ*p*h]` | `applications/durables/declaration/stages/keeper_cons/keeper_cons.bl`; [Constraints](../../docs/Bellman-Sym/10-constraints.md) §§1, 5.2 |
-| a shock drawn on the arrival edge, `ε ~ N(0, 1)`; `N(μ, v)` takes the variance | `applications/durables/declaration/stages/tenure/tenure.bl`; [Shock distributions](../../docs/Bellman-Sym/reference/laws.md) §1 |
-| a chain conditioned on the previous state, `DiscreteMarkov(Π, points, z_pre)`; a matrix and a vector as parameters, `Pi : ℝ`, `z_vals : ℝ` | [Shock distributions](../../docs/Bellman-Sym/reference/laws.md) §2; `applications/housing-owner/declaration/stages/housing_choice/housing_choice.bl` |
-| a branch drawn by nature, `s : {survive, die}`, `s ~ Categorical((π_o, 1 - π_o))`, its backward block listing the two branch values alone and reading `s` under the expectation, `V = β*E_{s}((W_r[>], η*V_young[>])[s])` | [Branching](../../docs/Bellman-Sym/05-branching.md) §4; `applications/cagetti-denardi-2006/declaration/stages/retiree_death/retiree_death.bl` |
-| a branching block on a control, `d : !ctrl @ {keep, adjust}`, with labeled blocks that compute on each branch; the value and marginal lines selecting by `[d]`; `d = argmax_{d}(V_kp[>], V_adj[>])` | [Branching](../../docs/Bellman-Sym/05-branching.md) §1; `tenure.bl` of the durables model |
+| a declaration `name : set :: ["…"]`, a named set `X := ℝ₊`, a finite set of labels `{DB, DC}`, a bound as a second set written after `@`, `ρ : ℝ @ (-inf, 1)` | [Symbol conventions](../../../docs/Bellman-Sym/reference/symbols-conventions.md) §9 |
+| a function `𝑢(c : ℝ₊₊, h : ℝ₊₊) := …` with a state passed as an argument; a correspondence `Γ(x : ℝ₊₊) := (0, x]`, with two arguments `Γ(x : ℝ₊₊, h : ℝ₊) := (0, x + θ*p*h]` | `applications/durables/declaration/stages/keeper_cons/keeper_cons.bl`; [Constraints](../../../docs/Bellman-Sym/10-constraints.md) §§1, 5.2 |
+| a shock drawn on the arrival edge, `ε ~ N(0, 1)`; `N(μ, v)` takes the variance | `applications/durables/declaration/stages/tenure/tenure.bl`; [Shock distributions](../../../docs/Bellman-Sym/reference/laws.md) §1 |
+| a chain conditioned on the previous state, `DiscreteMarkov(Π, points, z_pre)`; a matrix and a vector as parameters, `Pi : ℝ`, `z_vals : ℝ` | [Shock distributions](../../../docs/Bellman-Sym/reference/laws.md) §2; `applications/housing-owner/declaration/stages/housing_choice/housing_choice.bl` |
+| a branch drawn by nature, `s : {survive, die}`, `s ~ Categorical((π_o, 1 - π_o))`, its backward block listing the two branch values alone and reading `s` under the expectation, `V = β*E_{s}((W_r[>], η*V_young[>])[s])` | [Branching](../../../docs/Bellman-Sym/05-branching.md) §4; `applications/cagetti-denardi-2006/declaration/stages/retiree_death/retiree_death.bl` |
+| a branching block on a control, `d : !ctrl @ {keep, adjust}`, with labeled blocks that compute on each branch; the value and marginal lines selecting by `[d]`; `d = argmax_{d}(V_kp[>], V_adj[>])` | [Branching](../../../docs/Bellman-Sym/05-branching.md) §1; `tenure.bl` of the durables model |
 | a finite-set control that enters the law of motion arithmetically, `H_choice : !ctrl @ XH`, chosen by `argmax_{H_choice}(V[>])`; an intermediate line in a forward block, `moved = …` | `housing_choice.bl` of the housing-owner model |
-| selection from a tuple by the label a coordinate takes, `(x, y)[d]`, `(V_young[>], W_old[>])[s]`; the rule `family-selection` asks only for a key the family admits | [Expression forms](../../docs/Bellman-Sym/reference/forms.md) §2; [Refusals](../../docs/Bellman-Sym/reference/refusals.md), `family-selection` |
-| `exp(…)`, `log(…)`, powers `x^(…)` | [Expression forms](../../docs/Bellman-Sym/reference/forms.md) §§1, 2; `tenure.bl` of the durables model |
-| a decision state used as a coordinate of a backward value, `𝑢(c, h_d)`, without listing `h_d` in the header; a value declared on `[-inf, inf)`; a marginal value `dV : ℝ₊₊ @ !mrgnvl`; a state as a factor in a backward line, read as a pointwise map of an Aggregation | `keeper_cons.bl` of the durables model; `applications/retirement-choice/declaration/stages/ret_choice/ret_choice.bl`; [Constraints](../../docs/Bellman-Sym/10-constraints.md) §4 |
-| the maximization written without `!doc`, the operation that outputs the policy, with its first-order conditions attached as properties by dotted ids, `:: [id=optimality.euler]`, printed under the Argmax operation with their corners | [Constraints](../../docs/Bellman-Sym/10-constraints.md) §4.1 (the stage `cons_argmax`), §5.1, §5.3 |
-| the operative-line spelling, where the condition names the control: `𝑑𝑢(c) = β*dV_f[>] ⟂ m_f - c - c_p >= 0` and the two-bound chain `𝑑𝑢(c) = β*(1 + 𝑑𝜒(c_p))*dV_p[>] ⟂ 0 <= c_p <= w_d`; `𝑢_c(c) = β*dV_f[>] ⟂ m_d - c >= 0`; a binder whose set depends on another control, `argmax_{c : Γ_c(m), h_choice : Γ_h(m - c)}`; the bound of a clause as an expression in declared quantities | `applications/pension-retirement/declaration/stages/worker_saving/worker_saving.bl`; `applications/housing-frictions/declaration/stages/keeper_saving/keeper_saving.bl` and `adjuster_saving.bl`; [Constraints](../../docs/Bellman-Sym/10-constraints.md) §3, the Slack box |
-| policy headers listing value and marginal-value fields but no state, `(dV[>] …, V[>] …) : !cntn`; the continuation states `k_n`, `a` and `h_n` are omitted from those headers | [Constraints](../../docs/Bellman-Sym/10-constraints.md) §§5.1, 5.2 |
-| the candidate line of the endogenous grid method without a clause, `c[>] <= 𝑢_c_inv(β*dV_a[>])`, and with the clause, `c[>] <= 𝑑𝑢𝑖𝑛𝑣(dV[>]) ⟂ a >= 0`, the grid line and the identification | `keeper_cons.bl` of the durables model; `applications/portfolio-choice/declaration/stages/cons/cons.bl`; [Constraints](../../docs/Bellman-Sym/10-constraints.md) §4.3 |
+| selection from a tuple by the label a coordinate takes, `(x, y)[d]`, `(V_young[>], W_old[>])[s]`; the rule `family-selection` asks only for a key the family admits | [Expression forms](../../../docs/Bellman-Sym/reference/forms.md) §2; [Refusals](../../../docs/Bellman-Sym/reference/refusals.md), `family-selection` |
+| `exp(…)`, `log(…)`, powers `x^(…)` | [Expression forms](../../../docs/Bellman-Sym/reference/forms.md) §§1, 2; `tenure.bl` of the durables model |
+| a decision state used as a coordinate of a backward value, `𝑢(c, h_d)`, without listing `h_d` in the header; a value declared on `[-inf, inf)`; a marginal value `dV : ℝ₊₊ @ !mrgnvl`; a state as a factor in a backward line, read as a pointwise map of an Aggregation | `keeper_cons.bl` of the durables model; `applications/retirement-choice/declaration/stages/ret_choice/ret_choice.bl`; [Constraints](../../../docs/Bellman-Sym/10-constraints.md) §4 |
+| the maximization written without `!doc`, the operation that outputs the policy, with its first-order conditions attached as properties by dotted ids, `:: [id=optimality.euler]`, printed under the Argmax operation with their corners | [Constraints](../../../docs/Bellman-Sym/10-constraints.md) §4.1 (the stage `cons_argmax`), §5.1, §5.3 |
+| the operative-line spelling, where the condition names the control: `𝑑𝑢(c) = β*dV_f[>] ⟂ m_f - c - c_p >= 0` and the two-bound chain `𝑑𝑢(c) = β*(1 + 𝑑𝜒(c_p))*dV_p[>] ⟂ 0 <= c_p <= w_d`; `𝑢_c(c) = β*dV_f[>] ⟂ m_d - c >= 0`; a binder whose set depends on another control, `argmax_{c : Γ_c(m), h_choice : Γ_h(m - c)}`; the bound of a clause as an expression in declared quantities | `applications/pension-retirement/declaration/stages/worker_saving/worker_saving.bl`; `applications/housing-frictions/declaration/stages/keeper_saving/keeper_saving.bl` and `adjuster_saving.bl`; [Constraints](../../../docs/Bellman-Sym/10-constraints.md) §3, the Slack box |
+| policy headers listing value and marginal-value fields but no state, `(dV[>] …, V[>] …) : !cntn`; the continuation states `k_n`, `a` and `h_n` are omitted from those headers | [Constraints](../../../docs/Bellman-Sym/10-constraints.md) §§5.1, 5.2 |
+| the candidate line of the endogenous grid method without a clause, `c[>] <= 𝑢_c_inv(β*dV_a[>])`, and with the clause, `c[>] <= 𝑑𝑢𝑖𝑛𝑣(dV[>]) ⟂ a >= 0`, the grid line and the identification | `keeper_cons.bl` of the durables model; `applications/portfolio-choice/declaration/stages/cons/cons.bl`; [Constraints](../../../docs/Bellman-Sym/10-constraints.md) §4.3 |
 | a constant line in a forward block, `y_p_ret = 0` | `applications/pension-retirement/declaration/stages/retiree_saving/retiree_saving.bl` |
 | the bequest as a stage: one marginal value at the decision perch and the chain rule in the arrival builder; a zero continuation value | `applications/durables/declaration/stages/bequest/bequest.bl` |
 
@@ -212,9 +216,9 @@ risky share in [0,1]; `h` the housing stock in ℝ₊, zero for a renter; `m` th
 mortgage in ℝ₊; `P` the house price in ℝ₊₊; `ξ` the wage state in ℝ; `α` the
 housing taste in (0,1); `β` the discount factor in (0,1); `plan` in
 `Plan := {DB, DC}`. Tenure τ is a function of age, since enrollment age is
-common and there is no unemployment (Section 5), and is a per-period
-parameter. The plan is carried as a label-valued state through the working
-periods; the paper's code solves the two plans as two separate problems
+common and there is no unemployment (Section 5). The stages read tenure at
+the age carried through the continuation. The plan is a label-valued
+state through the working periods; the paper's code solves the two plans as two separate problems
 (Appendix D.3), which the pages admit equally as two routes of stages, and
 "Assumptions to confirm" leaves that choice to AAS.
 
@@ -241,10 +245,11 @@ u   ~ N(0, σ_u^2)                                :: ["innovation to the wage st
 β   ~ DiscreteMarkov(Π_β, β_pts, β_pre)          :: ["the discount factor, Section 4.F"]
 ```
 
-The arrival block applies the returns and forms earnings; `Y` is the level
-exp(y(t, τ)) at the age of the period, a per-period parameter, zero from the
-year of retirement on (equation 14, the cases t = T_R and t > T_R), and the
-scale factors `scale_r` and `scale_s` are the paper's r and s of equation (7):
+The arrival block applies the returns and forms earnings. The level `Y` is
+exp(y(t, τ)) at the age carried by the stage. It is zero from the year of
+retirement on (equation 14, the cases t = T_R and t > T_R). The fragment
+uses `Y` for this evaluated income level. The scale factors `scale_r`
+and `scale_s` are the paper's r and s of equation (7).
 
 ```bl
 [id=arvl_to_dcsn, (a : ℝ₊, a_dc : ℝ₊, π_pre : [0,1], h : ℝ₊, m : ℝ₊, P_pre : ℝ₊₊, ξ_pre : ℝ, α_pre : (0,1), β_pre : (0,1), plan : Plan, u, ε_d, ε_h, α, β) : !arvl -> (a_s : ℝ₊, y_s : ℝ₊, adc_s : ℝ₊, h_s : ℝ₊, m_s : ℝ₊, P_s : ℝ₊₊, ξ_s : ℝ, α_s : (0,1), β_s : (0,1), plan_s : Plan, π_s : [0,1]) : !dcsn] {
@@ -295,18 +300,26 @@ application writes a return inside the expectation. No policy block.
 | continuation, branch `survive` | `a_sv : ℝ₊`, `y_sv : ℝ₊`, `adc_sv : ℝ₊`, `h_sv : ℝ₊`, `m_sv : ℝ₊`, `P_sv : ℝ₊₊`, `ξ_sv : ℝ`, `α_sv : (0,1)`, `β_sv : (0,1)`, `plan_sv : Plan`, `π_sv : [0,1]` |
 | continuation, branch `die` | `a_bq : ℝ₊`, `adc_bq : ℝ₊`, `h_bq : ℝ₊`, `m_bq : ℝ₊`, `P_bq : ℝ₊₊`, the five quantities the bequest base of equation (33) reads |
 
-The draw and the branches, written as [Branching](../../docs/Bellman-Sym/05-branching.md)
-§4 and `retiree_death.bl` write a branch drawn by nature; `p_s` is the
-probability of surviving into the age of the period, a per-period parameter
-(the paper's p_{t−1} for the period of age t):
+The draw follows [Branching](../../../docs/Bellman-Sym/05-branching.md)
+§4 and `retiree_death.bl`. The fixed parameter `p_s` is a table of survival
+probabilities. The constant value-type field `age_sv` supplies the age at
+which the table is read (the paper's p_{t−1} for the period of age t).
+The user supplies terminal age at realization, and the backward equations
+compute the earlier ages. The shock law has weights `p_s[age_sv]` and
+`1 - p_s[age_sv]`. In the absorbing branch, `death = s(age_sv)` records
+the draw locally; `death` is not an output state. The fragment shows the
+branches and the backward fields, without specifying the table's numerical values.
 
 ```bl
-p_s : [0,1]                                      :: ["probability of surviving into the age of the period, Section 5"]
+Age := {17, …, 101}
+Plan := {DB, DC}
+
+p_s : Age → [0,1]                                :: ["probability of surviving into the age of the period, Section 5"]
 
 s : {survive, die}
-s ~ Categorical((p_s, 1 - p_s))                  :: ["surviving or dying, with probabilities in the order of the labels"]
+s(_age) ~ Categorical((p_s[_age], 1 - p_s[_age])) :: ["surviving or dying, with probabilities in the order of the labels"]
 
-[id=dcsn_to_cntn, (a_d, y_d, adc_d, h_d, m_d, P_d, ξ_d, α_d, β_d, plan_d, π_d, s) : !dcsn -> ()] {
+[id=dcsn_to_cntn, (a_d, y_d, adc_d, h_d, m_d, P_d, ξ_d, α_d, β_d, plan_d, π_d, s, age_sv) : !dcsn -> ()] {
     [label=survive, () -> (a_sv : ℝ₊, y_sv : ℝ₊, adc_sv : ℝ₊, h_sv : ℝ₊, m_sv : ℝ₊, P_sv : ℝ₊₊, ξ_sv : ℝ, α_sv : (0,1), β_sv : (0,1), plan_sv : Plan, π_sv : [0,1]) : !cntn] {
         a_sv = a_d
         y_sv = y_d
@@ -326,27 +339,37 @@ s ~ Categorical((p_s, 1 - p_s))                  :: ["surviving or dying, with p
         h_bq = h_d
         m_bq = m_d
         P_bq = P_d
+        # The absorbing branch records the draw locally. Bequest needs only wealth states.
+        death = s(age_sv)
     }
 }
 
-[id=cntn_to_dcsn, (V_sv[>] : [-inf, inf) @ !vlu, V_bq[>] : ℝ @ !vlu, dV_a_sv[>] : ℝ₊₊ @ !mrgnvl, dV_a_bq[>] : ℝ₊₊ @ !mrgnvl, dV_h_sv[>] : ℝ₊₊ @ !mrgnvl, dV_h_bq[>] : ℝ₊₊ @ !mrgnvl, dV_m_sv[>] : ℝ @ !mrgnvl, dV_m_bq[>] : ℝ @ !mrgnvl) : !cntn -> (V : [-inf, inf) @ !vlu, dV_a : ℝ₊₊ @ !mrgnvl, dV_h : ℝ₊₊ @ !mrgnvl, dV_m : ℝ @ !mrgnvl) : !dcsn] {
-    V    = E_{s}((V_sv[>], V_bq[>])[s])                   :: [id=value]
-    dV_a = E_{s}((dV_a_sv[>], dV_a_bq[>])[s])             :: [id=marginal_liquid]
-    dV_h = E_{s}((dV_h_sv[>], dV_h_bq[>])[s])             :: [id=marginal_housing]
-    dV_m = E_{s}((dV_m_sv[>], dV_m_bq[>])[s])             :: [id=marginal_mortgage]
+[id=cntn_to_dcsn, (V_sv[>] : [-inf, inf) @ !vlu, V[>] : ℝ @ !vlu, age_sv : Age @ !vlu @ !cnst) : !cntn -> (V : [-inf, inf) @ !vlu, age_sv) : !dcsn] {
+    V        = E_{s}((V_sv[>], V[>])[s])                   :: [id=value]
+    D_{a_d}V = E_{s}((D_{a_sv}V_sv[>], D_{a_bq}V[>])[s])   :: [id=marginal_liquid]
+    D_{h_d}V = E_{s}((D_{h_sv}V_sv[>], D_{h_bq}V[>])[s])   :: [id=marginal_housing]
+    D_{m_d}V = E_{s}((D_{m_sv}V_sv[>], D_{m_bq}V[>])[s])   :: [id=marginal_mortgage]
+}
+
+[id=dcsn_to_arvl, (V, age_sv) : !dcsn -> (V[<] : [-inf, inf) @ !vlu, age[<] : Age @ !vlu @ !cnst) : !arvl] {
+    V[<] = V                                     :: [id=value]
+    age[<] = age_sv :: [id=age]
 }
 ```
 
-The backward block lists the branch values alone, and `E_{s}` names the
-shock, as `retiree_death.bl` writes it. The value line is the bracket of
+The backward block takes both branch value fields and the constant
+`age_sv`; `E_{s}` names the shock. The death value is `V[>]`, whose base
+name pairs with the bequest stage's arrival value. The derivative lines
+read derivatives of those value fields. The value line is the bracket of
 equation (20), p_t V_{t+1} + (1 − p_t) b(B_{t+1}), without the factor β_t,
 which the consumption stages of the previous period apply once. Equation (20)
 prints the bequest term as B_{t+1}; the online Appendix C's Bellman equation
 (37) prints b(B_{t+1}) with B_{t+1} defined in (38), and the stage follows
-(37). The arrival block and the arrival builder are identities. No policy
+(37). The arrival block keeps the value and sends the supplied age back as
+`age[<]`. No policy
 block: the label is drawn, and the stage chooses nothing, which is the
 condition under which a branching block on a shock is constructed
-([Branching](../../docs/Bellman-Sym/05-branching.md) §4). Forward, the
+([Branching](../../../docs/Bellman-Sym/05-branching.md) §4). Forward, the
 distribution at the decision perch is extended by the law of `s`, and the
 households drawn at each label are carried along that label's section; the
 two masses add up to the mass at the decision perch.
@@ -364,8 +387,8 @@ alternative is the parameter `u_p`, the first line of equation (4) evaluated
 at the enrollment age; the value line is `V = (0, -u_p)[plan_c] + V[>]`, the
 deterministic part of equation (15), and the policy line
 `plan_c = argmax_{plan_c}((0, -u_p)[plan_c] + V[>])`. The taste shocks ζ_db
-and ζ_dc of equation (15) and the probability (16) are not written (see "What
-the stage files cannot state"). The marginal values pass through.
+and ζ_dc of equation (15) and the probability (16) are not written (see
+"Remaining modelling gaps", item 1). The marginal values pass through.
 
 ### `contribution`
 
@@ -408,8 +431,8 @@ R a_t, and the code passes the asset before returns
 `solvers/keeperEgm.py` 300 names "next liquid assets (before returns)"); the
 stage declares `R` for the purpose. The cost function 𝑢_v(a) = ψ + exp(ν^v_0
 + ν^v_2 (t − ν^v_1)² + ν^v_3 max{0, ln a}) of equation (4) is written in prose
-here: the age t is a per-period parameter, and the term max{0, ln a} has no
-shown spelling. The marginal value of liquid assets passes through as that of
+here. Its declaration can take age as an explicit argument, and the
+kink is written `max(0, log(a))`. The marginal value of liquid assets passes through as that of
 cash on hand, `dV_a = dV_w_c[>]`; the cost's own dependence on liquid assets
 is left out of the marginal value, as the code leaves it out. The paper's
 equation (24), the logit probability of each rate, is not written; the code
@@ -452,18 +475,18 @@ names `a_sv` to `π_sv`, and its continuation fields are those `tenure` arrives
 at, `w_a` to `plan_a`. Equation (14), the case t = T_R: liquid wealth receives
 the defined-benefit entitlement of a DB member and the balance of either plan,
 `w_a = a_sv + (a_db, 0)[plan_sv] + adc_sv`, and the balance is emptied,
-`adc_a = 0`; earnings are zero at this age by the parameter `Y` of `shocks`,
-and the stage reads `y_sv` and adds nothing of it. The entitlement a^{db} =
+`adc_a = 0`; earnings in `shocks` are zero at this age, and the stage reads `y_sv`
+and adds nothing of it. The entitlement a^{db} =
 f^{ACF} f^{LSF}(65) f^{ASF} τ_R ȳ of equation (5) is a product of parameters and
 of the three-year average wage ȳ, which reads the earnings level at 65, not
 the zero `Y` of the year of retirement, and the expectation of the two
 previous wages given the current wage state under the reversed chain
 (Appendix D.1, "Wages"); the code evaluates it at the age of retirement as
 `DB_benefit(t, t − tzero, y(t, E[i]), …)` with t = R (`solvers/retiree_solver.py`
-1624 to 1629; `tools/ls_model_functions.py` 301 to 331). The line is prose,
-and its parameters are the age-65 earnings level and the deterministic
-earnings levels at 64 and 63, the exp(y(t − j, τ − j)) of Appendix D.1's
-formula for j = 1, 2, see "What the stage files cannot state". No policy
+1624 to 1629; `tools/ls_model_functions.py` 301 to 331). The calculation reads the deterministic earnings profile at the age
+field t and at t − 1 and t − 2, the exp(y(t − j, τ − j)) of Appendix D.1.
+The retirement-year period gives t = 65. See "Remaining modelling gaps",
+item 3, for the conditioning in the wage average. No policy
 block; the value and the marginal values pass through, the marginal value of
 liquid assets being that of cash on hand.
 
@@ -547,14 +570,14 @@ at +0.064, where the gross mortgage rate is exp(0.0649 + 0.33 × 0.064) = 1.090;
 with φ^C = 0.2 the equity per unit of last period's value is at least
 0.959 − 0.8 × 1.090 = 0.087, positive; the paper has no default. The value tuple and
 the policy tuple agree entry by entry and in order, as
-[Branching](../../docs/Bellman-Sym/05-branching.md) §1 requires; the three
+[Branching](../../../docs/Bellman-Sym/05-branching.md) §1 requires; the three
 marginal lines select in the same order. The arrival block and the arrival
 builder are identities. Forward, the policy splits the distribution at the
 decision perch into three, one per label, carried along that label's section,
 and the three masses add up to the mass at the decision perch
-([Branching](../../docs/Bellman-Sym/05-branching.md) §3). Appendix D.2 gives
+([Branching](../../../docs/Bellman-Sym/05-branching.md) §3). Appendix D.2 gives
 the keep alternative to incumbent owners only; the stage writes no such
-restriction, and the section "What the stage files cannot state" says why.
+restriction, and the section "Remaining modelling gaps" says why.
 Appendix D.2 also writes the choice as a comparison of the three branch
 values, as the policy line does.
 
@@ -605,7 +628,7 @@ estimate is negative:
 The savings line is equation (12) for a renter, with P^S_t = φ^S P_t (Section
 4.D) and the sale proceeds already in `w_d`; the value line is equation (20)
 with the discount factor read from the state. The policy block is written in
-the first spelling of [Constraints](../../docs/Bellman-Sym/10-constraints.md)
+the first spelling of [Constraints](../../../docs/Bellman-Sym/10-constraints.md)
 §4.1: the maximization without `!doc` is the operation that outputs the two
 controls, and the two conditions are its properties, attached by the dotted
 ids, which the loading software prints under the Argmax operation and checks
@@ -678,12 +701,12 @@ the non-adjusting branch without the term u_2, which the first-order condition
 `marginal_mortgage` is the envelope derivative of the savings line with
 respect to the mortgage due, −u_c(c), the Lagrangian of the liquid constraint
 making it exact at the corner as well; where the redraw limit binds, the
-limit's multiplier is added, in prose (item 6 of "What the stage files cannot
-state"); the code carries this derivative as `Lambda_M`. The policy block is
+limit's multiplier is added, in prose (item 5 of "Remaining modelling
+gaps"); the code carries this derivative as `Lambda_M`. The policy block is
 in the first spelling of Constraints §4.1, since the mortgage enters its
 condition only through the law of motion and a block that stated it by an
 operative line alone would be refused under `output-defined`
-([Constraints](../../docs/Bellman-Sym/10-constraints.md) §3, §5.3). The
+([Constraints](../../../docs/Bellman-Sym/10-constraints.md) §3, §5.3). The
 property `euler_mortgage` is the online Appendix C's (66) to (69), which
 write u_1(c_t) against the discounted mortgage cost, in the eliminated form
 Constraints §3 requires, each clause written so that its residual is the
@@ -694,7 +717,7 @@ right, the form of Appendix D's auxiliary (84), would set that multiplier to
 zero where the keeper consumes all cash with an interior mortgage; the
 residual −β dV_m[>] − u_c is the difference of the two bound multipliers,
 nonnegative at a zero balance and nonpositive at the collateral cap
-([Constraints](../../docs/Bellman-Sym/10-constraints.md) §§2, 3); as with
+([Constraints](../../../docs/Bellman-Sym/10-constraints.md) §§2, 3); as with
 (64), the bequest term stands inside the expectation where (66) prints it
 outside. The
 binder's feasible set is exact for the collateral cap: the consumption
@@ -764,7 +787,7 @@ then needs a mortgage of at least (1 + τ_H) P h − (w_d − c), a state-depend
 lower bound that the binder cannot write, since the greater of two bounds has
 no shown spelling, and that the property `euler_liquid` with its clause
 `⟂ w_d - c - (1 + τ_H)*P_d*h_choice + m_nxt >= 0` states instead, using the
-forward savings law (item 6 of "What the stage files cannot state"). The policy
+forward savings law (item 5 of "Remaining modelling gaps"). The policy
 block is in the first spelling of Constraints §4.1 for
 the reason given for the keeper, and its property `euler_mortgage` is in the
 same eliminated form, with u_c on its right, which matters here: the buyer
@@ -778,7 +801,7 @@ equation 85), and it holds where the collateral constraint is slack; where
 that constraint binds, equation (70) adds the multiplier of the collateral
 constraint times φ^C, a term the stage cannot write because the multiplier of
 a bound that names a control cannot be declared
-([Constraints](../../docs/Bellman-Sym/10-constraints.md) §4.2). The bound of
+([Constraints](../../../docs/Bellman-Sym/10-constraints.md) §4.2). The bound of
 `euler_mortgage` names the control `h_choice`, which the Slack box of
 Constraints §3 admits, a bound being an expression in the stage's declared
 quantities. The arrival block and the arrival builder are identities.
@@ -829,55 +852,29 @@ so b(B) is defined, B + k > 0, throughout.
 
 A **trellis** is the sequence of the model's periods, counted backward from
 the terminal one, with the mappings that join each period to the next in time
-([Trellises](../../docs/Bellman-Sym/07-trellis.md) §1); a **connector**
+([Trellises](../../../docs/Bellman-Sym/07-trellis.md) §1); a **connector**
 identifies a continuation field of one stage with an arrival field of another,
 within a period or between adjacent periods, and performs no calculation
-([Periods](../../docs/Bellman-Sym/06-period.md) §2); the **recipe**, the file
+([Periods](../../../docs/Bellman-Sym/06-period.md) §2); the **recipe**, the file
 `spec.yml`, names the trellis file and, for each stage key, the stage's file
 and the files from which its parameter values, its settings and its methods
-are read ([Trellises](../../docs/Bellman-Sym/07-trellis.md) §1).
+are read ([Trellises](../../../docs/Bellman-Sym/07-trellis.md) §1).
 
-The model has 85 periods: `periods[0]` is the period after the last age, in
-which the wealth left by a household that has reached 100 is bequeathed with
-certainty; `periods[h]` for h ≥ 1 is the period of age 101 − h, so that
-`periods[1]` is age 100, `periods[36]` age 65, the year of retirement, and
-`periods[84]` age 17, the year of enrollment. Ages 100 to 66 are the 35
-retirement periods, `periods[1]` to `periods[35]`; ages 64 to 18 are the 47
-working periods, `periods[37]` to `periods[83]`.
+The model has 85 periods. The user supplies terminal age 101 with the
+terminal continuation data. Each working or retirement period sends back
+the age it takes in minus one. With this terminal age, `periods[1]` is age
+100, `periods[36]` age 65 and `periods[84]` age 17.
 
-One period file lists all eleven stage keys and no connector; the recipe
-restricts the stages that occur in some periods only, by `periods: [lo, hi]`
-on their entries, as the recipe of the within-life model
-`applications/benhabib-2019/` places its bequest in `periods[0]` alone
-([The Bellman factory](../../docs/Bellman-Sym/08-bellman-factory.md) §3.4):
+The trellis joins five period kinds. Each kind lists its own stages and
+connectors. The recipe gives the stage sources for these periods.
 
-```yaml
-!period
-name: pension_period
-stages:
-  - shocks
-  - survival
-  - plan_choice
-  - contribution
-  - allocation
-  - payout
-  - tenure
-  - renter_cons
-  - keeper_cons
-  - adjuster_cons
-  - bequest
-connectors: []
-```
-
-| Stage key | Active in | Ages |
+| Period kind | Ages | Stages |
 |---|---|---|
-| `shocks` | every period | 17 to 100 and after |
-| `survival` | `periods: [1, 83]` | 18 to 100 |
-| `plan_choice` | `periods: [84, 84]` | 17 |
-| `contribution`, `allocation` | `periods: [37, 84]` | 17 to 64 |
-| `payout` | `periods: [36, 36]` | 65 |
-| `tenure`, `renter_cons`, `keeper_cons`, `adjuster_cons` | `periods: [1, 84]` | 17 to 100 |
-| `bequest` | `periods: [0, 83]` | 18 to 100 and after |
+| After the last age | 101 | `shocks`, `bequest` |
+| Later retirement | 66–100 | `shocks`, `survival`, `tenure`, the three consumption stages and `bequest` |
+| Retirement year | 65 | The later retirement stages and `payout` |
+| Working years | 18–64 | The later retirement stages and `contribution` and `allocation` |
+| Enrollment | 17 | `shocks`, `plan_choice`, `contribution`, `allocation`, `tenure` and the three consumption stages |
 
 The joins within a period are by name wherever the fields allow it. The
 continuation fields of `shocks`, `a_s` to `π_s`, are the arrival fields of
@@ -895,25 +892,24 @@ joined to `tenure` by the mapping
 
 `{a_sv: w_a, adc_sv: adc_a, π_sv: π_a, h_sv: h_a, m_sv: m_a, P_sv: P_a, ξ_sv: ξ_a, α_sv: α_a, β_sv: β_a, plan_sv: plan_a}`,
 
-written on the template entry of those periods, whose own keys stand over the
-file's, so that the entry repeats the template with the connectors it writes
-in place of the file's ([Trellises](../../docs/Bellman-Sym/07-trellis.md)
-§4); the field `y_sv`, the earnings of a retiree, which the parameter `Y`
+written in the period file of those periods, `period.retirement.yml`; the
+field `y_sv`, the earnings of a retiree, which the income level `Y`
 makes zero, is read by no stage, and a continuation field no stage of the
 period takes is an output of the period, which the inter-period mapping may
-leave unjoined ([The Bellman factory](../../docs/Bellman-Sym/08-bellman-factory.md)
+leave unjoined ([The Bellman factory](../../../docs/Bellman-Sym/08-bellman-factory.md)
 §7). In the period after the last age, `shocks` is joined to `bequest` by
 
 `{a_s: a_bq, adc_s: adc_bq, h_s: h_bq, m_s: m_bq, P_s: P_bq}`,
 
 and its remaining continuation fields leave the period unjoined in the same
-way. A connector names states; the value fields at a join are identified
-along the edge those states establish and not by their spelling, as the
-durables note, `applications/durables/economics.md`, and its `tenure.bl` show:
-the tenure stage's `V_kp[>]` is the arrival value of `keeper_cons` because the
-keep branch ends where that stage begins, and here likewise `survival`'s
-`V_bq[>]` is the arrival value of `bequest`, because the die branch ends at
-its arrival fields.
+way. A connection first selects its state route, then pairs its backward
+value-type fields. Equal base names after removing perch marks are the
+first candidates; differently named fields require an authored pairing.
+Here `survival`'s death input `V[>]` pairs with the bequest stage's arrival
+`V[<]` by that exact base name. The surviving route also carries its
+authored age pairing. Matching states alone does not identify arbitrary
+value fields. [Periods](../../../docs/Bellman-Sym/06-period.md) gives the
+complete connection rules.
 
 Each consumption stage ends the period at its own ten continuation fields,
 and one inter-period mapping, standing for every adjacent pair, joins all
@@ -924,16 +920,13 @@ three to the arrival fields of the next period's `shocks`:
 Each arrival field of `shocks` therefore has three sources, one per tenure
 branch; the three routes are exclusive, and the arrival measure, the
 distribution of the households who arrive there, is the sum of the three
-incoming measures ([Trellises](../../docs/Bellman-Sym/07-trellis.md) §2). The
+incoming measures ([Trellises](../../../docs/Bellman-Sym/07-trellis.md) §2). The
 same mapping reaches `periods[0]`, whose `shocks` arrives at the same names.
 No route returns from retirement to work, because the stages that choose a
 contribution or a share are absent from the retirement periods.
 
-The trellis file writes the period after the last age out, repeats the
-template for the retirement periods with their connector, and repeats it
-again for the year of retirement, the working periods and the first period;
-the three one-period entries differ from their neighbors only in which stages
-the recipe makes active there:
+The trellis file writes the period after the last age out and then repeats
+one period file for each of the four other period kinds:
 
 ```yaml
 !trellis
@@ -942,26 +935,20 @@ periods:
   - stages: [shocks, bequest]
     connectors:
       - {a_s: a_bq, adc_s: adc_bq, h_s: h_bq, m_s: m_bq, P_s: P_bq}
-  - {template: period.yml, repeat: 35, connectors: [{a_sv: w_a, adc_sv: adc_a, π_sv: π_a, h_sv: h_a, m_sv: m_a, P_sv: P_a, ξ_sv: ξ_a, α_sv: α_a, β_sv: β_a, plan_sv: plan_a}]}
-  - {template: period.yml, repeat: 1}
-  - {template: period.yml, repeat: 47}
-  - {template: period.yml, repeat: 1}
+  - {template: period.retirement.yml, repeat: 35}
+  - {template: period.payout.yml, repeat: 1}
+  - {template: period.working.yml, repeat: 47}
+  - {template: period.enrollment.yml, repeat: 1}
 inter_connectors:
   - {a_nxt_rt: a, adc_nxt_rt: a_dc, π_nxt_rt: π_pre, h_nxt_rt: h, m_nxt_rt: m, P_nxt_rt: P_pre, ξ_nxt_rt: ξ_pre, α_nxt_rt: α_pre, β_nxt_rt: β_pre, plan_nxt_rt: plan, a_nxt_kp: a, adc_nxt_kp: a_dc, π_nxt_kp: π_pre, h_nxt_kp: h, m_nxt_kp: m, P_nxt_kp: P_pre, ξ_nxt_kp: ξ_pre, α_nxt_kp: α_pre, β_nxt_kp: β_pre, plan_nxt_kp: plan, a_nxt_adj: a, adc_nxt_adj: a_dc, π_nxt_adj: π_pre, h_nxt_adj: h, m_nxt_adj: m, P_nxt_adj: P_pre, ξ_nxt_adj: ξ_pre, α_nxt_adj: α_pre, β_nxt_adj: β_pre, plan_nxt_adj: plan}
 ```
 
-The recipe names, for each stage key, its stage file and its sources, with
-`$fill` in every calibration and settings list and one methods slot per stage,
-and carries the `periods:` ranges of the table above; its `registry` block
-admits the names of the age schedules, which no stage declares. The values
-that vary with age, the earnings level `Y` of `shocks`, the survival
-probability `p_s` of `survival`, the age that enters the cost functions of
-`contribution` and `allocation`, and the age-65 earnings level, the tenure
-and the lump-sum factor of `payout`, are written into each period's records
-by a function of the application's `code/`, after every `load_recipe` and
-before the binding verbs, as `write_wage_schedule` of the durables model
-writes its `Y` and `y_R`
-([The Bellman factory](../../docs/Bellman-Sym/08-bellman-factory.md) §3.5).
+The recipe names each stage file and its calibration, settings and methods.
+The model carries the age from one period to the previous one. The earnings
+level, survival probability, participation costs and pension payout read
+functions or tables at that age. The payout reads earnings at three
+successive ages. Each age-dependent quantity uses the same calibration
+table or coefficients in every period in which the stage occurs.
 
 ## Calibration
 
@@ -980,87 +967,83 @@ the parameters it declares.
 
 | Stage | Parameters it declares | Values and where the paper gives them |
 |---|---|---|
-| `shocks` | `R`; `δ`; `Y` by age; `φ`, `σ_u`; `r_r`, `r_s`, `scale_r`, `scale_s`, `σ_d`; `β_m`, `κ_m`; `r_h`, `σ_h`; the chains `Π_α`, `α_pts`, `Π_β`, `β_pts` | R = 1.0223 (Section 5); δ = 0.011 (Section 5, from Fox and Tulip 2014); Y from the earnings equation, a quartic in age and a quadratic in tenure (Section 5), whose coefficients the paper does not print and the development settings hold as `lambdas`; the wage persistence and innovation are estimated by OLS (Section 5) and not printed, the development settings' `phi_w = 0.9044`, `sigma_w = 0.0922`; r^s = 1.93%, r^r = 4.76%, r^d = 2.88%, s = 0.54, r = 1.68, σ_{ε^d} = 0.064 (Section 5); β^m = 3.36, κ = 0.33 (Section 5); r^h = 0.032, σ_{ε^h} = 0.042 (Section 5); the taste chain from ᾱ, ρ_α, σ_α of Table 4 (0.555, 0.893, 0.013 for males; 0.565, 0.912, 0.011 for females) with q = 0.4 and η = 80 (Section 5); the discount chain from β̄, ρ_β, σ_β of Table 4 (0.900, 0.477, 0.024; 0.892, 0.455, 0.024); P_0 = 1 in 2010 (text after equation 14) |
-| `survival` | `p_s` by age | Human Mortality Database, gender-specific, averaged over 2010 and 2014 (Section 5); the development settings' list `survival` |
+| `shocks` | `R`; `δ`; earnings-profile coefficients or table; `φ`, `σ_u`; `r_r`, `r_s`, `scale_r`, `scale_s`, `σ_d`; `β_m`, `κ_m`; `r_h`, `σ_h`; the chains `Π_α`, `α_pts`, `Π_β`, `β_pts` | R = 1.0223 (Section 5); δ = 0.011 (Section 5, from Fox and Tulip 2014); Y from the earnings equation, a quartic in age and a quadratic in tenure (Section 5), whose coefficients the paper does not print and the development settings hold as `lambdas`; the wage persistence and innovation are estimated by OLS (Section 5) and not printed, the development settings' `phi_w = 0.9044`, `sigma_w = 0.0922`; r^s = 1.93%, r^r = 4.76%, r^d = 2.88%, s = 0.54, r = 1.68, σ_{ε^d} = 0.064 (Section 5); β^m = 3.36, κ = 0.33 (Section 5); r^h = 0.032, σ_{ε^h} = 0.042 (Section 5); the taste chain from ᾱ, ρ_α, σ_α of Table 4 (0.555, 0.893, 0.013 for males; 0.565, 0.912, 0.011 for females) with q = 0.4 and η = 80 (Section 5); the discount chain from β̄, ρ_β, σ_β of Table 4 (0.900, 0.477, 0.024; 0.892, 0.455, 0.024); P_0 = 1 in 2010 (text after equation 14) |
+| `survival` | survival table | Human Mortality Database, gender-specific, averaged over 2010 and 2014 (Section 5); the development settings' list `survival` |
 | `plan_choice` | `u_p` | ψ and ν^p_0, ν^p_1, ν^p_2 of Table 4 at t₀ = 17: ln ψ = −6.650, ν^p = (−3.007, −0.137, 0.785 × 10⁻²) for males; ln ψ = 1.381, ν^p = (−1.803, −0.127, 0.770 × 10⁻²) for females |
-| `contribution` | `R`; `v_1` to `v_5`, `v_S`, `v_E`, `o`; `ψ`, `ν_v0` to `ν_v3`, the age | v_S = 2.35%, v_E = 17%, o = 100% (Section 5); the five rates other than zero are not printed, the development settings' `vol_cont_points` (0.0108, 0.0340, 0.0857, 0.1815, 0.2700); ν^v = (−6.142, 40.772, −0.352 × 10⁻³, −0.560) for males, (−5.071, 46.291, −0.038 × 10⁻³, −0.354) for females (Table 4) |
-| `allocation` | `π_1`, `π_2`, `π_d`, `π_4`, `π_5`; `ψ`, `ν_r0` to `ν_r4`, `u_p`, the age | π^d = 0.7 (Section 4.C); the other shares are not printed, the development settings' `risk_share_points` (0.107, 0.504, 0.952, 1.0 beside 0 and 0.7); ν^r = (−4.158, −0.057, 0.406 × 10⁻³, 0.078, 1.333) for males, (−2.719, −0.058, 0.581 × 10⁻³, 0.091, 2.163) for females (Table 4) |
-| `payout` | `f_ACF`, `f_LSF`, `f_ASF`, `τ_R`; the age-65 earnings level and the deterministic earnings levels at 64 and 63 | f^{ACF} = 86.0%, f^{ASF} = 100% (Section 5); f^{LSF}(65) = 23% (equation 5); τ_R = 48 (Appendix D.1); the three levels from the same equation as `Y` |
+| `contribution` | `R`; `v_1` to `v_5`, `v_S`, `v_E`, `o`; `ψ`, `ν_v0` to `ν_v3` | v_S = 2.35%, v_E = 17%, o = 100% (Section 5); the five rates other than zero are not printed, the development settings' `vol_cont_points` (0.0108, 0.0340, 0.0857, 0.1815, 0.2700); ν^v = (−6.142, 40.772, −0.352 × 10⁻³, −0.560) for males, (−5.071, 46.291, −0.038 × 10⁻³, −0.354) for females (Table 4) |
+| `allocation` | `π_1`, `π_2`, `π_d`, `π_4`, `π_5`; `ψ`, `ν_r0` to `ν_r4`, `u_p` | π^d = 0.7 (Section 4.C); the other shares are not printed, the development settings' `risk_share_points` (0.107, 0.504, 0.952, 1.0 beside 0 and 0.7); ν^r = (−4.158, −0.057, 0.406 × 10⁻³, 0.078, 1.333) for males, (−2.719, −0.058, 0.581 × 10⁻³, 0.091, 2.163) for females (Table 4) |
+| `payout` | `f_ACF`, `f_LSF`, `f_ASF`, `τ_R`; the earnings profile read at ages 65, 64 and 63 | f^{ACF} = 86.0%, f^{ASF} = 100% (Section 5); f^{LSF}(65) = 23% (equation 5); τ_R = 48 (Appendix D.1); the three levels from the same equation as `Y` |
 | `renter_cons`, `keeper_cons`, `adjuster_cons` | `γ`, `ρ`; `φ_S`; `φ_C`; `τ_H`; `ι` (keeper, in prose) | γ = 3.234, ρ = −1.582 for males and 2.894, −1.611 for females (Table 4); φ^S = 0.06, φ^C = 20%, τ_H = 0.08, ι = $120,000 (Section 5) |
 | `bequest` | `θ`, `k`, `γ` | ln θ = 9.844 for males and 11.576 for females (Table 4); k from Ding (2013) by marital status (Section 5), not printed, 2.64169 in the development settings and 4.38930 in the lite settings |
 
 The taste-shock scales σ_p, σ^{DB}_v, σ^{DC}_v, σ^{DB}_π, σ^{DC}_π of Table 4
 belong to the logit of equations (16), (24) and (25), which the stages do not
 write. The enrollment, retirement and last ages, 17, 65 and 100 (Section 5),
-are the ages of the trellis above.
+set the period kinds above. The terminal age 101 and the backward age
+transition give the age at each period.
 
-## What the stage files cannot state
+## Remaining modelling gaps
 
-1. **The taste shocks and the logit.** The type-I extreme value shocks on the
-   plan, the contribution and the share (equations 15, 17, 19), the
-   probabilities (16), (24) and (25) and the log-sum values (22) and (23) have
-   no spelling: no family of the laws page is the extreme value law, a
-   `Categorical` weight may name a parameter, a state, a control or a shock
-   and not a value field, and the expectation of a maximum over an undeclared
-   shock cannot be written; the stages write the deterministic maximization.
-2. **Age in the stage.** A stage carries no age index, so the earnings level
-   Y (equation 3), the survival probability p_t (equation 20), the age t and
-   the enrollment age t₀ in the cost functions (equation 4), and the
-   earnings level, the tenure and the lump-sum factor at retirement (equation
-   5) are parameters of each occurrence, one use of the stage file at one
-   period, written per period by the application's code.
-3. **The cost functions' kink.** The term max{0, ln a} of u_v and u_π,
-   equation (4), has no shown spelling; the form `max` stands in the table of
-   expression forms with no file that writes it, so the two cost functions are
-   prose.
-4. **The three-year average wage.** The entitlement a^{db} of equation (5)
+1. **The taste shocks and the logit.** The draft retains deterministic
+   maximization. It has not declared the taste shocks on the plan,
+   contribution and share choices (equations 15, 17 and 19), or written
+   their probabilities (16), (24) and (25) and log-sum values (22) and (23).
+   The [law catalogue](../../../docs/Bellman-Sym/reference/laws.md#type-iextreme-value)
+   provides `TypeIExtremeValue(μ, s)`, including independent components
+   indexed by a finite set. A parameterized `Categorical` law may also
+   read a supplied constant such as age. These available forms do not
+   supply the draft's missing equations or their numerical implementation.
+2. **The cost functions.** The term max{0, ln a} of u_v and u_π,
+   equation (4), is written `max(0, log(a))`. The draft still needs
+   declarations with age as an explicit argument and the corresponding
+   marginal conditions; the expression itself is admitted.
+3. **The three-year average wage.** The entitlement a^{db} of equation (5)
    averages the earnings at 65 with the two previous wages, which Appendix D.1
    replaces by their expectation given the current state under the reversed
    wage chain; a function of the wage state defined through the chain's matrix
    has no shown spelling, and a draw of the two lagged states by
    `DiscreteMarkov(Π_rev, ξ_pts, ξ_d)` with an expectation over them is a
    reading of the laws page the pages do not show. The earnings level the
-   average reads at 65 is not the parameter `Y` of `shocks`, which is zero in
-   the year of retirement by equation (14), so the `payout` occurrence carries
-   the age-65 earnings level and the deterministic earnings levels at 64 and
-   63 as parameters of its own, as the code evaluates `DB_benefit` at the age
-   of retirement with `y(t, E[i])`.
-5. **The feasibility of keeping.** Appendix D.2 gives the keep alternative to
-   incumbent owners only; a feasible set of a discrete control that depends on
-   the state has no shown spelling, and the stage relies on the keep branch at
-   a zero stock being dominated, since utility (1) is minus infinity at zero
-   housing services for the paper's negative ρ. The keep branch is likewise
-   infeasible where the cash does not cover the mortgage due net of the
-   largest new balance, where the keeper's `Γ_c` is empty; the stage does not
-   state that restriction either.
-6. **Two bounds on one control.** The non-adjuster's mortgage is bounded by
+   average reads at 65 comes from the shared earnings profile, evaluated
+   at ages 65, 64 and 63. The zero earnings used by `shocks` in retirement
+   do not replace these entitlement inputs. The code likewise evaluates
+   `DB_benefit` at retirement with `y(t, E[i])`.
+4. **The feasibility of keeping.** Appendix D.2 gives the keep alternative to
+   incumbent owners only. A state-dependent finite choice set can state this:
+   `Γ_d(x : ℝ₊) := {j : Tenure | h_min[j] < x}`, with `h_min` equal to zero
+   for keep and −1 for rent and adjust, excludes keep at zero housing.
+   The draft still needs that restriction and the cash condition: keep is
+   infeasible when cash cannot cover the mortgage due net of the largest
+   new balance, leaving the keeper's `Γ_c` empty.
+5. **Two bounds on one control.** The non-adjuster's mortgage is bounded by
    the collateral constraint (11) and by the redraw limit (Section 4.D), and
    `euler_mortgage` of `keeper_cons` carries the collateral cap alone; the
    adjuster's mortgage has the state-dependent lower bound
    (1 + τ_H) P h − (w_d − c) where that is positive, by equations (11) and
-   (12), which the binder of `adjuster_cons` cannot write. The lesser of two
-   caps and the greater of two floors have no shown spelling: `min` and `max`
-   stand in the table of expression forms with no file that writes them.
-7. **The collateral multiplier in the housing condition.** The housing Euler
+   (12). The expressions `min` and `max` can state the lesser cap and
+   greater floor. The draft still needs both bounds and their numerical
+   treatment; the expressions themselves are admitted.
+6. **The collateral multiplier in the housing condition.** The housing Euler
    equation (70) of the online Appendix C adds the multiplier of the collateral
    constraint where it binds; a declared multiplier's bound may not name a
    control, and the adjuster's bound names `h_choice`, so `euler_housing`
    holds where the constraint is slack and the binding case is prose.
-8. **The belief state of the taste.** The conviction and hesitation states of
+7. **The belief state of the taste.** The conviction and hesitation states of
    Section 4.A split the low taste into two chain states with one taste value;
    whether a chain declared on three points two of which are equal is admitted,
    or the belief must be a label state of its own, is not shown.
-9. **The initial distribution** of liquid assets by enrollment age, housing of
+8. **The initial distribution** of liquid assets by enrollment age, housing of
    one dollar, no pension balance and the price of one (Section 5), which the
    forward operators need and no stage declares; the plan and the share at the
    arrival of the first `shocks` stage are read from it before any choice.
-10. **The discretizations.** The five-state wage chain by Kopecky and Suen
+   The backward age transition gives age 17 in the first period.
+9. **The discretizations.** The five-state wage chain by Kopecky and Suen
     (2010), the three-point taste and discount chains, the two-point returns
     and the three-point price shock (Appendix D.1) are numerical choices for
     the methods and settings files; the chains for the taste and the discount
     factor are declared with matrix parameters because the paper gives them as
     chains, while the wage follows its continuous law (3).
-11. **The concessional contribution cap** of the footnote to Section 4.C, a tax
+10. **The concessional contribution cap** of the footnote to Section 4.C, a tax
     rule that appears in no equation of the paper.
 
 ## Assumptions to confirm
@@ -1076,7 +1059,7 @@ are the ages of the trellis above.
    bequest stage stands in every period from age 18 on and reads a zero
    continuation value `V[>]` in each; the pages supply the terminal
    continuation value as boundary data for the terminal period alone
-   ([Trellises](../../docs/Bellman-Sym/07-trellis.md) §2; [The Bellman factory](../../docs/Bellman-Sym/08-bellman-factory.md)
+   ([Trellises](../../../docs/Bellman-Sym/07-trellis.md) §2; [The Bellman factory](../../../docs/Bellman-Sym/08-bellman-factory.md)
    §3.4). Whether the package supplies the same datum to a stage that reads
    no continuation state in an earlier period is for AAS or the package.
 3. **The plan as a state or as two routes.** The plan is a label-valued state
@@ -1087,13 +1070,13 @@ are the ages of the trellis above.
 
 ## Numerical methods
 
-The method tags below are those of [Method types](../../docs/Bellman-Sym/reference/methods.md);
+The method tags below are those of [Method types](../../../docs/Bellman-Sym/reference/methods.md);
 each stage's methods file names them, and the settings file supplies the grids
 of 35 points for liquid assets, the balance, housing and the mortgage and 11
 for the price, the node counts and the simulation size (Appendix D.1; Section
 5). A **handler** is the numerical routine, or the adapter that calls one,
 registered to carry a method out
-([Methodization](../../docs/Bellman-Sym/04-methodization.md) §4). The arrival
+([Methodization](../../../docs/Bellman-Sym/04-methodization.md) §4). The arrival
 builder of `shocks` takes one expectation over its five shocks, and the three
 rows below bind three methods by shock; Method types binds a method at an
 operator occurrence or at its stage-wide name, and no shown file binds one
@@ -1104,7 +1087,7 @@ shock), so how the five draws are split among `!tauchen`, `!markov` and
 | Block | Method tag | What it realizes |
 |---|---|---|
 | the `argmax` of `optimality` in `renter_cons`, `keeper_cons` and `adjuster_cons`, which carries the conditions as its properties | `!root-find` at the operator `argmax` | the conditions solved at each decision state, as Appendix D.2 solves the renter's consumption and the mortgage by root finding. Two pages conflict here: Constraints §4.1 says of a first-order condition written as an operative line that "a root finder is attached to that line", while Method types admits `!root-find` at the operators `solve` and `argmax` only and refuses a methods file that places a method at a kind of place its row does not admit (`method-attachment`). This note follows Method types, which is printed from the package's method table, and the §4.1 spelling of the three blocks makes the argmax the one place in any case |
-| the same `argmax` | `!egm` at the operator `argmax`, which inverts the property for the candidate ([Methodization](../../docs/Bellman-Sym/04-methodization.md) §2, the last row of its table); or, in the candidate-line spelling of `cons.bl` of the portfolio model, `!egm` on `policy` | Appendix D.2's endogenous grid over savings; the inverse of the marginal utility of consumption at given services is a root the code finds numerically (`uc_inv`), not a closed form |
+| the same `argmax` | `!egm` at the operator `argmax`, which inverts the property for the candidate ([Methodization](../../../docs/Bellman-Sym/04-methodization.md) §2, the last row of its table); or, in the candidate-line spelling of `cons.bl` of the portfolio model, `!egm` on `policy` | Appendix D.2's endogenous grid over savings; the inverse of the marginal utility of consumption at given services is a root the code finds numerically (`uc_inv`), not a closed form |
 | the selection among the candidates of the non-concave problem | `!FUES` at an `upper_env` operator, where the block writes the candidate value and the envelope as `applications/retirement-choice/declaration/stages/worker_cons/worker_cons.bl` does; or a handler setting named as the durables methods files name theirs, `upper_envelope: keeper_upper_envelope`, a setting whose value is `FUES` | the fast upper envelope scan with the forward and backward scan (Appendix D.2) |
 | the `argmax` of `tenure`, `contribution`, `allocation` and `plan_choice` | `!max` | the comparison of the branch values and the deterministic choice; the logit of the paper is not a method of a declared operation (item 1 above) |
 | `E_{u}` of `shocks` | `!tauchen`, with `n_income_states: 5` | the five-state chain; the paper uses the method of Kopecky and Suen (2010), which the table does not list |
@@ -1127,9 +1110,9 @@ properties under it and no `Declared` section; that the period's joins are
 derived from the fields without a cycle and that the retirement periods join
 the survive branch to `tenure` through their connector; that the trellis
 holds 85 periods and that the one inter-period mapping checks against the
-fields of every adjacent pair; that the recipe's `periods:` ranges place each
-stage where the table above places it; that the calibration binds every
-declared parameter in every period after the age schedules are written; and
+fields of every adjacent pair; that each period kind holds the stages shown
+above; that the calibration binds the same age profiles in every occurrence;
+that terminal age 101 supplies ages 100 through 17 by the backward transition; and
 that `places()` on each stage lists the targets the methods files name.
 
 ## References

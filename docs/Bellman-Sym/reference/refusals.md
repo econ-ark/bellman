@@ -60,7 +60,7 @@ print(refusal_of(Example(
 t.bl:2:18-2:25: the file writes `!contrl` here, which is no word-type of the language
     [id=b, (x : ℝ) : !contrl -> (y : ℝ) : !dcsn] {
                      ^ (rule syntax)
-  write: the word-types are !arvl, !cntn, !ctrl, !dcsn, !shck, !state, !vlu
+  write: the word-types are !arvl, !cnst, !cntn, !ctrl, !dcsn, !shck, !state, !vlu
 ```
 
 ## 2 The three vocabularies of rules
@@ -79,6 +79,8 @@ A rule is written once, in the package, and a refusal names it. The three tables
 
 | rule | written | operation | claim | denotes | read from |
 |---|---|---|---|---|---|
+| <a id="continuation-input"></a>`continuation-input` | `(rule continuation-input)` | `query` | Supplied continuation data name exactly the declared external inputs, and their values satisfy every requirement their representation decides. | — | `refusals.py`, `RULES`, `"continuation-input"` |
+| <a id="law-requirement"></a>`law-requirement` | `(rule law-requirement)` | `query` | A numerical law has a supplied value for every constant field its parameter arguments read. | — | `refusals.py`, `RULES`, `"law-requirement"` |
 | <a id="syntax"></a>`syntax` | `(rule syntax)` | `parse` | The file is written in the forms the grammar admits, and every !-marked word is one of the vocabulary. It is the first rule a file meets: the refusal is raised where the parser or the lowering stops, and names the forms admitted at that place. | — | `refusals.py`, `RULES`, `"syntax"` |
 | <a id="marginal-role-retired"></a>`marginal-role-retired` | `(rule marginal-role-retired)` | `elaborate` | The roles `!mrgnvl` and `!sndmrgnvl` are retired from the language: a backward header lists value fields and controls, and a derivative of a value is the term `D_{x}V`. | — | `refusals.py`, `RULES`, `"marginal-role-retired"` |
 | <a id="stage-name"></a>`stage-name` | `(rule stage-name)` | `elaborate` | The file names itself once: exactly one `@stage` line, with a name. | — | `refusals.py`, `RULES`, `"stage-name"` |
@@ -92,6 +94,9 @@ A rule is written once, in the package, and a refusal names it. The three tables
 | <a id="well-typed"></a>`well-typed` | `(rule well-typed)` | `elaborate` | Every operation of a line, a function body or a declared set reads values of the kinds it takes: arithmetic, an ordered comparison and the bounds of an interval read numbers, and a label is no number; a function is applied to as many arguments as it declares, each of the kind it declares; `Inv` inverts one function; the two sides of a line are of one kind, and its left side names one field for each result of its right side. | — | `refusals.py`, `RULES`, `"well-typed"` |
 | <a id="divisor-nonzero"></a>`divisor-nonzero` | `(rule divisor-nonzero)` | `elaborate` | A divisor the file writes as a number is not zero: a division by a written zero is defined at no point (the definedness conditions of the fold). | — | `refusals.py`, `RULES`, `"divisor-nonzero"` |
 | <a id="shock-observed"></a>`shock-observed` | `(rule shock-observed)` | `elaborate` | A statement's perch has observed every shock the statement's right side depends on; otherwise the statement asks for an expectation. | — | `refusals.py`, `RULES`, `"shock-observed"` |
+| <a id="constant-dependence"></a>`constant-dependence` | `(rule constant-dependence)` | `elaborate` | The word !cnst types a value-type field alone, and a field typed !cnst has no state, shock or control dependence in its value or declared domain. | — | `refusals.py`, `RULES`, `"constant-dependence"` |
+| <a id="policy-objective"></a>`policy-objective` | `(rule policy-objective)` | `elaborate` | A maximization has exactly one decision field whose defining expression is its objective, after renaming the bound candidate. | — | `refusals.py`, `RULES`, `"policy-objective"` |
+| <a id="policy-feasibility"></a>`policy-feasibility` | `(rule policy-feasibility)` | `elaborate` | A feasibility correspondence reads only fields known before the choice. | — | `refusals.py`, `RULES`, `"policy-feasibility"` |
 | <a id="shock-reintroduced"></a>`shock-reintroduced` | `(rule shock-reintroduced)` | `elaborate` | A backward function does not read a shock again beside a term whose expectation has integrated it. | — | `refusals.py`, `RULES`, `"shock-reintroduced"` |
 | <a id="forward-composite"></a>`forward-composite` | `(rule forward-composite)` | `elaborate` | The fields a statement's right side mentions are at the left side's perch, before it, or forward of it along the stage's transitions. | — | `refusals.py`, `RULES`, `"forward-composite"` |
 | <a id="one-builder-per-output"></a>`one-builder-per-output` | `(rule one-builder-per-output)` | `elaborate` | One block writes a field between two perches: a second block that joins the same perches and writes a field the first writes is refused naming both blocks. | — | `refusals.py`, `RULES`, `"one-builder-per-output"` |
@@ -104,7 +109,7 @@ A rule is written once, in the package, and a refusal names it. The three tables
 | <a id="derivative-scalar-coordinate"></a>`derivative-scalar-coordinate` | `(rule derivative-scalar-coordinate)` | `elaborate` | The one formal argument a derivative names is scalar, not product-valued. | — | `refusals.py`, `RULES`, `"derivative-scalar-coordinate"` |
 | <a id="derivative-coordinate"></a>`derivative-coordinate` | `(rule derivative-coordinate)` | `elaborate` | A derivative of a value field, `D_{a}V[>]`, names a state coordinate of the perch at which the field is read, and not a discrete one; for the value of a branch, `D_{a_w}V_w[>]`, a state the branch writes. | — | `refusals.py`, `RULES`, `"derivative-coordinate"` |
 | <a id="stage-boundary"></a>`stage-boundary` | `(rule stage-boundary)` | `elaborate` | Every field is produced and consumed: a block writes it or the stage receives it, and a block reads it or the stage delivers it. | — | `refusals.py`, `RULES`, `"stage-boundary"` |
-| <a id="output-defined"></a>`output-defined` | `(rule output-defined)` | `elaborate` | Every required block output has an equation. | — | `refusals.py`, `RULES`, `"output-defined"` |
+| <a id="output-defined"></a>`output-defined` | `(rule output-defined)` | `elaborate` | Every required block output has an equation or is kept under the same spelling on both sides of the header. | — | `refusals.py`, `RULES`, `"output-defined"` |
 | <a id="grid-line-consistency"></a>`grid-line-consistency` | `(rule grid-line-consistency)` | `elaborate` | A grid line, a line that writes a decision state under the continuation mark (`m_d[>] = a + c[>]`), agrees with the law of motion solved for that state at the candidates: its right side and the law of motion so solved reduce to one expression, every function read as an opaque symbol. | — | `refusals.py`, `RULES`, `"grid-line-consistency"` |
 | <a id="identity-collision"></a>`identity-collision` | `(rule identity-collision)` | `elaborate` | No authored name collides with the spelling of an identity: a name containing the colon that separates its segments, or a name equal to one of the words a reader tests for in the last segment, `result`, `declared` or `merged`. | — | `refusals.py`, `RULES`, `"identity-collision"` |
 | <a id="readable-form"></a>`readable-form` | `(rule readable-form)` | `elaborate` | The item is a form the construction rules read. | — | `refusals.py`, `RULES`, `"readable-form"` |
@@ -129,20 +134,20 @@ A rule is written once, in the package, and a refusal names it. The three tables
 | <a id="category-codes"></a>`category-codes` | `(rule category-codes)` | `elaborate` | A set marked `!categories` is a nonempty range of integers written as a comprehension over ℤ or ℕ, whose annotation gives each member one category name and each name one member. The marker is written only on a top-level named set, and a field declared on a set with category codes names that set at every site that names a set. | — | `refusals.py`, `RULES`, `"category-codes"` |
 | <a id="value-input-role"></a>`value-input-role` | `(rule value-input-role)` | `elaborate` | A statement of a backward block reads values or marginal values, not both: its kernel acts on one role and its output has that role. | — | `refusals.py`, `RULES`, `"value-input-role"` |
 | <a id="signature-complete"></a>`signature-complete` | `(rule signature-complete)` | `elaborate` | A forward block's header lists every field its lines read that no earlier line of the block defines. A backward block's header lists the value fields its lines read and the controls at which they are read, but no state; a state of its output perch is a coordinate. A value field a backward header lists and no line of the block reads is admitted: it is left out of the block's builder and recorded as a diagnostic, `unread-input`, in place of a refusal. | — | `refusals.py`, `RULES`, `"signature-complete"` |
-| <a id="header-coordinate"></a>`header-coordinate` | `(rule header-coordinate)` | `elaborate` | A backward block's header lists the value fields it reads and writes and the controls at which its lines are read, and no state: a state of the perch at which its output stands is a coordinate of the output function, and a state of its input perch is reached through the law of motion. | — | `refusals.py`, `RULES`, `"header-coordinate"` |
+| <a id="header-coordinate"></a>`header-coordinate` | `(rule header-coordinate)` | `elaborate` | A backward block's header lists the value fields it reads and writes and the controls at which its lines are read, and no state: a state of the perch at which its output stands is a coordinate of the output function, and a state of its input perch is reached through the law of motion. A forward block's header lists no field that a backward block of the same stage writes. | — | `refusals.py`, `RULES`, `"header-coordinate"` |
 | <a id="input-perch-state"></a>`input-perch-state` | `(rule input-perch-state)` | `elaborate` | A backward line reads a state of its input or a later perch only through the law of motion. A direct read is refused, including in a relation or a condition after `⟂`. A read under the expectation over the edge's shock and continuation-state indexing on a policy candidate line are admitted. | — | `refusals.py`, `RULES`, `"input-perch-state"` |
 | <a id="kernel-form"></a>`kernel-form` | `(rule kernel-form)` | `query` | A kernel that `compile_kernel` writes as a Python function is retained arithmetic and calls to closed-form functions; a symbolic derivative has no compile rule. The function takes the values of the parameters it reads as arguments, so a symbolic version compiles too and answers no values, `parameter_values` None. | — | `refusals.py`, `RULES`, `"kernel-form"` |
 | <a id="method-option-value"></a>`method-option-value` | `(rule method-option-value)` | `configure` | Every configured keyword argument of a method lies in the domain its row of the catalogue names for it. | — | `refusals.py`, `RULES`, `"method-option-value"` |
 | <a id="kernel-target"></a>`kernel-target` | `(rule kernel-target)` | `query` | `kernel` and `compile` read a primitive operator box, and `compile` one whose kernel is g or G. | — | `refusals.py`, `RULES`, `"kernel-target"` |
 | <a id="distribution-dependency"></a>`distribution-dependency` | `(rule distribution-dependency)` | `elaborate` | The distribution declarations read one another without a cycle, and a declaration does not read its own subject. | — | `refusals.py`, `RULES`, `"distribution-dependency"` |
 | <a id="distribution-edge"></a>`distribution-edge` | `(rule distribution-edge)` | `elaborate` | The shocks of connected declarations are drawn on the edge of one forward builder. | — | `refusals.py`, `RULES`, `"distribution-edge"` |
-| <a id="distribution-domain"></a>`distribution-domain` | `(rule distribution-domain)` | `elaborate` | A declaration's family parameters lie in the family's domain: matched dimensions, a symmetric positive semidefinite covariance, nonnegative variances and deviations, finite endpoints in order, positive scales, and real arguments that have a number. | — | `refusals.py`, `RULES`, `"distribution-domain"` |
+| <a id="distribution-domain"></a>`distribution-domain` | `(rule distribution-domain)` | `elaborate` | A declaration's family parameters lie in the family's domain: matched dimensions, a symmetric positive semidefinite covariance, nonnegative variances and deviations, finite endpoints in order, positive scales, and real arguments that have a number. A law with arguments names distinct arguments, and each use of its shock supplies one constant that the stage takes in for each of them. | — | `refusals.py`, `RULES`, `"distribution-domain"` |
 | <a id="derived-parameter"></a>`derived-parameter` | `(rule derived-parameter)` | `elaborate` | A derived parameter's definition, `h := 1/(1 - Γ/R)`, reads declared parameters, finite numbers and other derived parameters, and is formed by signs, sums, differences, products, quotients, powers, the calls `log` and `exp` of one argument and the calls `min` and `max` of one argument or more, or by cases, `if … then … else …`; where the stage defines a function of one of those four names, the definition calls none of that name. The calibration supplies no value for it, and at the calibration values every operation it evaluates is defined and its value is a finite real number, or the infinity a branch of its conditional writes. The set a definition declares, `q : (0,1) := (β*R)^(1/ρ)/R`, is a set of numbers and reads no setting, and it holds each infinity that a branch writes: a definition that declares no set writes no infinite branch. | — | `refusals.py`, `RULES`, `"derived-parameter"` |
 | <a id="conditional-not-declared"></a>`conditional-not-declared` | `(rule conditional-not-declared)` | `elaborate` | The conditional distribution an expectation needs is a declared conditional, a product of them, or a marginal or conditional of a joint normal declaration whose conditioning block is positive definite. | — | `refusals.py`, `RULES`, `"conditional-not-declared"` |
 | <a id="branch-form"></a>`branch-form` | `(rule branch-form)` | `elaborate` | A branching block holds one labeled nested block per label and nothing else, at least two, in the forward block from the decision perch to the continuation perch, whose own output side is empty; a nested block has an empty input side and writes continuation fields. | — | `refusals.py`, `RULES`, `"branch-form"` |
 | <a id="branch-labels"></a>`branch-labels` | `(rule branch-labels)` | `elaborate` | The nested blocks carry the labels of the block's label coordinate, a control or a shock with its law, whose set is a finite set of at least two labels, each once and in the set's order. | — | `refusals.py`, `RULES`, `"branch-labels"` |
 | <a id="branch-tuple-mismatch"></a>`branch-tuple-mismatch` | `(rule branch-tuple-mismatch)` | `elaborate` | The value line selects by one tuple indexed by the label coordinate, one entry per label, and the policy maximizes over the same tuple in the same order; a branch a shock selects is read under the expectation over the shock alone. | — | `refusals.py`, `RULES`, `"branch-tuple-mismatch"` |
-| <a id="branch-value-position"></a>`branch-value-position` | `(rule branch-value-position)` | `elaborate` | A continuation value stands at one position of the selection tuples, the position of the branch on whose fields it is a function. | — | `refusals.py`, `RULES`, `"branch-value-position"` |
+| <a id="branch-value-position"></a>`branch-value-position` | `(rule branch-value-position)` | `elaborate` | A nonconstant continuation value has one branch association established by a selection tuple; it may also be read outside that tuple. A constant read only outside tuples receives its supplier from the connection. | — | `refusals.py`, `RULES`, `"branch-value-position"` |
 | <a id="branch-law"></a>`branch-law` | `(rule branch-law)` | `elaborate` | The law of a label shock gives one probability to each label in the order of the labels, `Categorical((p₁, …, pₙ))` or `Bernoulli(p)` over two. | — | `refusals.py`, `RULES`, `"branch-law"` |
 | <a id="not-constructed"></a>`not-constructed` | `(rule not-constructed)` | `elaborate` | The item is a form of the language the construction does not read. | — | `refusals.py`, `RULES`, `"not-constructed"` |
 
@@ -185,6 +190,18 @@ print(catalogue())
 ```
 
 ```text
+continuation-input  (graph construction; query)
+  condition  Supplied continuation data name exactly the declared external inputs, and their values satisfy every requirement their representation decides.
+  example  the package's example of the rule, and the refusal it provokes:
+  where  address 'inputs.L'
+  why    Continuation field L: the value 2 lies outside the declared set (-inf, 0].
+
+law-requirement  (graph construction; query)
+  condition  A numerical law has a supplied value for every constant field its parameter arguments read.
+  example  the package's example of the rule, and the refusal it provokes:
+  where  address 'arvl_to_dcsn'
+  why    The distribution of y at arvl_to_dcsn requires continuation fields age.
+
 syntax  (graph construction; parse)
   condition  The file is written in the forms the grammar admits, and every !-marked word is one of the vocabulary. It is the first rule a file meets: the refusal is raised where the parser or the lowering stops, and names the forms admitted at that place.
   example  the package's example of the rule, and the refusal it provokes:
@@ -311,6 +328,33 @@ shock-observed  (graph construction; elaborate)
   why    the line is read at the arvl perch and mentions V, a field at the dcsn perch; the edge from the arvl perch to the dcsn perch draws the shock y, so the value of V is not known at the arvl perch. Write the expectation over it, `E_{y}(…)`
   write  Write the expectation over it, `E_{y}(…)`
 
+constant-dependence  (graph construction; elaborate)
+  condition  The word !cnst types a value-type field alone, and a field typed !cnst has no state, shock or control dependence in its value or declared domain.
+  example  the package's example of the rule, and the refusal it provokes:
+  where  t.bl, line 12, column 5 (address 'cntn_to_dcsn.2')
+  what
+        B = c/2
+        ^
+  why    the constant field B depends on control c; its value and declared set must be independent of state, shock and choice
+
+policy-objective  (graph construction; elaborate)
+  condition  A maximization has exactly one decision field whose defining expression is its objective, after renaming the bound candidate.
+  example  the package's example of the rule, and the refusal it provokes:
+  where  t.bl, line 20, column 5 (address 'policy.1')
+  what
+        c = argmax_{cp : Γ_c(m)}(cp + W[>]/2)
+        ^
+  why    the argmax objective must equal the right side of one decision field; the decision fields W, B share its right side
+
+policy-feasibility  (graph construction; elaborate)
+  condition  A feasibility correspondence reads only fields known before the choice.
+  example  the package's example of the rule, and the refusal it provokes:
+  where  t.bl, line 20, column 5 (address 'policy.1')
+  what
+        c = argmax_{cp : Γ_c(m)}(cp + W[>]/2)
+        ^
+  why    the feasible set reads B, which depends on the choice
+
 shock-reintroduced  (graph construction; elaborate)
   condition  A backward function does not read a shock again beside a term whose expectation has integrated it.
   example  the package's example of the rule, and the refusal it provokes:
@@ -429,7 +473,7 @@ stage-boundary  (graph construction; elaborate)
   why    no block writes the field 'z' at the dcsn perch, and the stage does not receive it: the stage receives the continuation values and the arrival state, and a field at the dcsn perch in this position is neither. Write it as the output of a block, or list it where the stage receives it
 
 output-defined  (graph construction; elaborate)
-  condition  Every required block output has an equation.
+  condition  Every required block output has an equation or is kept under the same spelling on both sides of the header.
   example  the package's example of the rule, and the refusal it provokes:
   where  t.bl, line 16, column 1 (address 'dcsn_to_cntn')
   what
@@ -670,7 +714,7 @@ signature-complete  (graph construction; elaborate)
   write  List x in the header, `(y, x) : !dcsn -> (w : ℝ) : !dcsn`
 
 header-coordinate  (graph construction; elaborate)
-  condition  A backward block's header lists the value fields it reads and writes and the controls at which its lines are read, and no state: a state of the perch at which its output stands is a coordinate of the output function, and a state of its input perch is reached through the law of motion.
+  condition  A backward block's header lists the value fields it reads and writes and the controls at which its lines are read, and no state: a state of the perch at which its output stands is a coordinate of the output function, and a state of its input perch is reached through the law of motion. A forward block's header lists no field that a backward block of the same stage writes.
   example  the package's example of the rule, and the refusal it provokes:
   where  t.bl, line 5, column 1 (address 'cntn_to_dcsn')
   what
@@ -728,7 +772,7 @@ distribution-edge  (graph construction; elaborate)
   write  Remove y from the header and from the lines of block 'arvl_to_dcsn' or of block 'dcsn_to_cntn', which changes the law of motion of that block
 
 distribution-domain  (graph construction; elaborate)
-  condition  A declaration's family parameters lie in the family's domain: matched dimensions, a symmetric positive semidefinite covariance, nonnegative variances and deviations, finite endpoints in order, positive scales, and real arguments that have a number.
+  condition  A declaration's family parameters lie in the family's domain: matched dimensions, a symmetric positive semidefinite covariance, nonnegative variances and deviations, finite endpoints in order, positive scales, and real arguments that have a number. A law with arguments names distinct arguments, and each use of its shock supplies one constant that the stage takes in for each of them.
   example  the package's example of the rule, and the refusal it provokes:
   where  t.bl, line 4, column 1 (address 't.bl:4')
   what
@@ -786,7 +830,7 @@ branch-tuple-mismatch  (graph construction; elaborate)
   why    the value line selects from (V_w[>], V_r[>]) by 'd', and the policy line policy.choice maximizes over (V_r[>], V_w[>]); write the policy's maximand as the value line's tuple, in its order
 
 branch-value-position  (graph construction; elaborate)
-  condition  A continuation value stands at one position of the selection tuples, the position of the branch on whose fields it is a function.
+  condition  A nonconstant continuation value has one branch association established by a selection tuple; it may also be read outside that tuple. A constant read only outside tuples receives its supplier from the connection.
   example  the package's example of the rule, and the refusal it provokes:
   where  t.bl, line 14, column 5 (address 'cntn_to_dcsn.choice_value')
   what

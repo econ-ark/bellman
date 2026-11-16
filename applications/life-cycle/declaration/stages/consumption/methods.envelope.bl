@@ -1,0 +1,7 @@
+@methods: consumption
+
+savings_grid : {1, …, 40} → ℝ₊
+
+[id=cntn_to_dcsn] {
+    D_{m}V = c^(-ρ)                                    :: [id=marginal_decision]
+}

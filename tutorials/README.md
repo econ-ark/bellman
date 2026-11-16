@@ -38,7 +38,7 @@ How the parts fit together for a named economic model: construction, numerical s
 The portfolio–consumption model, in order:
 
 1. [Two stages, two orders](models/cons-port/01-two-stages-two-orders.ipynb): how a consumption stage and a portfolio stage form a period in either order, the order following from the fields they share. After Getting started 1.
-2. [A life cycle built backwards](models/cons-port/02-a-life-cycle-built-backwards.ipynb): how the stages are bound and a trellis of six years is built from nothing. After lesson 1 of this model.
+2. [A trellis built backwards](models/cons-port/02-a-life-cycle-built-backwards.ipynb): how the stages are bound, one period is repeated six times, and terminal inputs are supplied separately. After lesson 1 of this model.
 3. [Solving the two orders](models/cons-port/03-solving-the-two-orders.ipynb): how both orders are solved, one order's value recovered from the other's, and one stage's method changed. After lessons 1 and 2 of this model.
 
 The within-life model of Benhabib, Bisin and Luo:

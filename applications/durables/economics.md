@@ -125,7 +125,7 @@ the keeper's marginal value of housing.
 The branches of `tenure` end at the fields `w_kp`, `h_kp` and `z_kp` on the
 keep branch and `w_adj` and `z_adj` on the adjust branch, and the consumption
 stages begin at their decision states, so `period.yml` joins them by one
-connector, `{w_kp: w_d, h_kp: h_d, z_kp: keeper_cons.z_d, w_adj: m, z_adj: adjuster_cons.z_d}`;
+connector, `{w_kp: w_d, h_kp: h_d, z_kp: keeper_cons.z_d, w_adj: m, z_adj: adjuster_cons.z_d, age_kp: keeper_cons.age, age_adj: adjuster_cons.age}`;
 the income state `z_d` of both consumption stages is written with its stage
 key: a bare name that two stages of the period declare is reported under
 `endpoint-ambiguous`, and nothing is paired to it.
@@ -138,18 +138,20 @@ reaches the next period through the branch it chose, and they belong in the one
 inter-period mapping: the connector of one adjacent pair of periods carries
 every route between them.
 
-A connector names states. The value fields at a join are identified along the
-edge those states establish and not by their spelling, since a value name is
-local to its stage: the tenure stage's `V_kp[>]` is the decision value of
+Each connector joins states and may explicitly pair values. The branch age fields are paired explicitly. The two branch value functions pair along their respective state routes: the tenure stage's `V_kp[>]` is the decision value of
 `keeper_cons`, whose derivatives `D_{w_kp}V_kp[>]` and `D_{h_kp}V_kp[>]` the
 derivative lines of `declaration/stages/tenure/methods.bl` read, and its
 `V_adj[>]` that of `adjuster_cons`, whose derivative `D_{w_adj}V_adj[>]` they
 read, because the keep branch ends where the first stage begins and the adjust
 branch where the second does.
 
-The index of `periods[h]` counts periods before terminal, so `periods[0]` is the
-last age and `periods[h]` is age $T - h$. With the ages of
-`declaration/calibration/wage_schedule.yml` the trellis has 51 periods. The bequest is a
+The trellis has 51 periods. The bequest takes in terminal age 71 along with
+the zero continuation value. Each consumption stage keeps the age it takes
+in. The tenure stage sends back the age on the keep branch minus one. Each
+forward branch reads its own incoming age and uses the income for one year
+younger. The age sent back is 70 in `periods[0]` and 20 in `periods[50]`.
+The model's two branches receive the same age when the terminal datum is 71.
+The language also admits branch inputs with different ages. The bequest is a
 stage, `declaration/stages/bequest/bequest.bl`, active in the terminal period alone: it arrives at
 `a_bq`, `h_bq` and `z_bq`, the savings, the housing stock and the income state
 the two consumption stages continue to, reads a continuation value of zero, and
@@ -190,7 +192,10 @@ Dobrescu, L. I., Shanker, A., Bateman, H., Newell, B. R. and Thorp, S. (2025),
 SSRN working paper 4069226, whose earnings equation is a quartic in age and a
 quadratic in job tenure for log earnings with an autoregressive component; the
 seven coefficients are taken from the replication code, since that paper does
-not print them.
+not print them:
+$(\lambda_0, \dots, \lambda_6) = (4.329982,\ 0.610214,\ -0.0209832,\ 0.0003132,\ -0.00000172,\ 0.0199949,\ 0.0000476)$.
+The table `Y` of `declaration/calibration/wage_schedule.yml` holds the values
+of this formula at ages 20 to 60, each in the row of the age one year older.
 
 The paper has the household start work at age 20, retire at 60 and live to 70,
 and the run that produced Table 2 uses the first of these; the code's
@@ -208,24 +213,26 @@ housing curvature exceeds one; the code values the bequest as consumption of
 the wealth left, shifted by $K$, and that is the function `declaration/stages/bequest/bequest.bl`
 writes.
 
-## What the stage files cannot state
+## The age profile of income
 
-1. **The age profile of income.** A stage carries no age index, so the earnings
-   level $Y$ and the retirement income $y_R$ of `tenure.bl` are parameters of
-   each occurrence. The application's function `write_wage_schedule` in
-   `code/wage_schedule.py` evaluates the schedule of `declaration/calibration/wage_schedule.yml`
-   at the age of each period, $T - h$, and writes $Y$ and $y_R$ into that
-   period's `tenure` record, after every `load_recipe` and before the binding
-   verbs; `declaration/calibration/durables.yml` holds no value for them. The stage states
-   the shape $y(z) = Yz + y_R$ and no more.
-2. **The initial distribution** of assets, housing and the income state, which
+The two tables in `declaration/calibration/wage_schedule.yml` give the
+earnings coefficient and the retirement income in the income formula
+`Y[age]*z + y_R[age]`. The rows are indexed by incoming age and give income
+one year younger. At working ages 20 through 60 the retirement income is
+zero. At ages 61 through 70 earnings are zero and retirement income is 0.1.
+The zero row at incoming age 20 completes the declared table. Modeled
+periods read rows 21 through 71.
+
+## Additional numerical inputs
+
+1. **The initial distribution** of assets, housing and the income state, which
    the forward operators need and no stage declares.
-3. **The discretisation of income.** The stages declare a continuous
+2. **The discretisation of income.** The stages declare a continuous
    autoregression with a standard normal innovation. The finite Markov chain the
    code integrates against, the number of its states, the width it spans and the
    floor on its transition probabilities are numerical choices, and they are in
    `declaration/stages/tenure/methods.bl` and `declaration/settings/durables.yml`.
-4. **The rule at a tie** between keeping and adjusting, which the code fixes at
+3. **The rule at a tie** between keeping and adjusting, which the code fixes at
    adjusting. A tie leaves the choice undetermined in the model, so the rule is a
    setting of the selection method.
 

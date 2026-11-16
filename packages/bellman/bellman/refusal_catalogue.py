@@ -66,6 +66,8 @@ from bellman.factory.joins import forward_order
 from bellman.factory.loading import load_stage, load_trellis
 from bellman.factory.recipe import load_recipe
 from bellman.factory.trellis import assemble_trellis, elaborate_trellis
+from bellman.fold.conditions import numerical_law
+from bellman.native.records import Refusal
 from bellman.refusal_examples import CORPUS, EXAMPLES, corrected, write_registry
 from bellman.refusals import (
     FACTORY_RULES,
@@ -282,9 +284,11 @@ def refusal_of(example):
     """The refusal `example` provokes, or None where the package does not
     refuse it."""
     try:
-        _provoke(example)
+        result = _provoke(example)
     except (ConstructionError, TargetError, FactoryError) as refused:
         return refused
+    if isinstance(result, Refusal):
+        return ConstructionError(result.reason, **result.diagnostic)
     return None
 
 
@@ -513,6 +517,12 @@ def _other_version(example):
 # example makes, since several queries refuse under one such rule
 # (`operation`).
 _PROVOKERS = {
+    "numerical-law": (
+        "query", lambda example: numerical_law(
+            _stage(example), builder=example.target, inputs=example.inputs or None
+        ),
+    ),
+    "check_inputs": ("query", lambda example: _stage(example).check_inputs(example.inputs)),
     "load_recipe": (
         "read",
         lambda example: _from_registry(

@@ -1,5 +1,6 @@
 @stage: adjuster_cons_pa
 
+Age := {17, …, 101}
 Plan := {DB, DC}
 
 γ   : (1, inf)     :: ["curvature of utility, equation (1)"]
@@ -38,13 +39,14 @@ Plan := {DB, DC}
     plan_nxt_adj = plan_d
 }
 
-[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu, c, h_choice) -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu, c, h_choice, age : Age @ !vlu @ !cnst) : !cntn -> (V : [-inf, inf) @ !vlu, age) : !dcsn] {
     V        = 𝑢(c, h_choice, α_d) + β_d*V[>]             :: [id=value]
     D_{w_d}V = 𝑢_c(c, h_choice, α_d)                      :: [id=marginal_wealth]
 }
 
-[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl] {
+[id=dcsn_to_arvl, (V, age) : !dcsn -> (V[<] : [-inf, inf) @ !vlu, age_adj[<] : Age @ !vlu @ !cnst) : !arvl] {
     V[<] = V                                             :: [id=value]
+    age_adj[<] = age :: [id=age]
 }
 
 [id=policy, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl, h_choice : ℝ₊₊ @ !ctrl, m_nxt : ℝ₊ @ !ctrl) : !dcsn] {

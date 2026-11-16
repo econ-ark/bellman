@@ -19,7 +19,7 @@ type: concept
 
 # Bellman calculus
 
-The **Bellman calculus** describes how the equations of a dynamic decision problem define mathematical operations and how those operations compose. A [[stage]] records transitions, value calculations, and policy relations at three [[perch|information sets]]. Compatible stages form [[period|periods]], and period occurrences can form a finite [[trellis]].
+The **Bellman calculus** describes how the equations of a dynamic decision problem define mathematical operations and how those operations compose. A [[stage]] records transitions, value calculations, and policy relations at three [[perch|information sets]]. Compatible stages form [[period|periods]], and a [[trellis]] is a diagram of periods joined by connections.
 
 ## The objects being related
 

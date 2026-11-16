@@ -98,7 +98,7 @@ applications/durables/declaration/
                    keeper_cons/    keeper_cons.bl  methods.bl  keeper_cons.md
                    adjuster_cons/  adjuster_cons.bl  methods.bl  methods.adjuster_method.bl  adjuster_cons.md
                    bequest/        bequest.bl  methods.bl
-  calibration/     durables.yml (the parameters the stages declare)  wage_schedule.yml (the schedule and the ages)
+  calibration/     durables.yml (the parameters the stages declare)  wage_schedule.yml (the age-indexed income tables)
   settings/        durables.yml
   period.yml       the three stages of a period before the terminal one and the connector that joins tenure's branches to the decision states of the consumption stages; the order is derived from the fields, not from the list
   trellis.yml      the terminal period written out with the bequest and its connector, then {template: period.yml, repeat: 50};
@@ -132,12 +132,10 @@ print(without_comments(f"{registry}/spec.yml"), end="")
 ```text
 trellis: trellis.yml
 stages:
-  tenure:        {stage: stages/tenure/tenure.bl,               calibration: {all: [calibration/durables, $fill]}, settings: {all: [settings/durables, $fill]}, methods: {all: [stages/tenure/methods.bl]}}
+  tenure:        {stage: stages/tenure/tenure.bl,               calibration: {all: [calibration/durables, calibration/wage_schedule, $fill]}, settings: {all: [settings/durables, $fill]}, methods: {all: [stages/tenure/methods.bl]}}
   keeper_cons:   {stage: stages/keeper_cons/keeper_cons.bl,     calibration: {all: [calibration/durables, $fill]}, settings: {all: [settings/durables, $fill]}, methods: {all: [stages/keeper_cons/methods.bl]}}
   adjuster_cons: {stage: stages/adjuster_cons/adjuster_cons.bl, calibration: {all: [calibration/durables, $fill]}, settings: {all: [settings/durables, $fill]}, methods: {all: [stages/adjuster_cons/methods.bl]}}
   bequest:       {stage: stages/bequest/bequest.bl,             calibration: {all: [calibration/durables, $fill]}, methods: {all: [stages/bequest/methods.bl]}, periods: [0, 0]}
-registry:
-  calibration: [calibration/wage_schedule]
 ```
 
 What the recipe determines is the three mappings of every stage occurrence. `bellman.trellis.load_recipe("applications/durables/declaration", "spec.yml")` reads the recipe, the trellis file and the stage files at the paths it writes, the period templates and every source file it names, each once, and writes one record per stage and period, holding the stage's text and digest, the three mappings merged from the lists that apply at that period, and the ordered sources that produced them; it constructs no stage, and it reads a stage file's declarations only to check the names a fill gives. The binding is the work of the trellis verbs, which read those mappings from the records (§4). A recipe cannot stand alone: without the trellis file it names there is no list of periods to write records for, and a stage the recipe names that no period holds, or a stage a period holds that the recipe does not name, is refused under `recipe-template-agreement` with both files named.
@@ -158,61 +156,49 @@ A fill given to `load_recipe` produces a fresh syntactic trellis from the regist
 
 ### 3.4 Values that differ by period
 
-The sources common to every period stand in a stage's `all` list. The sources of some periods stand in a **range list** beside it, keyed by the periods it covers, written `"lo-hi"` and counted as the trellis counts them, the terminal period being `0` ([Trellises](07-trellis.md) §1.1). For a period inside the range, the range list is read after the `all` list, so that its sources stand over the common ones and over the fill; the ranges of one stage and one kind must not overlap, and a key that is not written `lo-hi` is refused under `recipe-shape`. The within-life model of Benhabib, Bisin and Luo (2019), `applications/benhabib-2019/`, gives its one decision stage a wage profile constant within each of six age brackets of six years, one range list per bracket:
+The sources common to every period stand in a stage's `all` list. The sources of some periods stand in a **range list** beside it, keyed by the periods it covers, written `"lo-hi"` and counted as the trellis counts them, the terminal period being `0` ([Trellises](07-trellis.md) §1.1). For a period inside the range, the range list is read after the `all` list, so that its sources stand over the common ones and over the fill; the ranges of one stage and one kind must not overlap, and a key that is not written `lo-hi` is refused under `recipe-shape`. For example, `"1-6": [calibration/alternative]` reads an additional
+source for periods 1 through 6.
+
+A recipe may select calibration, methods and settings by position. In a [modular model](../bellman-calculus/APPX-H-MODULARITY.md), calibration comes from the declaration's recorded sources regardless of position. Data that vary with economic time can enter as continuation fields. A general recipe can still use range lists and `periods: [lo, hi]` selectors.
+
+The within-life model of Benhabib, Bisin and Luo (2019) uses one wage table
+in every working period. The stage reads the table at the age it takes in
+from the next period and at its earnings decile. The table's row for that
+age gives the wage one year younger. The bequest takes in the terminal age
+and the zero continuation value when the model is realized.
 
 ```yaml
 trellis: trellis.yml
 stages:
   benhabib_bellman:
     stage: stages/benhabib_bellman/benhabib_bellman.bl
-    calibration:
-      all:     [calibration/main, $fill]
-      "1-6":   [calibration/wage/bracket_6]
-      "7-12":  [calibration/wage/bracket_5]
-      "13-18": [calibration/wage/bracket_4]
-      "19-24": [calibration/wage/bracket_3]
-      "25-30": [calibration/wage/bracket_2]
-      "31-36": [calibration/wage/bracket_1]
+    calibration: {all: [calibration/main, calibration/wage, $fill]}
     settings: {all: [settings/default, $fill]}
-    methods:  {all: [stages/benhabib_bellman/methods, $bellman_method]}
+    methods:  {all: [stages/benhabib_bellman/methods.bl]}
     periods: [1, 36]
-  bequest: {stage: stages/bequest/bequest.bl, calibration: {all: [calibration/main, $fill]}, methods: {all: [stages/bequest/methods]}, periods: [0, 0]}
-registry:
-  calibration: [calibration/horizon]
+  bequest: {stage: stages/bequest/bequest.bl, calibration: {all: [calibration/main, $fill]}, methods: {all: [stages/bequest/methods.bl]}, periods: [0, 0]}
 ```
 
-At `periods[1]` to `periods[6]`, ages 60 to 55, the record's calibration holds the wage function of the sixth bracket, read after `calibration/main` and the fill; at `periods[7]` it holds the fifth bracket's, and at `periods[36]`, age 25, the first bracket's.
-
-A stage **active in some periods only** writes `periods: [lo, hi]` on its entry, the bounds counted the same way, and the stage is then absent from the records of every other period, even where the template lists it. The benhabib template lists both stages in every one of its thirty-seven periods, and the recipe places the bequest in `periods[0]` alone and the decision stage in `periods[1]` to `periods[36]`; a stage restricted to periods that no template holds is refused under `recipe-template-agreement`. A range list changes what a stage receives at some periods, and `periods:` changes where the stage occurs; the interval stands in the record's provenance under `active`.
+A stage **active in some periods only** writes `periods: [lo, hi]` on its entry, the bounds counted the same way, and the stage is then absent from the records of every other period, even where the template lists it. The Benhabib template lists both stages in every one of its thirty-seven periods, and the recipe places the bequest in `periods[0]` alone and the decision stage in `periods[1]` to `periods[36]`; a stage restricted to periods that no template holds is refused under `recipe-template-agreement`. A range list changes what a stage receives at some periods, and `periods:` changes where the stage occurs; the interval stands in the record's provenance under `active`.
 
 **The bequest is a stage.** The file `bequest.bl` declares its parameters, arrives at the savings, the housing and the income state that the consumption stages continue to, under names of its own, `a_bq`, `h_bq` and `z_bq`, so that no arrival field of the terminal period is declared by two stages, values the wealth left behind, and reads a continuation value `V[>]` whose value is zero, the boundary data of the terminal period; its methods file, `stages/bequest/methods.bl`, adds the derivative lines of its value to its value builders' blocks, which the consumption stages' endogenous grid lines read. There is no separate terminal object of any kind: the bequest stands last in the terminal period, is active there alone through `periods: [0, 0]`, and receives a fill of θ as any stage receives a fill of a parameter it declares.
 
-A value that varies with every period, such as the wage schedule's income level `Y` and retirement income `y_R` of the tenure stage, has no key of the recipe and no class: the application writes each period's values into the syntactic trellis before the trellis verbs bind, from the names the `registry` block carries (§3.5), or calibrates each period with its own values as it accretes.
+The durables recipe supplies the same tables `Y` and `y_R` to every
+tenure occurrence. The bequest keeps the terminal age 71, the consumption
+stages keep their incoming ages, and the tenure stage sends back one year
+less than its incoming age on the keep branch. Each branch's forward map
+reads the table row for the age it takes in. The row gives the wage and
+retirement income one year younger.
 
 ### 3.5 The registry block
 
-The recipe's `registry` block names sources whose assignments no stage declares, here the eight names of `calibration/wage_schedule.yml`, so that a fill of one of them is not refused. They stand under the trellis's own `registry` key, `{kind: {name: value}}`, with their sources under the trellis's `provenance`, are bound to no stage and are copied unread by `elaborate_trellis` and the trellis verbs; a fill of such a name changes the `registry` mapping and nothing else. They are data for the application's own functions. The durables function `write_wage_schedule`, in `applications/durables/code/wage_schedule.py`, computes `Y` and `y_R` for each age from the schedule's coefficients and writes them into that period's `tenure` record, appending to the record's source list an entry that names the function, so that a record's provenance names every writer. It runs after every `load_recipe`, since a fill produces a fresh syntactic trellis, and before the trellis verbs:
+A recipe may name a `registry` block for values no stage declares. The
+values appear under the syntactic trellis's own `registry` key, with their
+sources in its provenance. A fill of one of these names changes the registry
+mapping. The binding verbs copy it. The durables recipe passes age through
+its stage fields and supplies both income tables as stage parameters.
 
-```python
-import sys
-
-sys.path.insert(0, "applications/durables/code")
-from wage_schedule import write_wage_schedule
-
-full = write_wage_schedule(load_recipe(registry, "spec.yml"))
-last_age = full["registry"]["calibration"]["last_age"]
-for h in (0, 10, 50):
-    tenure = full["periods"][h]["stages"]["tenure"]["calibration"]
-    print(f"periods[{h}], age {last_age - h}: Y {tenure['Y']:.4f}, y_R {tenure['y_R']}")
-```
-
-```text
-periods[0], age 70: Y 0.0000, y_R 0.1
-periods[10], age 60: Y 0.8986, y_R 0.0
-periods[50], age 20: Y 0.3193, y_R 0.0
-```
-
-The tenure stage chooses between keeping and adjusting. It is a [branching stage](05-branching.md); the full recipe constructs it in each of the fifty-one periods, and the whole trellis then holds one hundred and fifty-four stage occurrences.
+The tenure stage chooses between keeping and adjusting. It is a [branching stage](05-branching.md). The full recipe constructs it in each of the fifty-one periods, and the whole trellis holds one hundred and fifty-four stage occurrences.
 
 ### 3.6 Variants side by side
 
@@ -301,7 +287,7 @@ print(model["periods"][0]["stages"]["adjuster_cons"].methods)
 applications/durables/declaration/stages/adjuster_cons/adjuster_cons.bl
 calibration: {'R': 1.045, 'R_H': 1.0, 'β': 0.945, 'α': 0.7, 'γ_c': 3.5, 'γ_h': 1.5, 'κ': 0.06, 'δ': 0.0, 'τ': 0.12, 'ρ_z': 0.82, 'σ_z': 0.11, 'θ': 1.3498, 'K': 1.3}
 settings: {'n_a': 300, 'a_min': 0.01, 'a_max': 7.5, 'grid_phi': 1.01, 'b': 0.01, 'n_h': 300} ... of 39
-provenance: {'origin': 'applications/durables/declaration/stages/adjuster_cons/adjuster_cons.bl', 'sha256': '3c216eb3cb57c0d6187d4e2a820822bed94eb34b748490e813179cd7de87885b'}
+provenance: {'origin': 'applications/durables/declaration/stages/adjuster_cons/adjuster_cons.bl', 'sha256': '257bf5525247ea90fd0b10fab10fcd6d4a53e6b349ac69208bbfe07038c6d1fc'}
 additions: [('applications/durables/declaration/stages/adjuster_cons/methods.bl', '@methods: adjuster_cons')]
 methods:
 cntn_to_dcsn.evaluate[V]        !Linear(extrapolate=extrap_policy, clamp_factor=clamp_max_factor)   !Cartesian(m=(w_min, w_max, n_w))   "dcsmm:interp_as_3"
@@ -309,18 +295,17 @@ cntn_to_dcsn.evaluate[D_{m}V]   !Linear(extrapolate=extrap_policy, clamp_factor=
 policy                          !egm(spacing=grid_phi, savings_floor=b, roots_per_housing_point=egm_n, root_scan_step=root_eps, upper_envelope=adj_upper_envelope, jump_threshold=m_bar, lookback=fues_lb, eps_d=fues_eps_d, eps_sep=fues_eps_sep, eps_fwd_back=fues_eps_fwd_back, parallel_guard=fues_parallel_guard, include_intersections=adj_include_intersections, no_double_jumps=adj_no_double_jumps, single_intersection=adj_single_intersection, disable_jump_checks=adj_disable_jump_checks, correct_jumps=correct_jumps, search_sections=n_sections)   !Cartesian(a_nxt_adj=(a_min, a_max, n_a), h_nxt_adj=(h_min, h_max, n_h))   "fues-durables:make_adjuster_ops"
 ```
 
-The record's `provenance["source_lists"]` holds, for each kind, the ordered sources that produced its mapping: each file with its path and digest, and each slot with its name, whether a fill was bound to it, and the fill's names that the stage declares, here none since no fill was given. The registry-level names stand under the trellis's `registry` key:
+The record's `provenance["source_lists"]` holds, for each kind, the ordered sources that produced its mapping: each file with its path and digest, and each slot with its name, whether a fill was bound to it, and the fill's names that the stage declares, here none since no fill was given.
 
 ```python
 from pprint import pprint
 
 pprint(record["provenance"]["source_lists"])
-pprint(syntactic["registry"])
 ```
 
 ```text
 {'calibration': [{'path': 'applications/durables/declaration/calibration/durables.yml',
-                  'sha256': '77a026308bd078082e963b0d3fe6aa2cf1f79900e9c0bd5a837698f86beb000b',
+                  'sha256': 'cbe754ceb5e8b38baf73268699c7e1f0f912aeecc62c0747cbfa628e442c5fea',
                   'source': 'calibration/durables'},
                  {'bound': False, 'names': [], 'slot': 'fill'}],
  'methods': [{'path': 'applications/durables/declaration/stages/adjuster_cons/methods.bl',
@@ -330,20 +315,6 @@ pprint(syntactic["registry"])
                'sha256': 'e176ae673908bfc8331b68a7aa671b1f7bf15bba445ce83e61b2e7d155e62e42',
                'source': 'settings/durables'},
               {'bound': False, 'names': [], 'slot': 'fill'}]}
-{'calibration': {'earnings_scale': 1e-05,
-                 'first_age': 20,
-                 'last_age': 70,
-                 'retirement_age': 60,
-                 'retirement_income': 0.1,
-                 'tenure_cap': 30,
-                 'tenure_origin': 20,
-                 'wage_coefficients': [4.329982,
-                                       0.610214,
-                                       -0.0209832,
-                                       0.0003132,
-                                       -1.72e-06,
-                                       0.0199949,
-                                       4.76e-05]}}
 ```
 
 An elaborated stage occurrence holds the methods its record names, since the methods files are read with the stage text, and it declares its parameters and holds no value for them. The `set` column of `par` is filled from the declarations and the `value` column reads `unbound`:
@@ -444,7 +415,7 @@ configure_trellis: bound 6, copied 1
 before the fill: β 0.945   n_a 300
 after the fill:  β 0.93   n_a 500
 [{'path': 'applications/durables/declaration/calibration/durables.yml',
-  'sha256': '77a026308bd078082e963b0d3fe6aa2cf1f79900e9c0bd5a837698f86beb000b',
+  'sha256': 'cbe754ceb5e8b38baf73268699c7e1f0f912aeecc62c0747cbfa628e442c5fea',
   'source': 'calibration/durables'},
  {'bound': True, 'names': ('β',), 'slot': 'fill'}]
 ```
@@ -509,7 +480,7 @@ for beta in (0.93, 0.945, 0.96):
 | a stage file | by `elaborate_trellis(syntactic, elaborated)`: the stage occurrences of that file, the digest in the record detecting the change | every other stage occurrence, copied from `elaborated` |
 | the period template or the trellis file | by `load_recipe`: the shape of the trellis and the positions | the stage occurrences whose record is unchanged |
 
-A fill given to `load_recipe` produces a fresh syntactic trellis from the registry, so values the application wrote into the records period by period are written again by its function after every `load_recipe`, before the trellis verbs bind; such a function appends to the record's source list an entry naming its file, the names it wrote and its argument, so that a record's provenance names every writer. Only a changed stage file is constructed again: `elaborate_trellis` given the earlier elaborated trellis as its second argument copies every position whose record kept its digest and constructs the others. As `elaborate_trellis` constructs each distinct stage text once (§2), a verb binds each distinct input once; a changed selection of methods is another construction, which `elaborate_trellis(syntactic, elaborated)` makes at each position of the record (the table above). Where several positions hold versions of one stage file with the same bindings and recorded sources and the syntactic trellis gives them the same mapping, each mapping written with its keys in the same order, since a version prints them in that order, as it gives `keeper_cons` one calibration at every age, the verb binds the first and places at each of the others a copy that records its own position and parent and equals the version the verb would bind there alone; such a copy is a new version of its position, so `changed_positions` names it among the positions bound. Every stage occurrence is its own object; two stage occurrences with equal mappings have equal bindings and graphs and are distinct objects. Within a period, stages that declare the same parameter name share the meaning and value of that parameter, while their fields remain local. A verb binds a stage occurrence to the version it is given, never to the version of an earlier fill in a chain, and the earlier trellis is untouched. Binding changes no graph: the semgraphs of a bound version equal those of the symbolic one, and a verb writes to the bindings alone. What a change does to a numerical representation belongs to realization and is not decided here.
+A fill given to `load_recipe` produces a fresh syntactic trellis from the recipe's source lists and the new fill. An application may also supply calibration by editing an occurrence's record. Apply any such edit to the fresh record before binding it, and record the source in its provenance. Only a changed stage file is constructed again: `elaborate_trellis` given the earlier elaborated trellis as its second argument copies every position whose record kept its digest and constructs the others. As `elaborate_trellis` constructs each distinct stage text once (§2), a verb binds each distinct input once; a changed selection of methods is another construction, which `elaborate_trellis(syntactic, elaborated)` makes at each position of the record (the table above). Where several positions hold versions of one stage file with the same bindings and recorded sources and the syntactic trellis gives them the same mapping, each mapping written with its keys in the same order, since a version prints them in that order, as it gives `keeper_cons` one calibration at every age, the verb binds the first and places at each of the others a copy that records its own position and parent and equals the version the verb would bind there alone; such a copy is a new version of its position, so `changed_positions` names it among the positions bound. Every stage occurrence is its own object; two stage occurrences with equal mappings have equal bindings and graphs and are distinct objects. Within a period, stages that declare the same parameter name share the meaning and value of that parameter, while their fields remain local. A verb binds a stage occurrence to the version it is given, never to the version of an earlier fill in a chain, and the earlier trellis is untouched. Binding changes no graph: the semgraphs of a bound version equal those of the symbolic one, and a verb writes to the bindings alone. What a change does to a numerical representation belongs to realization and is not decided here.
 
 ### 6.1 Many draws on many cores
 
@@ -564,7 +535,7 @@ Field dependencies determine the economic order of the stages within a period; t
 
 The [connection report](../wiki/connector.md) shows authored and inferred pairs, candidates left unresolved, compatibility diagnostics and routes whose complete state and value interfaces are established. It names an authored endpoint that names no eligible use or several, and a pair whose compatibility is not established. A malformed connector entry, a continuation use claimed twice by authored entries or a selected cycle is refused. The report and the period drawing read the same selection; neither invents a second joining rule. A selected pair alone does not certify an economically complete route.
 
-The forward order, the backward order and the stages computable together are functions over the joins, and no graph of the period is stored. `bellman.period.diagram_period(trellis, h)` makes the drawing of `periods[h]` on request, in the format of a graph's `diagram()`: one box per stage, labeled by its key, standing in the forward order from left to right; one arrow per selected join, labeled by its field pair; and one unlabeled arrow to a plain label for each continuation field that no stage of the period takes. `bellman.trellis.diagram_trellis(trellis, periods=None)` shows the periods of an elaborated trellis, all of them or those whose indices `periods` lists, each as `diagram_period` shows it inside a frame labeled with `h` and, where the trellis's `registry` holds `last_age`, with the age; the terminal period stands at the right, so that economic time runs from left to right and the backward computation from right to left, as the drawing's title states; and every inter-period connector between two of those periods is shown as wires from the continuation fields that leave `periods[h + 1]` to the arrival fields of `periods[h]`, each labeled with the connector's index and its field pair. Both calls return a drawing that a notebook displays, built from the dictionary and stored nowhere. The drawing of the three latest periods of the two-stage durables trellis, made by `diagram_trellis(model, periods=[0, 1, 2])`:
+The forward order, the backward order and the stages computable together are functions over the joins, and no graph of the period is stored. `bellman.period.diagram_period(trellis, h)` makes the drawing of `periods[h]` on request, in the format of a graph's `diagram()`: one box per stage, labeled by its key, standing in the forward order from left to right; one arrow per selected join, labeled by its field pair; and one unlabeled arrow to a plain label for each continuation field that no stage of the period takes. `bellman.trellis.diagram_trellis(trellis, periods=None)` shows the periods of an elaborated trellis, all of them or those whose indices `periods` lists, each as `diagram_period` shows it inside a frame labeled by its position `h`; the terminal period stands at the right, so that economic time runs from left to right and the backward computation from right to left, as the drawing's title states; and every inter-period connector between two of those periods is shown as wires from the continuation fields that leave `periods[h + 1]` to the arrival fields of `periods[h]`, each labeled with the connector's index and its field pair. Both calls return a drawing that a notebook displays, built from the dictionary and stored nowhere. The drawing of the three latest periods of the two-stage durables trellis, made by `diagram_trellis(model, periods=[0, 1, 2])`:
 
 ![The drawing of the three latest periods of the two-stage durables trellis, made by diagram_trellis](figures/draw-trellis-durables-two-stage.svg)
 

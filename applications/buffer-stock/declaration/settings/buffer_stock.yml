@@ -10,7 +10,7 @@ settings:
   n_ψ_nodes: 7
   n_ξ_nodes: 7
   n_a: 960
-  a_min: 0.001
+  extra_grid: 0.001
   a_max: 20.0
   n_k: 960
   k_min: 0.001

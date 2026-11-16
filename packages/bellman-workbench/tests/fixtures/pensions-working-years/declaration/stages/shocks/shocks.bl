@@ -1,10 +1,11 @@
 @stage: shocks
 
+Age := {17, …, 101}
 Plan := {DB, DC}
 
 R       : ℝ₊₊       :: ["gross return on liquid assets, Section 4.E"]
 δ       : [0,1)     :: ["depreciation rate of housing, equation (8)"]
-Y       : ℝ₊        :: ["earnings level exp(y(t, τ)) at the age of the period, zero from retirement on"]
+Y       : Age → ℝ₊  :: ["earnings level exp(y(t, τ)) at the age of the period, zero from retirement on"]
 φ       : (-1,1)    :: ["persistence of the wage state, equation (3)"]
 σ_u     : ℝ₊        :: ["standard deviation of the wage innovation, equation (3)"]
 r_r     : ℝ         :: ["mean log return of the risky asset, equation (7)"]
@@ -32,10 +33,10 @@ u   ~ N(0, σ_u^2)                                :: ["innovation to the wage st
 β   : (0,1)
 β   ~ DiscreteMarkov(Π_β, β_pts, β_pre)          :: ["the discount factor, Section 4.F"]
 
-[id=arvl_to_dcsn, (a : ℝ₊, a_dc : ℝ₊, π_pre : [0,1], h : ℝ₊, m : ℝ₊, P_pre : ℝ₊₊, ξ_pre : ℝ, α_pre : (0,1), β_pre : (0,1), plan : Plan, u, ε_d, ε_h, α, β) : !arvl -> (a_d : ℝ₊, y_d : ℝ₊, adc_d : ℝ₊, h_d : ℝ₊, m_d : ℝ₊, P_d : ℝ₊₊, ξ_d : ℝ, α_d : (0,1), β_d : (0,1), plan_d : Plan, π_d : [0,1]) : !dcsn] {
+[id=arvl_to_dcsn, (a : ℝ₊, a_dc : ℝ₊, π_pre : [0,1], h : ℝ₊, m : ℝ₊, P_pre : ℝ₊₊, ξ_pre : ℝ, α_pre : (0,1), β_pre : (0,1), plan : Plan, u, ε_d, ε_h, α, β, age) : !arvl -> (a_d : ℝ₊, y_d : ℝ₊, adc_d : ℝ₊, h_d : ℝ₊, m_d : ℝ₊, P_d : ℝ₊₊, ξ_d : ℝ, α_d : (0,1), β_d : (0,1), plan_d : Plan, π_d : [0,1]) : !dcsn] {
     a_d    = R*a                                                                      :: [id=liquid_return]
     ξ_d    = φ*ξ_pre + u                                                              :: [id=wage_state]
-    y_d    = Y*exp(ξ_d)                                                               :: [id=earnings]
+    y_d    = Y[age]*exp(ξ_d)                                                          :: [id=earnings]
     adc_d  = (π_pre*exp(r_r + scale_r*ε_d) + (1 - π_pre)*exp(r_s + scale_s*ε_d))*a_dc :: [id=pension_return]
     h_d    = (1 - δ)*h                                                                :: [id=depreciation]
     P_d    = (1 + r_h + ε_h)*P_pre/(1 - δ)                                            :: [id=house_price]
@@ -60,14 +61,14 @@ u   ~ N(0, σ_u^2)                                :: ["innovation to the wage st
     π_s    = π_d
 }
 
-[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu, age : Age @ !vlu @ !cnst) : !cntn -> (V : [-inf, inf) @ !vlu, age) : !dcsn] {
     V        = V[>]                              :: [id=value]
     D_{a_d}V = D_{a_s}V[>]                       :: [id=marginal_liquid]
     D_{h_d}V = D_{h_s}V[>]                       :: [id=marginal_housing]
     D_{m_d}V = D_{m_s}V[>]                       :: [id=marginal_mortgage]
 }
 
-[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl] {
+[id=dcsn_to_arvl, (V, age) : !dcsn -> (V[<] : [-inf, inf) @ !vlu, age) : !arvl] {
     V[<]      = E_{u, ε_d, ε_h, α, β}(V)                                :: [id=value]
     D_{a}V[<] = E_{u, ε_d, ε_h, α, β}(R*D_{a_d}V)                       :: [id=marginal_liquid]
     D_{h}V[<] = E_{u, ε_d, ε_h, α, β}((1 - δ)*D_{h_d}V)                 :: [id=marginal_housing]

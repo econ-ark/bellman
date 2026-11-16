@@ -7,6 +7,31 @@
       "value": "bequest"
     },
     {
+      "__class__": "Statement",
+      "core": {
+        "__class__": "Assignment",
+        "target": {
+          "__class__": "Constant",
+          "name": "Age"
+        },
+        "value": {
+          "__class__": "Space",
+          "set": {
+            "__class__": "IntegerRange",
+            "lower": {
+              "__class__": "Number",
+              "value": 20
+            },
+            "upper": {
+              "__class__": "Number",
+              "value": 71
+            }
+          }
+        }
+      },
+      "annot": null
+    },
+    {
       "__class__": "Declare",
       "declaration": {
         "__class__": "Declaration",
@@ -531,10 +556,41 @@
                         }
                       }
                     ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "age",
+                    "at": null,
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "Age"
+                        }
+                      },
+                      {
+                        "__class__": "Role",
+                        "kind": {
+                          "__class__": "Value",
+                          "order": 0
+                        }
+                      },
+                      {
+                        "__class__": "Constancy"
+                      }
+                    ]
                   }
                 ]
               },
-              "source_types": [],
+              "source_types": [
+                {
+                  "__class__": "Infoset",
+                  "side": {
+                    "__class__": "Continuation"
+                  }
+                }
+              ],
               "target": {
                 "__class__": "Subject",
                 "coordinates": [
@@ -558,6 +614,12 @@
                         }
                       }
                     ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "age",
+                    "at": null,
+                    "classifiers": []
                   }
                 ]
               },
@@ -709,6 +771,12 @@
                     "stem": "V",
                     "at": null,
                     "classifiers": []
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "age",
+                    "at": null,
+                    "classifiers": []
                   }
                 ]
               },
@@ -748,6 +816,12 @@
                         }
                       }
                     ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "age",
+                    "at": null,
+                    "classifiers": []
                   }
                 ]
               },

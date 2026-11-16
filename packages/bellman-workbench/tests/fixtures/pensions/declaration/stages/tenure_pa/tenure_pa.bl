@@ -1,5 +1,6 @@
 @stage: tenure_pa
 
+Age := {17, …, 101}
 Plan := {DB, DC}
 
 [id=arvl_to_dcsn, (w_a : ℝ₊, adc_a : ℝ₊, π_a : [0,1], h_a : ℝ₊, m_a : ℝ₊, P_a : ℝ₊₊, ξ_a : ℝ, α_a : (0,1), β_a : (0,1), plan_a : Plan) : !arvl -> (w_d : ℝ₊, adc_d : ℝ₊, π_d : [0,1], h_d : ℝ₊, m_d : ℝ₊, P_d : ℝ₊₊, ξ_d : ℝ, α_d : (0,1), β_d : (0,1), plan_d : Plan) : !dcsn] {
@@ -50,14 +51,17 @@ Plan := {DB, DC}
     }
 }
 
-[id=cntn_to_dcsn, (V_rt[>] : [-inf, inf) @ !vlu, V_adj[>] : [-inf, inf) @ !vlu, V_kp[>] : [-inf, inf) @ !vlu, d) : !cntn -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+[id=cntn_to_dcsn, (V_rt[>] : [-inf, inf) @ !vlu, V_adj[>] : [-inf, inf) @ !vlu, V_kp[>] : [-inf, inf) @ !vlu, d,
+    age_rt[>] : Age @ !vlu @ !cnst, age_adj[>] : Age @ !vlu @ !cnst, age_kp[>] : Age @ !vlu @ !cnst) : !cntn -> (V : [-inf, inf) @ !vlu, age_sv : Age @ !vlu @ !cnst) : !dcsn] {
     V        = (V_rt[>], V_adj[>], V_kp[>])[d]                                        :: [id=choice_value]
     D_{w_d}V = (D_{w_rt}V_rt[>], D_{w_adj}V_adj[>], D_{w_kp}V_kp[>])[d]               :: [id=marginal_cash]
     D_{h_d}V = (P_d*D_{w_rt}V_rt[>], P_d*D_{w_adj}V_adj[>], D_{h_kp}V_kp[>])[d]       :: [id=marginal_housing]
     D_{m_d}V = (-D_{w_rt}V_rt[>], -D_{w_adj}V_adj[>], D_{m_kp}V_kp[>])[d]             :: [id=marginal_mortgage]
+    # All three consumption branches supply the same next-period age in this fixture.
+    age_sv = min((age_rt[>], age_adj[>], age_kp[>])) - 1                               :: [id=age]
 }
 
-[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl] {
+[id=dcsn_to_arvl, (V, age_sv) : !dcsn -> (V[<] : [-inf, inf) @ !vlu, age_sv) : !arvl] {
     V[<] = V                                     :: [id=value]
 }
 

@@ -237,23 +237,16 @@ class WireTable:
         """The sort of a function wire at a perch: the role and the declared
         set of the field it carries, free in `arguments`, the bound
         coordinates of the row that writes it."""
-        field = self.field_of(identity.stage, identity.perch, identity.field)
-        if producer is None:
-            # a branch value is free in its base's fields, read from the
-            # section of the pullback that reads it
-            held = {
-                (op.definition.address, op.section)
-                for op in self.table.primitive_rows
-                if op.kind == "Pullback" and op.section is not None and identity in op.inputs
-            }
-            arguments = (
-                self.sections[held.pop()]
-                if len(held) == 1
-                else tuple(
-                    i
-                    for i, s in self.ports.items()
-                    if s.perch == identity.perch and s.role == "state"
-                )
+        declared = self.ports.get(
+            Identity("field", stage=identity.stage, perch=identity.perch, field=identity.field)
+        )
+        field = declared or self.field_of(identity.stage, identity.perch, identity.field)
+        if declared is not None and declared.role in VALUE_ROLES and identity.mark is None:
+            arguments = declared.coordinates
+        elif producer is None:
+            arguments = tuple(
+                i for i, sort in self.ports.items()
+                if sort.perch == identity.perch and sort.role == "state"
             )
         role = field.role if field is not None else self.role_of(identity)
         return Sort(
@@ -263,6 +256,7 @@ class WireTable:
             role=role,
             domain=field.domain if field is not None else None,
             coordinates=arguments,
+            constant=field.constant if field is not None else False,
             # the coordinates in which the writing Evaluation records a stated
             # derivative of the value (AMD-MB-001 §5.1): the entries whose
             # line names this wire's value, and no entry of another value
@@ -361,7 +355,10 @@ class WireTable:
             # each component's role is the role of the value inputs its own
             # map reads, not of every input of the box
             return wires_read(producer.maps[producer.outputs.index(identity)]) or reads
-        if kind in ("Pullback", "Expectation", "Evaluation") and identity in producer.outputs:
+        if kind == "Pullback" and identity in producer.outputs and not producer.unknowns:
+            position = producer.outputs.index(identity)
+            return producer.inputs[position:position + 1]
+        if kind in ("Expectation", "Evaluation") and identity in producer.outputs:
             # one kernel applied to every component of a value bundle writes
             # one result per component it reads, in the components' order, so
             # a result's role is the role of the value input at its own place

@@ -1,6 +1,7 @@
 """The construction of a stage from its source record, the mapping
 `load_stage` returns: `elaborate_stage` for a record and `elaborate_text`
-for a text and its origin; `source_spans` for the span table of a text, and
+for a text and its origin; `source_spans` for the span table of a text,
+`header_fields` for the field each listing of its block headers names, and
 `bind_stage` for the binding of a stage from a record's three sources with a
 report of what bound. The methods of a record are its additions, the `.bl`
 methods files of the stage, each as its text and its origin: `construct_stage`
@@ -20,6 +21,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from hashlib import sha256
 from traceback import clear_frames
+from types import MappingProxyType
 from typing import NamedTuple
 
 from lark.exceptions import LarkError
@@ -34,6 +36,7 @@ from bellman.stage.binding_verbs import (
     configured_version,
     methodized_version,
 )
+from bellman.stage.construction import placed_declarations
 from bellman.stage.elaborated import make_stage
 from bellman.stage.levels import (
     addition_records,
@@ -44,6 +47,8 @@ from bellman.stage.levels import (
 from bellman.syntax.lower import parse_with_spans
 from bellman.syntax.parse import syntax_refusal
 from bellman.syntax.union import union
+from bellman.syntax.vocabulary import WRITTEN_MARK
+from bellman.typing.line_unknowns import INPUT
 
 # --- the stage of a record and the symbolic stage of a text ---
 
@@ -321,7 +326,8 @@ def stage_occurrence(
     holds under `additions`, the additions `initial` was constructed with;
     `elaborate_stage(record, bind=False)` constructs the text alone and
     records none. The caller copies it with `copy_native`, so that no two
-    positions share a version."""
+    positions share a version. The recorded position is an address in the
+    trellis diagram, not an input to the stage operator."""
     source = stage_text_of(record, address)
     text, origin, digest, supplied = source.text, source.origin, source.digest, source.supplied
     read = tuple((addition.text, addition.origin) for addition in source.additions)
@@ -422,12 +428,62 @@ def source_spans(text, origin):
     parser or the lowering cannot read is refused as `elaborate_text`
     refuses it, under the rule `syntax` at the refused position, so that an
     editor marks one place for the spans and for the elaboration."""
+    return _parsed(text, origin).spans
+
+
+def _parsed(text, origin):
+    """The parsed file of a stage text, its term and its span table
+    (`bellman.syntax.lower.parse_with_spans`); a text the parser or the
+    lowering cannot read is refused under the rule `syntax` at the refused
+    position."""
     try:
-        return parse_with_spans(text, filename=origin).spans
+        return parse_with_spans(text, filename=origin)
     except (LarkError, ConstructionError) as error:
         refusal = syntax_refusal(error, text, origin)
         clear_frames(error.__traceback__)
     raise refusal from None
+
+
+class HeaderField(NamedTuple):
+    """The field one listing of a block header names: its `identity`, whose
+    `perch` is the perch at which the language places the listing, and its
+    `role`, as the fields table of the stage gives both."""
+
+    identity: object
+    role: str
+
+
+def header_fields(text, origin):
+    """The field each listing of the block headers of a stage text names: a
+    read-only mapping from the address the span table gives the listing,
+    `<block>.in.<field>` or `<block>.<label>.out.<field>` (`source_spans`),
+    to its `HeaderField`, in the order of the text. The declaration pass
+    reads and checks the top-level items and the block headers and places
+    each listing, as it does when a stage is constructed
+    (`bellman.stage.construction.placed_declarations`); no line of a block
+    is typed and no graph is built. A text whose construction is refused in
+    a line of a block therefore still answers its headers. A constant that
+    a backward block takes in at the continuation perch, and that a forward
+    block lists among its inputs, is answered at the continuation perch on
+    both headers. A text the parser or the lowering cannot read is refused
+    under the rule `syntax`, and a text the declaration pass refuses up to
+    the placing of its headers is refused as `elaborate_text` refuses it."""
+    term, spans = _parsed(text, origin)
+    try:
+        declarations, _, _ = placed_declarations(term, spans)
+    except ConstructionError as error:
+        if error.file is None:
+            error.file = origin
+        raise
+    return MappingProxyType(
+        {
+            f"{listing.address}.{'in' if listing.side == INPUT else 'out'}."
+            f"{listing.stem}{WRITTEN_MARK[listing.mark] if listing.mark else ''}": HeaderField(
+                listing.wire_type, declarations.field_roles[listing.stem]
+            )
+            for listing in declarations.listings
+        }
+    )
 
 
 class Binding(NamedTuple):

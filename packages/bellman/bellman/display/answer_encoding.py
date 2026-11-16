@@ -134,10 +134,14 @@ def _encode(value, frames, tables):
     scope = (
         (value.params, (value.name,), (value.body,))
         if isinstance(value, (T.FuncDef, T.CorrDef))
+        else (value.arguments, (value.subjects,), (value.law,))
+        if isinstance(value, T.ParameterizedLaw)
         else S.binder_parts(value)
     )
     if scope is not None:
         return _encode_scope(value, scope, frames, tables)
+    if isinstance(value, T.Key) and any(value.at in frame for frame in frames):
+        return _node(value, {"at": _reference(value.at, frames, tables)})
     if isinstance(
         value,
         (
@@ -302,6 +306,8 @@ def _encode_scope(value, scope, frames, tables):
     metadata = [_encode(S.variable_metadata(v), frames, tables) for v in variables]
     if isinstance(value, (T.Operator, T.FuncDef, T.CorrDef)):
         outer[0] = _reference(outside[0], frames, tables)
+    if isinstance(value, T.ParameterizedLaw):
+        outer[0] = [_reference(subject, frames, tables) for subject in value.subjects]
     if isinstance(value, T.Operator):
         for index, variable in enumerate(variables):
             preceding = frames + (inner[-1][:index],)
@@ -490,6 +496,7 @@ KINDS = {
     T.Comprehension: "terms.Comprehension",
     T.Conditional: "terms.Conditional",
     T.Constant: "terms.Constant",
+    T.Constancy: "terms.Constancy",
     T.Continuation: "terms.Continuation",
     T.Control: "terms.Control",
     T.Coordinate: "terms.Coordinate",
@@ -501,6 +508,7 @@ KINDS = {
     T.Domain: "terms.Domain",
     T.Eq: "terms.Eq",
     T.Equation: "terms.Equation",
+    T.ExpressionArgument: "terms.ExpressionArgument",
     T.FILE: "terms.FILE",
     T.FiniteSet: "terms.FiniteSet",
     T.FuncDef: "terms.FuncDef",
@@ -528,6 +536,7 @@ KINDS = {
     T.Open: "terms.Open",
     T.Operator: "terms.Operator",
     T.Parameter: "terms.Parameter",
+    T.ParameterizedLaw: "terms.ParameterizedLaw",
     T.PathAssignment: "terms.PathAssignment",
     T.Pos: "terms.Pos",
     T.Points: "terms.Points",

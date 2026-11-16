@@ -1,7 +1,7 @@
 ---
 title: Trellis
 slug: trellis
-description: A finite sequence of period occurrences with inter-period connections.
+description: A diagram of periods joined by connections.
 wiki_status: canonical
 last_reviewed: '2026-10-02'
 reviewed_by: Claude (Fable); checked against the loaders and the trellis operations of packages/bellman/bellman/factory
@@ -18,13 +18,15 @@ type: concept
 
 # Trellis
 
-A **trellis** is a finite ordered collection of [[period|period occurrences]] and their inter-period [[connector|connections]]. It records uses of [[stage|stage files]] across dates. It is not a grid of individual state points and does not by itself assert one stored semgraph (semantic graph) for the entire horizon.
+A **trellis** is a diagram of [[period|periods]] joined by [[connector|connections]]. Its finite Python representation lists period occurrences and their inter-period connections. It records uses of [[stage|stage files]] across dates. It is not a grid of individual state points and does not by itself assert one stored semgraph (semantic graph) for the entire horizon.
 
-## Index and boundary data
+<a id="index-and-boundary-data"></a>
+
+## Positions and terminal data
 
 The index $h$ counts backwards from terminal: `periods[0]` is terminal and `periods[h+1]` is one period earlier than `periods[h]`. An [[connector|inter-period connector]] indexed by $h$ joins the earlier period's continuation to the later period's arrival. Backward calculation uses terminal continuation data first, then proceeds to increasing $h$. The trellis is counted this way because it is built this way, the terminal period appended first and each earlier period after it, so that appending a period changes no index already present and the horizon is the number of periods built.
 
-Terminal continuation data must match the terminal stage's declared inputs and domains. Calling an entry terminal does not automatically supply zero value, a terminal policy, or compatible derivatives. An infinite-horizon fixed-point condition is a different boundary problem.
+The user supplies terminal data when the model is realized, outside the trellis file. These data must match every terminal value-type field, a field typed `!vlu`, and its representing function's domain. They include age or a bound where the stage takes one in. Calling an entry terminal supplies no values. An infinite-horizon stationary problem requires a fixed point for every field sent backward, not only the value field; a finite trellis does not assert that fixed point.
 
 ## The three files and the two routes
 
@@ -34,7 +36,7 @@ The shape of a period's `stages` decides the route. Written as a list of keys, a
 
 ## Reusing stage files
 
-The same stage file may be parsed once and used for several [[stage|stage occurrences]]. Each stage occurrence receives its own semgraph, methods, and [[settings]]. Stages in one period share a parameter when they declare it under the same name; the same name in another period denotes another parameter. A value that differs by period is written in the recipe, as [the factory guide](../Bellman-Sym/08-bellman-factory.md) §3 states, or into the records by the application. The stage file itself need not encode a calendar date.
+The same stage file may be parsed once and used for several [[stage|stage occurrences]]. Each stage occurrence receives its own semgraph, methods, and [[settings]]. Stages in one period share a parameter when they declare it under the same name; the same name in another period denotes another parameter. In a [modular model](../bellman-calculus/APPX-H-MODULARITY.md), repeated declarations share their operators and calibration sources. Their supplied fields may differ, and methods and settings remain separate numerical choices. A stage occurrence's position is an address in the trellis, not an input to its equations. A quantity that differs with age is read from a fixed table or function at an age field. For example, `age = age_next - 1` computes age from the supplied continuation age. The package also permits recipes to select calibration, methods and settings by position; it does not enforce modularity ([the factory guide](../Bellman-Sym/08-bellman-factory.md) §3).
 
 ## The syntactic and the elaborated trellis
 

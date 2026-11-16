@@ -1,0 +1,1245 @@
+BELLMAN-SYM / STAGE tenure_choice                         [VERSION = SYMBOLIC]
+a stage occurrence of applications/housing-renting/declaration/stages/
+tenure_choice/tenure_choice.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        a≺ state, H≺ state, y_pre≺ state, V≺ value
+  ∼ decision       a_d state, H_d state, y_d state, d control, V value
+  ≻ continuation   a_o≻ state, H_o≻ state, y_o≻ state, w_r≻ state, y_r≻ state,
+                   V_o≻ value, V_r≻ value
+  ≺ → ∼            y drawn after arrival, before decision
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           a≺ at arrival, H≺ at arrival, y_pre≺ at arrival, a_d at
+                   decision, H_d at decision, y_d at decision, a_o≻ at
+                   continuation, H_o≻ at continuation, y_o≻ at continuation,
+                   w_r≻ at continuation, y_r≻ at continuation
+  controls         d at decision
+  values           V at the arrival, decision perches; V_o at the continuation
+                   perch; V_r at the continuation perch
+  shocks           y, drawn between arrival and decision
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → arvl_to_dcsn   (a≺, H≺, y_pre≺, y) : !arvl -> (a_d, H_d, y_d) : !dcsn
+  → dcsn_to_cntn   (a_d, H_d, y_d) : !dcsn, at d ->
+                   (a_o≻, H_o≻, y_o≻, w_r≻, y_r≻) : !cntn
+  ← cntn_to_dcsn   (V_o≻, V_r≻) : !cntn, at d -> (V) : !dcsn
+  ← dcsn_to_arvl   (V) : !dcsn -> (V≺) : !arvl
+  ← policy         (V_o≻, V_r≻) : !cntn -> (d) : !dcsn
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  distributions            1   y
+  parameters               6   r : ℝ₊; Π : [0, 1]; z : ℝ₊₊;
+                               a0_T : ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ ×
+                               ℝ₊ × ℝ₊;
+                               B_T : ℝ × ℝ × ℝ × ℝ × ℝ × ℝ × ℝ × ℝ × ℝ × ℝ;
+                               τ_T : [0, 1) × [0, 1) × [0, 1) × [0, 1) ×
+                               [0, 1) × [0, 1) × [0, 1) × [0, 1) × [0, 1) ×
+                               [0, 1)
+  functions                1   𝑇 on ℝ₊
+  function aliases         1   𝑑𝑇
+  laws of motion           2   a_d = a; H_d = H; y_d = y;
+                               a_o = a_d; H_o = H_d; y_o = y_d; w_r =
+                               (1 + r)*a_d - 𝑇(a_d) + H_d; y_r = y_d
+  value aggregators        3   V = (V_o[>], V_r[>])[d]; V[<] = E_{y}(V);
+                               d = argmax_{d}(V_o[>], V_r[>])
+  block lines             11   arvl_to_dcsn.1, arvl_to_dcsn.2,
+                               arvl_to_dcsn.3, dcsn_to_cntn.own.1,
+                               dcsn_to_cntn.own.2, dcsn_to_cntn.own.3,
+                               dcsn_to_cntn.rent.liquidation,
+                               dcsn_to_cntn.rent.2,
+                               cntn_to_dcsn.choice_value, dcsn_to_arvl.value,
+                               policy.choice
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   (𝑉_o≻, 𝑉_r≻) ↦ 𝑉≺, 𝑑(a_d, H_d, y_d)
+                    forward    μ≺ ↦ μ_own≻, μ_rent≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ≺ a≺, H≺, y_pre≺  → y drawn →  ∼ a_d, H_d, y_d  →  ≻ a_o≻, H_o≻,
+             y_o≻, w_r≻, y_r≻
+  backward   ≺ V≺  ←  ∼ V  ←  ≻ V_o≻, V_r≻
+  policy     ∼ d  ←  ≻ V_o≻, V_r≻
+
+==== stage ====
+STAGE tenure_choice
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑉_o≻     : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+         𝑉_r≻     : ℝ₊ × ℝ₊₊ → [−∞, ∞)
+         ───────────────────────────────────────────────────
+    out  𝑉≺       : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+         𝑑        : ℝ₊ × ℝ₊ × ℝ₊₊ → {own, rent}
+  forward
+    in   μ≺       : finite measure on ℝ₊ × ℝ₊ × ℝ₊₊
+         ───────────────────────────────────────────────────
+    out  μ_own≻   : finite measure on ℝ₊ × ℝ₊ × ℝ₊₊
+         μ_rent≻  : finite measure on ℝ₊ × ℝ₊₊
+
+Where
+  (a_d, H_d, y_d) = 𝑔≺(a, H, y_pre, y)
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉_o≻, 𝑉_r≻                   out: 𝑉
+
+    2  dcsn_to_arvl
+       in: 𝑉                            out: 𝑉≺
+
+    3  policy
+       in: 𝑉_o≻, 𝑉_r≻                   out: 𝑑
+
+  forward
+    1  arvl_to_dcsn
+       in: μ≺                           out: μ
+
+    2  dcsn_to_cntn
+       in: μ                            out: μ_own≻, μ_rent≻
+
+Conditions
+  cntn_to_dcsn:Aggregation  𝑉(a_d, H_d, y_d) ∈ [−∞, ∞)
+  dcsn_to_arvl:Aggregation  𝑉≺(a, H, y_pre) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  11  y ~ MarkovChain(Π, z, y_pre)
+        :: ["this period's income, drawn from the row of Π at last period's
+        income y_pre"]
+  26  a_d = a
+  27  H_d = H
+  28  y_d = y
+  33  a_o = a_d
+  34  H_o = H_d
+  35  y_o = y_d
+  38  w_r = (1 + r)*a_d - 𝑇(a_d) + H_d
+        :: [id=liquidation, "a renter sells the house; income is added in the
+        renter's rental stage"]
+  39  y_r = y_d
+  44  V = (V_o[>], V_r[>])[d]
+        :: [id=choice_value]
+  48  V[<] = E_{y}(V)
+        :: [id=value]
+  52  d = argmax_{d}(V_o[>], V_r[>])
+        :: [id=choice]
+
+Definitions referenced
+  y     tenure_choice:distribution:y
+  𝑔≺    tenure_choice:g:arvl_to_dcsn
+
+File
+  applications/housing-renting/declaration/stages/tenure_choice/
+  tenure_choice.bl
+
+Perches
+  ≺  arrival, written [<]
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE tenure_choice / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V_o≻  : {V_o≻, V_r≻}
+       V_r≻  : {V_o≻, V_r≻}
+       ────────────────────
+  out  V     : {V}
+
+Conditions
+  𝑉(a_d, H_d, y_d) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  44  V = (V_o[>], V_r[>])[d]  :: [id=choice_value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward dcsn_to_arvl ====
+STAGE tenure_choice / BACKWARD BLOCK dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V   : {V}
+       ──────────
+  out  V≺  : {V≺}
+
+Conditions
+  𝑉≺(a, H, y_pre) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  48  V[<] = E_{y}(V)  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward policy ====
+STAGE tenure_choice / POLICY BLOCK policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V_o≻  : {V_o≻, V_r≻}
+       V_r≻  : {V_o≻, V_r≻}
+       ────────────────────
+  out  d     : {d}
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  52  d = argmax_{d}(V_o[>], V_r[>])  :: [id=choice]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward arvl_to_dcsn ====
+STAGE tenure_choice / FORWARD BLOCK arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a≺      : {a≺, H≺, y_pre≺}
+       H≺      : {a≺, H≺, y_pre≺}
+       y_pre≺  : {y_pre≺}
+       y       : {y}
+       ──────────────────────────
+  out  a_d     : {a_d, H_d, y_d}
+       H_d     : {a_d, H_d, y_d}
+       y_d     : {y_d}
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  26  a_d = a
+  27  H_d = H
+  28  y_d = y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE tenure_choice / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a_d   : {a_d, H_d, y_d}
+       H_d   : {a_d, H_d, y_d}
+       y_d   : {y_d}
+       ──────────────────────────────────────
+  out  a_o≻  : {a_o≻, H_o≻, y_o≻, w_r≻, y_r≻}
+       H_o≻  : {a_o≻, H_o≻, y_o≻, w_r≻, y_r≻}
+       y_o≻  : {y_o≻, y_r≻}
+       w_r≻  : {a_o≻, H_o≻, y_o≻, w_r≻, y_r≻}
+       y_r≻  : {y_o≻, y_r≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  33  a_o = a_d
+  34  H_o = H_d
+  35  y_o = y_d
+  38  w_r = (1 + r)*a_d - 𝑇(a_d) + H_d
+        :: [id=liquidation, "a renter sells the house; income is added in the
+        renter's rental stage"]
+  39  y_r = y_d
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn / own ====
+STAGE tenure_choice / FORWARD BLOCK dcsn_to_cntn / own
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a_d   : {a_d, H_d, y_d}
+       H_d   : {a_d, H_d, y_d}
+       y_d   : {y_d}
+       ──────────────────────────────────────
+  out  a_o≻  : {a_o≻, H_o≻, y_o≻, w_r≻, y_r≻}
+       H_o≻  : {a_o≻, H_o≻, y_o≻, w_r≻, y_r≻}
+       y_o≻  : {y_o≻, y_r≻}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn / rent ====
+STAGE tenure_choice / FORWARD BLOCK dcsn_to_cntn / rent
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a_d   : {a_d, H_d, y_d}
+       H_d   : {a_d, H_d, y_d}
+       y_d   : {y_d}
+       ──────────────────────────────────────
+  out  w_r≻  : {a_o≻, H_o≻, y_o≻, w_r≻, y_r≻}
+       y_r≻  : {y_o≻, y_r≻}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE tenure_choice / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_o≻  : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+       𝑉_r≻  : ℝ₊ × ℝ₊₊ → [−∞, ∞)
+       ────────────────────────────────────────────────────
+  out  𝑉     : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+
+At
+  𝑑  : ℝ₊ × ℝ₊ × ℝ₊₊ → {own, rent}
+
+Where
+  𝑔_own≻   : ℝ₊ × ℝ₊ × ℝ₊₊ → ℝ₊ × ℝ₊ × ℝ₊₊,
+             𝑔_own≻(a_d, H_d, y_d) = 𝑔≻(a_d, H_d, y_d, own)
+  𝑔_rent≻  : ℝ₊ × ℝ₊ × ℝ₊₊ → ℝ₊ × ℝ₊₊,
+             𝑔_rent≻(a_d, H_d, y_d) = 𝑔≻(a_d, H_d, y_d, rent)
+
+Operations
+  1  Pullback:own
+     in: 𝑉_o≻                           out: 𝑉_o≻ ∘ 𝑔_own≻
+     ──────────────────────────────────────────────────────
+     rule: (𝑉_o≻ ∘ 𝑔_own≻)(a_d, H_d, y_d) = 𝑉_o≻(𝑔_own≻(a_d, H_d, y_d))
+
+  2  Pullback:rent
+     in: 𝑉_r≻                           out: 𝑉_r≻ ∘ 𝑔_rent≻
+     ──────────────────────────────────────────────────────
+     rule: (𝑉_r≻ ∘ 𝑔_rent≻)(a_d, H_d, y_d) = 𝑉_r≻(𝑔_rent≻(a_d, H_d, y_d))
+
+  3  Aggregation
+     in: (1), (2)                       out: 𝑉
+     ──────────────────────────────────────────────────────
+     rule: 𝑉 = (𝑉_o≻(𝑔_own≻(a_d, H_d, y_d)), 𝑉_r≻(𝑔_rent≻(a_d, H_d, y_d)))[𝑑]
+           on (a_d, H_d, y_d) ∈ ℝ₊ × ℝ₊ × ℝ₊₊
+
+  4  Evaluation
+     in: 𝑉                              out: 𝑉
+     ──────────────────────────────────────────────────────
+     rule: 𝑉 : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+
+Conditions
+  Aggregation  𝑉(a_d, H_d, y_d) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  44  V = (V_o[>], V_r[>])[d]  :: [id=choice_value]
+
+Definitions referenced
+  𝑔≻    tenure_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback:own ====
+STAGE tenure_choice / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Pullback:own
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_o≻  : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+       ───────────────────────────────
+  out  𝑉_o≻ ∘ 𝑔_own≻
+             : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+
+Where
+  𝑔_own≻  : ℝ₊ × ℝ₊ × ℝ₊₊ → ℝ₊ × ℝ₊ × ℝ₊₊,
+            𝑔_own≻(a_d, H_d, y_d) = 𝑔≻(a_d, H_d, y_d, own)
+
+Rule
+  (𝑉_o≻ ∘ 𝑔_own≻)(a_d, H_d, y_d) = 𝑉_o≻(𝑔_own≻(a_d, H_d, y_d))
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  33  a_o = a_d
+  34  H_o = H_d
+  35  y_o = y_d
+  38  w_r = (1 + r)*a_d - 𝑇(a_d) + H_d
+        :: [id=liquidation, "a renter sells the house; income is added in the
+        renter's rental stage"]
+  39  y_r = y_d
+
+Definitions referenced
+  𝑔≻    tenure_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback:rent ====
+STAGE tenure_choice / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Pullback:rent
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_r≻  : ℝ₊ × ℝ₊₊ → [−∞, ∞)
+       ───────────────────────────────
+  out  𝑉_r≻ ∘ 𝑔_rent≻
+             : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+
+Where
+  𝑔_rent≻  : ℝ₊ × ℝ₊ × ℝ₊₊ → ℝ₊ × ℝ₊₊,
+             𝑔_rent≻(a_d, H_d, y_d) = 𝑔≻(a_d, H_d, y_d, rent)
+
+Rule
+  (𝑉_r≻ ∘ 𝑔_rent≻)(a_d, H_d, y_d) = 𝑉_r≻(𝑔_rent≻(a_d, H_d, y_d))
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  33  a_o = a_d
+  34  H_o = H_d
+  35  y_o = y_d
+  38  w_r = (1 + r)*a_d - 𝑇(a_d) + H_d
+        :: [id=liquidation, "a renter sells the house; income is added in the
+        renter's rental stage"]
+  39  y_r = y_d
+
+Definitions referenced
+  𝑔≻    tenure_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE tenure_choice / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_o≻ ∘ 𝑔_own≻
+          : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+       𝑉_r≻ ∘ 𝑔_rent≻
+          : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+       ────────────────────────────
+  out  𝑉  : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+
+Where
+  𝑔_own≻   : ℝ₊ × ℝ₊ × ℝ₊₊ → ℝ₊ × ℝ₊ × ℝ₊₊,
+             𝑔_own≻(a_d, H_d, y_d) = 𝑔≻(a_d, H_d, y_d, own)
+  𝑔_rent≻  : ℝ₊ × ℝ₊ × ℝ₊₊ → ℝ₊ × ℝ₊₊,
+             𝑔_rent≻(a_d, H_d, y_d) = 𝑔≻(a_d, H_d, y_d, rent)
+
+Rule
+  𝑉 = (𝑉_o≻(𝑔_own≻(a_d, H_d, y_d)), 𝑉_r≻(𝑔_rent≻(a_d, H_d, y_d)))[𝑑]
+  on (a_d, H_d, y_d) ∈ ℝ₊ × ℝ₊ × ℝ₊₊
+
+Conditions
+  𝑉(a_d, H_d, y_d) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  44  V = (V_o[>], V_r[>])[d]  :: [id=choice_value]
+
+Definitions referenced
+  𝑔≻    tenure_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE tenure_choice / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+       ────────────────────────────
+  out  𝑉  : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+
+Where
+  𝑔_own≻   : ℝ₊ × ℝ₊ × ℝ₊₊ → ℝ₊ × ℝ₊ × ℝ₊₊,
+             𝑔_own≻(a_d, H_d, y_d) = 𝑔≻(a_d, H_d, y_d, own)
+  𝑔_rent≻  : ℝ₊ × ℝ₊ × ℝ₊₊ → ℝ₊ × ℝ₊₊,
+             𝑔_rent≻(a_d, H_d, y_d) = 𝑔≻(a_d, H_d, y_d, rent)
+
+Rule
+  𝑉 = (𝑉_o≻(𝑔_own≻(a_d, H_d, y_d)), 𝑉_r≻(𝑔_rent≻(a_d, H_d, y_d)))[𝑑]
+  on (a_d, H_d, y_d) ∈ ℝ₊ × ℝ₊ × ℝ₊₊
+  𝑉 : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  𝑔≻    tenure_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl ====
+STAGE tenure_choice / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉   : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+       ───────────────────────────────────────────────
+  out  𝑉≺  : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+
+Operations
+  1  Pullback
+     in: 𝑉                              out: 𝑉 ∘ 𝑔≺
+     ─────────────────────────────────────────────────
+     rule: (𝑉 ∘ 𝑔≺)(a, H, y_pre, y) = 𝑉(𝑔≺(a, H, y_pre, y))
+
+  2  value:Expectation:1
+     in: (1)
+     out: (a, H, y_pre) ↦ E_{y}[𝑉(𝑔≺(a, H, y_pre, y))]
+     ─────────────────────────────────────────────────
+     rule: (2)(a, H, y_pre) = E_{y}[𝑉(𝑔≺(a, H, y_pre, y))]
+
+  3  Aggregation
+     in: (2)                            out: 𝑉≺
+     ─────────────────────────────────────────────────
+     rule: 𝑉≺ = E_{y}[𝑉(𝑔≺(a, H, y_pre, y))]  on (a, H, y_pre) ∈ ℝ₊ × ℝ₊ × ℝ₊₊
+
+  4  Evaluation
+     in: 𝑉≺                             out: 𝑉≺
+     ─────────────────────────────────────────────────
+     rule: 𝑉≺ : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+
+Conditions
+  Aggregation  𝑉≺(a, H, y_pre) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  48  V[<] = E_{y}(V)  :: [id=value]
+
+Definitions referenced
+  y     tenure_choice:distribution:y
+  𝑔≺    tenure_choice:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Pullback ====
+STAGE tenure_choice / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+       ──────────────────────────────────
+  out  𝑉 ∘ 𝑔≺
+          : ℝ₊ × ℝ₊ × ℝ₊₊ × ℝ₊₊ → [−∞, ∞)
+
+Rule
+  (𝑉 ∘ 𝑔≺)(a, H, y_pre, y) = 𝑉(𝑔≺(a, H, y_pre, y))
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  26  a_d = a
+  27  H_d = H
+  28  y_d = y
+
+Definitions referenced
+  y     tenure_choice:distribution:y
+  𝑔≺    tenure_choice:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / value:Expectation:1 ====
+STAGE tenure_choice / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+  / value:Expectation:1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉 ∘ 𝑔≺
+         : ℝ₊ × ℝ₊ × ℝ₊₊ × ℝ₊₊ → [−∞, ∞)
+       ────────────────────────────────────────────
+  out  (a, H, y_pre) ↦ E_{y}[𝑉(𝑔≺(a, H, y_pre, y))]
+         : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+
+Rule
+  value:Expectation:1(a, H, y_pre) = E_{y}[𝑉(𝑔≺(a, H, y_pre, y))]
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  11  y ~ MarkovChain(Π, z, y_pre)
+        :: ["this period's income, drawn from the row of Π at last period's
+        income y_pre"]
+  48  V[<] = E_{y}(V)
+        :: [id=value]
+
+Definitions referenced
+  y     tenure_choice:distribution:y
+  𝑔≺    tenure_choice:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Aggregation ====
+STAGE tenure_choice / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+  / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (a, H, y_pre) ↦ E_{y}[𝑉(𝑔≺(a, H, y_pre, y))]
+           : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+       ────────────────────────────────────────────
+  out  𝑉≺  : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+
+Rule
+  𝑉≺ = E_{y}[𝑉(𝑔≺(a, H, y_pre, y))]           on (a, H, y_pre) ∈ ℝ₊ × ℝ₊ × ℝ₊₊
+
+Conditions
+  𝑉≺(a, H, y_pre) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  48  V[<] = E_{y}(V)  :: [id=value]
+
+Definitions referenced
+  y     tenure_choice:distribution:y
+  𝑔≺    tenure_choice:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Evaluation ====
+STAGE tenure_choice / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≺  : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+       ─────────────────────────────
+  out  𝑉≺  : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+
+Rule
+  𝑉≺ = E_{y}[𝑉(𝑔≺(a, H, y_pre, y))]           on (a, H, y_pre) ∈ ℝ₊ × ℝ₊ × ℝ₊₊
+  𝑉≺ : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  y     tenure_choice:distribution:y
+  𝑔≺    tenure_choice:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy ====
+STAGE tenure_choice / POLICY BUILDER policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_o≻  : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+       𝑉_r≻  : ℝ₊ × ℝ₊₊ → [−∞, ∞)
+       ─────────────────────────────────────────────────────────────────────
+  out  𝑑     : ℝ₊ × ℝ₊ × ℝ₊₊ → {own, rent}
+
+Where
+  𝑔_own≻   : ℝ₊ × ℝ₊ × ℝ₊₊ → ℝ₊ × ℝ₊ × ℝ₊₊,
+             𝑔_own≻(a_d, H_d, y_d) = 𝑔≻(a_d, H_d, y_d, own)
+  𝑔_rent≻  : ℝ₊ × ℝ₊ × ℝ₊₊ → ℝ₊ × ℝ₊₊,
+             𝑔_rent≻(a_d, H_d, y_d) = 𝑔≻(a_d, H_d, y_d, rent)
+
+Operations
+  1  Pullback:own
+     in: 𝑉_o≻                           out: 𝑉_o≻ ∘ 𝑔_own≻
+     ───────────────────────────────────────────────────────────────────────
+     rule: (𝑉_o≻ ∘ 𝑔_own≻)(a_d, H_d, y_d) = 𝑉_o≻(𝑔_own≻(a_d, H_d, y_d))
+
+  2  Pullback:rent
+     in: 𝑉_r≻                           out: 𝑉_r≻ ∘ 𝑔_rent≻
+     ───────────────────────────────────────────────────────────────────────
+     rule: (𝑉_r≻ ∘ 𝑔_rent≻)(a_d, H_d, y_d) = 𝑉_r≻(𝑔_rent≻(a_d, H_d, y_d))
+
+  3  choice:Aggregation
+     in: (1), (2)
+     out: (a_d, H_d, y_d, d)
+            ↦ (𝑉_o≻(𝑔_own≻(a_d, H_d, y_d)), 𝑉_r≻(𝑔_rent≻(a_d, H_d, y_d)))[d]
+     ───────────────────────────────────────────────────────────────────────
+     rule: (a_d, H_d, y_d, d)
+             ↦ (𝑉_o≻(𝑔_own≻(a_d, H_d, y_d)), 𝑉_r≻(𝑔_rent≻(a_d, H_d, y_d)))[d]
+
+  4  choice:Argmax
+     in: (3)                            out: 𝑑
+     ───────────────────────────────────────────────────────────────────────
+     rule: 𝑑(a_d, H_d, y_d)
+             ∈ argmax_{d ∈ {own, rent}}
+                 [(𝑉_o≻(𝑔_own≻(a_d, H_d, y_d)),
+                   𝑉_r≻(𝑔_rent≻(a_d, H_d, y_d)))[d]]
+
+  5  Evaluation
+     in: 𝑑                              out: 𝑑
+     ───────────────────────────────────────────────────────────────────────
+     rule: 𝑑 : ℝ₊ × ℝ₊ × ℝ₊₊ → {own, rent}
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  52  d = argmax_{d}(V_o[>], V_r[>])  :: [id=choice]
+
+Definitions referenced
+  𝑔≻    tenure_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback:own ====
+STAGE tenure_choice / POLICY BUILDER policy / Pullback:own
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_o≻  : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+       ───────────────────────────────
+  out  𝑉_o≻ ∘ 𝑔_own≻
+             : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+
+Where
+  𝑔_own≻  : ℝ₊ × ℝ₊ × ℝ₊₊ → ℝ₊ × ℝ₊ × ℝ₊₊,
+            𝑔_own≻(a_d, H_d, y_d) = 𝑔≻(a_d, H_d, y_d, own)
+
+Rule
+  (𝑉_o≻ ∘ 𝑔_own≻)(a_d, H_d, y_d) = 𝑉_o≻(𝑔_own≻(a_d, H_d, y_d))
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  33  a_o = a_d
+  34  H_o = H_d
+  35  y_o = y_d
+  38  w_r = (1 + r)*a_d - 𝑇(a_d) + H_d
+        :: [id=liquidation, "a renter sells the house; income is added in the
+        renter's rental stage"]
+  39  y_r = y_d
+
+Definitions referenced
+  𝑔≻    tenure_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback:rent ====
+STAGE tenure_choice / POLICY BUILDER policy / Pullback:rent
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_r≻  : ℝ₊ × ℝ₊₊ → [−∞, ∞)
+       ───────────────────────────────
+  out  𝑉_r≻ ∘ 𝑔_rent≻
+             : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+
+Where
+  𝑔_rent≻  : ℝ₊ × ℝ₊ × ℝ₊₊ → ℝ₊ × ℝ₊₊,
+             𝑔_rent≻(a_d, H_d, y_d) = 𝑔≻(a_d, H_d, y_d, rent)
+
+Rule
+  (𝑉_r≻ ∘ 𝑔_rent≻)(a_d, H_d, y_d) = 𝑉_r≻(𝑔_rent≻(a_d, H_d, y_d))
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  33  a_o = a_d
+  34  H_o = H_d
+  35  y_o = y_d
+  38  w_r = (1 + r)*a_d - 𝑇(a_d) + H_d
+        :: [id=liquidation, "a renter sells the house; income is added in the
+        renter's rental stage"]
+  39  y_r = y_d
+
+Definitions referenced
+  𝑔≻    tenure_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / choice:Aggregation ====
+STAGE tenure_choice / POLICY BUILDER policy / choice:Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_o≻ ∘ 𝑔_own≻
+         : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+       𝑉_r≻ ∘ 𝑔_rent≻
+         : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+       ──────────────────────────────────────────────────────────────────
+  out  (a_d, H_d, y_d, d)
+         ↦ (𝑉_o≻(𝑔_own≻(a_d, H_d, y_d)), 𝑉_r≻(𝑔_rent≻(a_d, H_d, y_d)))[d]
+         : ℝ₊ × ℝ₊ × ℝ₊₊ × {own, rent} → [−∞, ∞)
+
+Where
+  𝑔_own≻   : ℝ₊ × ℝ₊ × ℝ₊₊ → ℝ₊ × ℝ₊ × ℝ₊₊,
+             𝑔_own≻(a_d, H_d, y_d) = 𝑔≻(a_d, H_d, y_d, own)
+  𝑔_rent≻  : ℝ₊ × ℝ₊ × ℝ₊₊ → ℝ₊ × ℝ₊₊,
+             𝑔_rent≻(a_d, H_d, y_d) = 𝑔≻(a_d, H_d, y_d, rent)
+
+Rule
+  (a_d, H_d, y_d, d)
+    ↦ (𝑉_o≻(𝑔_own≻(a_d, H_d, y_d)), 𝑉_r≻(𝑔_rent≻(a_d, H_d, y_d)))[d]
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  52  d = argmax_{d}(V_o[>], V_r[>])  :: [id=choice]
+
+Definitions referenced
+  𝑔≻    tenure_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / choice:Argmax ====
+STAGE tenure_choice / POLICY BUILDER policy / choice:Argmax
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (a_d, H_d, y_d, d)
+         ↦ (𝑉_o≻(𝑔_own≻(a_d, H_d, y_d)), 𝑉_r≻(𝑔_rent≻(a_d, H_d, y_d)))[d]
+          : ℝ₊ × ℝ₊ × ℝ₊₊ × {own, rent} → [−∞, ∞)
+       ──────────────────────────────────────────────────────────────────
+  out  𝑑  : ℝ₊ × ℝ₊ × ℝ₊₊ → {own, rent}
+
+Where
+  𝑔_own≻   : ℝ₊ × ℝ₊ × ℝ₊₊ → ℝ₊ × ℝ₊ × ℝ₊₊,
+             𝑔_own≻(a_d, H_d, y_d) = 𝑔≻(a_d, H_d, y_d, own)
+  𝑔_rent≻  : ℝ₊ × ℝ₊ × ℝ₊₊ → ℝ₊ × ℝ₊₊,
+             𝑔_rent≻(a_d, H_d, y_d) = 𝑔≻(a_d, H_d, y_d, rent)
+
+Rule
+  𝑑(a_d, H_d, y_d)
+    ∈ argmax_{d ∈ {own, rent}}
+        [(𝑉_o≻(𝑔_own≻(a_d, H_d, y_d)), 𝑉_r≻(𝑔_rent≻(a_d, H_d, y_d)))[d]]
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  52  d = argmax_{d}(V_o[>], V_r[>])  :: [id=choice]
+
+Definitions referenced
+  𝑔≻    tenure_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Evaluation ====
+STAGE tenure_choice / POLICY BUILDER policy / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑑  : ℝ₊ × ℝ₊ × ℝ₊₊ → {own, rent}
+       ────────────────────────────────
+  out  𝑑  : ℝ₊ × ℝ₊ × ℝ₊₊ → {own, rent}
+
+Where
+  𝑔_own≻   : ℝ₊ × ℝ₊ × ℝ₊₊ → ℝ₊ × ℝ₊ × ℝ₊₊,
+             𝑔_own≻(a_d, H_d, y_d) = 𝑔≻(a_d, H_d, y_d, own)
+  𝑔_rent≻  : ℝ₊ × ℝ₊ × ℝ₊₊ → ℝ₊ × ℝ₊₊,
+             𝑔_rent≻(a_d, H_d, y_d) = 𝑔≻(a_d, H_d, y_d, rent)
+
+Rule
+  𝑑(a_d, H_d, y_d)
+    ∈ argmax_{d ∈ {own, rent}}
+        [(𝑉_o≻(𝑔_own≻(a_d, H_d, y_d)), 𝑉_r≻(𝑔_rent≻(a_d, H_d, y_d)))[d]]
+  𝑑 : ℝ₊ × ℝ₊ × ℝ₊₊ → {own, rent}
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  𝑔≻    tenure_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn ====
+STAGE tenure_choice / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on ℝ₊ × ℝ₊ × ℝ₊₊
+       ────────────────────────────────────────────────────
+  out  μ   : finite measure on ℝ₊ × ℝ₊ × ℝ₊₊
+
+Operations
+  1  DistributionExtension:y
+     in: μ≺                             out: μ≺⊗P_{y|y_pre}
+     ──────────────────────────────────────────────────────
+     rule: μ≺⊗P_{y|y_pre}(B)
+             = ∫_{(a, H, y_pre) ∈ ℝ₊ × ℝ₊ × ℝ₊₊}
+                 [P_{y|y_pre}(y_pre)({y ∈ ℝ₊₊ | (a, H, y_pre, y) ∈ B})]
+               μ≺(d(a, H, y_pre))
+
+  2  Pushforward
+     in: (1)                            out: μ
+     ──────────────────────────────────────────────────────
+     rule: μ(B)
+             = μ≺⊗P_{y|y_pre}({a≺, H≺, y_pre≺, y ∈ ℝ₊ × ℝ₊ × ℝ₊₊ × ℝ₊₊ |
+                               𝑔≺(a≺, H≺, y_pre≺, y) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  26  a_d = a
+  27  H_d = H
+  28  y_d = y
+
+Definitions referenced
+  P_{y|y_pre}  tenure_choice:distribution:y
+  y            tenure_choice:distribution:y
+  𝑔≺           tenure_choice:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / DistributionExtension:y ====
+STAGE tenure_choice / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+  / DistributionExtension:y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on ℝ₊ × ℝ₊ × ℝ₊₊
+       ───────────────────────────────────────────
+  out  μ≺⊗P_{y|y_pre}
+           : finite measure on ℝ₊ × ℝ₊ × ℝ₊₊ × ℝ₊₊
+
+Rule
+  μ≺⊗P_{y|y_pre}(B)
+    = ∫_{(a, H, y_pre) ∈ ℝ₊ × ℝ₊ × ℝ₊₊}
+        [P_{y|y_pre}(y_pre)({y ∈ ℝ₊₊ | (a, H, y_pre, y) ∈ B})]
+      μ≺(d(a, H, y_pre))
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  11  y ~ MarkovChain(Π, z, y_pre)
+        :: ["this period's income, drawn from the row of Π at last period's
+        income y_pre"]
+
+Definitions referenced
+  P_{y|y_pre}  tenure_choice:distribution:y
+  y            tenure_choice:distribution:y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / Pushforward ====
+STAGE tenure_choice / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺⊗P_{y|y_pre}
+          : finite measure on ℝ₊ × ℝ₊ × ℝ₊₊ × ℝ₊₊
+       ──────────────────────────────────────────
+  out  μ  : finite measure on ℝ₊ × ℝ₊ × ℝ₊₊
+
+Rule
+  μ(B)
+    = μ≺⊗P_{y|y_pre}({a≺, H≺, y_pre≺, y ∈ ℝ₊ × ℝ₊ × ℝ₊₊ × ℝ₊₊ |
+                      𝑔≺(a≺, H≺, y_pre≺, y) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  26  a_d = a
+  27  H_d = H
+  28  y_d = y
+
+Definitions referenced
+  P_{y|y_pre}  tenure_choice:distribution:y
+  y            tenure_choice:distribution:y
+  𝑔≺           tenure_choice:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE tenure_choice / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ        : finite measure on ℝ₊ × ℝ₊ × ℝ₊₊
+       ─────────────────────────────────────────────────────
+  out  μ_own≻   : finite measure on ℝ₊ × ℝ₊ × ℝ₊₊
+       μ_rent≻  : finite measure on ℝ₊ × ℝ₊₊
+
+At
+  𝑑  : ℝ₊ × ℝ₊ × ℝ₊₊ → {own, rent}
+
+Where
+  𝑔_own≻   : ℝ₊ × ℝ₊ × ℝ₊₊ → ℝ₊ × ℝ₊ × ℝ₊₊,
+             𝑔_own≻(a_d, H_d, y_d) = 𝑔≻(a_d, H_d, y_d, own)
+  𝑔_rent≻  : ℝ₊ × ℝ₊ × ℝ₊₊ → ℝ₊ × ℝ₊₊,
+             𝑔_rent≻(a_d, H_d, y_d) = 𝑔≻(a_d, H_d, y_d, rent)
+
+Operations
+  1  Pushforward
+     in: μ                              out: μ_own≻, μ_rent≻
+     ───────────────────────────────────────────────────────
+     rule: μ_own≻(B)
+             = μ({a_d, H_d, y_d ∈ ℝ₊ × ℝ₊ × ℝ₊₊ |
+                   𝑑(a_d, H_d, y_d) = own ∧ 𝑔_own≻(a_d, H_d, y_d) ∈ B})
+           μ_rent≻(B)
+             = μ({a_d, H_d, y_d ∈ ℝ₊ × ℝ₊ × ℝ₊₊ |
+                   𝑑(a_d, H_d, y_d) = rent ∧ 𝑔_rent≻(a_d, H_d, y_d) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  33  a_o = a_d
+  34  H_o = H_d
+  35  y_o = y_d
+  38  w_r = (1 + r)*a_d - 𝑇(a_d) + H_d
+        :: [id=liquidation, "a renter sells the house; income is added in the
+        renter's rental stage"]
+  39  y_r = y_d
+
+Definitions referenced
+  𝑔≻    tenure_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE tenure_choice / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ        : finite measure on ℝ₊ × ℝ₊ × ℝ₊₊
+       ──────────────────────────────────────────
+  out  μ_own≻   : finite measure on ℝ₊ × ℝ₊ × ℝ₊₊
+       μ_rent≻  : finite measure on ℝ₊ × ℝ₊₊
+
+Where
+  𝑔_own≻   : ℝ₊ × ℝ₊ × ℝ₊₊ → ℝ₊ × ℝ₊ × ℝ₊₊,
+             𝑔_own≻(a_d, H_d, y_d) = 𝑔≻(a_d, H_d, y_d, own)
+  𝑔_rent≻  : ℝ₊ × ℝ₊ × ℝ₊₊ → ℝ₊ × ℝ₊₊,
+             𝑔_rent≻(a_d, H_d, y_d) = 𝑔≻(a_d, H_d, y_d, rent)
+
+Rule
+  μ_own≻(B)
+    = μ({a_d, H_d, y_d ∈ ℝ₊ × ℝ₊ × ℝ₊₊ |
+          𝑑(a_d, H_d, y_d) = own ∧ 𝑔_own≻(a_d, H_d, y_d) ∈ B})
+  μ_rent≻(B)
+    = μ({a_d, H_d, y_d ∈ ℝ₊ × ℝ₊ × ℝ₊₊ |
+          𝑑(a_d, H_d, y_d) = rent ∧ 𝑔_rent≻(a_d, H_d, y_d) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  33  a_o = a_d
+  34  H_o = H_d
+  35  y_o = y_d
+  38  w_r = (1 + r)*a_d - 𝑇(a_d) + H_d
+        :: [id=liquidation, "a renter sells the house; income is added in the
+        renter's rental stage"]
+  39  y_r = y_d
+
+Definitions referenced
+  𝑔≻    tenure_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== tenure_choice:parameter:r ====
+STAGE tenure_choice / PARAMETER r
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  r  ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  3  r      : ℝ₊  :: ["interest rate on financial assets"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== tenure_choice:parameter:Π ====
+STAGE tenure_choice / PARAMETER Π
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Π  ∈ [0, 1]
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  4  Π      : [0,1]
+       :: ["transition matrix of the income chain, one row for each income
+       level; the set of one probability stands in for the matrix, which the
+       language cannot yet type"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== tenure_choice:parameter:z ====
+STAGE tenure_choice / PARAMETER z
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  z  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  5  z      : ℝ₊₊
+       :: ["the income levels of the chain, in the order of the rows of Π; ℝ₊₊
+       stands in for the vector, whose length the discretisation of the income
+       process fixes"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== tenure_choice:parameter:a0_T ====
+STAGE tenure_choice / PARAMETER a0_T
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  a0_T  ∈ ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  6  a0_T   : ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊
+       :: ["lower asset threshold of each of the ten tax brackets, in
+       increasing order"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== tenure_choice:parameter:B_T ====
+STAGE tenure_choice / PARAMETER B_T
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  B_T  ∈ ℝ × ℝ × ℝ × ℝ × ℝ × ℝ × ℝ × ℝ × ℝ × ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  7  B_T    : ℝ × ℝ × ℝ × ℝ × ℝ × ℝ × ℝ × ℝ × ℝ × ℝ
+       :: ["tax due at the lower threshold of each bracket"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== tenure_choice:parameter:τ_T ====
+STAGE tenure_choice / PARAMETER τ_T
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  τ_T  ∈ [0, 1) × [0, 1) × [0, 1) × [0, 1) × [0, 1) × [0, 1) × [0, 1) × [0, 1)
+           × [0, 1) × [0, 1)
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  8  τ_T    : [0,1) × [0,1) × [0,1) × [0,1) × [0,1) × [0,1) × [0,1) × [0,1) ×
+       [0,1) × [0,1)
+       :: ["marginal tax rate on assets within each bracket"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== tenure_choice:distribution:y ====
+STAGE tenure_choice / DISTRIBUTION y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  P_{y|y_pre}  ~ y_pre ↦ MarkovChain(Π, z, y_pre)
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  11  y ~ MarkovChain(Π, z, y_pre)
+        :: ["this period's income, drawn from the row of Π at last period's
+        income y_pre"]
+
+Definitions referenced
+  Π     tenure_choice:parameter:Π
+  z     tenure_choice:parameter:z
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== tenure_choice:function:𝑇 ====
+STAGE tenure_choice / FUNCTION 𝑇
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑇  : ℝ₊ → UNRESOLVED[𝑇; arithmetic operand result],
+       x
+         ↦ (UNRESOLVED[step; mathematical definition]
+           − UNRESOLVED[step; mathematical definition]) · (B_T[1]
+             + τ_T[1] · (x − a0_T[1]))
+           + (UNRESOLVED[step; mathematical definition]
+             − UNRESOLVED[step; mathematical definition]) · (B_T[2]
+               + τ_T[2] · (x − a0_T[2]))
+           + (UNRESOLVED[step; mathematical definition]
+             − UNRESOLVED[step; mathematical definition]) · (B_T[3]
+               + τ_T[3] · (x − a0_T[3]))
+           + (UNRESOLVED[step; mathematical definition]
+             − UNRESOLVED[step; mathematical definition]) · (B_T[4]
+               + τ_T[4] · (x − a0_T[4]))
+           + (UNRESOLVED[step; mathematical definition]
+             − UNRESOLVED[step; mathematical definition]) · (B_T[5]
+               + τ_T[5] · (x − a0_T[5]))
+           + (UNRESOLVED[step; mathematical definition]
+             − UNRESOLVED[step; mathematical definition]) · (B_T[6]
+               + τ_T[6] · (x − a0_T[6]))
+           + (UNRESOLVED[step; mathematical definition]
+             − UNRESOLVED[step; mathematical definition]) · (B_T[7]
+               + τ_T[7] · (x − a0_T[7]))
+           + (UNRESOLVED[step; mathematical definition]
+             − UNRESOLVED[step; mathematical definition]) · (B_T[8]
+               + τ_T[8] · (x − a0_T[8]))
+           + (UNRESOLVED[step; mathematical definition]
+             − UNRESOLVED[step; mathematical definition]) · (B_T[9]
+               + τ_T[9] · (x − a0_T[9]))
+           + UNRESOLVED[step; mathematical definition] · (B_T[10]
+               + τ_T[10] · (x − a0_T[10]))
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  13  𝑇(x : ℝ₊) := ((step(x - a0_T[1]) - step(x - a0_T[2]))*(B_T[1] +
+        τ_T[1]*(x - a0_T[1]))
+                    + (step(x - a0_T[2]) - step(x - a0_T[3]))*(B_T[2] +
+        τ_T[2]*(x - a0_T[2]))
+                    + (step(x - a0_T[3]) - step(x - a0_T[4]))*(B_T[3] +
+        τ_T[3]*(x - a0_T[3]))
+                    + (step(x - a0_T[4]) - step(x - a0_T[5]))*(B_T[4] +
+        τ_T[4]*(x - a0_T[4]))
+                    + (step(x - a0_T[5]) - step(x - a0_T[6]))*(B_T[5] +
+        τ_T[5]*(x - a0_T[5]))
+                    + (step(x - a0_T[6]) - step(x - a0_T[7]))*(B_T[6] +
+        τ_T[6]*(x - a0_T[6]))
+                    + (step(x - a0_T[7]) - step(x - a0_T[8]))*(B_T[7] +
+        τ_T[7]*(x - a0_T[7]))
+                    + (step(x - a0_T[8]) - step(x - a0_T[9]))*(B_T[8] +
+        τ_T[8]*(x - a0_T[8]))
+                    + (step(x - a0_T[9]) - step(x - a0_T[10]))*(B_T[9] +
+        τ_T[9]*(x - a0_T[9]))
+                    + step(x - a0_T[10])*(B_T[10] + τ_T[10]*(x - a0_T[10])))
+        :: [id=tax, "the tax on assets x: B_T[k] + τ_T[k]*(x - a0_T[k]) in
+        bracket k, which runs from a0_T[k], excluded, to a0_T[k+1], included;
+        step(u) is one when u is positive and zero otherwise"]
+
+Definitions referenced
+  a0_T  tenure_choice:parameter:a0_T
+  B_T   tenure_choice:parameter:B_T
+  τ_T   tenure_choice:parameter:τ_T
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== tenure_choice:function:𝑑𝑇 ====
+STAGE tenure_choice / FUNCTION 𝑑𝑇
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑑𝑇  : {()} → UNRESOLVED[𝑑𝑇; defining function result],  D_{x}(𝑇)
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  23  𝑑𝑇 := D_{x}(𝑇)
+        :: [id=marginal_tax, "the marginal tax rate, the derivative of the tax
+        away from the bracket thresholds"]
+
+Definitions referenced
+  𝑇     tenure_choice:function:𝑇
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.1 ====
+STAGE tenure_choice / FORWARD BLOCK arvl_to_dcsn / 1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  tenure_choice.bl
+  26  a_d = a
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.2 ====
+STAGE tenure_choice / FORWARD BLOCK arvl_to_dcsn / 2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  tenure_choice.bl
+  27  H_d = H
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.3 ====
+STAGE tenure_choice / FORWARD BLOCK arvl_to_dcsn / 3
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  tenure_choice.bl
+  28  y_d = y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.own.1 ====
+STAGE tenure_choice / FORWARD BLOCK dcsn_to_cntn / own.1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  tenure_choice.bl
+  33  a_o = a_d
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.own.2 ====
+STAGE tenure_choice / FORWARD BLOCK dcsn_to_cntn / own.2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  tenure_choice.bl
+  34  H_o = H_d
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.own.3 ====
+STAGE tenure_choice / FORWARD BLOCK dcsn_to_cntn / own.3
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  tenure_choice.bl
+  35  y_o = y_d
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.rent.liquidation ====
+STAGE tenure_choice / FORWARD BLOCK dcsn_to_cntn / rent.liquidation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  tenure_choice.bl
+  38  w_r = (1 + r)*a_d - 𝑇(a_d) + H_d
+        :: [id=liquidation, "a renter sells the house; income is added in the
+        renter's rental stage"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.rent.2 ====
+STAGE tenure_choice / FORWARD BLOCK dcsn_to_cntn / rent.2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  tenure_choice.bl
+  39  y_r = y_d
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.choice_value ====
+STAGE tenure_choice / BACKWARD BLOCK cntn_to_dcsn / choice_value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(a_d, H_d, y_d) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  44  V = (V_o[>], V_r[>])[d]  :: [id=choice_value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.value ====
+STAGE tenure_choice / BACKWARD BLOCK dcsn_to_arvl / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉≺(a, H, y_pre) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  48  V[<] = E_{y}(V)  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== policy.choice ====
+STAGE tenure_choice / POLICY BLOCK policy / choice
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  tenure_choice.bl
+  52  d = argmax_{d}(V_o[>], V_r[>])  :: [id=choice]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== tenure_choice:g:arvl_to_dcsn ====
+STAGE tenure_choice / LAW OF MOTION arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≺  : ℝ₊ × ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ₊ × ℝ₊ × ℝ₊₊,  (a, H, y_pre, y) ↦ (a, H, y)
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  26  a_d = a
+  27  H_d = H
+  28  y_d = y
+
+Definitions referenced
+  y     tenure_choice:distribution:y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== tenure_choice:g:dcsn_to_cntn ====
+STAGE tenure_choice / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : ℝ₊ × ℝ₊ × ℝ₊₊ × {own, rent} → (ℝ₊ × ℝ₊ × ℝ₊₊, ℝ₊ × ℝ₊₊)[d],
+        (a_d, H_d, y_d, d)
+          ↦ ((a_d, H_d, y_d), ((1 + r) · a_d − 𝑇(a_d) + H_d, y_d))[d]
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  33  a_o = a_d
+  34  H_o = H_d
+  35  y_o = y_d
+  38  w_r = (1 + r)*a_d - 𝑇(a_d) + H_d
+        :: [id=liquidation, "a renter sells the house; income is added in the
+        renter's rental stage"]
+  39  y_r = y_d
+
+Definitions referenced
+  r     tenure_choice:parameter:r
+  𝑇     tenure_choice:function:𝑇
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== tenure_choice:G:cntn_to_dcsn ====
+STAGE tenure_choice / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : [−∞, ∞) × [−∞, ∞) × ℝ₊ × ℝ₊ × ℝ₊₊ × {own, rent} → [−∞, ∞),
+        (V_o≻, V_r≻, a_d, H_d, y_d, d) ↦ (V_o≻, V_r≻)[d]
+
+Conditions
+  𝑉(a_d, H_d, y_d) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  44  V = (V_o[>], V_r[>])[d]  :: [id=choice_value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== tenure_choice:G:dcsn_to_arvl ====
+STAGE tenure_choice / VALUE AGGREGATOR dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≺  : [−∞, ∞) × ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞),  (w, a, H, y_pre) ↦ w
+
+Conditions
+  𝑉≺(a, H, y_pre) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  48  V[<] = E_{y}(V)  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== tenure_choice:G:policy ====
+STAGE tenure_choice / VALUE AGGREGATOR policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : [−∞, ∞) × [−∞, ∞) × ℝ₊ × ℝ₊ × ℝ₊₊ × {own, rent} → [−∞, ∞),
+        (V_o≻, V_r≻, a_d, H_d, y_d, d) ↦ (V_o≻, V_r≻)[d]
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure_choice.bl
+  52  d = argmax_{d}(V_o[>], V_r[>])  :: [id=choice]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

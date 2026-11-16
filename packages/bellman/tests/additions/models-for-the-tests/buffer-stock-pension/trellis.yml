@@ -1,0 +1,21 @@
+!trellis
+name: buffer_stock_pension
+# A model written for the tests: the buffer-stock stage with a pension
+# account over six periods. periods[0] is the last working period, which takes
+# value function iteration, and the five earlier periods take the endogenous
+# grid method. One stage file stands at every occurrence; the additions
+# differ by occurrence and are read in the order given, after the stage file.
+# The pension account, pension.bl, is read at every occurrence, so that the
+# connector `{a: k, q: p}` joins fields that both sides declare.
+periods:
+  - stages:
+      buffer_stock: {stage: stage/buffer_stock.bl, label: last_working,
+                     methods: [additions/pension.bl, additions/vfi.bl]}
+  - stages:
+      buffer_stock: {stage: stage/buffer_stock.bl,
+                     methods: [additions/pension.bl, additions/egm.bl]}
+    repeat: 5
+# Savings become next period's assets and the carried balance next period's
+# balance; the terminal boundary data V[>] of periods[0] is a function of (a, q).
+inter_connectors:
+  - {a: k, q: p}

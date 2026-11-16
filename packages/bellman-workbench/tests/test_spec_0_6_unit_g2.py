@@ -28,7 +28,7 @@ DURABLES = recipe.Source("recipe", "declaration/spec.yml")
 SHOCKS = "declaration/stages/shocks/shocks.bl"
 # The files the named pensions recipe reads, as a reviewer lists them from
 # the recipe, its trellis file, the two period templates, the stage files
-# and the source lists, with the registry file the recipe names; each with
+# and the source lists; each with
 # the name under which the service reads it.
 PENSIONS_FILES = {
     "declaration/spec.pensions.yml": "spec.yml",
@@ -38,8 +38,7 @@ PENSIONS_FILES = {
     "declaration/calibration/bequest_pa.yml": "calibration/bequest_pa.yml",
     "declaration/calibration/renter_cons.yml": "calibration/renter_cons.yml",
     "declaration/calibration/shocks.yml": "calibration/shocks.yml",
-    "declaration/calibration/survival.yml": "calibration/survival.yml",
-    "declaration/calibration/wage_schedule.yml": "calibration/wage_schedule.yml",
+    "declaration/calibration/pension_age_profiles.yml": "calibration/pension_age_profiles.yml",
     **{
         f"declaration/stages/{key}/{key}.bl": f"{key}.bl"
         for key in (
@@ -143,31 +142,18 @@ def test_item_1_the_pensions_record_lists_the_reviewed_files_and_each_choice_sen
     assert received == {name: sha256(text) for name, text in texts.items()}
 
 
-def test_item_2_the_durables_declaration_only_submission_names_the_wage_inputs_missing(
+def test_item_2_the_durables_declaration_submission_contains_the_income_sources(
     matsya_durables,
 ):
-    """The durables recipe's tenure stage declares Y and y_R, which no
-    calibration file values; `write_wage_schedule` of the folder's code
-    writes them after `load_recipe`, and a submission of the declaration
-    alone omits that function, so the record names them missing, with the
-    function, its file and line, and sends no code."""
+    """The declaration includes the fixed income functions Y and y_R;
+    the submission needs no external writer and contains no code files."""
     folder = model.open_folder(matsya_durables)
     prepared = matsya_work.prepare(folder, DURABLES, "recipe", session_of(folder.root), 1)
     assert prepared.refusals == ()
-    assert prepared.record["missing"] == [
-        {
-            "stage": "tenure",
-            "names": ["Y", "y_R"],
-            "function": "write_wage_schedule",
-            "file": "code/wage_schedule.py",
-            "line": 55,
-            "sentence": (
-                "Y and y_R of tenure are written by write_wage_schedule "
-                "(code/wage_schedule.py, line 55), which a submission of the declaration "
-                "omits; supply their values"
-            ),
-        }
-    ]
+    assert prepared.record["missing"] == []
+    assert "declaration/calibration/wage_schedule.yml" in {
+        entry["path"] for entry in prepared.record["files"]
+    }
     assert all(entry["path"].startswith("declaration/") for entry in prepared.record["files"])
 
 

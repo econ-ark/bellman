@@ -1,0 +1,778 @@
+BELLMAN-SYM / STAGE adjuster_cons                         [VERSION = SYMBOLIC]
+a stage occurrence of
+applications/durables/declaration/stages/adjuster_cons/adjuster_cons.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        none
+  ∼ decision       m state, z_d state, c control, h_choice control, V value,
+                   age value
+  ≻ continuation   a_nxt_adj≻ state, h_nxt_adj≻ state, z_nxt_adj≻ state, V≻
+                   value, age≻ value
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           m at decision, z_d at decision, a_nxt_adj≻ at continuation,
+                   h_nxt_adj≻ at continuation, z_nxt_adj≻ at continuation
+  controls         c at decision, h_choice at decision
+  values           V at the decision, continuation perches; age at the
+                   decision, continuation perches
+  shocks           none
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → dcsn_to_cntn   (m, z_d) : !dcsn, at c, at h_choice ->
+                   (a_nxt_adj≻, h_nxt_adj≻, z_nxt_adj≻) : !cntn
+  ← cntn_to_dcsn   (V≻, age≻) : !cntn, at c, at h_choice -> (V, age) : !dcsn
+  ← policy         (V≻) : !cntn -> (c, h_choice) : !dcsn
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  sets                     1   Age := {20, …, 71}
+  parameters               6   β : (0, 1); α : (0, 1); γ_c : (1, inf);
+                               γ_h : (1, inf); κ : ℝ₊₊; τ : ℝ₊₊
+  functions                4   𝑢 on ℝ₊₊ × ℝ₊₊, 𝑢_c, 𝑢_h, 𝑢_c_inv on ℝ₊₊
+  correspondences          2   Γ_c : ℝ₊₊ ⇉ ℝ₊₊, Γ_h : ℝ₊ ⇉ ℝ₊₊
+  laws of motion           1   a_nxt_adj = m - c - (1 + τ)*h_choice; h_nxt_adj
+                               = h_choice; z_nxt_adj = z_d
+  value aggregators        2   V = 𝑢(c, h_choice) + β*V[>];
+                               (c, h_choice) = argmax_{c : Γ_c(m), h_choice :
+                               Γ_h(m - c)}(𝑢(c, h_choice) + β*V[>])
+  block lines              5   dcsn_to_cntn.savings, dcsn_to_cntn.housing,
+                               dcsn_to_cntn.income_state, cntn_to_dcsn.value,
+                               policy.optimality
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   (𝑉≻, 𝑎𝑔𝑒≻) ↦ (𝑐(m, z_d), ℎ_choice(m, z_d)), 𝑉,
+                    𝑎𝑔𝑒
+                    forward    μ ↦ μ≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ∼ m, z_d  →  ≻ a_nxt_adj≻, h_nxt_adj≻, z_nxt_adj≻
+  backward   ∼ V, age  ←  ≻ V≻, age≻
+  policy     ∼ c, h_choice  ←  ≻ V≻
+
+==== stage ====
+STAGE adjuster_cons
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑉≻             : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+         𝑎𝑔𝑒≻           : {()} → Age
+         ─────────────────────────────────────────────────
+    out  (𝑐, ℎ_choice)  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
+                          𝑐(m, z_d) ∈ Γ_c(m),
+                          ℎ_choice(m, z_d) ∈ Γ_h(m − 𝑐(m, z_d))
+         𝑉              : ℝ₊₊ × ℝ₊₊ → ℝ
+         𝑎𝑔𝑒            : {()} → Age
+  forward
+    in   μ              : finite measure on ℝ₊₊ × ℝ₊₊
+         ─────────────────────────────────────────────────
+    out  μ≻             : finite measure on ℝ₊ × ℝ₊₊ × ℝ₊₊
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉≻, 𝑎𝑔𝑒≻                     out: 𝑉, 𝑎𝑔𝑒
+
+    2  policy
+       in: 𝑉≻                           out: (𝑐, ℎ_choice)
+
+  forward
+    1  dcsn_to_cntn
+       in: μ                            out: μ≻
+
+Conditions
+  cntn_to_dcsn:Aggregation  𝑉(m, z_d) ∈ ℝ
+  cntn_to_dcsn:Aggregation  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  20  a_nxt_adj = m - c - (1 + τ)*h_choice
+        :: [id=savings]
+  21  h_nxt_adj = h_choice
+        :: [id=housing]
+  22  z_nxt_adj = z_d
+        :: [id=income_state]
+  26  V = 𝑢(c, h_choice) + β*V[>]
+        :: [id=value]
+  30  (c, h_choice) = argmax_{c : Γ_c(m), h_choice :
+        Γ_h(m - c)}(𝑢(c, h_choice) + β*V[>])
+        :: [id=optimality]
+
+Definitions referenced
+  Age   adjuster_cons:set:Age
+  Γ_c   adjuster_cons:correspondence:Γ_c
+  Γ_h   adjuster_cons:correspondence:Γ_h
+
+File
+  applications/durables/declaration/stages/adjuster_cons/adjuster_cons.bl
+
+Perches
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE adjuster_cons / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻    : {V≻, age≻}
+       age≻  : {age≻}
+       ──────────────────
+  out  V     : {V, age}
+       age   : {age}
+
+Conditions
+  𝑉(m, z_d) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  26  V = 𝑢(c, h_choice) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  Age   adjuster_cons:set:Age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward policy ====
+STAGE adjuster_cons / POLICY BLOCK policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻        : {V≻, age≻}
+       ─────────────────────────
+  out  c         : {c, h_choice}
+       h_choice  : {c, h_choice}
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  30  (c, h_choice) = argmax_{c : Γ_c(m), h_choice :
+        Γ_h(m - c)}(𝑢(c, h_choice) + β*V[>])
+        :: [id=optimality]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE adjuster_cons / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   m           : {m, z_d}
+       z_d         : {m, z_d}
+       ──────────────────────────────────────────────────
+  out  a_nxt_adj≻  : {a_nxt_adj≻, h_nxt_adj≻, z_nxt_adj≻}
+       h_nxt_adj≻  : {h_nxt_adj≻, z_nxt_adj≻}
+       z_nxt_adj≻  : {h_nxt_adj≻, z_nxt_adj≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  20  a_nxt_adj = m - c - (1 + τ)*h_choice  :: [id=savings]
+  21  h_nxt_adj = h_choice                  :: [id=housing]
+  22  z_nxt_adj = z_d                       :: [id=income_state]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE adjuster_cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻    : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒≻  : {()} → Age
+       ────────────────────────────────────────────────────────────────
+  out  𝑉     : ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒   : {()} → Age
+
+At
+  (𝑐, ℎ_choice)  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
+                   𝑐(m, z_d) ∈ Γ_c(m),
+                   ℎ_choice(m, z_d) ∈ Γ_h(m − 𝑐(m, z_d))
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻(·, ·, 𝑐, ℎ_choice)
+     ──────────────────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻(·, ·, 𝑐, ℎ_choice))(m, z_d)
+             = 𝑉≻(𝑔≻(m, z_d, 𝑐(m, z_d), ℎ_choice(m, z_d)))
+
+  2  Aggregation
+     in: (1), 𝑎𝑔𝑒≻                      out: 𝑉, 𝑎𝑔𝑒
+     ──────────────────────────────────────────────────────────────────
+     rule: 𝑉 = 𝑢(𝑐, ℎ_choice) + β · 𝑉≻(𝑔≻(m, z_d, 𝑐, ℎ_choice))
+           on (m, z_d) ∈ ℝ₊₊ × ℝ₊₊
+           𝑎𝑔𝑒 = 𝑎𝑔𝑒≻()                                on (m, z_d) ∈ ℝ₊₊ × ℝ₊₊
+
+  3  Evaluation
+     in: 𝑉, 𝑎𝑔𝑒                         out: 𝑉, 𝑎𝑔𝑒
+     ──────────────────────────────────────────────────────────────────
+     rule: 𝑉 : ℝ₊₊ × ℝ₊₊ → ℝ
+           𝑎𝑔𝑒 : {()} → Age
+
+Conditions
+  Aggregation  𝑉(m, z_d) ∈ ℝ
+  Aggregation  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  26  V = 𝑢(c, h_choice) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  Age   adjuster_cons:set:Age
+  β     adjuster_cons:parameter:β
+  𝑢     adjuster_cons:function:𝑢
+  Γ_c   adjuster_cons:correspondence:Γ_c
+  Γ_h   adjuster_cons:correspondence:Γ_h
+  𝑔≻    adjuster_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback ====
+STAGE adjuster_cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       ──────────────────────────
+  out  𝑉≻ ∘ 𝑔≻(·, ·, 𝑐, ℎ_choice)
+           : ℝ₊₊ × ℝ₊₊ → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻(·, ·, 𝑐, ℎ_choice))(m, z_d)
+    = 𝑉≻(𝑔≻(m, z_d, 𝑐(m, z_d), ℎ_choice(m, z_d)))
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  20  a_nxt_adj = m - c - (1 + τ)*h_choice  :: [id=savings]
+  21  h_nxt_adj = h_choice                  :: [id=housing]
+  22  z_nxt_adj = z_d                       :: [id=income_state]
+
+Definitions referenced
+  𝑔≻    adjuster_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE adjuster_cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻(·, ·, 𝑐, ℎ_choice)
+             : ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒≻  : {()} → Age
+       ──────────────────────────
+  out  𝑉     : ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒   : ℝ₊₊ × ℝ₊₊ → Age
+
+Rule
+  𝑉 = 𝑢(𝑐, ℎ_choice) + β · 𝑉≻(𝑔≻(m, z_d, 𝑐, ℎ_choice))
+  on (m, z_d) ∈ ℝ₊₊ × ℝ₊₊
+  𝑎𝑔𝑒 = 𝑎𝑔𝑒≻()                                         on (m, z_d) ∈ ℝ₊₊ × ℝ₊₊
+
+Conditions
+  𝑉(m, z_d) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  26  V = 𝑢(c, h_choice) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  Age   adjuster_cons:set:Age
+  β     adjuster_cons:parameter:β
+  𝑢     adjuster_cons:function:𝑢
+  𝑔≻    adjuster_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE adjuster_cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉    : ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒  : ℝ₊₊ × ℝ₊₊ → Age
+       ──────────────────────
+  out  𝑉    : ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒  : {()} → Age
+
+Rule
+  𝑉 = 𝑢(𝑐, ℎ_choice) + β · 𝑉≻(𝑔≻(m, z_d, 𝑐, ℎ_choice))
+  on (m, z_d) ∈ ℝ₊₊ × ℝ₊₊
+  𝑉 : ℝ₊₊ × ℝ₊₊ → ℝ
+  𝑎𝑔𝑒 = 𝑎𝑔𝑒≻()                                         on (m, z_d) ∈ ℝ₊₊ × ℝ₊₊
+  𝑎𝑔𝑒 : {()} → Age
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Age   adjuster_cons:set:Age
+  β     adjuster_cons:parameter:β
+  𝑢     adjuster_cons:function:𝑢
+  𝑔≻    adjuster_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy ====
+STAGE adjuster_cons / POLICY BUILDER policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻             : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       ───────────────────────────────────────────────────────
+  out  (𝑐, ℎ_choice)  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
+                        𝑐(m, z_d) ∈ Γ_c(m),
+                        ℎ_choice(m, z_d) ∈ Γ_h(m − 𝑐(m, z_d))
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻
+     ─────────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻)(m, z_d, c, h_choice) = 𝑉≻(𝑔≻(m, z_d, c, h_choice))
+
+  2  optimality:Aggregation
+     in: (1)
+     out: (m, z_d, c, h_choice)
+            ↦ 𝑢(c, h_choice) + β · 𝑉≻(𝑔≻(m, z_d, c, h_choice))
+     ─────────────────────────────────────────────────────────
+     rule: (m, z_d, c, h_choice)
+             ↦ 𝑢(c, h_choice) + β · 𝑉≻(𝑔≻(m, z_d, c, h_choice))
+
+  3  optimality:Argmax
+     in: (2)                            out: (𝑐, ℎ_choice)
+     ─────────────────────────────────────────────────────────
+     rule: (𝑐(m, z_d), ℎ_choice(m, z_d))
+             ∈ argmax_{c ∈ Γ_c(m), h_choice ∈ Γ_h(m − c)}
+                 [𝑢(c, h_choice) + β · 𝑉≻(𝑔≻(m, z_d, c, h_choice))]
+
+  4  Evaluation
+     in: (𝑐, ℎ_choice)                  out: (𝑐, ℎ_choice)
+     ─────────────────────────────────────────────────────────
+     rule: (𝑐, ℎ_choice) : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
+           𝑐(m, z_d) ∈ Γ_c(m),  ℎ_choice(m, z_d) ∈ Γ_h(m − 𝑐(m, z_d))
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  30  (c, h_choice) = argmax_{c : Γ_c(m), h_choice :
+        Γ_h(m - c)}(𝑢(c, h_choice) + β*V[>])
+        :: [id=optimality]
+
+Definitions referenced
+  β     adjuster_cons:parameter:β
+  𝑢     adjuster_cons:function:𝑢
+  Γ_c   adjuster_cons:correspondence:Γ_c
+  Γ_h   adjuster_cons:correspondence:Γ_h
+  𝑔≻    adjuster_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback ====
+STAGE adjuster_cons / POLICY BUILDER policy / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       ────────────────────────────────────────────────────
+  out  𝑉≻ ∘ 𝑔≻
+           : {m, z_d, c, h_choice ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ |
+               c ∈ Γ_c(m) ∧ h_choice ∈ Γ_h(m − c)} → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻)(m, z_d, c, h_choice) = 𝑉≻(𝑔≻(m, z_d, c, h_choice))
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  20  a_nxt_adj = m - c - (1 + τ)*h_choice  :: [id=savings]
+  21  h_nxt_adj = h_choice                  :: [id=housing]
+  22  z_nxt_adj = z_d                       :: [id=income_state]
+
+Definitions referenced
+  Γ_c   adjuster_cons:correspondence:Γ_c
+  Γ_h   adjuster_cons:correspondence:Γ_h
+  𝑔≻    adjuster_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / optimality:Aggregation ====
+STAGE adjuster_cons / POLICY BUILDER policy / optimality:Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻
+         : {m, z_d, c, h_choice ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ |
+             c ∈ Γ_c(m) ∧ h_choice ∈ Γ_h(m − c)} → ℝ
+       ────────────────────────────────────────────────────
+  out  (m, z_d, c, h_choice)
+         ↦ 𝑢(c, h_choice) + β · 𝑉≻(𝑔≻(m, z_d, c, h_choice))
+         : {m, z_d, c, h_choice ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ |
+             c ∈ Γ_c(m) ∧ h_choice ∈ Γ_h(m − c)} → ℝ
+
+Rule
+  (m, z_d, c, h_choice) ↦ 𝑢(c, h_choice) + β · 𝑉≻(𝑔≻(m, z_d, c, h_choice))
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  30  (c, h_choice) = argmax_{c : Γ_c(m), h_choice :
+        Γ_h(m - c)}(𝑢(c, h_choice) + β*V[>])
+        :: [id=optimality]
+
+Definitions referenced
+  β     adjuster_cons:parameter:β
+  𝑢     adjuster_cons:function:𝑢
+  Γ_c   adjuster_cons:correspondence:Γ_c
+  Γ_h   adjuster_cons:correspondence:Γ_h
+  𝑔≻    adjuster_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / optimality:Argmax ====
+STAGE adjuster_cons / POLICY BUILDER policy / optimality:Argmax
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (m, z_d, c, h_choice)
+         ↦ 𝑢(c, h_choice) + β · 𝑉≻(𝑔≻(m, z_d, c, h_choice))
+                      : {m, z_d, c, h_choice ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ |
+                          c ∈ Γ_c(m) ∧ h_choice ∈ Γ_h(m − c)} → ℝ
+       ───────────────────────────────────────────────────────────────
+  out  (𝑐, ℎ_choice)  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
+                        𝑐(m, z_d) ∈ Γ_c(m),
+                        ℎ_choice(m, z_d) ∈ Γ_h(m − 𝑐(m, z_d))
+
+Rule
+  (𝑐(m, z_d), ℎ_choice(m, z_d))
+    ∈ argmax_{c ∈ Γ_c(m), h_choice ∈ Γ_h(m − c)}
+        [𝑢(c, h_choice) + β · 𝑉≻(𝑔≻(m, z_d, c, h_choice))]
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  30  (c, h_choice) = argmax_{c : Γ_c(m), h_choice :
+        Γ_h(m - c)}(𝑢(c, h_choice) + β*V[>])
+        :: [id=optimality]
+
+Definitions referenced
+  β     adjuster_cons:parameter:β
+  𝑢     adjuster_cons:function:𝑢
+  Γ_c   adjuster_cons:correspondence:Γ_c
+  Γ_h   adjuster_cons:correspondence:Γ_h
+  𝑔≻    adjuster_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Evaluation ====
+STAGE adjuster_cons / POLICY BUILDER policy / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (𝑐, ℎ_choice)  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
+                        𝑐(m, z_d) ∈ Γ_c(m),
+                        ℎ_choice(m, z_d) ∈ Γ_h(m − 𝑐(m, z_d))
+       ──────────────────────────────────────────────────────
+  out  (𝑐, ℎ_choice)  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
+                        𝑐(m, z_d) ∈ Γ_c(m),
+                        ℎ_choice(m, z_d) ∈ Γ_h(m − 𝑐(m, z_d))
+
+Rule
+  (𝑐(m, z_d), ℎ_choice(m, z_d))
+    ∈ argmax_{c ∈ Γ_c(m), h_choice ∈ Γ_h(m − c)}
+        [𝑢(c, h_choice) + β · 𝑉≻(𝑔≻(m, z_d, c, h_choice))]
+  (𝑐, ℎ_choice) : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
+  𝑐(m, z_d) ∈ Γ_c(m),  ℎ_choice(m, z_d) ∈ Γ_h(m − 𝑐(m, z_d))
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  β     adjuster_cons:parameter:β
+  𝑢     adjuster_cons:function:𝑢
+  Γ_c   adjuster_cons:correspondence:Γ_c
+  Γ_h   adjuster_cons:correspondence:Γ_h
+  𝑔≻    adjuster_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE adjuster_cons / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on ℝ₊₊ × ℝ₊₊
+       ────────────────────────────────────────
+  out  μ≻  : finite measure on ℝ₊ × ℝ₊₊ × ℝ₊₊
+
+At
+  (𝑐, ℎ_choice)  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
+                   𝑐(m, z_d) ∈ Γ_c(m),
+                   ℎ_choice(m, z_d) ∈ Γ_h(m − 𝑐(m, z_d))
+
+Operations
+  1  Pushforward
+     in: μ                              out: μ≻
+     ──────────────────────────────────────────
+     rule: μ≻(B)
+             = μ({m, z_d ∈ ℝ₊₊ × ℝ₊₊ |
+                   𝑔≻(m, z_d, 𝑐(m, z_d), ℎ_choice(m, z_d)) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  20  a_nxt_adj = m - c - (1 + τ)*h_choice  :: [id=savings]
+  21  h_nxt_adj = h_choice                  :: [id=housing]
+  22  z_nxt_adj = z_d                       :: [id=income_state]
+
+Definitions referenced
+  Γ_c   adjuster_cons:correspondence:Γ_c
+  Γ_h   adjuster_cons:correspondence:Γ_h
+  𝑔≻    adjuster_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE adjuster_cons / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on ℝ₊₊ × ℝ₊₊
+       ──────────────────────────────────────
+  out  μ≻  : finite measure on ℝ₊ × ℝ₊₊ × ℝ₊₊
+
+Rule
+  μ≻(B)
+    = μ({m, z_d ∈ ℝ₊₊ × ℝ₊₊ | 𝑔≻(m, z_d, 𝑐(m, z_d), ℎ_choice(m, z_d)) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  20  a_nxt_adj = m - c - (1 + τ)*h_choice  :: [id=savings]
+  21  h_nxt_adj = h_choice                  :: [id=housing]
+  22  z_nxt_adj = z_d                       :: [id=income_state]
+
+Definitions referenced
+  𝑔≻    adjuster_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:set:Age ====
+STAGE adjuster_cons / SET Age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Age  = {20, …, 71}
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  3  Age := {20, …, 71}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:parameter:β ====
+STAGE adjuster_cons / PARAMETER β
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  β  ∈ (0, 1)
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  5  β   : (0,1)  :: ["discount factor"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:parameter:α ====
+STAGE adjuster_cons / PARAMETER α
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  α  ∈ (0, 1)
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  6  α   : (0,1)  :: ["weight of consumption in utility"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:parameter:γ_c ====
+STAGE adjuster_cons / PARAMETER γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  γ_c  ∈ (1, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  7  γ_c : (1, inf)  :: ["curvature of utility from consumption"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:parameter:γ_h ====
+STAGE adjuster_cons / PARAMETER γ_h
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  γ_h  ∈ (1, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  8  γ_h : (1, inf)  :: ["curvature of utility from housing services"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:parameter:κ ====
+STAGE adjuster_cons / PARAMETER κ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  κ  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  9  κ   : ℝ₊₊  :: ["housing services per unit of the housing stock"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:parameter:τ ====
+STAGE adjuster_cons / PARAMETER τ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  τ  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  10  τ   : ℝ₊₊  :: ["cost of adjusting housing, per unit of housing bought"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:function:𝑢 ====
+STAGE adjuster_cons / FUNCTION 𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑢  : ℝ₊₊ × ℝ₊₊ → (−∞, 0),
+       (c, h)
+         ↦ α · c^(1 − γ_c)/(1 − γ_c) + (1 − α) · (κ · h)^(1 − γ_h)/(1 − γ_h)
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  12  𝑢(c : ℝ₊₊, h : ℝ₊₊) := α*c^(1-γ_c)/(1-γ_c) + (1-α)*(κ*h)^(1-γ_h)/(1-γ_h)
+        :: [id=util]
+
+Definitions referenced
+  α     adjuster_cons:parameter:α
+  γ_c   adjuster_cons:parameter:γ_c
+  γ_h   adjuster_cons:parameter:γ_h
+  κ     adjuster_cons:parameter:κ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:function:𝑢_c ====
+STAGE adjuster_cons / FUNCTION 𝑢_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑢_c  : ℝ₊₊ → ℝ₊₊,  c ↦ α · c^(−γ_c)
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  13  𝑢_c(c : ℝ₊₊) := α*c^(-γ_c)  :: [id=marg_util_cons]
+
+Definitions referenced
+  α     adjuster_cons:parameter:α
+  γ_c   adjuster_cons:parameter:γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:function:𝑢_h ====
+STAGE adjuster_cons / FUNCTION 𝑢_h
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑢_h  : ℝ₊₊ → ℝ₊₊,  h ↦ (1 − α) · κ^(1 − γ_h) · h^(−γ_h)
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  14  𝑢_h(h : ℝ₊₊) := (1-α)*κ^(1-γ_h)*h^(-γ_h)  :: [id=marg_util_housing]
+
+Definitions referenced
+  α     adjuster_cons:parameter:α
+  γ_h   adjuster_cons:parameter:γ_h
+  κ     adjuster_cons:parameter:κ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:function:𝑢_c_inv ====
+STAGE adjuster_cons / FUNCTION 𝑢_c_inv
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑢_c_inv  : ℝ₊₊ → ℝ₊₊,  x ↦ (α/x)^(1/γ_c)
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  15  𝑢_c_inv(x : ℝ₊₊) := (α/x)^(1/γ_c)  :: [id=inv_marg_util_cons]
+
+Definitions referenced
+  α     adjuster_cons:parameter:α
+  γ_c   adjuster_cons:parameter:γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:correspondence:Γ_c ====
+STAGE adjuster_cons / CORRESPONDENCE Γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Γ_c  : ℝ₊₊ ⇉ ℝ₊₊,  x ↦ (0, x]
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  16  Γ_c(x : ℝ₊₊) := (0, x]  :: [id=feasible_consumption]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:correspondence:Γ_h ====
+STAGE adjuster_cons / CORRESPONDENCE Γ_h
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Γ_h  : ℝ₊ ⇉ ℝ₊₊,  x ↦ (0, x/(1 + τ)]
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  17  Γ_h(x : ℝ₊) := (0, x/(1 + τ)]  :: [id=feasible_housing]
+
+Definitions referenced
+  τ     adjuster_cons:parameter:τ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.savings ====
+STAGE adjuster_cons / FORWARD BLOCK dcsn_to_cntn / savings
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  adjuster_cons.bl
+  20  a_nxt_adj = m - c - (1 + τ)*h_choice  :: [id=savings]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.housing ====
+STAGE adjuster_cons / FORWARD BLOCK dcsn_to_cntn / housing
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  adjuster_cons.bl
+  21  h_nxt_adj = h_choice  :: [id=housing]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.income_state ====
+STAGE adjuster_cons / FORWARD BLOCK dcsn_to_cntn / income_state
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  adjuster_cons.bl
+  22  z_nxt_adj = z_d  :: [id=income_state]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.value ====
+STAGE adjuster_cons / BACKWARD BLOCK cntn_to_dcsn / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(m, z_d) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  26  V = 𝑢(c, h_choice) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  Age   adjuster_cons:set:Age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== policy.optimality ====
+STAGE adjuster_cons / POLICY BLOCK policy / optimality
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  adjuster_cons.bl
+  30  (c, h_choice) = argmax_{c : Γ_c(m), h_choice :
+        Γ_h(m - c)}(𝑢(c, h_choice) + β*V[>])
+        :: [id=optimality]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:g:dcsn_to_cntn ====
+STAGE adjuster_cons / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : {m, z_d, c, h_choice ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ |
+          c ∈ Γ_c(m) ∧ h_choice ∈ Γ_h(m − c)} → ℝ₊ × ℝ₊₊ × ℝ₊₊,
+        (m, z_d, c, h_choice) ↦ (m − c − (1 + τ) · h_choice, h_choice, z_d)
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  20  a_nxt_adj = m - c - (1 + τ)*h_choice  :: [id=savings]
+  21  h_nxt_adj = h_choice                  :: [id=housing]
+  22  z_nxt_adj = z_d                       :: [id=income_state]
+
+Definitions referenced
+  τ     adjuster_cons:parameter:τ
+  Γ_c   adjuster_cons:correspondence:Γ_c
+  Γ_h   adjuster_cons:correspondence:Γ_h
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:G:cntn_to_dcsn ====
+STAGE adjuster_cons / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, age≻, m, z_d, c, h_choice ∈ ℝ × Age × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ |
+          c ∈ Γ_c(m) ∧ h_choice ∈ Γ_h(m − c)} → ℝ × Age,
+        (V≻, age, m, z_d, c, h_choice) ↦ (𝑢(c, h_choice) + β · V≻, age)
+
+Conditions
+  𝑉(m, z_d) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  26  V = 𝑢(c, h_choice) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  Age   adjuster_cons:set:Age
+  β     adjuster_cons:parameter:β
+  𝑢     adjuster_cons:function:𝑢
+  Γ_c   adjuster_cons:correspondence:Γ_c
+  Γ_h   adjuster_cons:correspondence:Γ_h
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_cons:G:policy ====
+STAGE adjuster_cons / VALUE AGGREGATOR policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, m, z_d, c, h_choice ∈ ℝ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ |
+          c ∈ Γ_c(m) ∧ h_choice ∈ Γ_h(m − c)} → ℝ,
+        (V≻, m, z_d, c, h_choice) ↦ 𝑢(c, h_choice) + β · V≻
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_cons.bl
+  30  (c, h_choice) = argmax_{c : Γ_c(m), h_choice :
+        Γ_h(m - c)}(𝑢(c, h_choice) + β*V[>])
+        :: [id=optimality]
+
+Definitions referenced
+  β     adjuster_cons:parameter:β
+  𝑢     adjuster_cons:function:𝑢
+  Γ_c   adjuster_cons:correspondence:Γ_c
+  Γ_h   adjuster_cons:correspondence:Γ_h
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

@@ -108,13 +108,13 @@ def test_item_1_a_returned_model_opens_under_its_own_root_and_no_discovery_lists
     assert inspected.service["result"]["comparison"] == {"converged": True, "differences": []}
     own = trellis.show_trellis(folder, recipe.Source("recipe", "declaration/spec.yml"))
     assert own.shown.syntactic["periods"][1]["stages"]["adjuster_cons"]["calibration"]["τ"] == 0.12
-    # the copy holds every file its model reads, and its binding meets the
-    # one note the folder's own meets: Y and y_R of tenure, which the
-    # folder's code/ writes and no declaration file values
+    # the copy holds every file its model reads, and its binding meets no
+    # note, as the folder's own meets none: the declaration values the income
+    # functions Y and y_R of tenure in calibration/wage_schedule.yml
     notes = trellis.binding_notes(own.shown.binding)
     own_notes = tuple(trellis.relative_sentence(folder, note) for note in notes)
-    assert inspected.missing == () and inspected.construction == own_notes
-    assert len(own_notes) == 1 and "parameter 'Y'" in own_notes[0]
+    assert own_notes == ()
+    assert inspected.missing == () and inspected.construction == ()
 
     lacking = returned.inspect(folder, downloaded(folder, 4, 1, removed=(CALIBRATION,)))
     assert lacking.construction == () and len(lacking.missing) == 1

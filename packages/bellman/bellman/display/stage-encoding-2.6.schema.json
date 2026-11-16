@@ -380,6 +380,10 @@
         "domain": {
           "$ref": "#/$defs/term"
         },
+        "constant": {
+          "type": "boolean",
+          "default": false
+        },
         "coordinates": {
           "type": "array",
           "items": {
@@ -1214,6 +1218,7 @@
             "terms.Closed",
             "terms.Complementary",
             "terms.Conditional",
+            "terms.Constancy",
             "terms.Constant",
             "terms.Continuation",
             "terms.Control",
@@ -1225,6 +1230,7 @@
             "terms.Domain",
             "terms.Eq",
             "terms.Equation",
+            "terms.ExpressionArgument",
             "terms.FILE",
             "terms.Feasible",
             "terms.Fibred",
@@ -1328,7 +1334,8 @@
             "terms.Comprehension",
             "terms.Operator",
             "terms.FuncDef",
-            "terms.CorrDef"
+            "terms.CorrDef",
+            "terms.ParameterizedLaw"
           ]
         },
         "bindings": {
@@ -2386,6 +2393,15 @@
       "handler",
       "source",
       "generated_from"
+    ],
+    "terms.Constancy": [],
+    "terms.ExpressionArgument": [
+      "value"
+    ],
+    "terms.ParameterizedLaw": [
+      "subjects",
+      "arguments",
+      "law"
     ]
   }
 }

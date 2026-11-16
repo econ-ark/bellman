@@ -35,7 +35,7 @@ type: concept
 @methods: buffer_stock
 
 n_a : ℕ              :: ["number of points of the savings grid"]
-a_min : Xa           :: ["lower bound of the savings grid"]
+extra_grid : ℝ₊     :: ["distance from the borrowing bound to the first savings point"]
 a_max : Xa           :: ["upper bound of the savings grid"]
 n_k : ℕ              :: ["number of points of the asset grid"]
 k_min : Xa           :: ["lower bound of the asset grid"]
@@ -43,9 +43,9 @@ k_max : Xa           :: ["upper bound of the asset grid"]
 n_ψ_nodes : ℕ        :: ["quadrature nodes of the permanent shock"]
 n_ξ_nodes : ℕ        :: ["quadrature nodes of the transitory shock"]
 
-[id=policy, policy.method : !egm | policy.grid : !Cartesian(a=(a_min, a_max, n_a))
+[id=policy, policy.method : !egm | policy.grid : !Cartesian(a=(L + extra_grid, a_max, n_a))
     | evaluate.method : !Linear] {
-    c[>] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[>])       :: [id=InvEuler]
+    c[>] = (β*D_{a}V[>])^(-1/ρ)       :: [id=InvEuler]
     m[>] = a + c[>]                 :: [id=g_cntn_to_dcsn]
     c[~] = c[>]                     :: [id=cons_choice]
 }

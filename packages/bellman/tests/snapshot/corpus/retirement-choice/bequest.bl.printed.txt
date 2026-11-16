@@ -1,0 +1,369 @@
+BELLMAN-SYM / STAGE bequest                               [VERSION = SYMBOLIC]
+a stage occurrence of
+applications/retirement-choice/declaration/stages/bequest/bequest.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        a_bq≺ state, V≺ value
+  ∼ decision       x state, V value
+  ≻ continuation   V≻ value
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           a_bq≺ at arrival, x at decision
+  controls         none
+  values           V at every perch
+  shocks           none
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → arvl_to_dcsn   (a_bq≺) : !arvl -> (x) : !dcsn
+  ← cntn_to_dcsn   (V≻) : !cntn -> (V) : !dcsn
+  ← dcsn_to_arvl   (V) : !dcsn -> (V≺) : !arvl
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  laws of motion           1   x = a_bq
+  value aggregators        2   V = V[>]; V[<] = V
+  block lines              3   arvl_to_dcsn.wealth, cntn_to_dcsn.value,
+                               dcsn_to_arvl.value
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   𝑉≻ ↦ 𝑉≺
+                    forward    μ≺ ↦ μ
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ≺ a_bq≺  →  ∼ x
+  backward   ≺ V≺  ←  ∼ V  ←  ≻ V≻
+
+==== stage ====
+STAGE bequest
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑉≻  : {()} → [−∞, ∞)
+         ──────────────────────────────────────
+    out  𝑉≺  : {()} → [−∞, ∞)
+  forward
+    in   μ≺  : finite measure on ℝ₊
+         ──────────────────────────────────────
+    out  μ   : finite measure on ℝ₊
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉≻                           out: 𝑉
+
+    2  dcsn_to_arvl
+       in: 𝑉                            out: 𝑉≺
+
+  forward
+    1  arvl_to_dcsn
+       in: μ≺                           out: μ
+
+Conditions
+  cntn_to_dcsn:Aggregation  𝑉 ∈ [−∞, ∞)
+  dcsn_to_arvl:Aggregation  𝑉≺ ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  12  x = a_bq  :: [id=wealth]
+  16  V = V[>]  :: [id=value]
+  20  V[<] = V  :: [id=value]
+
+File
+  applications/retirement-choice/declaration/stages/bequest/bequest.bl
+
+Perches
+  ≺  arrival, written [<]
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE bequest / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻}
+       ──────────
+  out  V   : {V}
+
+Conditions
+  𝑉 ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  16  V = V[>]  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward dcsn_to_arvl ====
+STAGE bequest / BACKWARD BLOCK dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V   : {V}
+       ──────────
+  out  V≺  : {V≺}
+
+Conditions
+  𝑉≺ ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  20  V[<] = V  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward arvl_to_dcsn ====
+STAGE bequest / FORWARD BLOCK arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a_bq≺  : {a_bq≺}
+       ────────────────
+  out  x      : {x}
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  12  x = a_bq  :: [id=wealth]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE bequest / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : {()} → [−∞, ∞)
+       ───────────────────────────────────────
+  out  𝑉   : {()} → [−∞, ∞)
+
+Operations
+  1  Aggregation
+     in: 𝑉≻                             out: 𝑉
+     ─────────────────────────────────────────
+     rule: 𝑉(x) = 𝑉≻
+
+  2  Evaluation
+     in: 𝑉                              out: 𝑉
+     ─────────────────────────────────────────
+     rule: 𝑉 : {()} → [−∞, ∞)
+
+Conditions
+  Aggregation  𝑉 ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  16  V = V[>]  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE bequest / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : {()} → [−∞, ∞)
+       ────────────────────
+  out  𝑉   : ℝ₊ → [−∞, ∞)
+
+Rule
+  𝑉(x) = 𝑉≻
+
+Conditions
+  𝑉 ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  16  V = V[>]  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE bequest / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : ℝ₊ → [−∞, ∞)
+       ───────────────────
+  out  𝑉  : {()} → [−∞, ∞)
+
+Rule
+  𝑉(x) = 𝑉≻
+  𝑉 : {()} → [−∞, ∞)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl ====
+STAGE bequest / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉   : {()} → [−∞, ∞)
+       ────────────────────────────────────────────────
+  out  𝑉≺  : {()} → [−∞, ∞)
+
+Operations
+  1  Pullback
+     in: 𝑉                              out: a_bq ↦ 𝑉()
+     ──────────────────────────────────────────────────
+     rule: a_bq ↦ 𝑉()
+
+  2  Aggregation
+     in: (1)                            out: 𝑉≺
+     ──────────────────────────────────────────────────
+     rule: 𝑉≺(a_bq) = 𝑉()
+
+  3  Evaluation
+     in: 𝑉≺                             out: 𝑉≺
+     ──────────────────────────────────────────────────
+     rule: 𝑉≺ : {()} → [−∞, ∞)
+
+Conditions
+  Aggregation  𝑉≺ ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  20  V[<] = V  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Pullback ====
+STAGE bequest / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : {()} → [−∞, ∞)
+       ───────────────────
+  out  a_bq ↦ 𝑉()
+          : ℝ₊ → [−∞, ∞)
+
+Rule
+  a_bq ↦ 𝑉()
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  12  x = a_bq  :: [id=wealth]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Aggregation ====
+STAGE bequest / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a_bq ↦ 𝑉()
+           : ℝ₊ → [−∞, ∞)
+       ──────────────────
+  out  𝑉≺  : ℝ₊ → [−∞, ∞)
+
+Rule
+  𝑉≺(a_bq) = 𝑉()
+
+Conditions
+  𝑉≺ ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  20  V[<] = V  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Evaluation ====
+STAGE bequest / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≺  : ℝ₊ → [−∞, ∞)
+       ────────────────────
+  out  𝑉≺  : {()} → [−∞, ∞)
+
+Rule
+  𝑉≺(a_bq) = 𝑉()
+  𝑉≺ : {()} → [−∞, ∞)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn ====
+STAGE bequest / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on ℝ₊
+       ───────────────────────────────────────
+  out  μ   : finite measure on ℝ₊
+
+Operations
+  1  Pushforward
+     in: μ≺                             out: μ
+     ─────────────────────────────────────────
+     rule: μ(B) = μ≺({a_bq≺ ∈ ℝ₊ | 𝑔≺(a_bq≺) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  12  x = a_bq  :: [id=wealth]
+
+Definitions referenced
+  𝑔≺    bequest:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / Pushforward ====
+STAGE bequest / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on ℝ₊
+       ──────────────────────────
+  out  μ   : finite measure on ℝ₊
+
+Rule
+  μ(B) = μ≺({a_bq≺ ∈ ℝ₊ | 𝑔≺(a_bq≺) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  12  x = a_bq  :: [id=wealth]
+
+Definitions referenced
+  𝑔≺    bequest:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.wealth ====
+STAGE bequest / FORWARD BLOCK arvl_to_dcsn / wealth
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  bequest.bl
+  12  x = a_bq  :: [id=wealth]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.value ====
+STAGE bequest / BACKWARD BLOCK cntn_to_dcsn / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉 ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  16  V = V[>]  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.value ====
+STAGE bequest / BACKWARD BLOCK dcsn_to_arvl / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉≺ ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  20  V[<] = V  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bequest:g:arvl_to_dcsn ====
+STAGE bequest / LAW OF MOTION arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≺  : ℝ₊ → ℝ₊,  a_bq ↦ a_bq
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  12  x = a_bq  :: [id=wealth]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bequest:G:cntn_to_dcsn ====
+STAGE bequest / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : [−∞, ∞) × ℝ₊ → [−∞, ∞),  (V≻, x) ↦ V≻
+
+Conditions
+  𝑉 ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  16  V = V[>]  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== bequest:G:dcsn_to_arvl ====
+STAGE bequest / VALUE AGGREGATOR dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≺  : [−∞, ∞) × ℝ₊ → [−∞, ∞),  (V, a_bq) ↦ V
+
+Conditions
+  𝑉≺ ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  bequest.bl
+  20  V[<] = V  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

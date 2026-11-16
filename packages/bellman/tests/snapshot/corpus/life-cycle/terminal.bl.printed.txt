@@ -1,0 +1,786 @@
+BELLMAN-SYM / STAGE terminal                              [VERSION = SYMBOLIC]
+a stage occurrence of
+applications/life-cycle/declaration/stages/terminal/terminal.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        z_4≺ state, a_4≺ state, V≺ value, age≺ value
+  ∼ decision       z_T state, a_T state, V value, age value
+  ≻ continuation   z_end≻ state, a_end≻ state, V≻ value, age≻ value
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           z_4≺ at arrival, a_4≺ at arrival, z_T at decision, a_T at
+                   decision, z_end≻ at continuation, a_end≻ at continuation
+  controls         none
+  values           V at every perch; age at every perch
+  shocks           none
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → arvl_to_dcsn   (z_4≺, a_4≺) : !arvl -> (z_T, a_T) : !dcsn
+  → dcsn_to_cntn   (z_T, a_T) : !dcsn -> (z_end≻, a_end≻) : !cntn
+  ← cntn_to_dcsn   (V≻, age≻) : !cntn -> (V, age) : !dcsn
+  ← dcsn_to_arvl   (V, age) : !dcsn -> (V≺, age≺) : !arvl
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  sets                     3   Xa := ℝ₊, Clock := {0, …, J}, Z := {1, 2, 3}
+  parameters               1   J : ℤ @ [1, inf)
+  laws of motion           2   z_T = z_4; a_T = a_4; z_end = z_T; a_end = a_T
+  value aggregators        2   V = V[>], D_{a_T}(V) = D_{a_end}V[>];
+                               V[<] = V, D_{a_4}V[<] = D_{a_T}(V)
+  block lines              8   arvl_to_dcsn.1, arvl_to_dcsn.2,
+                               dcsn_to_cntn.1, dcsn_to_cntn.2,
+                               cntn_to_dcsn.value,
+                               cntn_to_dcsn.marginal_decision,
+                               dcsn_to_arvl.value,
+                               dcsn_to_arvl.marginal_arrival
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   (𝑉≻, 𝑎𝑔𝑒≻) ↦ 𝑉≺, 𝑎𝑔𝑒≺
+                    forward    μ≺ ↦ μ≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ≺ z_4≺, a_4≺  →  ∼ z_T, a_T  →  ≻ z_end≻, a_end≻
+  backward   ≺ V≺, age≺  ←  ∼ V, age  ←  ≻ V≻, age≻
+
+==== stage ====
+STAGE terminal
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑉≻    : Z × Xa → ℝ
+         𝑎𝑔𝑒≻  : {()} → Clock
+         ────────────────────────────────────────────
+    out  𝑉≺    : Z × Xa → ℝ
+         𝑎𝑔𝑒≺  : {()} → Clock
+  forward
+    in   μ≺    : finite measure on Z × Xa
+         ────────────────────────────────────────────
+    out  μ≻    : finite measure on Z × Xa
+
+Where
+  (z_T, a_T) = 𝑔≺(z_4, a_4)
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉≻, 𝑎𝑔𝑒≻                     out: 𝑉, 𝑎𝑔𝑒
+
+    2  dcsn_to_arvl
+       in: 𝑉, 𝑎𝑔𝑒                       out: 𝑉≺, 𝑎𝑔𝑒≺
+
+  forward
+    1  arvl_to_dcsn
+       in: μ≺                           out: μ
+
+    2  dcsn_to_cntn
+       in: μ                            out: μ≻
+
+Conditions
+  cntn_to_dcsn:Aggregation        𝑉(z_T, a_T) ∈ ℝ
+  cntn_to_dcsn:Aggregation        𝑎𝑔𝑒 ∈ Clock
+  dcsn_to_arvl:Aggregation        𝑉≺(z_4, a_4) ∈ ℝ
+  dcsn_to_arvl:Aggregation        𝑎𝑔𝑒≺ ∈ Clock
+  cntn_to_dcsn.marginal_decision  marginal-reading: the right side of each
+                                    derivative line equals the derivative, in
+                                    the named coordinate, of the value the
+                                    builder writes, under the envelope
+                                    conditions: concavity of the continuation
+                                    value, interiority of the maximizer or the
+                                    multiplier's term at a binding constraint,
+                                    differentiability of the reward in the
+                                    control, a measurable selection of the
+                                    policy, and differentiability of the value
+                                    at the point read; listed and not checked
+                                     [required]
+  Clock                           J ∈ ℤ ∧ 0 ≤ J
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  10  z_T = z_4
+  11  a_T = a_4
+  15  z_end = z_T
+  16  a_end = a_T
+  20  V = V[>]                  :: [id=value]
+  21  D_{a_T}V = D_{a_end}V[>]  :: [id=marginal_decision]
+  25  V[<]   = V                :: [id=value]
+  26  D_{a_4}V[<] = D_{a_T}V    :: [id=marginal_arrival]
+
+Definitions referenced
+  Xa     terminal:set:Xa
+  J      terminal:parameter:J
+  Clock  terminal:set:Clock
+  Z      terminal:set:Z
+  𝑔≺     terminal:g:arvl_to_dcsn
+
+File
+  applications/life-cycle/declaration/stages/terminal/terminal.bl
+
+Perches
+  ≺  arrival, written [<]
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE terminal / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻    : {V≻, age≻}
+       age≻  : {age≻}
+       ──────────────────
+  out  V     : {V, age}
+       age   : {age}
+
+Conditions
+  𝑉(z_T, a_T) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Clock
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  20  V = V[>]                  :: [id=value]
+  21  D_{a_T}V = D_{a_end}V[>]  :: [id=marginal_decision]
+
+Definitions referenced
+  Clock  terminal:set:Clock
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward dcsn_to_arvl ====
+STAGE terminal / BACKWARD BLOCK dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V     : {V, age}
+       age   : {age}
+       ──────────────────
+  out  V≺    : {V≺, age≺}
+       age≺  : {age≺}
+
+Conditions
+  𝑉≺(z_4, a_4) ∈ ℝ
+  𝑎𝑔𝑒≺ ∈ Clock
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  25  V[<]   = V              :: [id=value]
+  26  D_{a_4}V[<] = D_{a_T}V  :: [id=marginal_arrival]
+
+Definitions referenced
+  Clock  terminal:set:Clock
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward arvl_to_dcsn ====
+STAGE terminal / FORWARD BLOCK arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   z_4≺  : {z_4≺}
+       a_4≺  : {z_4≺, a_4≺}
+       ────────────────────
+  out  z_T   : {z_T}
+       a_T   : {z_T, a_T}
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  10  z_T = z_4
+  11  a_T = a_4
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE terminal / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   z_T     : {z_T}
+       a_T     : {z_T, a_T}
+       ──────────────────────────
+  out  z_end≻  : {z_end≻}
+       a_end≻  : {z_end≻, a_end≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  15  z_end = z_T
+  16  a_end = a_T
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE terminal / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻    : Z × Xa → ℝ
+       𝑎𝑔𝑒≻  : {()} → Clock
+       ─────────────────────────────────────────────
+  out  𝑉     : Z × Xa → ℝ
+       𝑎𝑔𝑒   : {()} → Clock
+
+Where
+  (z_end, a_end) = 𝑔≻(z_T, a_T)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻
+     ───────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻)(z_T, a_T) = 𝑉≻(𝑔≻(z_T, a_T))
+
+  2  Aggregation
+     in: (1), 𝑎𝑔𝑒≻                      out: 𝑉, 𝑎𝑔𝑒
+     ───────────────────────────────────────────────
+     rule: 𝑉 = 𝑉≻(𝑔≻(z_T, a_T))                         on (z_T, a_T) ∈ Z × Xa
+           𝑎𝑔𝑒 = 𝑎𝑔𝑒≻()                                 on (z_T, a_T) ∈ Z × Xa
+
+  3  Evaluation
+     in: 𝑉, 𝑎𝑔𝑒                         out: 𝑉, 𝑎𝑔𝑒
+     ───────────────────────────────────────────────
+     rule: 𝑉 : Z × Xa → ℝ
+           D_{a_T}𝑉(z_T, a_T) = D_{a_end}𝑉≻(z_end, a_end)
+           𝑎𝑔𝑒 : {()} → Clock
+
+Conditions
+  Aggregation  𝑉(z_T, a_T) ∈ ℝ
+  Aggregation  𝑎𝑔𝑒 ∈ Clock
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  20  V = V[>]                  :: [id=value]
+  21  D_{a_T}V = D_{a_end}V[>]  :: [id=marginal_decision]
+
+Definitions referenced
+  Xa     terminal:set:Xa
+  Clock  terminal:set:Clock
+  Z      terminal:set:Z
+  𝑔≻     terminal:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback ====
+STAGE terminal / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Z × Xa → ℝ
+       ────────────────
+  out  𝑉≻ ∘ 𝑔≻
+           : Z × Xa → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻)(z_T, a_T) = 𝑉≻(𝑔≻(z_T, a_T))
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  15  z_end = z_T
+  16  a_end = a_T
+
+Definitions referenced
+  Xa    terminal:set:Xa
+  Z     terminal:set:Z
+  𝑔≻    terminal:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE terminal / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻
+             : Z × Xa → ℝ
+       𝑎𝑔𝑒≻  : {()} → Clock
+       ──────────────────────
+  out  𝑉     : Z × Xa → ℝ
+       𝑎𝑔𝑒   : Z × Xa → Clock
+
+Rule
+  𝑉 = 𝑉≻(𝑔≻(z_T, a_T))                                  on (z_T, a_T) ∈ Z × Xa
+  𝑎𝑔𝑒 = 𝑎𝑔𝑒≻()                                          on (z_T, a_T) ∈ Z × Xa
+
+Conditions
+  𝑉(z_T, a_T) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Clock
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  20  V = V[>]  :: [id=value]
+
+Definitions referenced
+  Xa     terminal:set:Xa
+  Clock  terminal:set:Clock
+  Z      terminal:set:Z
+  𝑔≻     terminal:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE terminal / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉    : Z × Xa → ℝ
+       𝑎𝑔𝑒  : Z × Xa → Clock
+       ─────────────────────
+  out  𝑉    : Z × Xa → ℝ
+       𝑎𝑔𝑒  : {()} → Clock
+
+Where
+  (z_end, a_end) = 𝑔≻(z_T, a_T)
+
+Rule
+  𝑉 = 𝑉≻(𝑔≻(z_T, a_T))                                  on (z_T, a_T) ∈ Z × Xa
+  𝑉 : Z × Xa → ℝ
+  D_{a_T}𝑉(z_T, a_T) = D_{a_end}𝑉≻(z_end, a_end)
+  𝑎𝑔𝑒 = 𝑎𝑔𝑒≻()                                          on (z_T, a_T) ∈ Z × Xa
+  𝑎𝑔𝑒 : {()} → Clock
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  21  D_{a_T}V = D_{a_end}V[>]  :: [id=marginal_decision]
+
+Definitions referenced
+  Xa     terminal:set:Xa
+  Clock  terminal:set:Clock
+  Z      terminal:set:Z
+  𝑔≻     terminal:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl ====
+STAGE terminal / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉     : Z × Xa → ℝ
+       𝑎𝑔𝑒   : {()} → Clock
+       ──────────────────────────────────────────────
+  out  𝑉≺    : Z × Xa → ℝ
+       𝑎𝑔𝑒≺  : {()} → Clock
+
+Where
+  (z_T, a_T) = 𝑔≺(z_4, a_4)
+
+Operations
+  1  Pullback
+     in: 𝑉                              out: 𝑉 ∘ 𝑔≺
+     ────────────────────────────────────────────────
+     rule: (𝑉 ∘ 𝑔≺)(z_4, a_4) = 𝑉(𝑔≺(z_4, a_4))
+
+  2  Aggregation
+     in: (1), 𝑎𝑔𝑒                       out: 𝑉≺, 𝑎𝑔𝑒≺
+     ────────────────────────────────────────────────
+     rule: 𝑉≺ = 𝑉(𝑔≺(z_4, a_4))                         on (z_4, a_4) ∈ Z × Xa
+           𝑎𝑔𝑒≺ = 𝑎𝑔𝑒()                                 on (z_4, a_4) ∈ Z × Xa
+
+  3  Evaluation
+     in: 𝑉≺, 𝑎𝑔𝑒≺                       out: 𝑉≺, 𝑎𝑔𝑒≺
+     ────────────────────────────────────────────────
+     rule: 𝑉≺ : Z × Xa → ℝ
+           D_{a_4}𝑉≺(z_4, a_4) = D_{a_T}𝑉(z_T, a_T)
+           𝑎𝑔𝑒≺ : {()} → Clock
+
+Conditions
+  Aggregation  𝑉≺(z_4, a_4) ∈ ℝ
+  Aggregation  𝑎𝑔𝑒≺ ∈ Clock
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  25  V[<]   = V              :: [id=value]
+  26  D_{a_4}V[<] = D_{a_T}V  :: [id=marginal_arrival]
+
+Definitions referenced
+  Xa     terminal:set:Xa
+  Clock  terminal:set:Clock
+  Z      terminal:set:Z
+  𝑔≺     terminal:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Pullback ====
+STAGE terminal / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : Z × Xa → ℝ
+       ───────────────
+  out  𝑉 ∘ 𝑔≺
+          : Z × Xa → ℝ
+
+Rule
+  (𝑉 ∘ 𝑔≺)(z_4, a_4) = 𝑉(𝑔≺(z_4, a_4))
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  10  z_T = z_4
+  11  a_T = a_4
+
+Definitions referenced
+  Xa    terminal:set:Xa
+  Z     terminal:set:Z
+  𝑔≺    terminal:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Aggregation ====
+STAGE terminal / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉 ∘ 𝑔≺
+             : Z × Xa → ℝ
+       𝑎𝑔𝑒   : {()} → Clock
+       ──────────────────────
+  out  𝑉≺    : Z × Xa → ℝ
+       𝑎𝑔𝑒≺  : Z × Xa → Clock
+
+Rule
+  𝑉≺ = 𝑉(𝑔≺(z_4, a_4))                                  on (z_4, a_4) ∈ Z × Xa
+  𝑎𝑔𝑒≺ = 𝑎𝑔𝑒()                                          on (z_4, a_4) ∈ Z × Xa
+
+Conditions
+  𝑉≺(z_4, a_4) ∈ ℝ
+  𝑎𝑔𝑒≺ ∈ Clock
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  25  V[<]   = V  :: [id=value]
+
+Definitions referenced
+  Xa     terminal:set:Xa
+  Clock  terminal:set:Clock
+  Z      terminal:set:Z
+  𝑔≺     terminal:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Evaluation ====
+STAGE terminal / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≺    : Z × Xa → ℝ
+       𝑎𝑔𝑒≺  : Z × Xa → Clock
+       ──────────────────────
+  out  𝑉≺    : Z × Xa → ℝ
+       𝑎𝑔𝑒≺  : {()} → Clock
+
+Where
+  (z_T, a_T) = 𝑔≺(z_4, a_4)
+
+Rule
+  𝑉≺ = 𝑉(𝑔≺(z_4, a_4))                                  on (z_4, a_4) ∈ Z × Xa
+  𝑉≺ : Z × Xa → ℝ
+  D_{a_4}𝑉≺(z_4, a_4) = D_{a_T}𝑉(z_T, a_T)
+  𝑎𝑔𝑒≺ = 𝑎𝑔𝑒()                                          on (z_4, a_4) ∈ Z × Xa
+  𝑎𝑔𝑒≺ : {()} → Clock
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  26  D_{a_4}V[<] = D_{a_T}V  :: [id=marginal_arrival]
+
+Definitions referenced
+  Xa     terminal:set:Xa
+  Clock  terminal:set:Clock
+  Z      terminal:set:Z
+  𝑔≺     terminal:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn ====
+STAGE terminal / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Z × Xa
+       ───────────────────────────────────────
+  out  μ   : finite measure on Z × Xa
+
+Operations
+  1  Pushforward
+     in: μ≺                             out: μ
+     ─────────────────────────────────────────
+     rule: μ(B) = μ≺({z_4≺, a_4≺ ∈ Z × Xa | 𝑔≺(z_4≺, a_4≺) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  10  z_T = z_4
+  11  a_T = a_4
+
+Definitions referenced
+  Xa    terminal:set:Xa
+  Z     terminal:set:Z
+  𝑔≺    terminal:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / Pushforward ====
+STAGE terminal / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Z × Xa
+       ──────────────────────────────
+  out  μ   : finite measure on Z × Xa
+
+Rule
+  μ(B) = μ≺({z_4≺, a_4≺ ∈ Z × Xa | 𝑔≺(z_4≺, a_4≺) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  10  z_T = z_4
+  11  a_T = a_4
+
+Definitions referenced
+  Xa    terminal:set:Xa
+  Z     terminal:set:Z
+  𝑔≺    terminal:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE terminal / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on Z × Xa
+       ────────────────────────────────────────
+  out  μ≻  : finite measure on Z × Xa
+
+Operations
+  1  Pushforward
+     in: μ                              out: μ≻
+     ──────────────────────────────────────────
+     rule: μ≻(B) = μ({z_T, a_T ∈ Z × Xa | 𝑔≻(z_T, a_T) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  15  z_end = z_T
+  16  a_end = a_T
+
+Definitions referenced
+  Xa    terminal:set:Xa
+  Z     terminal:set:Z
+  𝑔≻    terminal:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE terminal / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on Z × Xa
+       ──────────────────────────────
+  out  μ≻  : finite measure on Z × Xa
+
+Rule
+  μ≻(B) = μ({z_T, a_T ∈ Z × Xa | 𝑔≻(z_T, a_T) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  15  z_end = z_T
+  16  a_end = a_T
+
+Definitions referenced
+  Xa    terminal:set:Xa
+  Z     terminal:set:Z
+  𝑔≻    terminal:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== terminal:set:Xa ====
+STAGE terminal / SET Xa
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xa  = ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  4  Xa := ℝ₊  :: ["assets"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== terminal:set:Clock ====
+STAGE terminal / SET Clock
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Clock  = {0, …, J}
+
+Conditions
+  J ∈ ℤ ∧ 0 ≤ J
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  6  Clock := {0, …, J}
+       :: ["the ages, including the endpoint after the last period"]
+
+Definitions referenced
+  J     terminal:parameter:J
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== terminal:set:Z ====
+STAGE terminal / SET Z
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Z  = {1, 2, 3}
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  7  Z := {1, 2, 3}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== terminal:parameter:J ====
+STAGE terminal / PARAMETER J
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  J  ∈ {J ∈ ℤ | J ≥ 1}
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  5  J : ℤ @ [1, inf)  :: ["number of ages"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.1 ====
+STAGE terminal / FORWARD BLOCK arvl_to_dcsn / 1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  terminal.bl
+  10  z_T = z_4
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.2 ====
+STAGE terminal / FORWARD BLOCK arvl_to_dcsn / 2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  terminal.bl
+  11  a_T = a_4
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.1 ====
+STAGE terminal / FORWARD BLOCK dcsn_to_cntn / 1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  terminal.bl
+  15  z_end = z_T
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.2 ====
+STAGE terminal / FORWARD BLOCK dcsn_to_cntn / 2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  terminal.bl
+  16  a_end = a_T
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.value ====
+STAGE terminal / BACKWARD BLOCK cntn_to_dcsn / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(z_T, a_T) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Clock
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  20  V = V[>]  :: [id=value]
+
+Definitions referenced
+  Clock  terminal:set:Clock
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.marginal_decision ====
+STAGE terminal / BACKWARD BLOCK cntn_to_dcsn / marginal_decision
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  21  D_{a_T}V = D_{a_end}V[>]  :: [id=marginal_decision]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.value ====
+STAGE terminal / BACKWARD BLOCK dcsn_to_arvl / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉≺(z_4, a_4) ∈ ℝ
+  𝑎𝑔𝑒≺ ∈ Clock
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  25  V[<]   = V  :: [id=value]
+
+Definitions referenced
+  Clock  terminal:set:Clock
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.marginal_arrival ====
+STAGE terminal / BACKWARD BLOCK dcsn_to_arvl / marginal_arrival
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  26  D_{a_4}V[<] = D_{a_T}V  :: [id=marginal_arrival]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== terminal:g:arvl_to_dcsn ====
+STAGE terminal / LAW OF MOTION arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≺  : Z × Xa → Z × Xa,  (z_4, a_4) ↦ (z_4, a_4)
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  10  z_T = z_4
+  11  a_T = a_4
+
+Definitions referenced
+  Xa    terminal:set:Xa
+  Z     terminal:set:Z
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== terminal:g:dcsn_to_cntn ====
+STAGE terminal / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : Z × Xa → Z × Xa,  (z_T, a_T) ↦ (z_T, a_T)
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  15  z_end = z_T
+  16  a_end = a_T
+
+Definitions referenced
+  Xa    terminal:set:Xa
+  Z     terminal:set:Z
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== terminal:G:cntn_to_dcsn ====
+STAGE terminal / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : ℝ × Clock × Z × Xa → ℝ × Clock,  (V≻, age, z_T, a_T) ↦ (V≻, age)
+
+Conditions
+  𝑉(z_T, a_T) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Clock
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  20  V = V[>]                  :: [id=value]
+  21  D_{a_T}V = D_{a_end}V[>]  :: [id=marginal_decision]
+
+Definitions referenced
+  Xa     terminal:set:Xa
+  Clock  terminal:set:Clock
+  Z      terminal:set:Z
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== terminal:G:dcsn_to_arvl ====
+STAGE terminal / VALUE AGGREGATOR dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≺  : ℝ × Clock × Z × Xa → ℝ × Clock,  (V, age, z_4, a_4) ↦ (V, age)
+
+Conditions
+  𝑉≺(z_4, a_4) ∈ ℝ
+  𝑎𝑔𝑒≺ ∈ Clock
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  25  V[<]   = V              :: [id=value]
+  26  D_{a_4}V[<] = D_{a_T}V  :: [id=marginal_arrival]
+
+Definitions referenced
+  Xa     terminal:set:Xa
+  Clock  terminal:set:Clock
+  Z      terminal:set:Z
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

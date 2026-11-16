@@ -42,7 +42,7 @@ Xa := ℝ₊
 
 This complete transition fragment states the two identities; it does not infer them from a shared name. The declaration establishes unmarked `a` as an arrival input in the first block, whereas `a[>]` explicitly identifies the continuation output in the second. The decision state is named `a_d`. Bare references are resolved from declarations and the expression's context; the parser's identical treatment of a bare token and `[~]` does not itself determine its economic role.
 
-In a header, a mark must agree with the perch word of its side, `: !arvl`, `: !dcsn` or `: !cntn`. Construction checks this for `[<]` and `[>]`: the listing `(a[>] : Xa) : !arvl` is refused under [`field-perch`](../reference/refusals.md#field-perch). The mark `[~]` names the decision perch and is optional. The package reads `x[~]` as the bare name `x`. A state or a value written without a mark takes the perch of the header side that lists it, so the listing `(a[~] : Xa) : !arvl`, which breaks the rule, is read as the arrival field `a` and nothing is refused. The package does not yet check this ([Appendix C](14-appendix-c-syntax-to-semantics.md) §5.3).
+In a header, a mark must agree with the perch word of its side, `: !arvl`, `: !dcsn` or `: !cntn`, with one exception: the input side of a forward block may list a constant that the stage takes in at its continuation perch, spelled as the backward header that takes it in spells it, as `age[>]` in `(m, c : !ctrl @ ℝ₊, age[>]) : !dcsn`, and the constant stays at the continuation perch. Construction checks this for `[<]` and `[>]`: the listing `(a[>] : Xa) : !arvl` is refused under [`field-perch`](../reference/refusals.md#field-perch). The mark `[~]` names the decision perch and is optional. The package reads `x[~]` as the bare name `x`. A state or a value written without a mark takes the perch of the header side that lists it, so the listing `(a[~] : Xa) : !arvl`, which breaks the rule, is read as the arrival field `a` and nothing is refused. The package does not yet check this ([Appendix C](14-appendix-c-syntax-to-semantics.md) §5.3).
 
 We use `[<]`, `[~]`, and `[>]` for stage information. Although `.bl` inherits syntax from **dynspec**, an expression language, we do not transfer its steady-state reading of `[~]` into these equations, or use ordinary component indices such as `[1]` as alternative perch marks.
 
@@ -77,15 +77,18 @@ A side may omit its perch word only when each field it lists carries the mark `[
 >
 > **Status.** The grammar records the header's shape. Construction checks role and perch agreement, output definitions, and the exceptions below; it rejects a contradictory declaration at the offending header or declaration's [source span](../../wiki/source_span.md).
 
-The side annotation normally supplies the information context of its state or value coordinates. There are three exceptions:
+The side annotation normally supplies the information context of its state or value coordinates. There are four exceptions:
 
 - A decision control remains a decision control when listed beside continuation inputs. Listed there, it is the coordinate at which the block's lines are read, not an input of the block; it does not redefine the control as a continuation-state coordinate.
 - A shock listed as a transition argument is not thereby known at the input perch. Its law and transition use establish the relevant uncertainty and timing.
 - A state of the perch at which a backward block's output stands is a coordinate of that output and is listed on no backward header; a line of the block reads it without a listing, and a listed state is refused under `header-coordinate`. A state of the block's input perch is reached through the law of motion alone. A backward header therefore lists the value fields the block reads and writes and the controls at which its lines are read ([Appendix C](14-appendix-c-syntax-to-semantics.md#r1-blocks-and-their-headers) R1).
+- A constant that the stage takes in at its continuation perch stays at that perch where the input side of a forward block lists it; the block's law of motion or a shock law reads it there.
 
 For example, the consumption backward block lists `(V[>], c)` on its continuation side. The role `!ctrl` established for `c` still identifies a decision control. The calculation of value uses the chosen control and continuation value together. The continuation calculation must retain any decision information it needs; a smaller continuation state vector alone need not encode the control.
 
 Parameters are constant with respect to stage uncertainty and have no perch. They still require declarations and admissible values. A parameter name declared by two stages of one period denotes one period parameter; this does not identify either stage's fields. Numerical settings are supplied separately and are not economic fields.
+
+A backward header can keep a field by listing its bare name on both sides and writing no equation for it. For a nonconstant field, the corresponding forward block must keep every state coordinate its representing function reads. `L` on both sides can keep a constant, while `L[>]` and `L` are different fields. See [Fields sent backward](../01-stage.md#31-fields-sent-backward).
 
 ## 3 Shocks and expectations
 

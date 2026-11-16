@@ -1,0 +1,539 @@
+BELLMAN-SYM / STAGE cons                                  [VERSION = SYMBOLIC]
+a stage occurrence of applications/cons-port/declaration/stages/cons/cons.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        none
+  ∼ decision       m state, c control, V value
+  ≻ continuation   a≻ state, V≻ value
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           m at decision, a≻ at continuation
+  controls         c at decision
+  values           V at the decision, continuation perches
+  shocks           none
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → dcsn_to_cntn   (m) : !dcsn, at c -> (a≻) : !cntn
+  ← cntn_to_dcsn   (V≻) : !cntn, at c -> (V) : !dcsn
+  ← policy         (V≻) : !cntn -> (c) : !dcsn
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  sets                     2   Xm := ℝ₊₊, Xa := ℝ₊
+  parameters               1   ρ : (1, inf)
+  functions                1   𝑢 on ℝ₊₊
+  correspondences          1   Γ : ℝ₊₊ ⇉ ℝ₊₊
+  laws of motion           1   a = m - c
+  value aggregators        2   V = 𝑢(c) + V[>];
+                               c = argmax_{cp : Γ(m)}(𝑢(cp) + V[>])
+  block lines              3   dcsn_to_cntn.1, cntn_to_dcsn.1,
+                               policy.optimality
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   𝑉≻ ↦ 𝑐(m), 𝑉
+                    forward    μ ↦ μ≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ∼ m  →  ≻ a≻
+  backward   ∼ V  ←  ≻ V≻
+  policy     ∼ c  ←  ≻ V≻
+
+==== stage ====
+STAGE cons
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑉≻  : Xa → ℝ
+         ──────────────────────────────────────
+    out  𝑐   : Xm → ℝ₊₊,  𝑐(m) ∈ Γ(m)
+         𝑉   : Xm → ℝ
+  forward
+    in   μ   : finite measure on Xm
+         ──────────────────────────────────────
+    out  μ≻  : finite measure on Xa
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉≻                           out: 𝑉
+
+    2  policy
+       in: 𝑉≻                           out: 𝑐
+
+  forward
+    1  dcsn_to_cntn
+       in: μ                            out: μ≻
+
+Conditions
+  cntn_to_dcsn:Aggregation  𝑉(m) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  9   a = m - c
+  13  V = 𝑢(c) + V[>]
+  17  c = argmax_{cp : Γ(m)}(𝑢(cp) + V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xm    cons:set:Xm
+  Xa    cons:set:Xa
+  Γ     cons:correspondence:Γ
+
+File
+  applications/cons-port/declaration/stages/cons/cons.bl
+
+Perches
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE cons / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻}
+       ──────────
+  out  V   : {V}
+
+Conditions
+  𝑉(m) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  13  V = 𝑢(c) + V[>]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward policy ====
+STAGE cons / POLICY BLOCK policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻}
+       ──────────
+  out  c   : {c}
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  17  c = argmax_{cp : Γ(m)}(𝑢(cp) + V[>])  :: [id=optimality]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE cons / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   m   : {m}
+       ──────────
+  out  a≻  : {a≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  9  a = m - c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xa → ℝ
+       ───────────────────────────────────────────────────
+  out  𝑉   : Xm → ℝ
+
+At
+  𝑐  : Xm → ℝ₊₊,  𝑐(m) ∈ Γ(m)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻(·, 𝑐)
+     ─────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻(·, 𝑐))(m) = 𝑉≻(𝑔≻(m, 𝑐(m)))
+
+  2  Aggregation
+     in: (1)                            out: 𝑉
+     ─────────────────────────────────────────────────────
+     rule: 𝑉(m) = 𝑢(𝑐(m)) + 𝑉≻(𝑔≻(m, 𝑐(m)))
+
+  3  Evaluation
+     in: 𝑉                              out: 𝑉
+     ─────────────────────────────────────────────────────
+     rule: 𝑉 : Xm → ℝ
+
+Conditions
+  Aggregation  𝑉(m) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  13  V = 𝑢(c) + V[>]
+
+Definitions referenced
+  Xm    cons:set:Xm
+  Xa    cons:set:Xa
+  𝑢     cons:function:𝑢
+  Γ     cons:correspondence:Γ
+  𝑔≻    cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback ====
+STAGE cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xa → ℝ
+       ─────────────
+  out  𝑉≻ ∘ 𝑔≻(·, 𝑐)
+           : Xm → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻(·, 𝑐))(m) = 𝑉≻(𝑔≻(m, 𝑐(m)))
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  9  a = m - c
+
+Definitions referenced
+  Xm    cons:set:Xm
+  Xa    cons:set:Xa
+  𝑔≻    cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻(·, 𝑐)
+          : Xm → ℝ
+       ─────────────
+  out  𝑉  : Xm → ℝ
+
+Rule
+  𝑉(m) = 𝑢(𝑐(m)) + 𝑉≻(𝑔≻(m, 𝑐(m)))
+
+Conditions
+  𝑉(m) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  13  V = 𝑢(c) + V[>]
+
+Definitions referenced
+  Xm    cons:set:Xm
+  𝑢     cons:function:𝑢
+  𝑔≻    cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : Xm → ℝ
+       ───────────
+  out  𝑉  : Xm → ℝ
+
+Rule
+  𝑉(m) = 𝑢(𝑐(m)) + 𝑉≻(𝑔≻(m, 𝑐(m)))
+  𝑉 : Xm → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xm    cons:set:Xm
+  𝑢     cons:function:𝑢
+  𝑔≻    cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy ====
+STAGE cons / POLICY BUILDER policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xa → ℝ
+       ──────────────────────────────────────────────────────────────────
+  out  𝑐   : Xm → ℝ₊₊,  𝑐(m) ∈ Γ(m)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻
+     ────────────────────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻)(m, c) = 𝑉≻(𝑔≻(m, c))
+
+  2  optimality:Aggregation
+     in: (1)                            out: (m, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m, c))
+     ────────────────────────────────────────────────────────────────────
+     rule: (m, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m, c))
+
+  3  optimality:Argmax
+     in: (2)                            out: 𝑐
+     ────────────────────────────────────────────────────────────────────
+     rule: 𝑐(m) ∈ argmax_{cp ∈ Γ(m)} [𝑢(cp) + 𝑉≻(𝑔≻(m, cp))]
+
+  4  Evaluation
+     in: 𝑐                              out: 𝑐
+     ────────────────────────────────────────────────────────────────────
+     rule: 𝑐 : Xm → ℝ₊₊,  𝑐(m) ∈ Γ(m)
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  17  c = argmax_{cp : Γ(m)}(𝑢(cp) + V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xm    cons:set:Xm
+  Xa    cons:set:Xa
+  𝑢     cons:function:𝑢
+  Γ     cons:correspondence:Γ
+  𝑔≻    cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback ====
+STAGE cons / POLICY BUILDER policy / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xa → ℝ
+       ──────────────────────────────────────
+  out  𝑉≻ ∘ 𝑔≻
+           : {m, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m)} → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻)(m, c) = 𝑉≻(𝑔≻(m, c))
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  9  a = m - c
+
+Definitions referenced
+  Xm    cons:set:Xm
+  Xa    cons:set:Xa
+  Γ     cons:correspondence:Γ
+  𝑔≻    cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / optimality:Aggregation ====
+STAGE cons / POLICY BUILDER policy / optimality:Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻
+         : {m, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m)} → ℝ
+       ────────────────────────────────────
+  out  (m, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m, c))
+         : {m, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m)} → ℝ
+
+Rule
+  (m, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m, c))
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  17  c = argmax_{cp : Γ(m)}(𝑢(cp) + V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xm    cons:set:Xm
+  𝑢     cons:function:𝑢
+  Γ     cons:correspondence:Γ
+  𝑔≻    cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / optimality:Argmax ====
+STAGE cons / POLICY BUILDER policy / optimality:Argmax
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (m, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m, c))
+          : {m, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m)} → ℝ
+       ─────────────────────────────────────
+  out  𝑐  : Xm → ℝ₊₊,  𝑐(m) ∈ Γ(m)
+
+Rule
+  𝑐(m) ∈ argmax_{cp ∈ Γ(m)} [𝑢(cp) + 𝑉≻(𝑔≻(m, cp))]
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  17  c = argmax_{cp : Γ(m)}(𝑢(cp) + V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xm    cons:set:Xm
+  𝑢     cons:function:𝑢
+  Γ     cons:correspondence:Γ
+  𝑔≻    cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Evaluation ====
+STAGE cons / POLICY BUILDER policy / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑐  : Xm → ℝ₊₊,  𝑐(m) ∈ Γ(m)
+       ───────────────────────────
+  out  𝑐  : Xm → ℝ₊₊,  𝑐(m) ∈ Γ(m)
+
+Rule
+  𝑐(m) ∈ argmax_{cp ∈ Γ(m)} [𝑢(cp) + 𝑉≻(𝑔≻(m, cp))]
+  𝑐 : Xm → ℝ₊₊,  𝑐(m) ∈ Γ(m)
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xm    cons:set:Xm
+  𝑢     cons:function:𝑢
+  Γ     cons:correspondence:Γ
+  𝑔≻    cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE cons / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on Xm
+       ────────────────────────────────────────
+  out  μ≻  : finite measure on Xa
+
+At
+  𝑐  : Xm → ℝ₊₊,  𝑐(m) ∈ Γ(m)
+
+Operations
+  1  Pushforward
+     in: μ                              out: μ≻
+     ──────────────────────────────────────────
+     rule: μ≻(B) = μ({m ∈ Xm | 𝑔≻(m, 𝑐(m)) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  9  a = m - c
+
+Definitions referenced
+  Xm    cons:set:Xm
+  Xa    cons:set:Xa
+  Γ     cons:correspondence:Γ
+  𝑔≻    cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE cons / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on Xm
+       ──────────────────────────
+  out  μ≻  : finite measure on Xa
+
+Rule
+  μ≻(B) = μ({m ∈ Xm | 𝑔≻(m, 𝑐(m)) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  9  a = m - c
+
+Definitions referenced
+  Xm    cons:set:Xm
+  Xa    cons:set:Xa
+  𝑔≻    cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons:set:Xm ====
+STAGE cons / SET Xm
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xm  = ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  2  Xm := ℝ₊₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons:set:Xa ====
+STAGE cons / SET Xa
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xa  = ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  3  Xa := ℝ₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons:parameter:ρ ====
+STAGE cons / PARAMETER ρ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  ρ  ∈ (1, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  4  ρ : (1, inf)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons:function:𝑢 ====
+STAGE cons / FUNCTION 𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑢  : ℝ₊₊ → (−∞, 0),  c ↦ c^(1 − ρ)/(1 − ρ)
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  5  𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)
+
+Definitions referenced
+  ρ     cons:parameter:ρ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons:correspondence:Γ ====
+STAGE cons / CORRESPONDENCE Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Γ  : ℝ₊₊ ⇉ ℝ₊₊,  x ↦ (0, x]
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  6  Γ(x : ℝ₊₊) := (0, x]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.1 ====
+STAGE cons / FORWARD BLOCK dcsn_to_cntn / 1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  cons.bl
+  9  a = m - c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.1 ====
+STAGE cons / BACKWARD BLOCK cntn_to_dcsn / 1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(m) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  13  V = 𝑢(c) + V[>]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== policy.optimality ====
+STAGE cons / POLICY BLOCK policy / optimality
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  cons.bl
+  17  c = argmax_{cp : Γ(m)}(𝑢(cp) + V[>])  :: [id=optimality]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons:g:dcsn_to_cntn ====
+STAGE cons / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : {m, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m)} → Xa,  (m, c) ↦ m − c
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  9  a = m - c
+
+Definitions referenced
+  Xm    cons:set:Xm
+  Xa    cons:set:Xa
+  Γ     cons:correspondence:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons:G:cntn_to_dcsn ====
+STAGE cons / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, m, c ∈ ℝ × Xm × ℝ₊₊ | c ∈ Γ(m)} → ℝ,  (V≻, m, c) ↦ 𝑢(c) + V≻
+
+Conditions
+  𝑉(m) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  13  V = 𝑢(c) + V[>]
+
+Definitions referenced
+  Xm    cons:set:Xm
+  𝑢     cons:function:𝑢
+  Γ     cons:correspondence:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons:G:policy ====
+STAGE cons / VALUE AGGREGATOR policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, m, c ∈ ℝ × Xm × ℝ₊₊ | c ∈ Γ(m)} → ℝ,  (V≻, m, c) ↦ 𝑢(c) + V≻
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  17  c = argmax_{cp : Γ(m)}(𝑢(cp) + V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xm    cons:set:Xm
+  𝑢     cons:function:𝑢
+  Γ     cons:correspondence:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

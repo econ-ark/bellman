@@ -5,10 +5,9 @@ entry     += Typer(typer typing)              -- the attachment
 index     += At(perch)                        -- placement open
 expr      += Space(setexpr set)               -- injection
 expr      += Conditional(cond test, expr then, expr otherwise)
-                                              -- if test then … else …: the right side
-                                              -- of a derived parameter's definition, or
-                                              -- a branch of one; the branch the test
-                                              -- does not choose is not evaluated
+                                              -- the right side of a derived parameter
+                                              -- definition or a block equation, or a
+                                              -- branch of another conditional
 stmt      += CorrDef(identifier name, coordinate* params,
                      setexpr body)            -- Γ(x) := {…}
 stmt      += Slack(stmt core, cond bound)     -- core ⟂ bound: complementary
@@ -30,6 +29,8 @@ coordinate = Coordinate(identifier stem, index? at,
            | Group(subject inner, classifier* classifiers)
 
 law_stmt   = Law(identifier* subjects, expr law)
+law_stmt  += ParameterizedLaw(identifier* subjects,
+                             identifier* arguments, expr law)
 funcdef    = FuncDef(identifier name, coordinate* params, expr body)
 
 classifier = Domain(setexpr space)
@@ -81,13 +82,15 @@ relop = Lt | Le | Eq | Ge | Gt
 subject    += Path(segment* segments)         -- policy.evaluate[V[<]].method
 segment     = Segment(identifier name, selector* selectors)
                                               -- evaluate[V], evaluate[D_{k}V[<]]
-selector   += Term(expr at)                   -- a selector that is a term, written
-                                              -- in the subject of a typing entry alone
+selector   += Term(expr at)                   -- a marked table key or a term
+                                              -- in the subject of a typing entry
 typer      += Handler(subject subject, string program)
                                               -- policy.handler : "cons-port:egm"
 classifier += Method(word m)                  -- policy.method : !egm(tol=tol_v)
 classifier += Grid(grid g)                    -- policy.grid : !Cartesian(a=(a_min, a_max, n_a)),
                                               -- !Points(nodes=P) or !Fibred(base=…, fibre=…)
+classifier += Constancy
+argument   += ExpressionArgument(expr value)  -- a grid argument given by a sum
 
 -- The grid of a place is one outer grid word (AMD-MT-003 build contract §2).
 -- Each constructor carries the predicate words written after `require`, by

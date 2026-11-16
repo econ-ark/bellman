@@ -1,7 +1,0 @@
-# Earnings in age bracket 2, ages 31 to 36: periods 25-30 of the trellis,
-# counted from the terminal period (the legacy registry's periods 7-12,
-# counted from age 25). Benhabib, Bisin and Luo (2019), Table 1, column
-# "Age 31-36", in thousands of dollars a year, one entry per earnings decile,
-# q1 to q10 in order.
-calibration:
-  wage_fn: [11.55, 24.01, 32.58, 40.33, 47.70, 54.84, 65.10, 73.06, 87.21, 138.1]

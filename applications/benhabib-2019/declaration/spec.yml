@@ -9,30 +9,15 @@
 # types the policy builder's Evaluation and its node InvEuler, is named by no
 # list; an author who names it after the first in the list binds both.
 #
-# periods[0] is the terminal period and holds the bequest alone,
-# `periods: [0, 0]`; periods[1] to periods[36] hold the within-life stage, ages
-# 60 to 25 (calibration/horizon.yml). Earnings are constant within each of six
-# age brackets of six years, and each range list supplies the bracket's whole
-# `wage_fn`: "1-6" holds ages 60 to 55, the sixth bracket, and "31-36" ages 30
-# to 25, the first (economics.md, "The age brackets"). A range source is applied
-# after `$fill` and overrides it, so a `wage_fn` in a fill is replaced by the
-# bracket's file. The bequest's methods file states the derivative of its
-# value, which the endogenous grid step of the last age reads.
+# periods[0] holds the bequest. The within-life stage in periods[1] to
+# periods[36] takes in the age and reads the fixed wage table for the age
+# one year younger. The bequest keeps the terminal age supplied by the user.
 trellis: trellis.yml
 stages:
   benhabib_bellman:
     stage: stages/benhabib_bellman/benhabib_bellman.bl
-    calibration:
-      all:     [calibration/main, $fill]
-      "1-6":   [calibration/wage/bracket_6]
-      "7-12":  [calibration/wage/bracket_5]
-      "13-18": [calibration/wage/bracket_4]
-      "19-24": [calibration/wage/bracket_3]
-      "25-30": [calibration/wage/bracket_2]
-      "31-36": [calibration/wage/bracket_1]
+    calibration: {all: [calibration/main, calibration/wage, $fill]}
     settings: {all: [settings/default, $fill]}
     methods:  {all: [stages/benhabib_bellman/methods.bl]}
     periods: [1, 36]
   bequest: {stage: stages/bequest/bequest.bl, calibration: {all: [calibration/main, $fill]}, methods: {all: [stages/bequest/methods.bl]}, periods: [0, 0]}
-registry:
-  calibration: [calibration/horizon]

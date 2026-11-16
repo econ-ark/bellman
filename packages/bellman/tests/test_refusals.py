@@ -1,53 +1,96 @@
-"""The refusal file, in the third layer of the tests
-(`packages/bellman/README.md` §8).
+"""Refusals: the smallest example of each rule and the catalogue of the
+rules, the position and the four parts of a refusal, and its related
+locations, the earlier items or the files that a refusal names in its field
+`related` beside its own position."""
 
-One test per rule name of `RULES`, `TARGET_RULES` and `FACTORY_RULES` of
-`bellman.refusals`: the smallest example that breaks the
-rule is provoked and refused under that rule, at that address, with a message
-that names the objects involved. The examples themselves stand in the package,
-`bellman.refusal_examples.EXAMPLES`, which the catalogue of the rules reads as
-well, so that the package and its test state one fact one way (AMD-SG-022 §2,
-§11 item 6); this file reads the table and provokes each. Each refusal of graph
-construction prints its file and its line and column range, or its address when
-it has no position, before the message, and its rule after it.
-"""
-import math
+import io
+import re
+import time
+from contextlib import redirect_stdout
+from types import MappingProxyType
 
 import pytest
+from application_files import CORPUS, ROOT
+from stage_builders import stage_from_text
+from stage_texts import branching_text, changed, corpus_text, two_nodes_text_with_changes
+from two_sets import one_row_by_default
 
-from bellman.native.hypergraphs import copy_native
-from bellman.refusal_examples import EXAMPLES, INVERSE_EULER
-from bellman.stage import load_stage
-from bellman.trellis import load_recipe
-from bellman.refusal_catalogue import catalogue, entry, refusal_of
-from bellman.refusals import (FACTORY_RULES, RULES, TARGET_RULES, ConstructionError, FactoryError,
-                              NotConstructed, TargetError)
-from bellman.stage.grains import graph_of
-from conftest import (CORPUS, GRID_STAGE, GRID_VALUES, PERFECT_FORESIGHT_ORIGIN,
-                      TWO_STATE_GRID_STAGE, branching, closed_form_check, cons_obs_text,
-                      corpus_text, perfect_foresight_text, shock_branching, stage_from_text)
+from bellman import refusal_catalogue
+from bellman.__main__ import main
+from bellman.refusal_catalogue import VOCABULARIES, entry, refusal_of, text_of
+from bellman.refusal_examples import EXAMPLES, INVERSE_EULER, Example, corrected
+from bellman.refusals import (
+    FACTORY_RULES,
+    RULES,
+    TARGET_RULES,
+    ConstructionError,
+    FactoryError,
+    NotConstructed,
+    TargetError,
+)
+from bellman.trellis import load_trellis, specify_trellis
 
-# the value line of the branching fixture, after which its tests write a
+# --- the stage texts and the helpers ---
+
+# the value line of the branching stage, after which its tests write a
 # derivative line of the choice value
 CHOICE_VALUE = "    V = (V_w[>], V_r[>])[d]                :: [id=choice_value]\n"
+
+
 # the grid line and the identification of the inverse Euler form, which the
-# tests of the candidate rules change
+# tests of the candidate lines change
 GRID_LINE = "    m[>] = a + c[>]        :: [id=grid]\n"
+
+
 IDENTIFICATION = "    c = c[>]               :: [id=identification]\n"
 
 
-def cons_with(written, changed):
+# the derivative line of the backward value block of the consumption stage
+CONS_MARGINAL_LINE = "    D_{m_d}V = 𝑑𝑢(c)                :: [id=marginal]\n"
+
+
+# a header that writes `!contrl`, a word the vocabulary of the language does
+# not hold, in place of `!ctrl`
+MISSPELLED_WORD = "@stage: t\n[id=b, (x : ℝ) : !contrl -> (y : ℝ) : !dcsn] {\n    y = x\n}\n"
+
+
+# a stage whose forward measures cannot be built: the distribution of its
+# shock names a family that the package does not admit, so the graph is
+# refused where the distribution is written
+OPAQUE_LAW = """@stage: opaque_law
+z : ℝ₊
+z ~ Weird(0.2, 0.8)
+[id=flow, (x:ℝ₊,z):!arvl -> (y:ℝ₊):!dcsn] { y=x+z }
+[id=value, (W:ℝ @ !vlu):!dcsn -> (V:ℝ @ !vlu):!arvl] {
+ V=E_{z}(W) :: [id=average]
+}
+"""
+
+
+# a settings file whose value of a_min, -1.0, lies outside the declared set
+# ℝ₊ of a_min; the key a_min stands on line 3, column 3 of the file
+SETTINGS_OUTSIDE_THE_SET = "settings:\n  n_a: 30\n  a_min: -1.0\n  a_max: 20.0\n"
+
+
+def cons_stage_with(line_as_written, line_as_changed):
     """The consumption stage's text with one line changed, elaborated."""
-    text = corpus_text("cons")
-    assert text.count(written) == 1, written
-    return stage_from_text(text.replace(written, changed), CORPUS["cons"])
+    text = changed(corpus_text("cons"), (line_as_written, line_as_changed))
+    return stage_from_text(text, CORPUS["cons"])
 
 
-def printed(error):
-    """The refusal as `ConstructionError.__str__` writes it: the position, or
-    the file and the address where it has none, then the message, then the
-    address and the rule, then one line per related location and one for
-    the action, where the refusal carries them."""
+def branching_with_marginal(term):
+    """The branching stage with a derivative line of its choice value that
+    reads `term` in the branch of work."""
+    marginal = f"    D_{{a_d}}V = ({term}, D_{{a_r}}V_r[>])[d]  :: [id=marginal]\n"
+    return branching_text((CHOICE_VALUE, CHOICE_VALUE + marginal))
+
+
+def printed_from_fields(error):
+    """The text that `ConstructionError.__str__` prints, built from the
+    fields of the refusal: the position, or the file and the address where it
+    has none, then the message, then the address and the rule, then one line
+    for each related location and one for the action, where the refusal
+    carries them."""
     if error.line is None:
         head = f"{error.file}: address {error.address!r}: {error.message} (rule {error.rule})"
     else:
@@ -64,2140 +107,1101 @@ def printed(error):
     return head + after
 
 
+def position(error):
+    """The file, the range and the address of a refusal."""
+    return error.file, error.line, error.column, error.end_line, error.end_column, error.address
+
+
+# --- the words of the refusals ---
+
+# The phrases by which a sentence would misname a term of the documentation:
+# `value block` or `value builder` for a backward block; `transition g`,
+# `transition from`, `transition defines` or `forward transition` for the law
+# of motion or for the edge on which a shock is drawn; and `law` or `laws`
+# alone for the distribution of a shock. `law` in `law of motion` or `laws of
+# motion`, and `law` joined by a hyphen to the word before it, are no such
+# phrase, and the word `transition` in any other phrase, such as
+# `transition block`, is not read.
+MISNAMING_PHRASES = re.compile(
+    r"value block|value builder|transition g\b|\btransition (?:from|defines)"
+    r"|\bforward transition|(?<!-)\blaws?\b(?! of motion)"
+)
+
+
+@pytest.fixture(scope="module")
+def sentence_by_rule(catalogue_entries):
+    """The sentence of the refusal that the example of each rule provokes, by
+    the rule, as the catalogue gives it, in a mapping that no test can
+    change."""
+    return MappingProxyType({item.rule: item.why for item in catalogue_entries})
+
+
+def test_no_catalogue_sentence_misnames_a_backward_block_law_of_motion_edge_or_distribution(
+    sentence_by_rule,
+):
+    """No sentence of a refusal that the catalogue provokes holds a phrase of
+    `MISNAMING_PHRASES`: none calls a backward block a value block or a
+    value builder, the law of motion or an edge a transition, or writes
+    `law` alone, outside `law of motion`, as for a distribution."""
+    assert [
+        sentence for sentence in sentence_by_rule.values() if MISNAMING_PHRASES.search(sentence)
+    ] == []
+
+
+@pytest.mark.parametrize(
+    "declarations, backward",
+    [
+        pytest.param(
+            "y ~ N(0,1)\nz : ℝ\nz ~ N(0,1)\ny ~ N(0,2)\n",
+            None,
+            id="a-second-distribution-of-y",
+        ),
+        pytest.param(
+            "y ~ N(0,1)\nz : ℝ\n(y, z) ~ N((0,0),((1,0),(0,1)))\n",
+            None,
+            id="y-again-in-a-joint-distribution",
+        ),
+        pytest.param(
+            "y ~ N(0,1)\nz : ℝ\nz ~ N(0,1)\nq : ℝ\n",
+            "    V = E_{q}(V[>]) :: [id=value]\n",
+            id="an-expectation-over-q-which-has-no-distribution",
+        ),
+    ],
+)
+def test_a_distribution_refusal_misnames_no_backward_block_law_of_motion_edge_or_distribution(
+    declarations, backward
+):
+    """The refusal of a shock given two distributions, or read in an
+    expectation without one, holds no phrase of `MISNAMING_PHRASES`: it
+    calls no backward block a value block or a value builder, neither the
+    law of motion nor an edge a transition, and writes `law` alone nowhere,
+    outside `law of motion`."""
+    with pytest.raises(ConstructionError) as refused:
+        stage_from_text(two_nodes_text_with_changes(declarations=declarations, backward=backward))
+    assert MISNAMING_PHRASES.findall(refused.value.message) == []
+
+
+def test_the_refusal_of_a_transition_without_an_expectation_asks_for_a_backward_block(
+    sentence_by_rule,
+):
+    """The sentence of the refusal under `transition-without-expectation`
+    ends by naming the law of motion 𝑔 and a backward block."""
+    assert sentence_by_rule["transition-without-expectation"].endswith(
+        "through the law of motion 𝑔 and takes no expectation; "
+        "write the integration in a backward block"
+    )
+
+
+@pytest.mark.parametrize(
+    "rule, phrase",
+    [
+        pytest.param(
+            "shock-observed",
+            "; the edge from the arvl perch to the dcsn perch draws the shock y,",
+            id="the-edge-that-draws-a-shock",
+        ),
+        pytest.param(
+            "forward-composite",
+            "Write the cntn-perch field the law of motion defines",
+            id="the-law-of-motion",
+        ),
+        pytest.param(
+            "branch-law",
+            "has no distribution; the branches are weighted by the distribution of the shock",
+            id="the-distribution-of-a-shock",
+        ),
+    ],
+)
+def test_a_refusal_names_the_edge_the_law_of_motion_or_the_distribution_of_a_shock(
+    sentence_by_rule, rule, phrase
+):
+    """The sentence of the refusal of each of three rules names the edge on
+    which a shock is drawn, the law of motion or a shock's distribution."""
+    assert phrase in sentence_by_rule[rule]
+
+
+# --- the smallest example of each rule ---
+
+
 @pytest.mark.parametrize("rule", RULES)
-def test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it(rule, elaborate_text):
+def test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it(rule):
+    """The example of a rule of graph construction provokes a refusal under
+    that rule, at the example's address in its file, whose sentence holds the
+    example's words and whose printed text is the one its fields give."""
     example = EXAMPLES[rule]
     error = refusal_of(example)
     assert isinstance(error, ConstructionError), rule
     assert (error.rule, error.address) == (rule, example.address)
     assert error.file == example.origin
-    if example.provokes == "compile_kernel":
-        assert error.line is None
-    for word in example.words:
-        assert word in error.message, (word, error.message)
-    assert str(error) == printed(error)
-    if rule in ("declared-twice", "label-not-in-parent", "type-conflict", "metadata-mismatch"):
-        # the earlier item of the pair is a related location under the role
-        # `original declaration`, with its file, its range and its term
-        # address, and the sentence still names its position in words
-        (earlier,) = error.related
-        assert earlier.role == "original declaration"
-        assert earlier.file in ("t.bl", "m.bl") and earlier.address is not None
-        assert None not in (earlier.line, earlier.column, earlier.end_line, earlier.end_column)
-        assert f"{earlier.file}:{earlier.line}:{earlier.column}" in error.message
-        assert (earlier.file, earlier.address) != (error.file, error.address)
-    if rule == "syntax":
-        from bellman.refusal_catalogue import text_of
-
-        assert (error.file, error.line, error.column) == ("cons.bl", 16, 40)
-        assert str(error).startswith("cons.bl:16:")
-        assert text_of(example).splitlines()[15] in str(error)
-        assert "\n" + " " * (4 + error.column - 1) + "^" in str(error)
-        # the grammar's sentence for the place is the action, held once
-        assert "a side of a block header" in error.write and error.write not in error.message
-        with pytest.raises(ConstructionError) as refused:
-            elaborate_text("@stage: t\n[id=b, (x : ℝ) : !contrl -> (y : ℝ) : !dcsn] {\n    y = x\n}\n")
-        word = refused.value
-        assert (word.rule, word.line, word.column) == ("syntax", 2, 18)
-        assert "!contrl" in word.message
-        for refusal in (error, word):
-            for internal in ("Error trying to process rule", "word_type", "TAGBANG"):
-                assert internal not in str(refusal)
-    if rule == "defined-once":
-        assert (error.line, error.column) == (4, 5)
-        held = entry(rule)
-        assert held.where == "t.bl, line 4, column 5 (address 'b.second')"
-        assert "W = 2*V[>]" in held.what and "^" in held.what
-        assert held.why == error.message
-        assert "t.bl:3:5 (term address 'b.first')" in held.why
-        assert held.write == error.write
-        assert all(word in held.write
-                   for word in ("Remove one of the two definitions of W", "another name", "`!doc`"))
-        assert held.corrected == ""
-        documentary = example.text.replace("[id=first, !node]", "[id=first, !doc]")
-        assert elaborate_text(documentary).name == "t"
-        # a derivative term stated twice in one block, the housing-frictions
-        # probe (F68): refused at the second line naming the first
-        marginal = "    D_{m_d}V = 𝑑𝑢(c)                :: [id=marginal]\n"
-        with pytest.raises(ConstructionError) as refused:
-            cons_with(marginal, marginal + "    D_{m_d}V = 2*𝑑𝑢(c)              :: [id=marginal2]\n")
-        assert (refused.value.rule, refused.value.address) == (rule, "cntn_to_dcsn.marginal2")
-        assert "block 'cntn_to_dcsn' already states D_{m_d}V at" in refused.value.message
-        assert "(term address 'cntn_to_dcsn.marginal')" in refused.value.message
-    if rule == "name-in-scope":
-        # a set a typing names that the stage does not define, the three forms
-        # of the cons-port probe (F35) and a product in a set's definition,
-        # each refused at the item that names it with the sets in scope; an
-        # undefined function stays an external callable, recorded as an
-        # obligation and refused by no rule
-        for written, changed, address, what in (
-            ("ρ : [1, inf)\n", "ρ : [1, inf)\nn_m : Foo\n", "5", "the declaration of 'n_m'"),
-            ("(m_d, c : !ctrl @ ℝ₊₊) : !dcsn", "(m_d, c : !ctrl @ Foo) : !dcsn", "dcsn_to_cntn",
-             "the header of block 'dcsn_to_cntn', which types c"),
-            ("𝑑𝑢(c : ℝ₊₊) := c^(-ρ)", "𝑑𝑢(c : Foo) := c^(-ρ)", "6",
-             "the argument 'c' of the function '𝑑𝑢'"),
-            ("Xa := ℝ₊\n", "Xa := ℝ₊\nXq := Xm × Foo\n", "4", "the definition of the set 'Xq'"),
-        ):
-            with pytest.raises(ConstructionError) as refused:
-                cons_with(written, changed)
-            assert (refused.value.rule, refused.value.address) == (rule, address)
-            assert f"{what} names the set 'Foo'" in refused.value.message
-            assert "the sets in scope here: Xm, Xa" in refused.value.message
-            assert "ℝ, ℝ₊, ℝ₊₊, ℤ, ℕ" in refused.value.message
-        # a function of the stage written where a set stands, defined with a
-        # parameter list or as the inverse of a function, is refused under
-        # the same rule, naming the function and its definition
-        for written, changed, address, what, function in (
-            ("ρ : [1, inf)\n", "ρ : [1, inf)\nn_m : 𝑑𝑢\n", "5", "the declaration of 'n_m'", "𝑑𝑢"),
-            ("Xa := ℝ₊\n", "Xa := ℝ₊\nXq := Xm × 𝑑𝑢\n", "4",
-             "the definition of the set 'Xq'", "𝑑𝑢"),
-            ("Γ(x : ℝ₊₊) := (0, x]\n", "Γ(x : ℝ₊₊) := (0, x]\n𝑑𝑢𝑖𝑛𝑣 := Inv(𝑑𝑢)\nn_m : 𝑑𝑢𝑖𝑛𝑣\n",
-             "9", "the declaration of 'n_m'", "𝑑𝑢𝑖𝑛𝑣"),
-        ):
-            with pytest.raises(ConstructionError) as refused:
-                cons_with(written, changed)
-            assert (refused.value.rule, refused.value.address) == (rule, address)
-            assert (
-                f"{what} names the set {function!r}, which the stage defines as a function at"
-                in refused.value.message
-            )
-            assert "and as no set" in refused.value.message
-        marginal = "    D_{m_d}V = 𝑑𝑢(c)                :: [id=marginal]\n"
-        stage = cons_with(marginal, marginal.replace("𝑑𝑢(c)", "𝑓𝑜𝑜(c)"))
-        assert "external-callable-signature-and-provider" in {
-            item.condition for item in stage.obligations()
-        }
-    if rule == "derivative-coordinate":
-        # the value of a branch is a function of that branch's states alone:
-        # the pension-retirement probe, a coordinate of the other branch in a
-        # derivative of the work value, is refused naming the branch and its
-        # coordinates, and the branch's own coordinate is admitted
-        def with_marginal(term):
-            return branching((CHOICE_VALUE, CHOICE_VALUE
-                              + f"    D_{{a_d}}V = ({term}, D_{{a_r}}V_r[>])[d]  :: [id=marginal]\n"))
-
-        with pytest.raises(ConstructionError) as refused:
-            elaborate_text(with_marginal("D_{a_r}V_w[>]"))
-        assert (refused.value.rule, refused.value.address) == (rule, "cntn_to_dcsn.marginal")
-        assert ("names 'a_r', which is no state coordinate of the branch 'work' of the cntn perch"
-                in refused.value.message)
-        assert "the coordinates of the branch 'work' of the cntn perch are a_w" in refused.value.message
-        assert elaborate_text(with_marginal("D_{a_w}V_w[>]")).name == "t"
-    if rule == "candidate-coordinate":
-        # admitted: the control at the candidates, the decision state (the grid
-        # line) and the value candidate an upper envelope compares, as the
-        # worker's block of retirement-choice writes them; the value candidate
-        # is refused where no envelope reads it (F39)
-        value_candidate = GRID_LINE + "    v[>] = 𝑢(c[>]) + V[>]    :: [id=cand_value]\n"
-        envelope = "    c = upper_env(m[>], c[>], v[>])    :: [id=envelope]\n"
-        with_envelope = INVERSE_EULER.replace(GRID_LINE, value_candidate).replace(IDENTIFICATION, envelope)
-        assert elaborate_text(with_envelope).name == "t"
-        with pytest.raises(ConstructionError) as refused:
-            elaborate_text(INVERSE_EULER.replace(GRID_LINE, value_candidate))
-        assert (refused.value.rule, refused.value.address) == (rule, "policy.cand_value")
-        assert "writes v[>], a candidate of 'v'" in refused.value.message
-        assert "no upper envelope of block 'policy' compares it" in refused.value.message
-    if rule == "candidate-read":
-        # the grid line, a decision state at the candidates, is read by the
-        # Evaluation as the knots of the policy and needs no reader among the
-        # lines; the control's candidate is read by the grid line
-        closed = "    c = 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>])     :: [id=closed]\n"
-        assert elaborate_text(INVERSE_EULER.replace(IDENTIFICATION, closed)).name == "t"
-    if rule == "one-builder-per-output":
-        # a second value builder and a second forward builder with the same
-        # outputs and perches are refused under this rule and not under
-        # `forward-composite` (F17, continued)
-        for block, address, first in (
-            ("[id=value2, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {\n"
-             "    V = 2*𝑢(c) + V[>]    :: [id=value]\n}\n", "value2", "cntn_to_dcsn"),
-            ("[id=step2, (m, c : !ctrl @ ℝ₊₊) : !dcsn -> (a : ℝ₊) : !cntn] {\n    a = m - 2*c\n}\n",
-             "step2", "dcsn_to_cntn"),
-        ):
-            with pytest.raises(ConstructionError) as refused:
-                elaborate_text(INVERSE_EULER + block)
-            assert (refused.value.rule, refused.value.address) == (rule, address)
-            assert f"which block '{first}' already writes" in refused.value.message
+    assert [word for word in example.words if word not in error.message] == []
+    assert str(error) == printed_from_fields(error)
 
 
-def test_a_grid_line_is_compared_with_the_law_of_motion_solved_for_its_decision_state(cons, elaborate_text):
-    # the rule grid-line-consistency: the right side of a grid line and the law
-    # of motion solved for the decision state at the candidates reduce to one
-    # expression by algebraic simplification, every function read as an opaque
-    # symbol; the refusal names the line as written and the law of motion so
-    # solved (RL5)
-    from conftest import ROOT, ADJUSTER_CONS_EXPLICIT
-    from bellman.refusal_examples import INVERSE_EULER
+# the rules whose example compiles a kernel of the built stage
+COMPILATION_RULES = [rule for rule in RULES if EXAMPLES[rule].provokes == "compile_kernel"]
 
-    # the inverse Euler form of the consumption stage, whose policy block writes
-    # the grid line `m[>] = a + c[>]` (the corpus writes the maximization alone)
-    text = INVERSE_EULER
-    grid = "    m[>] = a + c[>]        :: [id=grid]"
-    assert text.count(grid) == 1
 
-    def with_grid(right):
-        return text.replace(grid, f"    m[>] = {right}    :: [id=grid]")
-
-    # a grid line is read by its value, not by its spelling
-    for right in ("c[>] + a", "(a + c[>])*1", "2*(a + c[>]) - a - c[>]"):
-        assert elaborate_text(with_grid(right)).name == "t"
-    # a decimal literal is read as the rational number its spelling denotes,
-    # so 0.9 and 10/9 are reciprocal in the comparison
-    law = "    a = m - c\n"
-    assert text.count(law) == 1
-    assert elaborate_text(with_grid("10*a/9 + c[>]").replace(law, "    a = 0.9*(m - c)\n")).name == "t"
-    # a grid line that agrees with the law of motion only under an identity
-    # among declared functions is refused, and the message says so
-    with pytest.raises(ConstructionError) as refused:
-        elaborate_text(with_grid("a + 𝑑𝑢𝑖𝑛𝑣(𝑑𝑢(c[>]))"))
-    assert (refused.value.rule, refused.value.address) == ("grid-line-consistency", "policy.grid")
-    for words in ("the grid line m[>] = a + 𝑑𝑢𝑖𝑛𝑣(𝑑𝑢(c[>]))", "the law of motion gives m[>] = a + c[>]",
-                  "it applies the functions 𝑑𝑢, 𝑑𝑢𝑖𝑛𝑣", "assumes no identity"):
-        assert words in refused.value.message, (words, refused.value.message)
-    # a law of motion with several outputs is solved through its other lines:
-    # on the durables adjuster the housing line gives the control without a
-    # candidate
-    adjuster = (ROOT / ADJUSTER_CONS_EXPLICIT).read_text(encoding="utf-8")
-    line = "m[>]          = a_nxt_adj + c[>] + (1 + τ)*h_nxt_adj"
-    assert adjuster.count(line) == 1
-    assert elaborate_text(adjuster).name == "adjuster_cons"
-    with pytest.raises(ConstructionError) as refused:
-        elaborate_text(adjuster.replace(line, "m[>]          = a_nxt_adj + c[>] + h_nxt_adj         "))
-    assert (refused.value.rule, refused.value.address) == ("grid-line-consistency", "policy.endoggrid")
-    for words in ("the grid line m[>] = a_nxt_adj + c[>] + h_nxt_adj",
-                  "its lines a_nxt_adj = m - c - (1 + τ)*h_choice and h_nxt_adj = h_choice "
-                  "solved for m and h_choice at the candidate c[>]",
-                  "the law of motion gives m[>] = a_nxt_adj + c[>] + (1 + τ)*h_nxt_adj",
-                  "does not reduce to"):
-        assert words in refused.value.message, (words, refused.value.message)
-    # a law of motion in which the decision state occurs other than once and
-    # affinely is not solved: the grid line is not checked, and no kind of
-    # condition is added in the place of the check
-    unsolved = elaborate_text(with_grid("a + 5*c[>]").replace(law, "    a = m*m - c\n"))
-    assert ({item.condition for item in unsolved.obligations()}
-            == {item.condition for item in elaborate_text(text).obligations()})
+@pytest.mark.parametrize("rule", COMPILATION_RULES)
+def test_a_refusal_of_compile_kernel_names_no_line_of_the_file(rule):
+    """A refusal raised when a kernel of the built stage is compiled names
+    no line of the file, since the stage keeps no position after its
+    construction."""
+    error = refusal_of(EXAMPLES[rule])
+    assert error.rule == rule
+    assert error.line is None
 
 
 @pytest.mark.parametrize("rule", TARGET_RULES)
-def test_the_smallest_example_breaking_a_rule_of_the_identity_table_is_refused_under_it(rule):
+def test_the_smallest_example_breaking_a_rule_for_the_names_of_pieces_is_refused_under_it(rule):
+    """The example of a rule for a name given to a query of the stage object
+    is refused under that rule, naming the example's target and stage, with
+    the example's words."""
     example = EXAMPLES[rule]
     error = refusal_of(example)
     assert isinstance(error, TargetError), rule
     assert (error.rule, error.target) == (rule, example.address)
-    if example.corpus:
-        assert error.stage == example.corpus
-    for word in example.words:
-        assert word in str(error), (word, str(error))
+    assert error.stage == example.corpus
+    assert [word for word in example.words if word not in str(error)] == []
 
 
 @pytest.mark.parametrize("rule", FACTORY_RULES)
-def test_the_smallest_planted_case_breaking_a_rule_of_the_factory_is_refused_under_it(rule):
+def test_the_smallest_example_breaking_a_rule_of_the_factory_is_refused_under_it(rule):
+    """The example of a rule of the Bellman factory provokes a refusal under
+    that rule at the example's address, which holds the example's words,
+    what stands there and what to write, and whose printed text closes with
+    the rule."""
     example = EXAMPLES[rule]
     error = refusal_of(example)
     assert isinstance(error, FactoryError), rule
     assert (error.rule, error.address) == (rule, example.address)
-    for word in example.words:
-        assert word in error.message, (word, error.message)
+    assert [word for word in example.words if word not in error.message] == []
     assert error.written and error.write, rule
     assert str(error).endswith(f"(rule {rule})")
 
 
-def test_diagram_period_refuses_an_index_the_trellis_does_not_hold(cons):
-    # as `diagram_trellis` refuses one, where Python's own IndexError, or a
-    # negative index counted from the end, reached the reader (S11)
-    from bellman.period import diagram_period
-    trellis = {"periods": [{"stages": {"cons": cons}, "connectors": []}], "inter_connectors": []}
-    for index in (5, -1, "0"):
-        with pytest.raises(FactoryError) as refused:
-            diagram_period(trellis, index)
-        assert (refused.value.rule, refused.value.address, refused.value.written) == (
-            "trellis-file-shape", "periods", repr(index))
-        assert "the trellis holds 1 periods" in refused.value.message
-        assert refused.value.write == "an index between 0 and 0"
+# --- the catalogue ---
 
 
-def test_a_key_written_twice_is_refused_on_every_path_that_reads_a_yaml_file(cons, cons_sources, path_of, tmp_path):
-    # one reader reads every YAML file; before it, a calibration or a settings
-    # file given by its path took the last value silently, and a methods file
-    # raised a bare DuplicateKey (map/bindings B1; S11)
-    from bellman.trellis import load_recipe, load_trellis
-    from bellman.refusal_examples import write_registry
-    calibration = tmp_path / "calibration.yml"
-    calibration.write_text("calibration:\n  ρ: 2.0\n  ρ: 3.0\n", encoding="utf-8")
-    settings = tmp_path / "settings.yml"
-    written = cons_sources["settings"].read_text(encoding="utf-8")
-    assert written.count("  n_m: 8000") == 1
-    settings.write_text(written.replace("  n_m: 8000", "  n_m: 8000\n  n_m: 10"), encoding="utf-8")
-    trellis = tmp_path / "trellis.yml"
-    trellis.write_text(f"periods:\n  - stages:\n      cons: {{stage: {path_of('cons')}, calibration: calibration.yml}}\n"
-                       "    connectors: []\ninter_connectors: []\n", encoding="utf-8")
-    methodized = copy_native(cons).methodize(cons_sources["methods"])
-    for call, path, key, line in ((lambda: copy_native(cons).calibrate(calibration), calibration, "ρ", 3),
-                                  (lambda: methodized.configure(settings), settings, "n_m", 7),
-                                  (lambda: load_trellis(trellis), calibration, "ρ", 3)):
-        with pytest.raises(FactoryError) as refused:
-            call()
-        assert (refused.value.rule, refused.value.file, refused.value.written, refused.value.write) == (
-            "readable-file", str(path), f"{key!r} at line {line}", f"one `{key}:` entry")
-        written_twice = f"in {path.name}, at line {line - 1} and again at line {line}"
-        assert f"the key {key!r} is written twice {written_twice}" in refused.value.message
-    registry = write_registry(tmp_path / "registry", {"calibration/main.yml": "calibration:\n  β: 0.96\n  β: 0.5\n"})
-    with pytest.raises(FactoryError) as refused:
-        load_recipe(registry, "spec.yml")
-    assert (refused.value.rule, refused.value.write) == ("recipe-source", "one `β:` entry")
+def test_the_catalogue_lists_every_rule_of_the_three_vocabularies_in_their_order(
+    catalogue_entries,
+):
+    """The catalogue lists the rules of graph construction, then those of
+    the names of the pieces, then those of the Bellman factory."""
+    assert [item.rule for item in catalogue_entries] == (
+        list(RULES) + list(TARGET_RULES) + list(FACTORY_RULES)
+    )
 
 
-# the smallest registry's recipe as a recipe writes it, its trellis file and its
-# one stage's file named by their paths from the recipe's folder (AAS, 2 October
-# 2026); the three tests below remove or change one of the two lines
-EXPLICIT_RECIPE = ("trellis: trellis.yml\nstages:\n  two_nodes:\n"
-                   "    stage: stages/two_nodes/two_nodes.bl\n"
-                   "    calibration: {all: [calibration/main]}\n")
-
-
-def test_a_recipe_that_names_no_trellis_file_is_refused(tmp_path):
-    """A recipe names its trellis file under `trellis:`; a recipe without the
-    key is refused under `recipe-shape`, and the file `trellis.yml`, which
-    stands in the recipe's folder, is not read in its place."""
-    import bellman
-    from bellman.refusal_examples import write_registry
-    directory = write_registry(tmp_path / "registry",
-                               {"spec.yml": EXPLICIT_RECIPE.replace("trellis: trellis.yml\n", "")})
-    assert (directory / "trellis.yml").is_file()
-    with pytest.raises(FactoryError) as refused:
-        load_recipe(directory, "spec.yml")
-    assert (refused.value.rule, refused.value.file, refused.value.address) == (
-        "recipe-shape", str(directory / "spec.yml"), "trellis")
-    assert str(refused.value).endswith(
-        ": the recipe names no trellis file; write `trellis: trellis.yml`, the path from this folder "
-        "(rule recipe-shape)")
-
-
-def test_a_stage_entry_that_names_no_stage_file_is_refused(tmp_path):
-    """Each entry of a recipe names its stage file under `stage:`; an entry
-    without the key is refused under `recipe-shape` at the entry's address."""
-    import bellman
-    from bellman.refusal_examples import write_registry
-    directory = write_registry(tmp_path / "registry",
-                               {"spec.yml": EXPLICIT_RECIPE.replace("    stage: stages/two_nodes/two_nodes.bl\n", "")})
-    with pytest.raises(FactoryError) as refused:
-        load_recipe(directory, "spec.yml")
-    assert (refused.value.rule, refused.value.file, refused.value.address) == (
-        "recipe-shape", str(directory / "spec.yml"), "stages.two_nodes")
-    assert str(refused.value).endswith(
-        ": the entry `stages.two_nodes` names no stage file; write "
-        "`stage: stages/two_nodes/two_nodes.bl`, the path from this folder (rule recipe-shape)")
-
-
-def test_a_stage_file_is_read_at_the_path_its_entry_writes_and_never_found_by_its_key(tmp_path):
-    """No stage file is found by its key: an entry without `stage:` is refused
-    although the key's file stands at both places the retired reading by name
-    looked, `stages/<key>.bl` and `stages/<key>/<key>.bl`; a written path is
-    read as written, here a file whose name is not the key; and a path that
-    names no file, or no `.bl` file, is refused as `load_stage` refuses it, at
-    the recipe's address of the path."""
-    import bellman
-    from bellman.refusal_examples import TWO_NODES, write_registry
-    unnamed = write_registry(tmp_path / "unnamed", {
-        "spec.yml": EXPLICIT_RECIPE.replace("    stage: stages/two_nodes/two_nodes.bl\n", ""),
-        "stages/two_nodes.bl": TWO_NODES})
-    assert (unnamed / "stages/two_nodes.bl").is_file() and (unnamed / "stages/two_nodes/two_nodes.bl").is_file()
-    with pytest.raises(FactoryError) as refused:
-        load_recipe(unnamed, "spec.yml")
-    assert (refused.value.rule, refused.value.address) == ("recipe-shape", "stages.two_nodes")
-    elsewhere = write_registry(tmp_path / "elsewhere", {
-        "spec.yml": EXPLICIT_RECIPE.replace("stage: stages/two_nodes/two_nodes.bl", "stage: models/saving.bl"),
-        "models/saving.bl": TWO_NODES})
-    record = load_recipe(elsewhere, "spec.yml")["periods"][0]["stages"]["two_nodes"]
-    assert record["stage"]["origin"] == str(elsewhere / "models/saving.bl")
-    for name, written in (("absent", "stages/absent.bl"), ("yaml", "calibration/main.yml")):
-        directory = write_registry(tmp_path / name, {
-            "spec.yml": EXPLICIT_RECIPE.replace("stage: stages/two_nodes/two_nodes.bl", f"stage: {written}")})
-        with pytest.raises(FactoryError) as refused:
-            load_recipe(directory, "spec.yml")
-        with pytest.raises(FactoryError) as direct:
-            load_stage(directory / written)
-        assert (refused.value.rule, refused.value.file, refused.value.address, refused.value.written) == (
-            "readable-file", str(directory / "spec.yml"), "stages.two_nodes.stage", written)
-        assert (refused.value.message, refused.value.write) == (direct.value.message, direct.value.write)
-
-
-def test_a_parameter_two_stages_of_a_period_declare_is_refused_where_their_sets_or_values_disagree(shared_registry, tmp_path):
-    """The refusals of `period-parameter-agreement` beyond the planted case
-    (AMD-COMP-001 §2.3), each naming the period, the parameter, the stages
-    and their sources: two declared sets whose intersection the package does
-    not read, ℝ₊₊ and ℤ, at the elaboration; two sources supplying two
-    values, with the notes of a refused binding naming the discounting
-    stage's position and the kind; and a value a source supplies that lies
-    outside the set another declaring stage writes, 0 in the two-node
-    stage's ℝ₊₊ though in the discounting stage's own set."""
-    from bellman.refusal_examples import write_registry
-    from bellman.trellis import assemble_trellis, elaborate_trellis
-    from conftest import SHARED_REGISTRY
-    integers = write_registry(tmp_path / "integers", {
-        **SHARED_REGISTRY, "stages/disc/disc.bl": SHARED_REGISTRY["stages/disc/disc.bl"].replace("β : (0,1)", "β : ℤ")})
-    with pytest.raises(FactoryError) as refused:
-        elaborate_trellis(load_recipe(integers, "spec.yml"))
-    assert (refused.value.rule, refused.value.address) == ("period-parameter-agreement", "periods[0]")
-    assert refused.value.written == "β : ℝ₊₊ in two_nodes; β : ℤ in disc"
-    for word in ("two_nodes", "disc", "'β'", "reads no intersection"):
-        assert word in refused.value.message
-    assert not hasattr(refused.value, "__notes__")
-    with pytest.raises(FactoryError) as refused:
-        assemble_trellis(shared_registry, "spec.yml", disc_fill={"β": 0.5})
-    assert (refused.value.rule, refused.value.address) == ("period-parameter-agreement", "periods[0]")
-    assert refused.value.written == "β: 0.96 (calibration/main, $fill); 0.5 ($disc_fill)"
-    assert "supply the parameter 'β' with the values 0.96 and 0.5" in refused.value.message
-    assert refused.value.__notes__ == ["Stage occurrence: periods[0].stages['disc']", "Binding kind: calibration"]
-    widened = write_registry(tmp_path / "widened", {
-        **SHARED_REGISTRY, "stages/disc/disc.bl": SHARED_REGISTRY["stages/disc/disc.bl"].replace("β : (0,1)", "β : ℝ₊")})
-    with pytest.raises(FactoryError) as refused:
-        assemble_trellis(widened, "spec.yml", fill={"β": 0.0}, disc_fill={"β": 0.0})
-    assert refused.value.written == "β: 0.0 (calibration/main, $fill); β : ℝ₊₊ in two_nodes"
-    assert "the value 0.0 of the parameter 'β', supplied by two_nodes, lies outside the set ℝ₊₊" in refused.value.message
-    assert refused.value.__notes__ == ["Stage occurrence: periods[0].stages['two_nodes']", "Binding kind: calibration"]
-
-
-def test_two_stages_of_one_period_agree_on_one_union_and_are_refused_on_two(tmp_path):
-    """The refusals of `period-parameter-agreement` where two stages of one
-    period declare one parameter in a union of sets (AMD-GRAM-005 §3). One
-    union, its members written in either order or one of them through a
-    named set, is one set of the period, and a value outside it is refused
-    for the period. Two unions are refused, since the package reads no
-    intersection of them, and so is one text that the two stages read as
-    two sets."""
-    from conftest import SHARED_REGISTRY
-
-    from bellman.refusal_examples import TWO_NODES, write_registry
-    from bellman.trellis import assemble_trellis, elaborate_trellis
-
-    def registry(folder, first, second):
-        """The registry of the two stages that share β, the two-node stage
-        declaring it with the lines `first` and the discounting stage with
-        the lines `second`."""
-        declared, shared = "β : ℝ₊₊\n", "β : (0,1)"
-        discounting = SHARED_REGISTRY["stages/disc/disc.bl"]
-        assert TWO_NODES.count(declared) == 1 and discounting.count(shared) == 1
-        files = {
-            **SHARED_REGISTRY,
-            "stages/two_nodes/two_nodes.bl": TWO_NODES.replace(declared, first + "\n"),
-            "stages/disc/disc.bl": discounting.replace(shared, second),
-        }
-        return write_registry(tmp_path / folder, files)
-
-    # the rule and the address of each refusal below
-    agreement = ("period-parameter-agreement", "periods[0]")
-    # one union, its members written in either order, is one set of the period
-    same = registry("same", "β : (0,1) \\/ (1, inf)", "β : (1, inf) \\/ (0,1)")
-    elaborate_trellis(load_recipe(same, "spec.yml"))
-    bound = assemble_trellis(same, "spec.yml", fill={"β": 0.5}, disc_fill={"β": 0.5})
-    stages = bound["periods"][0]["stages"].values()
-    assert [stage.par["β"].value for stage in stages] == [0.5, 0.5]
-    # a value outside the union is refused for the period, before any
-    # stage binds it
-    with pytest.raises(FactoryError) as refused:
-        assemble_trellis(same, "spec.yml", fill={"β": 1.0}, disc_fill={"β": 1.0})
-    assert (refused.value.rule, refused.value.address) == agreement
-    assert (
-        "the value 1.0 of the parameter 'β', supplied by two_nodes, lies outside the set "
-        "(0, 1) \\/ (1, inf)"
-    ) in refused.value.message
-    # two unions are refused, since the package reads no intersection of them
-    different = registry("different", "β : (0,1) \\/ (1, inf)", "β : (0,1) \\/ (2, inf)")
-    with pytest.raises(FactoryError) as refused:
-        elaborate_trellis(load_recipe(different, "spec.yml"))
-    error = refused.value
-    assert (error.rule, error.address) == agreement
-    assert error.written == "β : (0, 1) \\/ (1, inf) in two_nodes; β : (0, 1) \\/ (2, inf) in disc"
-    assert "reads no intersection" in error.message
-    # a name inside a member is read as the set its own stage defines: a
-    # union one stage writes through a name and the other in full is one set
-    # of the period, and a value outside it is refused for the period
-    named = "Xb := [0,1)\nβ : Xb \\/ (1, inf)"
-    through = registry("through", named, "β : [0,1) \\/ (1, inf)")
-    elaborate_trellis(load_recipe(through, "spec.yml"))
-    with pytest.raises(FactoryError) as refused:
-        assemble_trellis(through, "spec.yml", fill={"β": 1.0}, disc_fill={"β": 1.0})
-    assert (refused.value.rule, refused.value.address) == agreement
-    assert "lies outside the set (1, inf) \\/ [0, 1) that two_nodes" in refused.value.message
-    # one text that two stages read as two sets is refused, each set quoted
-    # as written and as its stage reads it; so is a name that several sets
-    # of one type bound
-    for folder, declared, first, second in (
-        ("renamed", "(1, inf) \\/ Xb", "(1, inf) \\/ [0, 1)", "(1, inf) \\/ [0, 2)"),
-        ("bounded", "Xb @ (0, 5)", "[0, 1) @ (0, 5)", "[0, 2) @ (0, 5)"),
-    ):
-        renamed = registry(folder, f"Xb := [0,1)\nβ : {declared}", f"Xb := [0,2)\nβ : {declared}")
-        with pytest.raises(FactoryError) as refused:
-            elaborate_trellis(load_recipe(renamed, "spec.yml"))
-        error = refused.value
-        assert (error.rule, error.address) == agreement, declared
-        assert error.written == f"β : {declared} in two_nodes; β : {declared} in disc"
-        assert (
-            f"with the sets {declared}, read in two_nodes as {first}, and {declared}, read in "
-            f"disc as {second}, and the package reads no intersection of them"
-        ) in error.message, declared
-
-
-def test_a_method_word_at_a_place_its_row_does_not_admit_and_a_word_no_row_holds_are_refused(cons):
-    """A method word typed at a place of a kind its row of the catalogue does
-    not admit is refused under `method-admission`, naming the place, its kind
-    and the kinds the row admits; a word no row holds is refused under
-    `syntax`, naming the words of the catalogue (specification 0.7 §5)."""
-    for entry, words in (
-        ("policy.method : !gauss_hermite", ("`policy`", "kind builder", "admits operator E")),
-        ("cntn_to_dcsn.value.method : !egm",
-         ("`cntn_to_dcsn.value`", "kind statement", "admits builder, operator argmax")),
-        ("cntn_to_dcsn.evaluate.method : !vfi",
-         ("`cntn_to_dcsn.evaluate`", "kind operator evaluate", "admits builder")),
-    ):
-        with pytest.raises(ConstructionError) as refused:
-            copy_native(cons).methodize({"text": f"@methods: cons\n{entry}\n", "origin": "cons.methods.bl"})
-        assert (refused.value.rule, refused.value.stage) == ("method-admission", cons.name)
-        assert all(word in str(refused.value) for word in words), str(refused.value)
-    for word in ("unknown_method", "linear", "rootfind", "value_iteration"):
-        with pytest.raises(ConstructionError) as refused:
-            copy_native(cons).methodize(
-                {"text": f"@methods: cons\npolicy.method : !{word}\n", "origin": "cons.methods.bl"})
-        assert refused.value.rule == "syntax"
-        assert f"`!{word}`, which no row of the catalogue holds" in str(refused.value)
-
-
-def test_method_options_refuse_invalid_authored_or_configured_values(cons, port):
-    """`configure` refuses a setting a component names and the source does
-    not value (`setting-unvalued`); a keyword argument of a method word whose
-    value at the settings has not the kind the catalogue's row names
-    (`method-option-value`), for `!vfi` `n_c` a positive integer and `tol` a
-    positive real, for `!gauss_hermite` a node count per shock a positive
-    integer and for `!tauchen` `min_prob` a finite positive real; and a grid
-    whose count, bounds or node set at the settings are out of order
-    (`grid-bounds`). At binding, a factor on a coordinate the function at
-    the place lacks is refused (`grid-coordinate`), and a keyword the row
-    requires and the entry omits (`method-admission`)."""
-    # each binding binds a stage of its own (specification 0.6 decision 1 and R4)
-    methodized = copy_native(cons).methodize({
-        "text": "@methods: cons\npoints : ℝ\ntolerance : [-inf, inf]\npolicy.method : !vfi(n_c=points, tol=tolerance)\n",
-        "origin": "cons.methods.bl"})
-    with pytest.raises(ConstructionError, match="points") as refused:
-        methodized.configure({"settings": {"tolerance": 1e-6}})
-    assert refused.value.rule == "setting-unvalued"
-    for settings, message in (
-        ({"points": -5, "tolerance": 1e-6}, "positive integer"),
-        ({"points": 8, "tolerance": float("inf")}, "positive real"),
-        ({"points": 8, "tolerance": -1.0}, "positive real"),
-    ):
-        with pytest.raises(ConstructionError, match=message) as refused:
-            methodized.configure({"settings": settings})
-        assert (refused.value.rule, refused.value.stage, refused.value.address) == (
-            "method-option-value", "cons", "policy")
-    configured = methodized.configure({"settings": {"points": 8, "tolerance": 1e-6}})
-    assert configured.bindings.settings["points"] == 8
-    assert "n_c = 8" in str(configured.builder.policy.denote())
-
-    # the grid of the value's representation at the settings: a count below
-    # two, bounds out of order or not finite, and a bound outside the
-    # coordinate's declared set
-    gridded = copy_native(cons).methodize({
-        "text": ("@methods: cons\nn_m : ℤ\nm_min : ℝ\nm_max : ℝ\n"
-                 "cntn_to_dcsn.evaluate.method : !Linear\n"
-                 "cntn_to_dcsn.evaluate.grid : !Cartesian(m_d=(m_min, m_max, n_m))\n"),
-        "origin": "cons.methods.bl"})
-    for settings, rule, message in (
-        ({"n_m": -5, "m_min": 0.1, "m_max": 10.0}, "grid-bounds", "count -5"),
-        ({"n_m": 8, "m_min": 10.0, "m_max": 1.0}, "grid-bounds", "in order"),
-        ({"n_m": 8, "m_min": -1.0, "m_max": 10.0}, "grid-bounds", "declared set"),
-        # a bound that is no number of the declared set is refused at the
-        # declaration before the grid is read
-        ({"n_m": 8, "m_min": float("nan"), "m_max": 10.0}, "setting-outside-set", "nan"),
-        ({"n_m": 8, "m_min": 0.1, "m_max": float("inf")}, "setting-outside-set", "inf"),
-    ):
-        with pytest.raises(ConstructionError, match=message) as refused:
-            gridded.configure({"settings": settings})
-        assert (refused.value.rule, refused.value.stage) == (rule, "cons")
-        if rule == "grid-bounds":
-            assert refused.value.address == "cntn_to_dcsn.evaluate"
-    # a factor on a coordinate the function at the place lacks is refused
-    # where the entry is read
-    with pytest.raises(ConstructionError, match="'m'.*no coordinate.*m_d") as refused:
-        copy_native(cons).methodize({
-            "text": ("@methods: cons\nn_m : ℕ\nm_min : ℝ₊\nm_max : ℝ₊\n"
-                     "cntn_to_dcsn.evaluate.method : !Linear\n"
-                     "cntn_to_dcsn.evaluate.grid : !Cartesian(m=(m_min, m_max, n_m))\n"),
-            "origin": "cons.methods.bl"})
-    assert refused.value.rule == "grid-coordinate"
-
-    # the node counts of a quadrature, one per shock, each a positive integer
-    # and every one of them written
-    quadrature = copy_native(port).methodize({
-        "text": "@methods: port\nnodes_Ψ : ℝ\nnodes_θ : ℝ\nE_Ψ_θ.method : !gauss_hermite(n_Ψ=nodes_Ψ, n_θ=nodes_θ)\n",
-        "origin": "port.methods.bl"})
-    for value, rule, message in (
-        (0, "method-option-value", "n_Ψ.*positive integer"),
-        ([7], "setting-outside-set", "nodes_Ψ"),
-        (7.5, "method-option-value", "n_Ψ.*positive integer"),
-        (True, "setting-outside-set", "nodes_Ψ"),
-    ):
-        with pytest.raises(ConstructionError, match=message) as refused:
-            quadrature.configure({"settings": {"nodes_Ψ": value, "nodes_θ": 7}})
-        assert refused.value.rule == rule
-    with pytest.raises(ConstructionError, match="without the keyword n_θ") as refused:
-        copy_native(port).methodize({
-            "text": "@methods: port\nnodes_Ψ : ℝ\nE_Ψ_θ.method : !gauss_hermite(n_Ψ=nodes_Ψ)\n",
-            "origin": "port.methods.bl"})
-    assert refused.value.rule == "method-admission"
-    positive_real = copy_native(port).methodize({
-        "text": "@methods: port\nminimum_probability : [-inf, inf]\nE_Ψ_θ.method : !tauchen(min_prob=minimum_probability)\n",
-        "origin": "port.methods.bl"})
-    with pytest.raises(ConstructionError, match="finite value"):
-        positive_real.configure({"settings": {"minimum_probability": float("inf")}})
-
-
-def test_every_rule_of_the_three_vocabularies_has_an_example_in_the_catalogue(catalogue_entries):
-    """A rule with no example is a gap in the catalogue and fails here
-    (AMD-SG-022 §2). Each entry names its rule, the place the refusal is
-    raised and the refusal as printed."""
+def test_the_example_of_every_rule_is_refused_and_its_corrected_form_is_not(catalogue_entries):
+    """The example of every rule of the catalogue provokes a refusal, and
+    its corrected form passes the operation that refused the example."""
     without = [item.rule for item in catalogue_entries if not item.refusal]
-    for item in catalogue_entries:
-        if item.rule in FACTORY_RULES:
-            assert all((item.where, item.what, item.why, item.write)), item.rule
     assert without == [], without
-    assert [item.rule for item in catalogue_entries] == list(RULES) + list(TARGET_RULES) + list(FACTORY_RULES)
+    assert {item.rule: item.corrected for item in catalogue_entries if item.corrected} == {}
 
 
-# the forms a branching block may not take (B02's six, E28's four, E8, E30),
-# each beside the example of its rule in the package's table: the case, the
-# changes, the rule, the address (None where the parse refuses and names it in
-# the message) and the words the refusal names
-BRANCHING_REFUSALS = [
-    ("B02 1: fewer than two labels", (("d : !ctrl @ {work, retire}", "d : !ctrl @ {work}"),),
-     "branch-labels", "dcsn_to_cntn", ("'d'", "1 label")),
-    ("B02 2: a label written twice", (("[label=retire,", "[label=work,"),),
-     "syntax", None, ("dcsn_to_cntn.work",)),
-    ("B02 3 and E8: the branches in another order than the set",
-     (("d : !ctrl @ {work, retire}", "d : !ctrl @ {retire, work}"),),
-     "branch-labels", "dcsn_to_cntn", ("{retire, work}", "order")),
-    ("B02 4: a field written by two branches",
-     (("[label=retire, () -> (a_r : ℝ₊) : !cntn]", "[label=retire, () -> (a_w : ℝ₊) : !cntn]"),
-      ("a_r = a_d", "a_w = a_d")),
-     "declared-once", "dcsn_to_cntn.retire", ("'a_w'", "'work'", "'retire'")),
-    ("B02 5 and E28: a nested block without a label", (("[label=retire, ", "[name=retire, "),),
-     "branch-form", "dcsn_to_cntn.2", ("label=",)),
-    ("E28: a line beside the nested blocks", (("    [label=work,", "    a_x = a_d\n    [label=work,"),),
-     "branch-form", "dcsn_to_cntn.1", ("beside",)),
-    ("E28: a nested block outside the forward block from the decision perch",
-     (("    V = (V_w[>], V_r[>])[d]",
-       "    [label=work, () -> (x : ℝ) : !cntn] {\n        x = 1\n    }\n    V = (V_w[>], V_r[>])[d]"),),
-     "branch-form", "cntn_to_dcsn.work", ("decision perch",)),
-    ("B02 6 and E30: a value line with no tuple indexed by the label coordinate",
-     (("V = (V_w[>], V_r[>])[d]", "V = V_w[>]"),),
-     "branch-tuple-mismatch", "cntn_to_dcsn.choice_value", ("policy.choice", "no tuple")),
-    ("E6: a value read at two positions",
-     (("V = (V_w[>], V_r[>])[d]", "V = (V_w[>], V_w[>] + V_r[>])[d]"),
-      ("argmax_{d}(V_w[>], V_r[>])", "argmax_{d}(V_w[>], V_w[>] + V_r[>])")),
-     "branch-value-position", "cntn_to_dcsn.choice_value", ("V_w[>]", "'work'", "'retire'")),
-]
+@pytest.mark.parametrize("rule", FACTORY_RULES)
+def test_the_entry_of_a_rule_of_the_factory_gives_the_four_parts_of_its_refusal(
+    catalogue_entries, rule
+):
+    """The catalogue entry of a rule of the Bellman factory gives where,
+    what, why and what to write of the refusal of its example."""
+    (item,) = [item for item in catalogue_entries if item.rule == rule]
+    assert all((item.where, item.what, item.why, item.write)), item.rule
 
 
-@pytest.mark.parametrize("case", BRANCHING_REFUSALS, ids=lambda case: case[0])
-def test_a_malformed_branching_block_is_refused_under_its_rule(case, elaborate_text):
-    _, changes, rule, address, words = case
-    with pytest.raises(ConstructionError) as refused:
-        elaborate_text(branching(*changes))
-    error = refused.value
-    assert error.rule == rule and (address is None or error.address == address), (error.rule, error.address)
-    assert all(word in str(error) for word in words), (words, str(error))
+def test_every_example_gives_an_edit():
+    """Every example of the package gives an edit of its fields, `write`,
+    which is not empty."""
+    assert [name for name, example in EXAMPLES.items() if not example.write] == []
 
 
-POLICY = ("[id=policy, (V_y[>], V_o[>]) : !cntn -> (c : ℝ₊ @ !ctrl) : !dcsn] {\n"
-          "    c = argmax_{c}(E_{s}((V_y[>], V_o[>])[s]))  :: [id=choice]\n}\n")
-# the forms a branch a shock selects may not take (E13, E14): the case, the
-# changes to `SHOCK_BRANCHING`, the rule, the address and the words the refusal
-# names; a top-level item is addressed by its ordinal in the declaration pass,
-# so the law at line 4 is the address `4`, as the catalogue's example of
-# `distribution-edge` is `3`, and the file position stands in the message
-SHOCK_REFUSALS = [
-    ("the label shock not listed", (("(a_d, s) : !dcsn -> ()", "(a_d) : !dcsn -> ()"),),
-     "branch-labels", "dcsn_to_cntn", ("neither a control nor a shock",)),
-    ("the label declared with no law and no role", (("s ~ Categorical((π, 1 - π))\n", ""),),
-     "branch-labels", "dcsn_to_cntn", ("neither a control nor a shock", "s ~ Categorical")),
-    ("the labels in another order than the branches", (("s : {young, old}", "s : {old, young}"),),
-     "branch-labels", "dcsn_to_cntn", ("{old, young}", "order")),
-    ("a label shock without a law",
-     (("s : {young, old}\ns ~ Categorical((π, 1 - π))\n", "s : {young, old} @ !shck\n"),),
-     "branch-law", "dcsn_to_cntn", ("'s'", "has no distribution", "Categorical((p_young, p_old))")),
-    ("three weights for two labels", (("Categorical((π, 1 - π))", "Categorical((π, 1 - π, 0))"),),
-     "branch-law", "4", ("3 probabilities", "2 labels", "t.bl:4")),
-    ("a law that gives the labels no weights", (("Categorical((π, 1 - π))", "N(0, 1)"),),
-     "branch-law", "4", ("N(0, 1)", "no probability for each label", "Bernoulli(p)")),
-    ("numeric weights that do not sum to one", (("(π, 1 - π)", "(0.3, 0.6)"),),
-     "distribution-domain", "t.bl:4", ("0.3, 0.6", "not to one")),
-    ("a selection by the shock outside its expectation",
-     (("E_{s}((V_y[>], V_o[>])[s])", "(V_y[>], V_o[>])[s]"),),
-     "branch-tuple-mismatch", "cntn_to_dcsn.value", ("outside an expectation over it alone",)),
-    ("an expectation over the shock of no tuple",
-     (("E_{s}((V_y[>], V_o[>])[s])", "E_{s}(V_y[>] + V_o[>])"),),
-     "branch-tuple-mismatch", "cntn_to_dcsn.value", ("of no tuple indexed by it",)),
-    ("three entries for two labels",
-     (("E_{s}((V_y[>], V_o[>])[s])", "E_{s}((V_y[>], V_o[>], V_o[>])[s])"),),
-     "branch-tuple-mismatch", "cntn_to_dcsn.value", ("3 entries", "{young, old}")),
-    ("a branch value read at two positions",
-     (("E_{s}((V_y[>], V_o[>])[s])", "E_{s}((V_y[>], V_y[>] + V_o[>])[s])"),),
-     "branch-value-position", "cntn_to_dcsn.value", ("V_y[>]", "'young'", "'old'")),
-    ("a control listed beside the drawn label",
-     (("(a_d, s) : !dcsn -> ()", "(a_d, c : !ctrl @ ℝ₊, s) : !dcsn -> ()"),),
-     "not-constructed", "dcsn_to_cntn", ("the shock 's' selects", "chooses 'c'")),
-    ("a policy block beside the draw", (("[id=dcsn_to_arvl", POLICY + "[id=dcsn_to_arvl"),),
-     "not-constructed", "dcsn_to_cntn", ("the shock 's' selects", "chooses 'c'")),
-]
+# the examples that are no rule's own example in the catalogue: a second
+# example of a rule, which the catalogue does not run
+SECOND_EXAMPLES = [name for name in EXAMPLES if name not in RULES + TARGET_RULES + FACTORY_RULES]
 
 
-@pytest.mark.parametrize("case", SHOCK_REFUSALS, ids=lambda case: case[0])
-def test_a_malformed_branch_a_shock_selects_is_refused_under_its_rule(case, elaborate_text):
-    _, changes, rule, address, words = case
-    with pytest.raises(ConstructionError) as refused:
-        elaborate_text(shock_branching(*changes))
-    error = refused.value
-    assert (error.rule, error.address) == (rule, address), (error.rule, error.address)
-    assert all(word in str(error) for word in words), (words, str(error))
+@pytest.mark.parametrize("name", SECOND_EXAMPLES)
+def test_a_second_example_of_a_rule_is_refused_and_its_corrected_form_is_not(name):
+    """A second example of a rule provokes a refusal, and its corrected form
+    passes the operation that refused the example."""
+    example = EXAMPLES[name]
+    assert refusal_of(example) is not None
+    refusal = refusal_of(corrected(example))
+    assert refusal is None, str(refusal).splitlines()[0]
 
 
-# the weights of a mixture and of a categorical (AMD-SG-010 §3): the condition
-# is retained symbolically and decided when calibration supplies the numbers
-MIXTURE_WEIGHTS = ("y ~ Mixture((p_zero, 0), (1 - p_zero, LogNormal(μ_y, σ_y)))",
-                   "q : [0,1]\ny ~ Mixture((p_zero, 0), (q, LogNormal(μ_y, σ_y)))")
-MIXTURE_VALUES = {"β": 0.96, "γ": 2.0, "R": 1.02, "μ_y": 0.0, "σ_y": 0.1, "p_zero": 0.3, "q": 0.7}
-
-
-def test_mixture_weights_that_do_not_sum_to_one_are_refused_when_calibration_decides_them(
-        elaborate_text, text_of):
-    written, changed = MIXTURE_WEIGHTS
-    text = text_of("cons_savings_iid")
-    assert text.count(written) == 1
-    stage = elaborate_text(text.replace(written, changed))
-    assert [item.condition for item in stage.obligations()
-            if item.condition == "distribution-weights-are-a-probability-vector"]
-    stage.calibrate(MIXTURE_VALUES)                     # 0.3 and 0.7 sum to one
-    with pytest.raises(ConstructionError) as refused:
-        stage.calibrate({**MIXTURE_VALUES, "q": 0.5})
-    error = refused.value
-    assert error.rule == "distribution-domain"
-    for word in ("p_zero, q", "the Mixture declaration `y ~ Mixture(", "sum to 0.8", "not to one"):
-        assert word in error.message, (word, error.message)
-
-
-def test_a_shock_that_bears_the_name_of_a_named_space_is_refused_where_it_is_written(elaborate_text):
-    """A name has one meaning in a stage: a shock declared by its distribution
-    alone, under the name of a named space, is refused at the shock's line, the
-    message giving the position of the space's definition."""
-    with pytest.raises(ConstructionError) as refused:
-        elaborate_text("@stage: t\nZ := ℝ₊₊\nZ ~ N(0, 1)\n"
-                       "[id=b, (x : ℝ) : !dcsn -> (y : ℝ) : !dcsn] {\n    y = x\n}\n")
-    assert refused.value.rule == "one-name-one-meaning"
-    for word in ("'Z' is a shock", "named space", "t.bl:2"):
-        assert word in refused.value.message, (word, refused.value.message)
-
-
-def test_a_control_listed_at_a_perch_that_is_neither_the_decision_perch_nor_its_side_s_is_refused(
-        text_of, elaborate_text):
-    """A perch word on a control's own listing places nothing, so it is
-    admitted where it names the decision perch, on any side, or where it names
-    the perch of its side, and refused under `field-perch` otherwise
-    (AMD-SG-017 §2). On the input side of `cntn_to_dcsn` of `cons.bl`, marked
-    `: !cntn`, `c : !cntn` and `c : !dcsn` are admitted and `c : !arvl`, which
-    names neither, keeps the refusal of the base with its message."""
-    written = "(V[>] : [-inf, inf) @ !vlu, c) : !cntn ->"
-    text = text_of("cons")
-    assert text.count(written) == 1
-    with pytest.raises(ConstructionError) as refused:
-        elaborate_text(text.replace(written, written.replace(", c)", ", c : !arvl)")), "cons.bl")
-    assert refused.value.rule == "field-perch"
-    assert refused.value.address == "cntn_to_dcsn"
-    for word in ("c on the input side of block 'cntn_to_dcsn'", "a control placed at the arvl perch",
-                 "a control is at the decision perch wherever it is listed"):
-        assert word in refused.value.message, (word, refused.value.message)
-
-
-def test_a_control_carried_by_a_perch_mark_is_refused_as_before_the_rule_of_the_perch_word(
-        text_of, elaborate_text):
-    """AMD-SG-017 §2 admits a perch word on a control's own listing and says
-    nothing of a perch mark, which D06 reads as the field at the perch the mark
-    names. A control marked for any perch but the decision perch therefore
-    keeps the refusal it carried before the rule: on the input side of
-    `cntn_to_dcsn` of `cons.bl`, `c[>]` and `c[<]` are refused under
-    `field-perch` with the message of a control placed away from the decision
-    perch, where `c : !cntn` and `c : !dcsn`, which name a perch of that side
-    and the decision perch, elaborate."""
-    written = "(V[>] : [-inf, inf) @ !vlu, c) : !cntn ->"
-    text = text_of("cons")
-    assert text.count(written) == 1
-    for marked, perch in (("c[>]", "cntn"), ("c[<]", "arvl")):
-        with pytest.raises(ConstructionError) as refused:
-            elaborate_text(text.replace(written, written.replace(", c)", f", {marked})")), "cons.bl")
-        assert refused.value.rule == "field-perch"
-        assert refused.value.address == "cntn_to_dcsn"
-        for word in (f"{marked} on the input side of block 'cntn_to_dcsn'",
-                     f"a control placed at the {perch} perch"):
-            assert word in refused.value.message, (word, refused.value.message)
-
-
-def test_a_weight_the_declaration_itself_fixes_outside_the_unit_interval_is_refused_where_it_is_written(
-        elaborate_text):
-    """A weight the file writes as a number is decided at construction, not at
-    calibration: a mixture whose first weight is 1.5 is refused where it is
-    written, under the same rule."""
-    with pytest.raises(ConstructionError) as refused:
-        elaborate_text("@stage: t\ny : ℝ\ny ~ Mixture((1.5, 0), (-0.5, N(0, 1)))\n"
-                       "[id=b, (x : ℝ, y) : !dcsn -> (w : ℝ) : !dcsn] {\n    w = x + y\n}\n")
-    assert refused.value.rule == "distribution-domain"
-    for word in ("the Mixture declaration `y ~ Mixture(", "1.5", "not a probability"):
-        assert word in refused.value.message, (word, refused.value.message)
-
-
-# a chain declaration on a stage whose one block reads the shock, with the
-# family term replaced: two arguments and three are the shape `DiscreteMarkov`
-# declares, one and four are not (AMD-SG-017 §5.2)
-CHAIN_STAGE = ("@stage: t\nz_lo : ℝ\nz_hi : ℝ\nΠ : [0,1]\nz : ℝ\nDECLARATION\n"
-               "[id=b, (x : ℝ, z) : !dcsn -> (w : ℝ) : !dcsn] {\n    w = x + z\n}\n")
-CHAIN_SHAPES = {
-    "z ~ DiscreteMarkov((z_lo, z_hi))": "a call of 1 argument",
-    "z ~ DiscreteMarkov(Π, (z_lo, z_hi), x, x)": "a call of 4 arguments",
-}
-
-
-def test_a_distribution_call_of_another_number_of_arguments_than_its_family_takes_is_refused(
-        elaborate_text):
-    """Every admitted family declares the arguments it takes, and a call of
-    another number is refused where it is written, the message naming the
-    family and the arguments it takes (AMD-SG-017 §5.2). The declaration as the
-    family takes it, with two arguments and with three, elaborates."""
-    for declaration, counted in CHAIN_SHAPES.items():
-        with pytest.raises(ConstructionError) as refused:
-            elaborate_text(CHAIN_STAGE.replace("DECLARATION", declaration))
-        assert refused.value.rule == "readable-form"
-        # the declaration's address is its file position (AMD-SG-017 §4), so the
-        # refusal names the line the declaration is written at
-        assert refused.value.address == "t.bl:6"
-        for word in ("the DiscreteMarkov declaration `z ~ DiscreteMarkov(", counted,
-                     "`DiscreteMarkov` takes 2 or 3 arguments",
-                     "the transition probabilities", "the chain's states", "the previous state"):
-            assert word in refused.value.message, (declaration, word, refused.value.message)
-    for admitted in ("z ~ DiscreteMarkov(Π, (z_lo, z_hi))", "z ~ DiscreteMarkov(Π, (z_lo, z_hi), x)"):
-        elaborate_text(CHAIN_STAGE.replace("DECLARATION", admitted))
-
-
-# the refusals of a derived parameter (AMD-MT-003, build contract §5;
-# AMD-GRAM-006), each the definition of h in the perfect-foresight stage of
-# the derived checks as changed, the calibration that provokes it or None
-# for a refusal at elaboration, and the words its message names; the
-# catalogue's example holds the call of a function other than log, exp, min
-# and max
-DERIVED_REFUSALS = [
-    ("a field", "h := 1/(1 - Γ/m)", None, ("the derived parameter h", "reads m, a field")),
-    ("a set", "h := 1/(1 - Γ/R) + Xm", None, ("reads Xm, a set of the stage",)),
-    ("a function", "h := 1 + 𝑢", None, ("reads 𝑢, a function of the stage",)),
-    ("infinity", "h := 1/(1 - Γ/R) + inf", None, ("reads inf, which is no finite number",)),
-    # the sentence names the four calls and the definition by cases
-    ("a call of another function", "h := 1/sqrt(R)", None,
-     ("calls sqrt", "none of log, exp, min and max",
-      "the calls `min` and `max`, each of one argument or more",
-      "its right side may be a conditional, `if … then … else …`")),
-    ("min of a set", "h := min(Γ, Xm)", None, ("reads Xm, a set of the stage",)),
-    # what a test and a branch of a definition by cases read and call
-    ("a set in a test", "h := if Xa < R then 1 else 2", None, ("reads Xa, a set of the stage",)),
-    ("a field in a test", "h := if m < R then 1 else 2", None, ("reads m, a field of the stage",)),
-    ("a function as a branch", "h := if Γ < R then 𝑢 else 2", None,
-     ("reads 𝑢, a function of the stage",)),
-    ("a call of another function in a branch", "h := if Γ < R then 1/sqrt(R) else 2", None,
-     ("calls sqrt", "its right side may be a conditional")),
-    # an infinity is a whole branch and nothing else
-    ("infinity in the arithmetic of a branch", "h := if Γ < R then 1 else 2*inf", None,
-     ("reads inf, which is no finite number",)),
-    ("infinity in a test", "h := if Γ < inf then 1 else 2", None,
-     ("reads inf, which is no finite number",)),
-    ("infinity as a whole definition", "h := inf", None,
-     ("reads inf, which is no finite number",)),
-    # an infinite branch needs a declared set that holds it
-    ("an infinite branch without a declared set", "h := if Γ < R then 1/(1 - Γ/R) else inf", None,
-     ("writes the branch `inf`", "the set ℝ of a definition that declares none cannot hold inf",
-      "a branch written `inf` or `-inf` is admitted in a definition whose declared set holds "
-      "that infinity")),
-    ("an infinite branch on a set open at that end",
-     "h : (0, inf) := if Γ < R then 1/(1 - Γ/R) else inf", None,
-     ("writes the branch `inf`", "its declared set `(0, inf)` cannot hold inf")),
-    ("an infinite branch on a set that holds the other infinity",
-     "h : ℝ_{+∞} := if Γ < R then 1/(1 - Γ/R) else -inf", None,
-     ("writes the branch `-inf`", "its declared set `ℝ_{+∞}` cannot hold -inf")),
-    # log, exp, min and max are the functions of the language: a stage that
-    # defines a function of one of those names calls none of that name in a
-    # derived parameter's definition
-    ("a call of min where the stage defines min", "h := min(Γ, R)\nmin(a : ℝ, b : ℝ) := a + b",
-     None, ("calls min, `min(Γ, R)`, and the stage defines a function named min",
-            "would give the one name two meanings")),
-    ("a call of log where the stage defines log", "h := 1 + log(R)\nlog(a : ℝ₊₊) := 2*a", None,
-     ("calls log, `log(R)`, and the stage defines a function named log",)),
-    # also where the stage's function takes another number of arguments than
-    # the call gives
-    ("a call of min where the stage defines min of one argument",
-     "h := min(Γ, R)\nmin(a : ℝ) := a", None,
-     ("calls min, `min(Γ, R)`, and the stage defines a function named min",)),
-    ("a call of log where the stage defines log of two arguments",
-     "h := 1 + log(R)\nlog(a : ℝ₊₊, b : ℝ) := a + b", None,
-     ("calls log, `log(R)`, and the stage defines a function named log",)),
-    ("a number beyond the floating-point range", "h := 1/(1 - Γ/R) + 1" + "0" * 400, None,
-     ("writes a number that exceeds the largest finite floating-point number",)),
-    ("a decimal number beyond the floating-point range", "h := 1/(1 - Γ/R) + 1e400", None,
-     ("writes a number that exceeds the largest finite floating-point number",
-      "has no finite real value")),
-    ("log of two arguments", "h := log(R, Γ)", None, ("calls log with 2 arguments",)),
-    ("a tuple", "h := 1 + (R, Γ)", None, ("writes `(R, Γ)`, a form no derived parameter",)),
-    ("a value for h", "h := 1/(1 - Γ/R)", {"h": 52.0},
-     ("the calibration source supplies the value 52.0 for h", "`1/(1 - Γ/R)`")),
-    ("a division by zero", "h := 1/(1 - Γ/R)", {"Γ": 1.04},
-     ("the divisor `1 - Γ/R` is 0.0 at Γ = 1.04, R = 1.04", "a division by zero has no value")),
-    ("a nonpositive logarithm", "h := log(1 - Γ/R)", {"Γ": 1.06},
-     ("the argument `1 - Γ/R` of log is", "log is defined at positive numbers alone")),
-    ("a noninteger power of a negative base", "h := (1 - Γ/R)^(1/2)", {"Γ": 1.06},
-     ("which is no integer", "a noninteger exponent requires a positive base")),
-    ("an undefined power of zero", "h := (1 - Γ/R)^(-1)", {"Γ": 1.04},
-     ("has the base 0.0 and the exponent -1.0", "defined for a positive exponent alone")),
-    ("a value beyond the floating-point range", "h := exp(1000*ρ)", {},
-     ("`exp(1000*ρ)` at ρ = 2.0 exceeds the largest finite floating-point number",)),
-    ("a positive argument lost to underflow", "h := log(exp(-1000*ρ))", {},
-     ("is 0.0 by floating-point underflow", "which numeric underflow does not supply")),
-    # the branch a test chooses is evaluated as any definition is, and a zero
-    # that floating point rounded from a nonzero result decides no test
-    ("a division by zero in the chosen branch", "h := if Γ < R then 1/(β - β) else 2", {},
-     ("the divisor `β - β` is 0.0", "a division by zero has no value")),
-    ("an underflowed side of a test", "h := if exp(-800*R) = 0 then 1 else 2", {},
-     ("the test `exp(-800*R) = 0` reads `exp(-800*R)`, which is 0.0 by floating-point underflow",
-      "such a zero decides no comparison")),
-    # every argument of min is evaluated, whichever is the least
-    ("an argument of min without a value", "h := min(R, 1/(R - Γ))", {"Γ": 1.04},
-     ("the divisor `R - Γ` is 0.0",)),
-]
-
-
-@pytest.mark.parametrize("case", DERIVED_REFUSALS, ids=lambda case: case[0])
-def test_a_derived_parameter_is_refused_at_its_definition(case, derived_parameters):
-    """A derived parameter's definition that reads a name other than a
-    declared parameter or a derived parameter, that calls a function other
-    than log or exp of one argument and min or max of one argument or more,
-    that calls one of the four where the stage defines a function of that
-    name, that writes another form, or that writes an infinite branch its
-    declared set cannot hold is refused under `derived-parameter` where it
-    is written, before any line is read; a calibration that supplies a value
-    for it, or at which its arithmetic has no value, is refused under the
-    same rule at its definition's file position, naming the operation and
-    the numbers it reads."""
-    _, definition, values, words = case
-    with pytest.raises(ConstructionError) as refused:
-        stage = derived_parameters.stage(("h := 1/(1 - Γ/R)", definition))
-        if values is not None:
-            stage.calibrate({"calibration": {**derived_parameters.calibration, **values}})
-    error = refused.value
-    line = next(n for n, text in enumerate(derived_parameters.text.split("\n"), 1)
-                if text.startswith("h :="))
-    if values is None:
-        assert (error.rule, error.file, error.line) == (
-            "derived-parameter", derived_parameters.origin, line
-        )
-    else:
-        assert (error.rule, error.address) == (
-            "derived-parameter", f"{derived_parameters.origin}:{line}"
-        )
-    for word in words:
-        assert word in error.message, (word, error.message)
-    assert error.write
-
-
-def test_a_definition_that_computes_with_an_infinite_value_has_no_value(derived_parameters):
-    """No arithmetic of infinities is defined (AMD-GRAM-006): a definition
-    that reads a derived parameter valued at an infinity, in arithmetic, in a
-    call, in a test, as the branch that its test chooses or as its whole
-    right side, has no value there, and the calibration is refused at that
-    definition under `derived-parameter`, naming the infinite value."""
-    by_cases = "h : ℝ_{+∞} := if Γ < R then 1/(1 - Γ/R) else inf"
-    for reading in ("1 - h", "-h", "max(h, 60)", "if h > 60 then 1 else 0",
-                    "if Γ < R then 1 else h", "h"):
-        stage = derived_parameters.stage(("h := 1/(1 - Γ/R)", f"{by_cases}\nw := {reading}"))
-        stage.calibrate({"calibration": derived_parameters.calibration})
-        with pytest.raises(ConstructionError) as refused:
-            derived_parameters.stage(
-                ("h := 1/(1 - Γ/R)", f"{by_cases}\nw := {reading}")
-            ).calibrate({"calibration": {**derived_parameters.calibration, "Γ": 1.04}})
-        error = refused.value
-        assert (error.rule, error.address) == (
-            "derived-parameter", f"{derived_parameters.origin}:9"), reading
-        assert (f"the derived parameter w, defined as `{reading}`, has no value: the value inf "
-                "of h is no finite number; ") in error.message, reading
-        assert error.write == "Write parameter values at which the definition of w has a value"
-
-
-def test_a_label_in_the_test_of_a_definition_by_cases_is_refused_as_it_is_in_arithmetic(
-        derived_parameters):
-    """A test reads what a branch reads, parameters, derived parameters and
-    finite numbers (AMD-GRAM-006): a label of a finite set written on either
-    side of a test, with an ordered relation or with `=`, is refused under
-    `well-typed` where the file is read, as the same label in arithmetic
-    is."""
-    growth = 'Γ : ℝ₊₊          :: ["permanent income growth factor"]\n'
-    for reading in ("if d < R then 1 else 2", "if d = R then 1 else 2",
-                    "if R >= d then 1 else 2", "d + R"):
-        with pytest.raises(ConstructionError) as refused:
-            derived_parameters.stage((growth, growth + f"d : {{work, retire}}\nw := {reading}\n"))
-        error = refused.value
-        read = reading[3:].split(" then")[0] if reading.startswith("if ") else reading
-        assert (error.rule, error.line) == ("well-typed", 9), reading
-        assert (f"`d` is a label, a member of a finite set of names, and `{read}` reads it as a "
-                "number; a label carries no arithmetic") in error.message, reading
-
-
-# the perfect-foresight stage's lines that the texts below change
-HUMAN_WEALTH = "h := 1/(1 - Γ/R)"
-UTILITY = "𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)                :: [id=util]"
-RESOURCES = "    m = R_n*k + 1                   :: [id=market_resources]"
-# the sentence that the three words of a definition by cases are no names
-NO_NAME = (
-    "`if`, `then` and `else` are the words of a definition by cases, and none of them is a name"
+# the checkout row runs every example and takes over two seconds
+@pytest.mark.parametrize(
+    "installed", one_row_by_default([False, True], default=True), ids=["checkout", "installed"]
 )
-# where a definition by cases stands, the advice of a refusal of the parser
-# at a line that writes the word `if`
-CONDITIONAL_PLACE = (
-    "a conditional, `if … then … else …`, stands as the whole right side of a definition "
-    "without arguments, `x := if a < b then 1 else 2`, with or without a declared set, "
-    "`x : (0, 3) := if a < b then 1 else 2`, or as a branch of another conditional; it stands "
-    f"inside no formula, no function's body and no line of a block; {NO_NAME}"
+def test_entry_answers_every_rule_from_the_checkout_or_the_installed_package_in_under_a_second(
+    installed, tmp_path, monkeypatch
+):
+    """`entry(rule)` answers each rule of the three vocabularies in under a
+    second, with its vocabulary, its operation, its condition and the
+    refusal of its example under the rule, or, from the installed package,
+    the reason that an example reading a stage file of the repository is
+    not run."""
+    # the installed package is outside the checkout: the repository's root,
+    # from which an example reads a stage file, is an empty folder
+    if installed:
+        monkeypatch.setattr(refusal_catalogue, "ROOT", tmp_path)
+    slow, wrong = {}, {}
+    for _, _, table in VOCABULARIES:
+        for rule in table:
+            started = time.perf_counter()
+            found = entry(rule)
+            seconds = time.perf_counter() - started
+            if seconds >= 1.0:
+                slow[rule] = round(seconds, 2)
+            example = EXAMPLES[rule]
+            if installed and (example.corpus or example.stages):
+                answered = not found.refusal and bool(found.why)
+            else:
+                answered = bool(found.refusal) and refusal_of(example).rule == rule
+            if not (found.vocabulary and found.operation and found.condition and answered):
+                wrong[rule] = (found.operation, found.why)
+    assert slow == {}
+    assert wrong == {}
+
+
+def test_a_name_that_no_vocabulary_holds_has_no_entry():
+    """`entry` answers None for a name that no vocabulary holds, such as
+    `unread-input`, the rule of a diagnostic."""
+    assert entry("unread-input") is None
+
+
+# --- the position and the four parts of a refusal under syntax ---
+
+
+def test_the_refusal_of_the_syntax_example_prints_its_line_with_a_mark_under_its_column():
+    """The refusal of the consumption stage with `]` closing a side of a
+    header is printed from line 16, column 40 of `cons.bl`, with the text of
+    that line and a mark under the column."""
+    example = EXAMPLES["syntax"]
+    error = refusal_of(example)
+    assert (error.file, error.line, error.column) == ("cons.bl", 16, 40)
+    assert str(error).startswith("cons.bl:16:")
+    # line 16 of the changed text
+    assert text_of(example).splitlines()[15] in str(error)
+    # the line is printed indented by four spaces, so the mark stands four
+    # places to the right of its column
+    assert "\n" + " " * (4 + error.column - 1) + "^" in str(error)
+
+
+def test_a_syntax_refusal_gives_the_grammars_sentence_as_its_action_and_not_in_its_message():
+    """The refusal of the syntax example gives the sentence that the grammar
+    keeps for a side of a block header as its action, which its message does
+    not repeat."""
+    error = refusal_of(EXAMPLES["syntax"])
+    assert "a side of a block header" in error.write and error.write not in error.message
+
+
+def test_a_word_the_vocabulary_does_not_hold_is_refused_under_syntax_at_the_word():
+    """A header that writes `!contrl` is refused under `syntax` over the
+    columns of that word, in a sentence that names it."""
+    with pytest.raises(ConstructionError) as refused:
+        stage_from_text(MISSPELLED_WORD)
+    error = refused.value
+    # the seven characters of `!contrl` stand on line 2 from column 18, and
+    # the range ends at column 25
+    assert (error.rule, position(error)) == ("syntax", ("t.bl", 2, 18, 2, 25, None))
+    assert "!contrl" in error.message
+
+
+# three texts of the parser that a refusal under `syntax` does not print: the
+# opening of the error that the parsing library raises when a step of the
+# reading fails, and the rule `word_type` and the token `TAGBANG` of the
+# grammar of the language
+PARSER_NAMES = ("Error trying to process rule", "word_type", "TAGBANG")
+
+
+@pytest.mark.parametrize(
+    "example",
+    [
+        EXAMPLES["syntax"],
+        Example(rule="syntax", address=None, words=(), text=MISSPELLED_WORD),
+    ],
+    ids=["a-side-closed-by-a-bracket", "a-word-the-vocabulary-does-not-hold"],
 )
+def test_a_syntax_refusal_prints_neither_the_parsers_error_text_nor_two_names_of_its_grammar(
+    example,
+):
+    """A refusal under `syntax` prints neither `Error trying to process
+    rule`, the opening of an error of the parsing library, nor `word_type`
+    and `TAGBANG`, two names of the grammar."""
+    error = refusal_of(example)
+    assert error.rule == "syntax"
+    assert [name for name in PARSER_NAMES if name in str(error)] == []
 
 
-@pytest.mark.parametrize("change, column, why", [
-    ((HUMAN_WEALTH, "h := 1 + if Γ < R then 1 else 2"), 13, "the file writes `Γ` here"),
-    ((HUMAN_WEALTH, "h := (if Γ < R then 1 else 2)"), 10, "the file writes `Γ` here"),
-    ((HUMAN_WEALTH, "h : (0, 3) := 1 + if Γ < R then 1 else 2"), 22, "the file writes `Γ` here"),
-    ((HUMAN_WEALTH, "h := min(R, if Γ < R then 1 else 2)"), 16, "the file writes `Γ` here"),
-    ((UTILITY, "𝑢(c : ℝ₊₊) := if c < 1 then c else 1    :: [id=util]"), 18,
-     "the file writes `c` here"),
-    ((RESOURCES, "    m = if k < 0 then 1 else R_n*k + 1   :: [id=market_resources]"), 12,
-     "the file writes `k` here"),
-    # a conditional always has both branches
-    ((HUMAN_WEALTH, "h := if Γ < R then 1"), 21, "the language admits `else` at this place"),
-    # the word at the start of a right side is the first word of a
-    # conditional, and no name
-    ((HUMAN_WEALTH, "h := if + 1"), 9,
-     "the language admits `(`, `-`, a name, a number or `inf` at this place"),
-    ((HUMAN_WEALTH, "h := if"), 13,
-     "the language admits `(`, `-`, a name, a number or `inf` at this place"),
-    ((HUMAN_WEALTH, "h := if(R)"), 11, "the language admits `=` or a comparison"),
-], ids=lambda value: value[1].strip() if isinstance(value, tuple) else None)
-def test_a_conditional_stands_as_the_whole_right_side_of_a_definition_and_nowhere_else(
-        change, column, why, derived_parameters):
-    """A conditional, `if … then … else …`, stands as the whole right side of
-    a definition without arguments, with or without a declared set, and as a
-    branch of another conditional (AMD-GRAM-006). Written inside a formula,
-    in parentheses, as an argument, in a function's body or in a line of a
-    block, written without `else`, or begun by the word `if` used as a name,
-    the text is refused by the parser under `syntax` at the place it stopped
-    at, and the advice says where the form stands and that its three words
-    are no names."""
-    with pytest.raises(ConstructionError) as refused:
-        derived_parameters.stage(change)
-    error = refused.value
-    assert (error.rule, error.file) == ("syntax", derived_parameters.origin), change
-    assert error.column == column and why in error.parts.why, error.parts.why
-    assert error.write == CONDITIONAL_PLACE
-
-
-def test_the_word_if_in_a_comment_or_in_a_quoted_text_writes_no_conditional(derived_parameters):
-    """A line that writes no conditional receives no advice on where a
-    conditional stands (AMD-GRAM-006): the word `if` inside a comment, a
-    quoted explanation or an annotation is no word of the line's formula,
-    and the refusal of the parser at such a line gives the advice that the
-    same line receives without the word."""
-    growth = 'Γ : ℝ₊₊          :: ["permanent income growth factor"]\n'
-    for line, why in (
-        ("x := 2*R +   # add the premium if any", "the line ends here"),
-        ('β2 : (0,1)   :: ["a second discount factor, if any"] :: ["again"]',
-         'the file writes `:: ["again"]` here'),
-        ("β2 : (0,1)   :: ['a second discount factor, if any'] :: ['again']",
-         "the file writes `:: ['again']` here"),
-        # the word as the id of an annotation, in brackets without quotes
-        ("x := 2*R   :: [id=if] :: [id=b]", "the file writes `:: [id=b]` here"),
-    ):
-        refusals = []
-        for written in (line, line.replace("if any", "at most").replace("id=if", "id=a")):
-            with pytest.raises(ConstructionError) as refused:
-                derived_parameters.stage((growth, growth + written + "\n"))
-            refusals.append(refused.value)
-        error, without_the_word = refusals
-        assert (error.rule, error.file, error.line) == ("syntax", derived_parameters.origin, 8)
-        assert why in error.parts.why, error.parts.why
-        assert "stands as the whole right side of a definition" not in (error.write or ""), line
-        assert error.write == without_the_word.write, line
-
-
-def test_the_three_words_of_a_definition_by_cases_are_no_names(derived_parameters):
-    """`if`, `then` and `else` are words of the language and no names (AAS,
-    12 November 2026; AMD-GRAM-006): a file that writes one of them as a
-    name, in a declaration, a definition, a binder, a header or a formula, of
-    a stage file or of a methods file, is refused under `syntax` at the
-    word, with one sentence. A name that begins with one of the words is a
-    name."""
-    growth = 'Γ : ℝ₊₊          :: ["permanent income growth factor"]\n'
-    side = "(k : Xa) : !arvl"
-    assert derived_parameters.text.count(side) == 1
-
-    def places(word):
-        return {
-            "a declaration": (growth, growth + f"{word} : ℝ₊₊\n"),
-            "a definition": (growth, growth + f"{word} := 2*R\n"),
-            "a definition with a set": (growth, growth + f"{word} : (0, 9) := 2*R\n"),
-            "a named set": (growth, growth + f"{word} := [0, 1]\n"),
-            "a function's name": (growth, growth + f"{word}(x : ℝ) := x^2\n"),
-            "a function's argument": (growth, growth + f"𝑓({word} : ℝ) := {word}^2\n"),
-            "the binder of a set": (growth, growth + f"H := {{{word} : ℝ | {word} >= 0}}\n"),
-            "a law's subject": (growth, growth + f"{word} ~ N(0, 1)\n"),
-            "a subscript": (growth, growth + f"w : (0, E_{{{word}}}({word}^2))\n"),
-            "a field of a header": (side, f"({word} : Xa) : !arvl"),
-            "the id of a header": ("[id=arvl_to_dcsn,", f"[id={word},"),
-            "a formula": (growth, growth + f"w := 1 + {word}\n"),
-            "a formula in parentheses": (growth, growth + f"w := ({word})\n"),
-            "an endpoint of a set": (growth, growth + f"w : (0, {word})\n"),
-            "the name of a set": (growth, growth + f"w : {word}\n"),
-            "a test": (growth, growth + f"w := if {word} < R then 1 else 0\n"),
-            "a line of a block": ("    m = R_n*k + 1 ", f"    m = R_n*k + {word} "),
-        }
-
-    for word in ("if", "then", "else"):
-        for place, change in places(word).items():
-            with pytest.raises(ConstructionError) as refused:
-                derived_parameters.stage(change)
-            error = refused.value
-            assert (error.rule, error.file) == ("syntax", derived_parameters.origin), (word, place)
-            assert error.parts.why == f"the file writes `{word}` as a name; {NO_NAME}", (
-                word, place)
-            assert error.write == f"Write another name in place of `{word}`", (word, place)
-            # the refusal stands at the word
-            assert error.end_column - error.column == len(word), (word, place)
-        # a methods file is read by the same rule, by `methodize`
-        for addition in (f"{word} : ℝ₊₊\n", f"κ := 1 - {word}\n"):
-            with pytest.raises(ConstructionError) as refused:
-                derived_parameters.stage().methodize(
-                    {"text": f"@methods: perfect_foresight\n{addition}", "origin": "m.bl"})
-            error = refused.value
-            assert (error.rule, error.file, error.line) == ("syntax", "m.bl", 2), (word, addition)
-            assert f"the file writes `{word}` as a name; {NO_NAME}" in error.message
-    # names that begin with the words
-    named = derived_parameters.stage(
-        (growth, growth + "iffy := 3*R\nthenar := 2*R\nelsewhere := thenar + iffy\n"))
-    assert named.par["elsewhere"].derived
-
-
-def test_methodize_refuses_an_addition_the_parser_cannot_read_as_elaborate_stage_refuses_it(
-        derived_parameters):
-    """A methods addition that the parser cannot read is refused by
-    `methodize` as `elaborate_stage` refuses it: under `syntax`, in the
-    addition's own file, with the marked line and the advice; a conditional
-    inside a formula of an addition carries the advice on where a
-    conditional stands (AMD-GRAM-006)."""
-    from bellman.stage import elaborate_stage
-
-    for addition, admitted in (
-        ("κ := 1 + if Γ < R then 1 else 2\n", "the file writes `Γ` here"),
-        ("κ := if Γ < R then 1\n", "the language admits `else` at this place"),
-        ("κ := 1 +\n", "the line ends here"),
-    ):
-        methods = {"text": f"@methods: perfect_foresight\n{addition}", "origin": "m.bl"}
-        with pytest.raises(ConstructionError) as refused:
-            derived_parameters.stage().methodize(methods)
-        error = refused.value
-        assert (error.rule, error.file, error.line) == ("syntax", "m.bl", 2), addition
-        assert admitted in error.parts.why and addition.rstrip("\n") in error.parts.what
-        assert (error.write == CONDITIONAL_PLACE) == ("if " in addition), addition
-        # the stage file with the same addition is refused in the same words
-        with pytest.raises(ConstructionError) as elaborated:
-            elaborate_stage({
-                "stage": {"text": derived_parameters.text, "origin": derived_parameters.origin},
-                "calibration": {}, "settings": {}, "methods": [methods]})
-        assert str(elaborated.value) == str(error), addition
-
-
-def test_a_definition_by_cases_that_declares_a_set_reads_a_parameter(derived_parameters):
-    """A definition that declares a set reads at least one parameter or
-    derived parameter, by cases as otherwise (AMD-GRAM-005 §2; AMD-GRAM-006):
-    one whose test and branches read none is refused under `readable-form`,
-    as `ρ : ℝ := 2` is, with a sentence that advises no conditional in a
-    calibration file."""
-    growth = 'Γ : ℝ₊₊          :: ["permanent income growth factor"]\n'
-    with pytest.raises(ConstructionError) as refused:
-        derived_parameters.stage((growth, growth + "w : (0, 3) := if 1 < 2 then 1 else 2\n"))
-    error = refused.value
-    assert (error.rule, error.line) == ("readable-form", 8)
-    assert error.message == (
-        "the declaration of w carries the value if 1 < 2 then 1 else 2, a definition by cases "
-        "that reads no parameter; a definition that declares a set reads at least one parameter "
-        "or derived parameter, by cases as otherwise, and a value that reads none is one number, "
-        "which the calibration file supplies")
-    assert error.write == (
-        "Write `w : (0, 3)` here and the number in the calibration file, or a test and branches "
-        "that read a parameter")
-    # a conditional on a declaration that does not have the shape of a
-    # definition with a declared set, one of several names or one with a
-    # role word, is refused without that sentence and without its advice,
-    # which are untrue of such a declaration whether its conditional reads a
-    # parameter or none, and without the advice to write a conditional in a
-    # calibration file; its sentence writes no declaration as an example,
-    # since `a, b : ℝ` is no line that the parser reads and `x : ℝ` declares
-    # a parameter
-    for subject, names in (("(a, b) : ℝ", "a, b"), ("x : ℝ @ !ctrl", "x")):
-        for value in ("if β < R then 1 else 2", "if 1 < 2 then 1 else 2"):
-            declaration = f"{subject} := {value}"
-            with pytest.raises(ConstructionError) as refused:
-                derived_parameters.stage((growth, growth + declaration + "\n"))
-            error = refused.value
-            assert (error.rule, error.line) == ("readable-form", 8), declaration
-            for untrue in ("reads no parameter", "a test and branches that read a parameter",
-                           "in the calibration file"):
-                assert untrue not in error.message + (error.write or ""), (declaration, untrue)
-            assert error.message == (
-                f"the declaration of {names} carries the value {value}; a declaration states the "
-                "set a name lies in, and the calibration file supplies the value of each name"
-            ), declaration
-            assert error.write is None, declaration
-    # a definition that declares a set and whose value defines no derived
-    # parameter is refused with the forms such a definition takes, the four
-    # calls and the definition by cases among them
-    with pytest.raises(ConstructionError) as refused:
-        derived_parameters.stage((growth, growth + "w : (0, 3) := sqrt(β)\n"))
-    error = refused.value
-    assert error.rule == "readable-form" and "defines no derived parameter" in error.message
-    assert error.write == (
-        "Write the value of w from declared parameters, finite numbers and derived parameters, "
-        "with signs, sums, differences, products, quotients, powers, log, exp, min and max, or "
-        "by cases with `if … then … else …`")
-
-
-def test_the_advice_for_an_infinite_value_writes_the_spelling_a_calibration_file_reads(
-        derived_parameters, tmp_path):
-    """A declaration of one name that carries a number as written or an
-    infinity is refused under `readable-form` with the advice to supply the
-    value in the calibration file (AMD-GRAM-005 §2; AMD-GRAM-006). The
-    advice writes each value in a spelling that the reader of a calibration
-    file returns as a number: `.inf` and `-.inf` for the two infinities,
-    since it returns `inf` as a text, and a float with an exponent with a
-    decimal point, `1.0e-05`, since it returns `1e-05` as a text. A value
-    that it would return as a text, `1/2`, receives no such advice."""
-    from bellman.stage.sources import load_calibration
-
-    growth = 'Γ : ℝ₊₊          :: ["permanent income growth factor"]\n'
-    for value, supplied in (("inf", ".inf"), ("-inf", "-.inf")):
-        with pytest.raises(ConstructionError) as refused:
-            derived_parameters.stage((growth, growth + f"T : ℝ̄ := {value}\n"))
-        error = refused.value
-        assert (error.rule, error.line) == ("readable-form", 8), value
-        assert error.message == (
-            f"the declaration of T carries the value {value}; a stage file declares the set a "
-            f"name lies in, `T : ℝ̄`, and the calibration file supplies its value, `T: {supplied}`")
-        assert error.write == (
-            f"Write `T : ℝ̄` here, and `T: {supplied}` in the calibration file, where "
-            f"`{supplied}` is read as a number and `{value}` as a text")
-    # a finite number is advised as it is written, with its sign
-    for value in ("2", "-3"):
-        with pytest.raises(ConstructionError) as refused:
-            derived_parameters.stage((growth, growth + f"T : ℝ̄ := {value}\n"))
-        assert refused.value.write == (
-            f"Write `T : ℝ̄` here, and `T: {value}` in the calibration file"), value
-    # a float that the package prints with an exponent and no decimal point,
-    # `1e-05`, is advised with the point
-    with pytest.raises(ConstructionError) as refused:
-        derived_parameters.stage((growth, growth + "T : ℝ̄ := 1e-5\n"))
-    assert refused.value.write == (
-        "Write `T : ℝ̄` here, and `T: 1.0e-05` in the calibration file, where `1.0e-05` is read "
-        "as a number and `1e-05` as a text")
-    # a value that is no number as written, which the reader of a calibration
-    # file returns as a text, receives no such advice
-    with pytest.raises(ConstructionError) as refused:
-        derived_parameters.stage((growth, growth + "T : ℝ̄ := 1/2\n"))
-    error = refused.value
-    assert (error.rule, error.line, error.write) == ("readable-form", 8, None)
-    assert error.message == (
-        "the declaration of T carries the value 1/2; a declaration states the set a name lies "
-        "in, and the calibration file supplies the value of each name")
-    path = tmp_path / "calibration.yaml"
-    path.write_text(
-        "above: .inf\nbelow: -.inf\ntext: inf\nquotient: 1/2\npoint: 1.0e-05\nno_point: 1e-05\n",
-        encoding="utf-8")
-    assert load_calibration(path) == {
-        "above": math.inf, "below": -math.inf, "text": "inf", "quotient": "1/2",
-        "point": 1e-05, "no_point": "1e-05"}
-
-
-def test_a_derived_parameter_that_reads_a_setting_is_refused_in_its_methods_file(
-        derived_parameters):
-    """A setting takes its value at configuration, after the calibration that
-    evaluates a derived parameter, so a definition that reads one is refused
-    under `derived-parameter` in the methods file that writes it."""
-    addition = {"text": "@methods: perfect_foresight\nn_a : ℕ\nκ := n_a/2\n", "origin": "m.bl"}
-    with pytest.raises(ConstructionError) as refused:
-        derived_parameters.stage().methodize(addition)
-    error = refused.value
-    assert (error.rule, error.file, error.line) == ("derived-parameter", "m.bl", 3)
-    assert "reads n_a, a setting" in error.message
-
-
-def test_two_lines_merged_into_one_box_bind_one_method(elaborate_text):
-    """A merged box is one operator, so it holds one method (AMD-SG-011 §3);
-    the author keeps two methods by keeping the two computations apart with
-    `!node`. The two lines are the arrival builder's two value lines, which
-    integrate the same pair of shocks, the second also as an iterated
-    expectation, so that the stage-wide places `E_y_z`, `E_y` and `E_z` reach
-    the one merged box; under AMD-MB-001 a derivative line forms no box, so
-    the stage carries a second value `W` (MB-T215)."""
-    from bellman.stage.binding_verbs import methodize
-    from conftest import bundles
-    text = bundles(backward="    V[<] = E_{y,z}(V)                     :: [id=value]\n"
-                            "    W[<] = E_{y,z}(R*W) + E_{y}(E_{z}(W)) :: [id=second]\n",
-                   decision="    V = c + β*V[>]                  :: [id=value]\n"
-                            "    W = c + β*W[>]                  :: [id=second]\n")
-    for old, new in (("(V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn]",
-                      "(V[>] : ℝ @ !vlu, W[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu, W : ℝ @ !vlu) : !dcsn]"),
-                     ("[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl]",
-                      "[id=dcsn_to_arvl, (V, W) : !dcsn -> (V[<] : ℝ @ !vlu, W[<] : ℝ @ !vlu) : !arvl]")):
-        assert text.count(old) == 1, old
-        text = text.replace(old, new)
-    stage = elaborate_text(text, "bundles.bl")
-    entries = ("dcsn_to_arvl.value.E_y_z.method : !quadrature\n",
-               "dcsn_to_arvl.second.E_y_z.method : !exact\n")
-    with pytest.raises(ConstructionError) as refused:
-        methodize(stage, {"text": "@methods: bundles\n" + "".join(entries), "origin": "bundles.methods.bl"})
-    assert refused.value.rule == "component-typed-twice"
-    assert "which both reach the operator `E` of block 'dcsn_to_arvl'" in str(refused.value)
-    assert "dcsn_to_arvl.value.E_y_z.method : !quadrature" in str(refused.value)
-    assert "dcsn_to_arvl.second.E_y_z.method : !exact" in str(refused.value)
-    # an occurrence of the maximization in a named line reaches the box the
-    # line's row is, which the sentence names by the line's block
-    with pytest.raises(ConstructionError) as refused:
-        methodize(stage, {"text": "@methods: bundles\nn_golden : ℕ\npolicy.argmax.method : !max\n"
-                                  "policy.objective.argmax.method : !golden_section(n_sections=n_golden)\n",
-                          "origin": "bundles.methods.bl"})
-    assert "which both reach the operator `argmax` of block 'policy';" in str(refused.value)
-    # two stage-wide places of different names reach the one merged box, and
-    # neither stands in a block, so the sentence reads the block from the
-    # place of the block that holds the box
-    with pytest.raises(ConstructionError) as refused:
-        methodize(stage, {"text": "@methods: bundles\nE_y_z.method : !quadrature\n"
-                                  "E_y.method : !exact\n",
-                          "origin": "bundles.methods.bl"})
-    assert refused.value.rule == "component-typed-twice"
-    assert ("at `E_y_z` and at `E_y`, which both reach the operator `E` of block "
-            "'dcsn_to_arvl';") in str(refused.value)
-    # the head of the block names every occurrence in it, and the merged box
-    # answers with the one component
-    bound = methodize(stage, {"text": "@methods: bundles\ndcsn_to_arvl.E_y_z.method : !quadrature\n",
-                              "origin": "bundles.methods.bl"})
-    merged = bound.builder.bwd.primitives["dcsn_to_arvl:Expectation"]
-    assert {place: str(held) for place, held in merged.methods.items()} == {"dcsn_to_arvl.E_y_z": "!quadrature"}
-    assert str(merged.signature()).splitlines()[-1] == "method     !quadrature"
-
-
-# --- the two second cases of the retired acceptance files --------------------
-# The test-only pass of 18 September 2026 retires the acceptance files of
-# AMD-SG-006 to AMD-SG-010. Two of their refusals are no second reading of a
-# case above: a `!doc` line of a value block, which the policy block's
-# exemption does not reach, and the two expectations of `sa_savings.bl` written
-# in the reverse order, where the case above is a singular conditioning block.
-
-
-def test_a_doc_line_of_a_value_block_may_read_a_decision_state(elaborate_text, text_of, cons_obs):
-    # a state of the perch at which a backward block's output stands is a
-    # coordinate of the output and needs no listing, on a `!doc` line as on an
-    # operative one (AAS, 12 October 2026); the documentary line changes no wire
-    value_line = '    V        = 𝑢(c) + V[>]          :: [id=value]\n'
-    with_doc = value_line + "    V  = 𝑢(m_d)                     :: [id=note, !doc]\n"
-    text = text_of("cons_obs")
-    assert text.count(value_line) == 1
-    noted = elaborate_text(text.replace(value_line, with_doc), "cons_obs.bl")
-    assert str(noted.builder["cntn", "dcsn"].signature()) == str(cons_obs.builder["cntn", "dcsn"].signature())
-
-
-# a candidate statement with two candidates: one equation cannot determine two
-# unknowns, and the refusal names both counts and the solve_{…} spelling
-# (AMD-SG-017 §1)
-TWO_CANDIDATES = """@stage: two
-
-Xa := ℝ₊₊
-
-β : (0,1)
-γ : (1, inf)
-
-𝑢(c : ℝ₊₊) := c^(1-γ)/(1-γ)
-𝑑𝑢(c : ℝ₊₊) := c^(-γ)
-Γ(m : ℝ₊₊) := (0, m]
-
-[id=arvl_to_dcsn, (m : ℝ₊₊) : !arvl -> (m_d : ℝ₊₊) : !dcsn] {
-    m_d = m
-}
-
-[id=dcsn_to_cntn, (m_d, c : ℝ₊₊ @ !ctrl, h : ℝ₊₊ @ !ctrl) : !dcsn -> (a : Xa) : !cntn] {
-    a = m_d - c - h
-}
-
-[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c, h) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
-    V = 𝑢(c) + 𝑢(h) + β*V[>]
-}
-
-[id=dcsn_to_arvl, V : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
-    V[<] = V
-}
-
-[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl, h : ℝ₊₊ @ !ctrl) : !dcsn] {
-    c = argmax_{c : Γ(m_d)}(𝑢(c) + β*V[>])   :: [id=optimality, !doc]
-    𝑑𝑢(c) + 𝑑𝑢(h) = β*D_{a}V[>]              :: [id=euler]
-}
-"""
-
-
-def test_a_system_with_fewer_statements_than_unknowns_is_refused(elaborate_text):
-    # the one equation of the block mentions the two outputs c and h and no
-    # other statement defines either, so the system has one statement and two
-    # unknowns and determines neither
-    with pytest.raises(ConstructionError) as refused:
-        elaborate_text(TWO_CANDIDATES, "two.bl")
-    error = refused.value
-    assert (error.rule, error.address) == ("not-constructed", "policy.euler")
-    assert "1 statement of builder 'policy' (policy.euler) states" in error.message
-    assert "a relation in 2 unknowns (c, h)" in error.message
-    assert "`c, h = solve_{c, h}(…)`" in error.message
-
-
-def test_the_reversed_order_of_the_expectations_is_refused_naming_the_undeclared_conditional(path_of):
-    text = path_of("sa_savings").read_text(encoding="utf-8")
-    reversed_order = text.replace("CE = E_{Ψ}(V[>]^(1-γ))^(1/(1-γ))", "CE = E_{ν}(V[>]^(1-γ))^(1/(1-γ))").replace(
-        "AMB = E_{ν}(CE^(1-η))^(1/(1-η))", "AMB = E_{Ψ}(CE^(1-η))^(1/(1-η))")
-    with pytest.raises(ConstructionError) as refused:
-        stage_from_text(reversed_order)
-    error = refused.value
-    assert (error.rule, error.address) == ("conditional-not-declared", "cntn_to_dcsn.risk_ce")
-    assert "the expectation over ν on line cntn_to_dcsn.risk_ce needs the distribution of ν given Ψ" in error.message
-
-
-# --- the malformed clauses of the retired acceptance file of AMD-SG-035 -------
-# Item 5 of AMD-SG-035 §9, moved here when lane C of the internal developer
-# release 0.01 retired the file (BN1 of the release's decisions): a declared
-# multiplier (spelling B, `cons_obs.bl`) written without its clause, with two
-# bounds, at the arrival perch, without a mark, bounding the control or a
-# decision state, declared twice, its bound written with the number first, or
-# listed on the header of its block; and a clause of spelling A (the twin text
-# `cons_kt` of `conftest.py`) whose chain descends, is strict or is mixed, or
-# whose one bound is written with the number first, which the sign table
-# would read with the reversed sign (E33, E37). Each case is the case's name,
-# the twin it changes, the line or the header as changed, and the rule.
-MULTIPLIER_LINE = "    μ[>]   : ℝ₊ ⟂ a >= 0"
-MALFORMED_MULTIPLIERS = [
-    ("the clause missing", "μ[>]   : ℝ₊", "syntax"),
-    ("two bounds on a declaration", "μ[>]   : ℝ₊ ⟂ 0 <= a <= 1", "multiplier-declaration"),
-    ("the arrival mark", "μ[<]   : ℝ₊ ⟂ a >= 0", "multiplier-declaration"),
-    ("no mark", "μ      : ℝ₊ ⟂ a >= 0", "multiplier-declaration"),
-    ("a bound naming the control", "μ[>]   : ℝ₊ ⟂ c >= 0", "multiplier-declaration"),
-    ("a bound naming a decision state", "μ[>]   : ℝ₊ ⟂ m_d >= 0", "multiplier-declaration"),
-    ("declared twice", "μ[>]   : ℝ₊ ⟂ a >= 0\n    μ[>]   : ℝ₊ ⟂ a >= 0", "multiplier-declaration"),
-    ("a declaration's bound written with the number first", "μ[>]   : ℝ₊ ⟂ 0 <= a", "readable-form"),
-]
-MALFORMED_CHAINS = [("a descending chain", "1 >= a >= 0"), ("a strict chain", "0 < a <= 1"),
-                    ("a mixed chain", "0 <= a >= 1"), ("a bound written with the number first", "0 <= a")]
-LISTED_MULTIPLIER = ("inf) @ !vlu) : !cntn ->", "inf) @ !vlu, μ[>] : ℝ₊) : !cntn ->")
-MALFORMED_CLAUSES = ([(name, "cons_obs", written, rule) for name, written, rule in MALFORMED_MULTIPLIERS]
-                     + [("a header listing the multiplier", "header", LISTED_MULTIPLIER, "multiplier-declaration")]
-                     + [(name, "cons_kt", written, "readable-form") for name, written in MALFORMED_CHAINS])
-
-
-@pytest.mark.parametrize("case", MALFORMED_CLAUSES, ids=lambda case: case[0])
-def test_a_malformed_declaration_of_a_multiplier_or_clause_of_a_line_is_refused_under_its_rule(case, cons_kt_text):
-    _, twin, written, rule = case
-    if twin == "cons_obs":
-        assert cons_obs_text().count(MULTIPLIER_LINE) == 1
-        text = cons_obs_text().replace(MULTIPLIER_LINE, "    " + written)
-    elif twin == "header":
-        assert cons_obs_text().count(written[0]) == 1
-        text = cons_obs_text().replace(*written)
-    else:
-        assert cons_kt_text.count("⟂ m_d - c >= 0") == 1
-        text = cons_kt_text.replace("⟂ m_d - c >= 0", "⟂ " + written)
-    with pytest.raises(ConstructionError) as refused:
-        stage_from_text(text, twin + ".bl")
-    assert refused.value.rule == rule
-
-
-# a stage whose forward measures cannot be built: the law of its shock names a
-# family the extension does not admit, so the graph is refused where the law is
-# written
-OPAQUE_LAW = """@stage: opaque_law
-z : ℝ₊
-z ~ Weird(0.2, 0.8)
-[id=flow, (x:ℝ₊,z):!arvl -> (y:ℝ₊):!dcsn] { y=x+z }
-[id=value, (W:ℝ @ !vlu):!dcsn -> (V:ℝ @ !vlu):!arvl] {
- V=E_{z}(W) :: [id=average]
-}
-"""
-
-
-def test_a_forward_graph_the_construction_refused_names_its_file_its_position_and_its_rule(elaborate_text):
-    """A refused graph says where, what happened, the address and the rule
-    (AMD-SG-001 §2, kept). The behaviour file states that the refusal is
-    raised; its file, line, column and rule stand here. The refusal is raised
-    at the distribution record, whose address is the file position of its
-    declaration (AMD-SG-017 §4), and its position is the item's own."""
-    with pytest.raises(NotConstructed) as refused:
-        graph_of(elaborate_text(OPAQUE_LAW), "builders", "forward")
-    error = refused.value
-    assert (error.stage, error.address, error.rule, error.line, error.column) == (
-        "opaque_law", "t.bl:3", "not-constructed", 3, 1)
-    assert str(error).startswith("t.bl:3:1-3:20: the forward measures are not constructed: the distribution of z "
-                                 "is written with the family 'Weird'")
-    assert str(error).endswith("(address 't.bl:3'; rule not-constructed)")
-
-
-def test_methodize_replaces_a_second_binding_and_refuses_a_source_naming_another_stage_and_two_targets_at_one_box(
-        cons, port):
-    """A second `methodize` of a target replaces the method its first bound
-    there, of the same kind, on the stage both are called on (specification
-    0.6 decision 1 and R4, which retire the refusal of a second binding); and
-    the two refusals of `methodize` the behaviour file does not read: it
-    covers the unknown target, the positional address, the duplicate target and
-    the malformed source. Each names the stage and the place, what happened,
-    the rule and what to write."""
-    from bellman.stage.binding_verbs import methodize
-    stage = copy_native(cons)
-
-    def addition(method):
-        return {"text": (f"@methods: cons\ncntn_to_dcsn.evaluate.method : {method}\n"
-                         "n_m : ℕ\nm_min : ℝ₊\nm_max : ℝ₊\n"
-                         "cntn_to_dcsn.evaluate.grid : !Cartesian(m_d=(m_min, m_max, n_m))\n"),
-                "origin": "cons.methods.bl"}
-    methodized = methodize(stage, addition("!Linear"))
-    assert methodize(methodized, addition("!pchip")) is stage
-    assert str(stage.methods) == "cntn_to_dcsn.evaluate   !pchip   !Cartesian(m_d=(m_min, m_max, n_m))"
-    with pytest.raises(ConstructionError) as refused:
-        methodize(copy_native(cons), {"text": "@methods: port\n", "origin": "port.methods.bl"})
-    assert refused.value.rule == "metadata-mismatch"
-    assert str(refused.value).startswith("port.methods.bl:1:1")
-    assert ("the addition names the stage 'port', and the stage file names itself 'cons'"
-            in str(refused.value))
-    assert "an addition's first line is `@methods: <stage>`" in str(refused.value)
-    # the whole of an Evaluation and one of the objects it stores share a
-    # key, so one component typed at both is typed twice (D4); the two
-    # objects, the value and its stated derivative, are represented apart
-    with pytest.raises(ConstructionError) as refused:
-        methodize(copy_native(port), {
-            "text": ("@methods: port\ncntn_to_dcsn.evaluate.method : !Linear\n"
-                     "cntn_to_dcsn.evaluate[V].method : !pchip\n"),
-            "origin": "port.methods.bl"})
-    assert refused.value.rule == "component-typed-twice"
-    assert "the object `V` stored at the operator `evaluate` of block 'cntn_to_dcsn'" in str(refused.value)
-    apart = methodize(copy_native(port), {
-        "text": ("@methods: port\ncntn_to_dcsn.evaluate[V].method : !Linear\n"
-                 "cntn_to_dcsn.evaluate[D_{k_d}V].method : !pchip\n"),
-        "origin": "port.methods.bl"})
-    assert {place: str(held) for place, held in apart.methods.items()} == {
-        "cntn_to_dcsn.evaluate[V]": "!Linear", "cntn_to_dcsn.evaluate[D_{k_d}V]": "!pchip"}
-
-
-# the names that would collide with the spelling of an identity (AMD-SG-016 §3),
-# each as the stage text that writes it and the address the refusal names
-COLLIDING_NAMES = {
-    "a field named result": (
-        "@stage: t\n[id=b, (x : ℝ) : !dcsn -> (result : ℝ) : !dcsn] {\n    result = x\n}\n",
-        "b", "the field 'result'"),
-    "a block named merged": (
-        "@stage: t\n[id=merged, (x : ℝ) : !dcsn -> (y : ℝ) : !dcsn] {\n    y = x\n}\n",
-        "merged", "the block id 'merged'"),
-    "a field named declared": (
-        "@stage: t\n[id=b, (x : ℝ) : !dcsn -> (declared : ℝ) : !dcsn] {\n    declared = x\n}\n",
-        "b", "the field 'declared'"),
-    "a statement named merged": (
-        "@stage: t\n[id=b, (x : ℝ) : !dcsn -> (y : ℝ) : !dcsn] {\n    y = x :: [id=merged]\n}\n",
-        "b.merged", "the statement id 'merged'"),
-    "a stage name with a colon": (
-        "@stage: t:u\n[id=b, (x : ℝ) : !dcsn -> (y : ℝ) : !dcsn] {\n    y = x\n}\n",
-        "1", "the stage name 't:u'"),
-    # the subjects of a distribution are spelled joined by '_', a separator a
-    # shock name may contain, so two declarations that join alike would carry
-    # one identity; the constructor cannot see the two, and this check can
-    "two distribution declarations joining alike": (
-        "@stage: t\na_b : ℝ\na : ℝ\nb : ℝ\na_b ~ N(0,1)\n(a, b) ~ N((0,0), ((1,0),(0,1)))\n"
-        "[id=blk, (k : ℝ) : !dcsn -> (y : ℝ) : !dcsn] {\n    y = k\n}\n",
-        "6", "spelled 'a_b' joined"),
-}
-
-
-@pytest.mark.parametrize("written", COLLIDING_NAMES)
-def test_a_name_that_would_collide_with_the_spelling_of_an_identity_is_refused_where_it_is_written(
-        written, elaborate_text):
-    """AMD-SG-016 §3: an identity is built in one place and never parsed, and a
-    name that would collide with its spelling is refused there, once, under
-    `identity-collision` — a name containing the colon that separates the
-    segments, and a name equal to one of the three words a reader tests for in
-    the last segment, `result`, `declared` and `merged`."""
-    source, address, named = COLLIDING_NAMES[written]
-    with pytest.raises(ConstructionError) as refused:
-        elaborate_text(source)
-    error = refused.value
-    assert (error.rule, error.address) == ("identity-collision", address)
-    assert named in error.message
-    assert str(error).endswith(f"(address {address!r}; rule identity-collision)")
-
-
-def test_the_two_collisions_the_delegated_review_names_that_do_not_collide_are_not_refused(elaborate_text):
-    """The delegated review of AMD-SG-016 named three further collisions for
-    this brief to verify (§3). A name containing a dot is refused by the
-    grammar, which admits no dot in a block id, a statement id or a field name,
-    so no identity is ever built from one. A shock name containing an underscore
-    does not collide: the subjects of a distribution and of an extended measure
-    are spelled joined by `_`, and nothing reads that join apart again, so the
-    corpus's own `z_shock`, `ε_p` and `W_F` stay admitted. The third, a field
-    named `declared`, does collide with the reserved word and is refused above.
-    """
-    from lark.exceptions import UnexpectedInput
-    for dotted in ("@stage: t\n[id=a.b, (x : ℝ) : !dcsn -> (y : ℝ) : !dcsn] {\n    y = x\n}\n",
-                   "@stage: t\n[id=b, (x : ℝ) : !dcsn -> (y.z : ℝ) : !dcsn] {\n    y.z = x\n}\n"):
-        with pytest.raises((ValueError, UnexpectedInput)) as refused:
-            elaborate_text(dotted)
-        assert "Unexpected token" in str(refused.value) or "identity-collision" not in str(refused.value)
-    stage = elaborate_text(
-        "@stage: t\nz_1 : ℝ\nz_1 ~ N(0,1)\n"
-        "[id=arvl_to_dcsn, (k : ℝ) : !arvl -> (k_d : ℝ) : !dcsn] {\n    k_d = k\n}\n"
-        "[id=dcsn_to_cntn, (k_d, z_1) : !dcsn -> (a : ℝ) : !cntn] {\n    a = k_d + z_1\n}\n"
-        "[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {\n"
-        "    V = E_{z_1}(V[>])\n}\n"
-        "[id=dcsn_to_arvl, V : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {\n    V[<] = V\n}\n")
-    assert "t:shck:z_1" in {str(identity) for identity in stage.fields()}
-
-
-@pytest.mark.parametrize("selected, column, remedy", [
-    ("v[keep][~]", 17, "v[~][keep]"),
-    ("v[<][>]", 14, "v[>]"),
-])
-def test_a_perch_mark_after_a_selector_is_a_positioned_syntax_refusal(
-        elaborate_text, selected, column, remedy):
-    source = "@stage: t\n\n[id=b, (v) : !cntn -> (w) : !dcsn] {\n    w = " + selected + "\n}\n"
-    with pytest.raises(ConstructionError) as refused:
-        elaborate_text(source, "selectors.bl")
-    error = refused.value
-    assert (error.rule, error.file, error.line, error.column) == ("syntax", "selectors.bl", 4, column)
-    assert "perch mark" in error.message and "first selector" in error.message
-    assert "write" in error.write and remedy in error.write
-    assert "\n" + " " * (column + 3) + "^" in error.message
-    assert "VisitError" not in str(error) and "Error trying to process rule" not in str(error)
-
-
-# the forms the grammar admits and the lowering reads no term from, each
-# refused under `syntax` at its line and column, its sentence quoting the text
-# as written and its advice saying what to write: the case, the text after the
-# `@stage` line, the position, the words of the sentence and of the advice
-LOWERING_REFUSALS = [
-    ("a computed selector",
-     "k : ℝ\n[id=b, (x : ℝ) : !arvl -> (y : ℝ) : !dcsn] {\n    y = (1, 2)[k + 1]\n}\n", (4, 9),
-     ("`(1, 2)[k + 1]`", "selects by `k + 1`", "a position or a name"), "`(1, 2)[1]`"),
-    ("a selection on the side of a header",
-     "[id=b, (x[1] : ℝ) : !arvl -> (y : ℝ) : !dcsn] {\n    y = x\n}\n", (2, 9),
-     ("`x[1]`", "a selection from x", "by its name"), "`x[>]`"),
-    ("a selection declared", "x[1] : ℝ\n", (2, 1), ("`x[1]`", "a selection from x"), "`x : …`"),
-    ("a selection given a distribution", "x : ℝ\nx[1] ~ N(0, 1)\n", (3, 1),
-     ("`x[1]`", "names its shocks by name"), "`x ~ …`"),
-    ("a comprehension binder typed by a role word", "Γ(x : ℝ) := {c : !ctrl | c < x}\n", (2, 13),
-     ("`{c : !ctrl | c < x}`", "typed by `!ctrl`", "one set"), "`{c : ℝ₊ | …}`"),
-    ("a bound written after a comma", "γ : ℝ₊, < 2\n", (2, 1),
-     ("`γ < 2`", "after a comma", "retired"), "`ℝ₊ @ (-inf, 2)`"),
-    ("two sets of one type that are no intervals", "γ : ℝ₊ @ ℤ\n", (2, 1),
-     ("`ℝ₊`", "`ℤ`", "are no intervals"), "`γ : ℝ₊ @ (0, 1)`"),
-    ("a set of labels with an interval", "γ : {a, b} @ (0, 1)\n", (2, 1),
-     ("`{a, b}`", "a set of labels"), "the one set γ takes its values in"),
-    ("a bound after a comma on two names", "(γ, δ) : ℝ₊ × ℝ₊, < 2\n", (2, 1),
-     ("`< 2`", "after a comma", "retired"), "`γ : ℝ₊ @ (-inf, 2)`"),
-    ("several sets on a declaration of two names", "(γ, δ) : ℝ₊ × ℝ₊ @ (0, 1)\n", (2, 1),
-     ("of (γ, δ) carries", "one declared name"), "each name on its own line"),
-    ("two lines under one id",
-     "[id=b, (x : ℝ) : !dcsn -> (y : ℝ, w : ℝ) : !dcsn] {\n    y = x :: [id=same]\n    w = x :: [id=same]\n}\n",
-     (4, 5), ("'b.same'", "the first at t.bl:3:5"), "another id"),
+# Forms that the parser reads and the language gives no meaning, each refused
+# under `syntax` where it is written: the text after the `@stage: t` line,
+# the line and the column of the refusal, the words of its sentence and the
+# words of its action.
+FORMS_REFUSED_UNDER_SYNTAX = [
+    pytest.param(
+        "k : ℝ\n[id=b, (x : ℝ) : !arvl -> (y : ℝ) : !dcsn] {\n    y = (1, 2)[k + 1]\n}\n",
+        4,
+        9,
+        ("`(1, 2)[k + 1]`", "selects by `k + 1`", "a position or a name"),
+        "`(1, 2)[1]`",
+        id="a computed selector",
+    ),
+    pytest.param(
+        "[id=b, (x[1] : ℝ) : !arvl -> (y : ℝ) : !dcsn] {\n    y = x\n}\n",
+        2,
+        9,
+        ("`x[1]`", "a selection from x", "by its name"),
+        "`x[>]`",
+        id="a selection on the side of a header",
+    ),
+    pytest.param(
+        "x[1] : ℝ\n",
+        2,
+        1,
+        ("`x[1]`", "a selection from x"),
+        "`x : …`",
+        id="a selection declared",
+    ),
+    pytest.param(
+        "x : ℝ\nx[1] ~ N(0, 1)\n",
+        3,
+        1,
+        ("`x[1]`", "names its shocks by name"),
+        "`x ~ …`",
+        id="a selection given a distribution",
+    ),
+    pytest.param(
+        "Γ(x : ℝ) := {c : !ctrl | c < x}\n",
+        2,
+        13,
+        ("`{c : !ctrl | c < x}`", "typed by `!ctrl`", "one set"),
+        "`{c : ℝ₊ | …}`",
+        id="a comprehension binder typed by a role word",
+    ),
+    pytest.param(
+        "γ : ℝ₊, < 2\n",
+        2,
+        1,
+        ("`γ < 2`", "after a comma", "retired"),
+        "`ℝ₊ @ (-inf, 2)`",
+        id="a bound written after a comma",
+    ),
+    pytest.param(
+        "γ : ℝ₊ @ ℤ\n",
+        2,
+        1,
+        ("`ℝ₊`", "`ℤ`", "are no intervals"),
+        "`γ : ℝ₊ @ (0, 1)`",
+        id="two sets of one type that are no intervals",
+    ),
+    pytest.param(
+        "γ : {a, b} @ (0, 1)\n",
+        2,
+        1,
+        ("`{a, b}`", "a set of labels"),
+        "the one set γ takes its values in",
+        id="a set of labels with an interval",
+    ),
+    pytest.param(
+        "(γ, δ) : ℝ₊ × ℝ₊, < 2\n",
+        2,
+        1,
+        ("`< 2`", "after a comma", "retired"),
+        "`γ : ℝ₊ @ (-inf, 2)`",
+        id="a bound after a comma on two names",
+    ),
+    pytest.param(
+        "(γ, δ) : ℝ₊ × ℝ₊ @ (0, 1)\n",
+        2,
+        1,
+        ("of (γ, δ) carries", "one declared name"),
+        "each name on its own line",
+        id="several sets on a declaration of two names",
+    ),
+    pytest.param(
+        "[id=b, (x : ℝ) : !dcsn -> (y : ℝ, w : ℝ) : !dcsn] {\n"
+        "    y = x :: [id=same]\n    w = x :: [id=same]\n}\n",
+        4,
+        5,
+        ("'b.same'", "the first at t.bl:3:5"),
+        "another id",
+        id="two lines under one id",
+    ),
 ]
 
 
-# the faults the typing walk finds, each refused where it is found, at the
-# line's position, under its rule: the case, the text after the `@stage` line,
-# the rule, the line and the words of the sentence. The first two are audit
-# M4's, which reached the modeller as a sentence matched by its words and as a
-# plain ValueError.
-_ONE_FUNCTION = ("𝑓(x : ℝ₊) := x + 1\n𝑔(x : ℝ × ℝ) := x[1]\nβ : ℝ₊₊\n"
-                 "[id=b, (v : ℝ₊) : !arvl -> (w : ℝ₊) : !dcsn] {\n    w = LINE\n}\n")
-_ONE_SHOCK = ("y : ℝ\ny ~ N(0, 1)\n[id=arvl_to_dcsn, (k : ℝ) : !arvl -> (k_d : ℝ) : !dcsn] {\n    k_d = k\n}\n"
-              "[id=dcsn_to_cntn, (k_d, y) : !dcsn -> (a : ℝ) : !cntn] {\n    a = k_d + y\n}\n"
-              "[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {\n    V = LINE\n}\n"
-              "[id=dcsn_to_arvl, V : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {\n    V[<] = V\n}\n")
-TYPING_REFUSALS = [
-    ("a function used as a number", _ONE_FUNCTION.replace("LINE", "𝑓 + 1"), "well-typed", 6,
-     ("`𝑓` is a function", "`𝑓 + 1` reads it as a number", "`𝑓(…)`")),
-    ("a binder named twice", _ONE_SHOCK.replace("LINE", "E_{y, y}(V[>])"), "declared-once", 11,
-     ("`E_{y, y}(V[>])` names y twice", "`E_{y}(…)`")),
-    ("Inv of a number", _ONE_FUNCTION.replace("LINE", "Inv(β)"), "well-typed", 6,
-     ("`Inv(β)` inverts a number", "one function")),
-    ("a function of a pair applied to a number", _ONE_FUNCTION.replace("LINE", "𝑔(v)"), "well-typed", 6,
-     ("argument 1 of the call to 𝑔 is a number", "a tuple of values")),
-    ("the two sides of a line of two kinds", _ONE_FUNCTION.replace("LINE", "𝑓"), "well-typed", 6,
-     ("the right side of `w = 𝑓` is a function", "the left side a number")),
-    ("arithmetic on a label",
-     "[id=b, (d : {keep, adjust}) : !dcsn -> (y : ℝ) : !dcsn] {\n    y = d + 1\n}\n", "well-typed", 3,
-     ("`d` is a label", "`d + 1` reads it as a number")),
-]
+# four texts that a refusal under `syntax` does not print: `@in`, a spelling
+# of membership that the language no longer reads and that no sentence of
+# the package now writes; `Select(` and `Sym(`, the openings of the printed
+# forms of two terms of the package; and `NotImplementedError`, an error of
+# Python
+INTERNAL_TEXTS = ("@in", "Select(", "Sym(", "NotImplementedError")
 
 
-@pytest.mark.parametrize("case", TYPING_REFUSALS, ids=lambda case: case[0])
-def test_a_fault_the_typing_walk_finds_is_refused_where_it_is_found(case, elaborate_text):
-    _, body, rule, line, words = case
+@pytest.mark.parametrize("body, line, column, words, write", FORMS_REFUSED_UNDER_SYNTAX)
+def test_a_form_the_parser_reads_but_the_language_does_not_is_refused_where_it_is_written(
+    body, line, column, words, write
+):
+    """A form that the parser reads and the language gives no meaning is
+    refused under `syntax` at its line and column, in a sentence that quotes
+    the text as written, an action that says what to write, a marked line,
+    and none of the four texts of `INTERNAL_TEXTS`."""
     with pytest.raises(ConstructionError) as refused:
-        elaborate_text("@stage: t\n" + body)
-    error = refused.value
-    assert (error.rule, error.line, error.column) == (rule, line, 5), (error.rule, error.line)
-    assert all(word in error.message for word in words), (words, error.message)
-    assert "requires scalar operands" not in error.message and "task file" not in error.message
-
-
-def test_a_written_zero_divisor_in_a_function_body_is_refused_at_the_definition(elaborate_text):
-    # the example of `divisor-nonzero` divides in a line; a function body is
-    # refused at the file position of its definition record (AMD-SG-017 §4)
-    with pytest.raises(ConstructionError) as refused:
-        elaborate_text("@stage: t\n𝑓(x : ℝ₊) := x/0\n"
-                       "[id=b, (v : ℝ₊) : !arvl -> (w : ℝ) : !dcsn] {\n    w = 𝑓(v)\n}\n")
-    error = refused.value
-    assert (error.rule, error.address, error.line, error.column) == ("divisor-nonzero", "t.bl:2", 2, 1)
-    assert "`x/0` divides by zero" in error.message
-
-
-@pytest.mark.parametrize("case", LOWERING_REFUSALS, ids=lambda case: case[0])
-def test_a_form_the_lowering_reads_no_term_from_is_refused_where_it_is_written(case, elaborate_text):
-    _, body, (line, column), words, write = case
-    with pytest.raises(ConstructionError) as refused:
-        elaborate_text("@stage: t\n" + body)
+        stage_from_text("@stage: t\n" + body)
     error = refused.value
     assert (error.rule, error.file, error.line, error.column) == ("syntax", "t.bl", line, column)
     assert all(word in error.parts.why for word in words), (words, error.parts.why)
     assert write in error.write and "^" in error.parts.what
-    for internal in ("@in", "Select(", "Sym(", "NotImplementedError"):
-        assert internal not in str(error), internal
+    assert [text for text in INTERNAL_TEXTS if text in str(error)] == []
 
 
-def test_calibration_refuses_a_parameter_value_making_utility_undefined(cons):
-    with pytest.raises(ValueError) as refused:
-        copy_native(cons).calibrate({"ρ": 1.0})
-    assert all(word in str(refused.value) for word in ("ρ", "1.0", "1 - ρ = 0"))
+# --- the refusals of graph construction beside their acceptances ---
 
 
-def test_calibration_decides_a_line_condition_at_the_value_of_a_derived_parameter(
-        derived_parameters):
-    """A parameter-only condition of a line that reads a derived parameter is
-    decided at the value the derived parameter's definition takes, as one that
-    reads a declared parameter is decided at its value (AMD-SG-022 §4;
-    AMD-MT-003, build contract §5): with `z := R - 1.04`, the divisor of
-    `m = k/z + 1` is refused where R = 1.04 makes z zero and established
-    where R = 1.05 does not."""
-    changes = (("R_n := R/Γ", "R_n := R/Γ\nz := R - 1.04"), ("m = R_n*k + 1", "m = k/z + 1"))
-    with pytest.raises(ValueError) as refused:
-        derived_parameters.stage(*changes).calibrate(
-            {"calibration": {**derived_parameters.calibration, "R": 1.04}})
-    assert all(word in str(refused.value) for word in ("z = 0.0", "¬(z = 0)", "false"))
-    stage = derived_parameters.stage(*changes)
-    stage.calibrate({"calibration": {**derived_parameters.calibration, "R": 1.05}})
-    condition, = [item for item in stage.obligations()
-                  if item.condition == "arithmetic-definedness"
-                  and item.entries[0].block == "arvl_to_dcsn"]
-    assert condition.status == "established"
-    assert condition.evidence[0].startswith("calibration z = 0.01")
+def test_a_field_defined_twice_in_a_block_is_refused_unless_the_first_is_documentation():
+    """A block that defines W on two lines marked `!node` is refused at the
+    second line, and the same block with its first line marked `!doc` is
+    admitted."""
+    example = EXAMPLES["defined-once"]
+    error = refusal_of(example)
+    assert error.rule == "defined-once"
+    # the second definition of W stands on line 4, indented by four spaces
+    assert (error.line, error.column) == (4, 5)
+    documentary = example.text.replace("[id=first, !node]", "[id=first, !doc]")
+    assert stage_from_text(documentary).name == "t"
 
 
-# fourteen runs of `python -m bellman`, each a new process that imports the
-# package, so the test is one of the sweeps
-@pytest.mark.sweep
-def test_command_refuses_malformed_sources_unreadable_paths_and_invalid_arguments(path_of, elaborate_text, tmp_path):
-    import subprocess
-    import sys
+def test_the_entry_of_defined_once_gives_the_four_parts_of_the_refusal_of_its_example():
+    """The catalogue entry of `defined-once` gives the position, the marked
+    line, the sentence and the action of the refusal of its example."""
+    error = refusal_of(EXAMPLES["defined-once"])
+    held = entry("defined-once")
+    assert held.where == "t.bl, line 4, column 5 (address 'b.second')"
+    assert "W = 2*V[>]" in held.what and "^" in held.what
+    assert held.why == error.message
+    assert "t.bl:3:5 (term address 'b.first')" in held.why
+    assert held.write == error.write
+    phrases = ("Remove one of the two definitions of W", "another name", "`!doc`")
+    assert [phrase for phrase in phrases if phrase not in held.write] == []
 
-    from bellman.refusal_catalogue import text_of
-    from conftest import ROOT
 
-    command = [sys.executable, "-m", "bellman"]
-    refused_path = tmp_path / "refused.bl"
-    refused_text = text_of(EXAMPLES["syntax"])
-    refused_path.write_text(refused_text, encoding="utf-8")
+def test_a_derivative_stated_twice_in_one_block_is_refused_at_the_second_line_naming_the_first():
+    """The consumption stage with a second derivative line for D_{m_d}V in its
+    backward value block is refused at that line, in a sentence that names
+    the first."""
+    second = "    D_{m_d}V = 2*𝑑𝑢(c)              :: [id=marginal2]\n"
     with pytest.raises(ConstructionError) as refused:
-        elaborate_text(refused_text, origin=str(refused_path))
-    for option in ([], ["--encoding"], ["--dossier"]):
-        answer = subprocess.run(command + [str(refused_path)] + option, cwd=ROOT,
-                                capture_output=True, text=True, encoding="utf-8", timeout=60)
-        assert answer.returncode == 1
-        assert not answer.stderr
-        assert answer.stdout == str(refused.value) + "\n"
-        assert "rule syntax" in answer.stdout and "^" in answer.stdout
-        assert "`)`" in answer.stdout and "`,`" in answer.stdout
-    for unreadable in (tmp_path / "missing.bl", tmp_path):
-        for option in ([], ["--encoding"], ["--dossier"]):
-            answer = subprocess.run(command + [str(unreadable)] + option, cwd=ROOT,
-                                    capture_output=True, text=True, encoding="utf-8", timeout=60)
-            assert answer.returncode == 1 and not answer.stderr
-            lines = answer.stdout.splitlines()
-            assert [line.split()[0] for line in lines] == ["where", "what", "why", "write"]
-            assert str(unreadable) in lines[0] and "readable .bl file" in lines[-1]
-    path = path_of("cons").relative_to(ROOT)
-    for arguments in ([], ["--encoding"], [str(path), "--unknown"],
-                      [str(path), "--encoding", "--dossier"], [str(path), "--period", "period.yml"]):
-        answer = subprocess.run(command + arguments, cwd=ROOT, capture_output=True,
-                                text=True, encoding="utf-8", timeout=60)
-        assert answer.returncode == 2
-        assert not answer.stdout
-        assert answer.stderr.startswith("usage:")
+        cons_stage_with(CONS_MARGINAL_LINE, CONS_MARGINAL_LINE + second)
+    assert (refused.value.rule, refused.value.address) == (
+        "defined-once",
+        "cntn_to_dcsn.marginal2",
+    )
+    assert "block 'cntn_to_dcsn' already states D_{m_d}V at" in refused.value.message
+    assert "(term address 'cntn_to_dcsn.marginal')" in refused.value.message
 
 
-def test_method_keyword_names_must_be_declared_even_inside_nested_values(cons):
-    """Method arguments read declared names; quoted strings remain literal,
-    and a number is refused at every depth (AAS, 14 November 2026)."""
-    for value in ("missing", '("a", !foo(inner=missing))'):
-        addition = {"text": "@methods: cons\n"
-                    f"policy.evaluate.method : !Linear(option={value})\n",
-                    "origin": "keywords.methods.bl"}
-        with pytest.raises(ConstructionError) as caught:
-            copy_native(cons).methodize(addition)
-        error = caught.value
-        assert error.rule == "name-in-scope"
-        assert error.file == "keywords.methods.bl" and error.line == 2
-        assert error.address == "policy.evaluate"
-        assert error.column is not None and error.write
-        assert "missing" in error.message
-    for value in ("2", '("a", 2)', "!foo(inner=2)"):
-        addition = {"text": "@methods: cons\n"
-                    f"policy.evaluate.method : !Linear(option={value})\n",
-                    "origin": "keywords.methods.bl"}
-        with pytest.raises(ConstructionError) as caught:
-            copy_native(cons).methodize(addition)
-        error = caught.value
-        assert error.rule == "method-setting-declared"
-        assert error.file == "keywords.methods.bl" and error.line == 2
-        assert error.address == "policy.evaluate"
-        assert error.column is not None and error.write
-        assert "writes the number 2" in error.message
-    allowed = copy_native(cons).methodize({
-        "text": '@methods: cons\npolicy.evaluate.method : !Linear(option="literal")\n',
-        "origin": "keywords.methods.bl",
-    })
-    assert "policy.evaluate" in allowed.methods
-
-
-# The grids a record of their constructors does not admit (AMD-MT-003 build
-# contract §2): each case is its name, the stage text, the typing entries and
-# the declarations of the methods file, the settings configured, the rule, the
-# address and the file the refusal names, and the words its message holds. A
-# stage that binds is configured, so that a refusal of the configured values
-# is reached; an entry of a builder methodized by `!egm` stands in the stage
-# text once the addition is unioned with it.
-_FIBRED = "!Fibred(base=!Points(nodes=B), fibre=!Cartesian(c=(Γ_c, n_c)))"
-_EGM_GRID = (
-    INVERSE_EULER.replace("@stage: t\n", "@stage: grids\nA := {1, 2}\nΓ_c(x : ℝ₊) := [0, x]\n")
+# Each address below is the term address of the item that names the set: for
+# a top-level item, its order among the items of the consumption stage,
+# counting the `@stage` line as the first.
+@pytest.mark.parametrize(
+    "line_as_written, line_as_changed, address, named_by",
+    [
+        pytest.param(
+            "ρ : [1, inf)\n",
+            "ρ : [1, inf)\nn_m : Foo\n",
+            "5",
+            "the declaration of 'n_m'",
+            id="a-declaration",
+        ),
+        pytest.param(
+            "(m_d, c : !ctrl @ ℝ₊₊) : !dcsn",
+            "(m_d, c : !ctrl @ Foo) : !dcsn",
+            "dcsn_to_cntn",
+            "the header of block 'dcsn_to_cntn', which types c",
+            id="a-block-header",
+        ),
+        pytest.param(
+            "𝑑𝑢(c : ℝ₊₊) := c^(-ρ)",
+            "𝑑𝑢(c : Foo) := c^(-ρ)",
+            "6",
+            "the argument 'c' of the function '𝑑𝑢'",
+            id="an-argument-of-a-function",
+        ),
+        pytest.param(
+            "Xa := ℝ₊\n",
+            "Xa := ℝ₊\nXq := Xm × Foo\n",
+            "4",
+            "the definition of the set 'Xq'",
+            id="a-factor-of-a-product-set",
+        ),
+    ],
 )
-GRID_REFUSALS = [
-    ("fibred at the grid of egm", _EGM_GRID,
-     "policy.method : !egm\n"
-     "policy.grid : !Fibred(base=!Points(nodes=A), fibre=!Cartesian(c=(Γ_c, n_c)))\n",
-     "", {}, "grid-coordinate", ("policy", "grids.bl"),
-     ("on the states of the continuation perch",
-      "a place of any other coordinate domain refuses")),
-    ("fibred at a function of states alone", GRID_STAGE,
-     f"cntn_to_dcsn.evaluate.method : !Linear\ncntn_to_dcsn.evaluate.grid : {_FIBRED}\n",
-     "", {}, "grid-coordinate", ("cntn_to_dcsn.evaluate", "methods.bl"),
-     ("reads a grid on (m)", "constructs pairs on (m, c)")),
-    ("a base of feasible factors", GRID_STAGE,
-     "cntn_to_dcsn.method : !vfi\n"
-     "cntn_to_dcsn.grid : !Fibred(base=!Cartesian(c=(Γ_c, n_c)), "
-     "fibre=!Cartesian(c=(Γ_c, n_c)))\n",
-     "", {}, "grid-coordinate", ("cntn_to_dcsn", "methods.bl"),
-     ("the base of !Fibred is !Points or a !Cartesian term without feasible-control factors",)),
-    ("a fibre of points", GRID_STAGE,
-     "cntn_to_dcsn.method : !vfi\n"
-     "cntn_to_dcsn.grid : !Fibred(base=!Points(nodes=B), fibre=!Points(nodes=B))\n",
-     "", {}, "grid-coordinate", ("cntn_to_dcsn", "methods.bl"),
-     ("the fibre of !Fibred is a !Cartesian term whose factors are feasible-control factors",)),
-    ("a contradictory requirement", GRID_STAGE,
-     "cntn_to_dcsn.method : !vfi\n"
-     "cntn_to_dcsn.grid : !Points(nodes=B, require=(!Cartesian, !NonCartesian))\n",
-     "", {}, "grid-requirement", ("cntn_to_dcsn", "methods.bl"),
-     ("!Cartesian and !NonCartesian", "contradict each other")),
-    ("points no file declares", GRID_STAGE,
-     "cntn_to_dcsn.method : !vfi\ncntn_to_dcsn.grid : !Points(nodes=Z)\n",
-     "", {}, "grid-setting-declared", ("cntn_to_dcsn", "methods.bl"),
-     ("'Z' as its points", "no setting a methods file declares and no set the stage defines")),
-    ("points of one coordinate on two", TWO_STATE_GRID_STAGE,
-     "cntn_to_dcsn.evaluate.method : !Linear\ncntn_to_dcsn.evaluate.grid : !Points(nodes=P)\n",
-     "P : ℝ × ℝ × ℝ\n", {}, "grid-coordinate", ("cntn_to_dcsn.evaluate", "methods.bl"),
-     ("whose points have 1 coordinate each", "the coordinates (m, z)", "`X2 := ℝ × ℝ`")),
-    ("a configured point outside the declared set", GRID_STAGE,
-     "cntn_to_dcsn.method : !vfi\ncntn_to_dcsn.grid : !Points(nodes=Q)\n",
-     "Q : ℝ × ℝ\n", {"Q": [-1.0, 1.0]}, "grid-bounds", ("cntn_to_dcsn", "grids.bl"),
-     ("the point (-1.0,)", "lies outside the declared set Xm")),
-    ("an outer requirement the joint grid does not satisfy", GRID_STAGE,
-     f"cntn_to_dcsn.method : !vfi\ncntn_to_dcsn.grid : {_FIBRED[:-1]}, require=!Cartesian)\n",
-     "", {}, "grid-requirement", ("cntn_to_dcsn", "methods.bl"),
-     ("does not satisfy !Cartesian", "{1, 2} × {0, 1, 2}, holds (1, 2)")),
-    ("an inner requirement a fibre does not satisfy", GRID_STAGE,
-     "cntn_to_dcsn.method : !vfi\ncntn_to_dcsn.grid : "
-     "!Fibred(base=!Points(nodes=B), fibre=!Cartesian(c=(Γ_c, n_c), require=!NonCartesian))\n",
-     "", {}, "grid-requirement", ("cntn_to_dcsn", "methods.bl"),
-     ("its fibre at the base state m = 1 does not satisfy !NonCartesian",)),
+def test_a_set_the_stage_does_not_define_is_refused_where_it_is_named_with_the_sets_in_scope(
+    line_as_written, line_as_changed, address, named_by
+):
+    """The consumption stage with a set `Foo` that it does not define is
+    refused under `name-in-scope` at the item that names the set, in a
+    sentence that lists the sets in scope there and the primitive sets."""
+    with pytest.raises(ConstructionError) as refused:
+        cons_stage_with(line_as_written, line_as_changed)
+    assert (refused.value.rule, refused.value.address) == ("name-in-scope", address)
+    assert f"{named_by} names the set 'Foo'" in refused.value.message
+    assert "the sets in scope here: Xm, Xa" in refused.value.message
+    assert "ℝ, ℝ₊, ℝ₊₊, ℤ, ℕ" in refused.value.message
+
+
+# The addresses are term addresses, counted as in the table above.
+@pytest.mark.parametrize(
+    "line_as_written, line_as_changed, address, named_by, function",
+    [
+        pytest.param(
+            "ρ : [1, inf)\n",
+            "ρ : [1, inf)\nn_m : 𝑑𝑢\n",
+            "5",
+            "the declaration of 'n_m'",
+            "𝑑𝑢",
+            id="a-declaration",
+        ),
+        pytest.param(
+            "Xa := ℝ₊\n",
+            "Xa := ℝ₊\nXq := Xm × 𝑑𝑢\n",
+            "4",
+            "the definition of the set 'Xq'",
+            "𝑑𝑢",
+            id="a-factor-of-a-product-set",
+        ),
+        pytest.param(
+            "Γ(x : ℝ₊₊) := (0, x]\n",
+            "Γ(x : ℝ₊₊) := (0, x]\n𝑑𝑢𝑖𝑛𝑣 := Inv(𝑑𝑢)\nn_m : 𝑑𝑢𝑖𝑛𝑣\n",
+            "9",
+            "the declaration of 'n_m'",
+            "𝑑𝑢𝑖𝑛𝑣",
+            id="a-declaration-by-a-function-defined-as-an-inverse",
+        ),
+    ],
+)
+def test_a_function_of_the_stage_written_where_a_set_stands_is_refused_naming_its_definition(
+    line_as_written, line_as_changed, address, named_by, function
+):
+    """The consumption stage with a function of its own written where a set
+    stands is refused under `name-in-scope` at the item, in a sentence that
+    names the function and its definition."""
+    with pytest.raises(ConstructionError) as refused:
+        cons_stage_with(line_as_written, line_as_changed)
+    assert (refused.value.rule, refused.value.address) == ("name-in-scope", address)
+    assert (
+        f"{named_by} names the set {function!r}, which the stage defines as a function at"
+        in refused.value.message
+    )
+    assert "and as no set" in refused.value.message
+
+
+def test_a_call_to_a_function_the_file_does_not_declare_is_recorded_as_a_condition():
+    """The consumption stage whose derivative line calls 𝑓𝑜𝑜, a function
+    that the file does not declare, is admitted and states the condition
+    `external-callable-signature-and-provider`."""
+    stage = cons_stage_with(CONS_MARGINAL_LINE, CONS_MARGINAL_LINE.replace("𝑑𝑢(c)", "𝑓𝑜𝑜(c)"))
+    assert "external-callable-signature-and-provider" in {
+        obligation.condition for obligation in stage.obligations()
+    }
+
+
+def test_a_derivative_of_a_branch_value_is_taken_only_in_the_coordinates_of_that_branch():
+    """In the branching stage, a derivative of the value of the branch of
+    work in the coordinate a_r of the branch of retirement is refused,
+    naming the branch and its coordinates, where the coordinate a_w of the
+    branch of work is admitted."""
+    with pytest.raises(ConstructionError) as refused:
+        stage_from_text(branching_with_marginal("D_{a_r}V_w[>]"))
+    assert (refused.value.rule, refused.value.address) == (
+        "derivative-coordinate",
+        "cntn_to_dcsn.marginal",
+    )
+    assert (
+        "names 'a_r', which is no state coordinate of the branch 'work' of the cntn perch"
+        in refused.value.message
+    )
+    assert (
+        "the coordinates of the branch 'work' of the cntn perch are a_w" in refused.value.message
+    )
+    assert stage_from_text(branching_with_marginal("D_{a_w}V_w[>]")).name == "t"
+
+
+def test_a_value_candidate_is_admitted_only_where_an_upper_envelope_compares_it():
+    """The inverse Euler form with a value candidate v[>] after its grid
+    line is admitted where an upper envelope compares the candidates, and
+    refused at the value candidate where none does."""
+    value_candidate = GRID_LINE + "    v[>] = 𝑢(c[>]) + V[>]    :: [id=cand_value]\n"
+    envelope = "    c = upper_env(m[>], c[>], v[>])    :: [id=envelope]\n"
+    with_envelope = INVERSE_EULER.replace(GRID_LINE, value_candidate).replace(
+        IDENTIFICATION, envelope
+    )
+    assert stage_from_text(with_envelope).name == "t"
+    with pytest.raises(ConstructionError) as refused:
+        stage_from_text(INVERSE_EULER.replace(GRID_LINE, value_candidate))
+    assert (refused.value.rule, refused.value.address) == (
+        "candidate-coordinate",
+        "policy.cand_value",
+    )
+    assert "writes v[>], a candidate of 'v'" in refused.value.message
+    assert "no upper envelope of block 'policy' compares it" in refused.value.message
+
+
+def test_the_grid_line_reads_the_candidate_of_the_control_and_needs_no_reader_itself():
+    """The inverse Euler form with its control in closed form is refused
+    where no later line reads the candidate c[>], and admitted with the
+    grid line, which reads c[>] and which no later line reads, since the
+    Evaluation reads it as the knots of the policy."""
+    closed = "    c = 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>])     :: [id=closed]\n"
+    with pytest.raises(ConstructionError) as refused:
+        stage_from_text(INVERSE_EULER.replace(GRID_LINE + IDENTIFICATION, closed))
+    assert (refused.value.rule, refused.value.address) == ("candidate-read", "policy.InvEuler")
+    assert stage_from_text(INVERSE_EULER.replace(IDENTIFICATION, closed)).name == "t"
+
+
+@pytest.mark.parametrize(
+    "block, address, first",
+    [
+        pytest.param(
+            "[id=value2, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {\n"
+            "    V = 2*𝑢(c) + V[>]    :: [id=value]\n}\n",
+            "value2",
+            "cntn_to_dcsn",
+            id="a-second-backward-block-writing-the-value",
+        ),
+        pytest.param(
+            "[id=step2, (m, c : !ctrl @ ℝ₊₊) : !dcsn -> (a : ℝ₊) : !cntn] {\n    a = m - 2*c\n}\n",
+            "step2",
+            "dcsn_to_cntn",
+            id="a-second-forward-block-writing-the-saving",
+        ),
+    ],
+)
+def test_a_second_block_writing_a_field_between_the_same_perches_is_refused(block, address, first):
+    """The inverse Euler form with a second block that writes the output of
+    one of its blocks between the same two perches is refused under
+    `one-builder-per-output` at the second block, naming the first."""
+    with pytest.raises(ConstructionError) as refused:
+        stage_from_text(INVERSE_EULER + block)
+    assert (refused.value.rule, refused.value.address) == ("one-builder-per-output", address)
+    assert f"which block '{first}' already writes" in refused.value.message
+
+
+def test_a_forward_graph_the_construction_refused_names_its_file_its_position_and_its_rule():
+    """The forward builders graph of a stage whose shock has a distribution
+    of a family the package does not admit is refused at the line of that
+    distribution, the address of its declaration and the rule
+    `not-constructed`."""
+    with pytest.raises(NotConstructed) as refused:
+        stage_from_text(OPAQUE_LAW).builder.fwd.list()
+    error = refused.value
+    # the distribution `z ~ Weird(0.2, 0.8)` stands on line 3
+    assert (error.stage, error.address, error.rule, error.line, error.column) == (
+        "opaque_law",
+        "t.bl:3",
+        "not-constructed",
+        3,
+        1,
+    )
+    assert str(error).startswith(
+        "t.bl:3:1-3:20: the forward measures are not constructed: the distribution of z "
+        "is written with the family 'Weird'"
+    )
+    assert str(error).endswith("(address 't.bl:3'; rule not-constructed)")
+
+
+def test_a_refusal_with_no_position_and_no_address_ends_its_text_with_its_rule():
+    """The text of a refusal that names a rule ends with that rule in
+    parentheses."""
+    named = NotConstructed("no forward builder", rule="not-constructed")
+    assert str(named).endswith("(rule not-constructed)")
+
+
+# Two stage texts after their `@stage: t` line, each with a line `LINE` that
+# the rows below replace: two functions 𝑓 and 𝑔 and a parameter β, read in
+# the line of a forward block, which is line 6 of the file; and a shock y,
+# read in the backward value line, which is line 11 of the file.
+FUNCTIONS_AND_A_FORWARD_LINE = (
+    "𝑓(x : ℝ₊) := x + 1\n𝑔(x : ℝ × ℝ) := x[1]\nβ : ℝ₊₊\n"
+    "[id=b, (v : ℝ₊) : !arvl -> (w : ℝ₊) : !dcsn] {\n    w = LINE\n}\n"
+)
+
+
+SHOCK_AND_A_VALUE_LINE = (
+    "y : ℝ\ny ~ N(0, 1)\n"
+    "[id=arvl_to_dcsn, (k : ℝ) : !arvl -> (k_d : ℝ) : !dcsn] {\n    k_d = k\n}\n"
+    "[id=dcsn_to_cntn, (k_d, y) : !dcsn -> (a : ℝ) : !cntn] {\n    a = k_d + y\n}\n"
+    "[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {\n"
+    "    V = LINE\n}\n"
+    "[id=dcsn_to_arvl, V : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {\n    V[<] = V\n}\n"
+)
+
+
+# The faults found when a line is typed, each refused at the line under its
+# rule: the text after the `@stage: t` line, the rule, the line and the words
+# of the sentence.
+TYPING_REFUSALS = [
+    pytest.param(
+        FUNCTIONS_AND_A_FORWARD_LINE.replace("LINE", "𝑓 + 1"),
+        "well-typed",
+        6,
+        ("`𝑓` is a function", "`𝑓 + 1` reads it as a number", "`𝑓(…)`"),
+        id="a function used as a number",
+    ),
+    pytest.param(
+        SHOCK_AND_A_VALUE_LINE.replace("LINE", "E_{y, y}(V[>])"),
+        "declared-once",
+        11,
+        ("`E_{y, y}(V[>])` names y twice", "`E_{y}(…)`"),
+        id="a binder named twice",
+    ),
+    pytest.param(
+        FUNCTIONS_AND_A_FORWARD_LINE.replace("LINE", "Inv(β)"),
+        "well-typed",
+        6,
+        ("`Inv(β)` inverts a number", "one function"),
+        id="Inv of a number",
+    ),
+    pytest.param(
+        FUNCTIONS_AND_A_FORWARD_LINE.replace("LINE", "𝑔(v)"),
+        "well-typed",
+        6,
+        ("argument 1 of the call to 𝑔 is a number", "a tuple of values"),
+        id="a function of a pair applied to a number",
+    ),
+    pytest.param(
+        FUNCTIONS_AND_A_FORWARD_LINE.replace("LINE", "𝑓"),
+        "well-typed",
+        6,
+        ("the right side of `w = 𝑓` is a function", "the left side a number"),
+        id="the two sides of a line of two kinds",
+    ),
+    pytest.param(
+        "[id=b, (d : {keep, adjust}) : !dcsn -> (y : ℝ) : !dcsn] {\n    y = d + 1\n}\n",
+        "well-typed",
+        3,
+        ("`d` is a label", "`d + 1` reads it as a number"),
+        id="arithmetic on a label",
+    ),
 ]
 
 
-@pytest.mark.parametrize("case", GRID_REFUSALS, ids=lambda case: case[0])
-def test_a_grid_the_record_of_its_constructor_does_not_admit_is_refused_under_its_rule(
-        case, grid_stage):
-    _, text, entries, declarations, settings, rule, (address, file), words = case
+@pytest.mark.parametrize("body, rule, line, words", TYPING_REFUSALS)
+def test_a_fault_found_when_a_line_is_typed_is_refused_at_the_line_under_its_rule(
+    body, rule, line, words
+):
+    """A line whose terms are of kinds that its operations do not take, or
+    that binds a name twice, is refused under its rule where the line
+    begins, in the package's own sentence with the row's words, which holds
+    neither `requires scalar operands` nor `task file`."""
     with pytest.raises(ConstructionError) as refused:
-        grid_stage(entries, declarations, text=text).configure({**GRID_VALUES, **settings})
+        stage_from_text("@stage: t\n" + body)
     error = refused.value
-    assert (error.rule, error.address, error.file) == (rule, address, file), str(error)
+    # each line is indented by four spaces, so it begins at column 5
+    assert (error.rule, error.line, error.column) == (rule, line, 5), (error.rule, error.line)
     assert all(word in error.message for word in words), (words, error.message)
+    # the texts of two plain errors that the typing raised before it refused
+    # a fault of a line under a rule; no code of the package writes either
+    # text now, and a fault of a line is refused with the package's own
+    # sentence
+    assert "requires scalar operands" not in error.message and "task file" not in error.message
 
 
-# the perfect-foresight stage whose arrival block, a forward builder, defines
-# cash on hand by an authored table on a `!node` line; a forward builder closes
-# with no Evaluation and its law of motion is not split at a forward node, so
-# the node's Evaluation has no row of its own, and a grid there discretizes the
-# states of the builder's output perch, (m), while the table is evaluated at k
-FORWARD_NODE = perfect_foresight_text(
-    ("@stage: perfect_foresight\n", "@stage: forward_node\n"),
-    ('Γ : ℝ₊₊          :: ["permanent income growth factor"]\n',
-     'Γ : ℝ₊₊          :: ["permanent income growth factor"]\nK : ℝ × ℝ × ℝ\nY : ℝ × ℝ × ℝ\n'),
-    ("    m = R_n*k + 1                   :: [id=market_resources]\n",
-     "    m = evaluate(K, Y, k)           :: [id=market_resources, !node]\n"),
+# --- the related locations of a refusal ---
+
+# A related location is a `Location` of the field `related` of a refusal: an
+# earlier item or a file that the refusal names beside the item it stands
+# at, under a role that says what it is: `original declaration` for the
+# earlier of two items written twice, `rejected setting` for the key of a
+# settings file and `settings source` for the settings file itself. The
+# refusal prints each related location on a line of its own after its
+# sentence.
+
+
+# The four refusals of the union of a stage file with a methods file, each
+# raised at the later item and naming the earlier one as its original
+# declaration: the rule, the later item's file, range and address, and the
+# earlier item's file and address.
+@pytest.mark.parametrize(
+    "rule, later, file, address",
+    [
+        pytest.param(
+            "declared-twice",
+            ("m.bl", 2, 29, 2, 49, "policy.policy.method"),
+            "m.bl",
+            "policy.method",
+            id="declared-twice",
+        ),
+        pytest.param(
+            "label-not-in-parent",
+            ("m.bl", 3, 5, 5, 6, "dcsn_to_cntn.rent"),
+            "t.bl",
+            "dcsn_to_cntn",
+            id="label-not-in-parent",
+        ),
+        pytest.param(
+            "type-conflict",
+            ("m.bl", 2, 26, 2, 38, "cntn_to_dcsn.out.V"),
+            "t.bl",
+            "cntn_to_dcsn.out.V",
+            id="type-conflict",
+        ),
+        pytest.param(
+            "metadata-mismatch",
+            ("m.bl", 1, 1, 1, 15, "1"),
+            "t.bl",
+            "1",
+            id="metadata-mismatch",
+        ),
+    ],
 )
-
-# the refusals of a representation whose place supplies no data its family
-# accepts, of a grid where the family reads none, of a grid beside an authored
-# table that discretizes another coordinate domain than the table's, and of an
-# expression the kernel compiler writes into no function (AMD-MT-003 build
-# contract §3): each case is the addition's entries, the rule, the address the
-# refusal names and words its message holds
-REPRESENTATION_REFUSALS = (
-    # the closed form refuses a representation grid
-    ("perfect_foresight", "n : ℕ\nlo : Xm\nhi : Xm\n[id=policy, policy.method : !explicit "
-     "| policy.evaluate.method : !closed_form "
-     "| policy.evaluate.grid : !Cartesian(m=(lo, hi, n))] {\n"
-     "    c = (1 - (R*β)^(1/ρ)/R)*(m - 1 + 1/(1 - Γ/R))    :: [id=consumption]\n}\n",
-     "grid-coordinate", "policy.evaluate",
-     ("!closed_form reads no grid", "remove the grid entry")),
-    # the closed form at the Evaluation of an !egm builder, which supplies
-    # pairs
-    ("cons_savings_iid", "n_a : ℕ\na_min : ℝ₊\na_max : ℝ₊\n[id=policy, method : !egm "
-     "| policy.grid : !Cartesian(a=(a_min, a_max, n_a)) | evaluate.method : !closed_form] {\n"
-     "    c[>] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[>])       :: [id=InvEuler]\n"
-     "    w[>] = a + c[>]                 :: [id=g_cntn_to_dcsn]\n"
-     "    c[~] = c[>]                     :: [id=cons_choice]\n}\n",
-     "representation-source", "policy.evaluate", ("!egm selects policy pairs", "accepts neither")),
-    # a family that reads the pairs of !egm, written with a grid there
-    ("cons_savings_iid", "n_a : ℕ\na_min : ℝ₊\na_max : ℝ₊\nn_w : ℕ\nw_min : ℝ₊\nw_max : ℝ₊\n"
-     "[id=policy, method : !egm | policy.grid : !Cartesian(a=(a_min, a_max, n_a)) "
-     "| evaluate.method : !Linear | evaluate.grid : !Cartesian(w=(w_min, w_max, n_w))] {\n"
-     "    c[>] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[>])       :: [id=InvEuler]\n"
-     "    w[>] = a + c[>]                 :: [id=g_cntn_to_dcsn]\n"
-     "    c[~] = c[>]                     :: [id=cons_choice]\n}\n",
-     "grid-coordinate", "policy.evaluate", ("reads the policy pairs", "the grid of !egm")),
-    # the closed form at a declared function whose expression is a derivative
-    ("cons_savings_iid", "𝑑𝑢.method : !closed_form\n", "representation-source", "𝑑𝑢",
-     ("complete authored expression", "supplies none")),
-    # a grid beside an authored table evaluated at an expression of the place's
-    # coordinate, whose knots are points of that expression and not of the
-    # coordinate the grid discretizes, a !Cartesian grid and a !Points grid
-    ("perfect_foresight", "K : ℝ × ℝ × ℝ\nY : ℝ × ℝ × ℝ\nKN : ℝ × ℝ × ℝ\n[id=dcsn_to_arvl] {\n"
-     "    W = evaluate(K, Y, R*k/Γ + 1)    :: [id=table]\n}\n"
-     "dcsn_to_arvl.table.evaluate.method : !Linear\n"
-     "dcsn_to_arvl.table.evaluate.grid : !Cartesian(k=KN)\n",
-     "representation-source", "dcsn_to_arvl.table.evaluate",
-     ("is evaluated at `R*k/Γ + 1`", "!Cartesian(k=KN) discretizes (k)")),
-    ("perfect_foresight", "K : ℝ × ℝ × ℝ\nY : ℝ × ℝ × ℝ\nP : ℝ × ℝ × ℝ\n[id=dcsn_to_arvl] {\n"
-     "    W = evaluate(K, Y, R*k/Γ + 1)    :: [id=table]\n}\n"
-     "dcsn_to_arvl.table.evaluate.method : !Linear\n"
-     "dcsn_to_arvl.table.evaluate.grid : !Points(nodes=P)\n",
-     "representation-source", "dcsn_to_arvl.table.evaluate",
-     ("is evaluated at `R*k/Γ + 1`", "!Points(nodes=P) discretizes (k)")),
-    # a table on two coordinates written at them in another order than the
-    # grid's, whose knots are points in that other order
-    ("grids", "MN : ℝ × ℝ\nZN : ℝ × ℝ\nK2 : X2 × X2 × X2 × X2\nY2 : ℝ × ℝ × ℝ × ℝ\n"
-     "[id=cntn_to_dcsn] {\n    W = evaluate(K2, Y2, (z, m))    :: [id=table]\n}\n"
-     "cntn_to_dcsn.table.evaluate.method : !Linear\n"
-     "cntn_to_dcsn.table.evaluate.grid : !Cartesian(m=MN, z=ZN)\n",
-     "representation-source", "cntn_to_dcsn.table.evaluate",
-     ("is evaluated at `(z, m)`", "discretizes (m, z)", "in the order of the grid's coordinates")),
-    # the closed form at a declared function whose body calls a function no
-    # definition declares, which the kernel compiler writes into no function
-    ("perfect_foresight", "𝑓(x : ℝ₊₊) := log(x)    :: [id=f]\n𝑓.method : !closed_form\n",
-     "representation-source", "𝑓",
-     ("the declared function '𝑓'", "the call `log(x)` names a function no definition")),
-    # the closed form at a declared function whose body calls a correspondence
-    # the stage declares, whose definition is a set and no closed form
-    ("perfect_foresight", "𝑓(x : Xm) := Γ_c(x)    :: [id=f]\n𝑓.method : !closed_form\n",
-     "representation-source", "𝑓",
-     ("the call `Γ_c(x)` names Γ_c", "whose definition is no expression in closed form")),
-    # the closed form typed at a node's line with a grid typed at the node's
-    # Evaluation, the two entries one assignment to the node's function
-    ("perfect_foresight", "n : ℕ\nlo : Xm\nhi : Xm\n[id=cntn_to_dcsn] {\n"
-     "    W = β*V[>]    :: [id=discounted, !node]\n}\n"
-     "cntn_to_dcsn.discounted.method : !closed_form\n"
-     "cntn_to_dcsn.discounted.evaluate.grid : !Cartesian(m=(lo, hi, n))\n",
-     "grid-coordinate", "cntn_to_dcsn.discounted.evaluate", ("!closed_form reads no grid",)),
-    # a grid beside the table of a forward node, which has no Evaluation of its
-    # own: the grid discretizes the states of the output perch, (m)
-    ("forward_node", "P : ℝ × ℝ × ℝ\narvl_to_dcsn.market_resources.evaluate.method : !Linear\n"
-     "arvl_to_dcsn.market_resources.evaluate.grid : !Points(nodes=P)\n",
-     "representation-source", "arvl_to_dcsn.market_resources.evaluate",
-     ("is evaluated at `k`", "!Points(nodes=P) discretizes (m)")),
-)
+def test_a_refusal_of_a_methods_file_names_the_earlier_item_as_its_original_declaration(
+    rule, later, file, address
+):
+    """A refusal of the union of a stage file with a methods file stands at
+    the later item and names the earlier item as its original declaration,
+    by position in its sentence and on a line of its own after the first."""
+    error = refusal_of(EXAMPLES[rule])
+    assert (error.rule, position(error)) == (rule, later)
+    (earlier,) = error.related
+    assert (earlier.role, earlier.file, earlier.address) == ("original declaration", file, address)
+    assert None not in (earlier.line, earlier.column, earlier.end_line, earlier.end_column)
+    assert f"{earlier.file}:{earlier.line}:{earlier.column} (term address {address!r})" in (
+        error.message
+    )
+    assert str(error).splitlines()[0].endswith(f"(address {later[-1]!r}; rule {rule})")
+    assert f"\n  {earlier}" in str(error)
 
 
-@pytest.mark.parametrize("case", REPRESENTATION_REFUSALS, ids=lambda case: f"{case[2]}:{case[3]}")
-def test_a_representation_whose_place_supplies_no_data_its_family_accepts_is_refused(
-        case, cons_savings_iid, perfect_foresight):
-    """A representation is refused where its family does not accept the data
-    its place supplies or the compiler writes no function of its expression,
-    and a grid is refused where the family reads none, the grid at a node's
-    Evaluation read with the representation typed at the node's line, or
-    where it stands beside an authored table on another coordinate domain or
-    on its coordinates in another order, each refusal positioned at the
-    entry in the addition."""
-    name, entries, rule, address, words = case
-    texts = {"grids": (TWO_STATE_GRID_STAGE, "grids.bl"),
-             "forward_node": (FORWARD_NODE, PERFECT_FORESIGHT_ORIGIN)}
-    stage = (
-        stage_from_text(*texts[name])
-        if name in texts
-        else {"cons_savings_iid": cons_savings_iid, "perfect_foresight": perfect_foresight}[name]
+def test_a_refusal_prints_its_original_declaration_and_then_its_action_on_lines_of_their_own():
+    """The refusal of a methods file that names the stage `port` for the
+    consumption stage prints, after its first line, the `@stage` line as its
+    original declaration and then its action."""
+    error = refusal_of(EXAMPLES["metadata-mismatch"])
+    # the line `@stage: cons`, of twelve characters, stands from column 1 to
+    # column 13 of line 1
+    assert tuple(error.related[0]) == ("original declaration", "t.bl", 1, 1, 1, 13, "1")
+    assert error.write == "Write `@methods: cons`"
+    assert str(error).endswith(
+        "\n  original declaration: t.bl:1:1-1:13 (address '1')\n  write: Write `@methods: cons`"
+    )
+
+
+def test_a_key_written_twice_in_a_trellis_file_is_refused_at_the_second_naming_the_first(
+    tmp_path,
+):
+    """A trellis file that writes the key `periods` twice is refused under
+    `trellis-file-shape` at the second key, with the first as its original
+    declaration."""
+    trellis = tmp_path / "trellis.yml"
+    trellis.write_text(
+        f"periods:\n  - stages:\n      cons: {{stage: {ROOT / CORPUS['cons']}}}\n"
+        "    connectors: []\nperiods: []\ninter_connectors: []\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(FactoryError) as refused:
+        load_trellis(trellis)
+    error = refused.value
+    # the second key `periods` stands on line 5, the first on line 1
+    assert (error.rule, error.file, error.line, error.column, error.address) == (
+        "trellis-file-shape",
+        str(trellis),
+        5,
+        1,
+        "periods",
+    )
+    assert tuple(error.related[0]) == (
+        "original declaration",
+        str(trellis),
+        1,
+        1,
+        None,
+        None,
+        "periods",
+    )
+    assert str(error).startswith(
+        f"{trellis}:5:1: address 'periods': the key 'periods' is written twice"
+    )
+    assert str(error).endswith(f"\n  original declaration: {trellis}:1:1 (address 'periods')")
+
+
+def test_a_setting_outside_its_set_is_refused_at_its_declaration_naming_its_key_in_the_file(
+    tmp_path, stage_with_one_addition
+):
+    """A settings file whose value of a_min lies outside its declared set is
+    refused at the declaration of a_min in the methods file, with the key
+    a_min of the settings file as the rejected setting."""
+    example = EXAMPLES["setting-outside-set"]
+    stage = stage_with_one_addition(text_of(example), example.additions[0][1])
+    settings = tmp_path / "settings.yml"
+    settings.write_text(SETTINGS_OUTSIDE_THE_SET, encoding="utf-8")
+    with pytest.raises(ConstructionError) as refused:
+        stage.configure(settings)
+    error = refused.value
+    # a_min is declared on line 3 of the methods file
+    assert (error.rule, error.file, error.line, error.address) == (
+        "setting-outside-set",
+        "methods.bl",
+        3,
+        "methods.bl:3",
+    )
+    assert tuple(error.related[0]) == (
+        "rejected setting",
+        str(settings),
+        3,
+        3,
+        None,
+        None,
+        "a_min",
+    )
+
+
+def test_after_a_refused_configuration_a_file_without_a_value_is_refused_naming_that_file(
+    tmp_path, stage_with_one_addition
+):
+    """A stage refused one settings file keeps none of its values, so a
+    second file that gives no value of the declared setting n_a is refused
+    under `setting-unvalued`, naming the second file as the settings
+    source."""
+    example = EXAMPLES["setting-outside-set"]
+    stage = stage_with_one_addition(text_of(example), example.additions[0][1])
+    settings = tmp_path / "settings.yml"
+    settings.write_text(SETTINGS_OUTSIDE_THE_SET, encoding="utf-8")
+    with pytest.raises(ConstructionError):
+        stage.configure(settings)
+    unvalued = tmp_path / "unvalued.yml"
+    unvalued.write_text("settings:\n  a_min: 0.0\n  a_max: 20.0\n", encoding="utf-8")
+    with pytest.raises(ConstructionError) as refused:
+        stage.configure(unvalued)
+    assert refused.value.rule == "setting-unvalued"
+    assert tuple(refused.value.related[0]) == (
+        "settings source",
+        str(unvalued),
+        None,
+        None,
+        None,
+        None,
+        None,
+    )
+
+
+def test_a_trellis_record_whose_setting_lies_outside_its_set_is_refused_naming_its_key(
+    tmp_path,
+):
+    """A trellis record that names a stage file, its methods file and a
+    settings file whose a_min lies outside its declared set is refused by
+    `specify_trellis` with the key a_min of that settings file as the
+    rejected setting."""
+    example = EXAMPLES["setting-outside-set"]
+    settings = tmp_path / "settings.yml"
+    settings.write_text(SETTINGS_OUTSIDE_THE_SET, encoding="utf-8")
+    (tmp_path / "t.bl").write_text(text_of(example), encoding="utf-8")
+    (tmp_path / "methods.bl").write_text(example.additions[0][1], encoding="utf-8")
+    bound = tmp_path / "bound.yml"
+    bound.write_text(
+        "periods:\n  - stages:\n"
+        "      t: {stage: t.bl, methods: methods.bl, settings: settings.yml}\n"
+        "    connectors: []\ninter_connectors: []\n",
+        encoding="utf-8",
     )
     with pytest.raises(ConstructionError) as refused:
-        copy_native(stage).methodize(
-            {"text": f"@methods: {name}\n{entries}", "origin": "entries.bl"}
-        )
-    error = refused.value
-    assert (error.rule, error.address, error.file) == (rule, address, "entries.bl")
-    assert error.line is not None and error.write
-    for word in words:
-        assert word in error.message, (word, error.message)
+        specify_trellis(load_trellis(bound))
+    assert (refused.value.rule, refused.value.address) == (
+        "setting-outside-set",
+        f"{tmp_path / 'methods.bl'}:3",
+    )
+    assert tuple(refused.value.related[0]) == (
+        "rejected setting",
+        str(settings),
+        3,
+        3,
+        None,
+        None,
+        "a_min",
+    )
 
 
-# the refusals of an explicit solution (AMD-MT-003 build contract §5): the
-# lines appended to a builder of the perfect-foresight stage under a method
-# word, or an entry alone, with the rule, the address, the words of the
-# refusal and the line of the addition at which it stands, the line at fault
-# or, where no line is at fault, the typing entry on the second line; None
-# where the refusal is checked where the version is bound
-_SOLVING = "!egm or !time_iteration, whose block reads the continuation value"
-EXPLICIT_REFUSALS = (
-    ("policy.method : !explicit\n", "explicit-solution", "policy",
-     ("no addition appends a line to the block", "`[id=policy, policy.method : !explicit]`"), 2),
-    ("arvl_to_dcsn.method : !explicit\n", "explicit-solution", "arvl_to_dcsn",
-     ("is a forward builder", "policy builder or on a backward value builder"), 2),
-    ("[id=policy, policy.method : !explicit] {\n    c^(-ρ) = β*R*D_{a}V[>]    :: [id=euler]\n}\n",
-     "explicit-solution", "policy", ("`policy.euler`", "states a relation", _SOLVING), 3),
-    ("[id=policy, policy.method : !explicit] {\n"
-     "    c = (β*D_{a}V[>])^(-1/ρ)    :: [id=inverse]\n}\n",
-     "explicit-solution", "policy", ("reads V[>], a value input", _SOLVING), 3),
-    ("[id=cntn_to_dcsn, cntn_to_dcsn.method : !explicit] {\n    V = 𝑢(c)/(1-β)\n}\n",
-     "explicit-solution", "cntn_to_dcsn", ("reads c, a control input", _SOLVING), 3),
-    ("[id=policy, policy.method : !explicit] {\n    κ = 1 - (R*β)^(1/ρ)/R    :: [id=mpc]\n"
-     "    c = argmax_{cp : Γ_c(m)}(κ*𝑢(cp))    :: [id=chosen]\n}\n",
-     "explicit-solution", "policy",
-     ("`policy.chosen`", "applies argmax, an operator", _SOLVING), 4),
-    ("[id=policy, policy.method : !explicit] {\n    c = D_{m}(m^2)    :: [id=slope]\n}\n",
-     "explicit-solution", "policy", ("applies D, an operator", _SOLVING), 3),
-    ("[id=policy, policy.method : !explicit] {\n    c[>] = (1 - (R*β)^(1/ρ)/R)*(a + 1)\n"
-     "    c = c[>]\n}\n",
-     "explicit-solution", "policy", ("defines c[>], a field at another perch", "under !egm"), 3),
-    ("[id=policy, policy.method : !explicit] {\n    κ = 1 - (R*β)^(1/ρ)/R    :: [id=mpc]\n}\n",
-     "explicit-solution", "policy",
-     ("no line the addition appends writes c", "write a line `c = <expression>` in the block"), 2),
-    ("[id=policy, policy.method : !time_iteration] {\n"
-     "    c = (1 - (R*β)^(1/ρ)/R)*(m - 1 + 1/(1 - Γ/R))    :: [id=consumption]\n}\n",
-     "explicit-solution", "policy", ("builder under !time_iteration", "type !explicit"), 2),
-    # an output whose row the kernel compiler refuses, checked where the
-    # version is bound, after the construction's exclusions
-    ("[id=policy, policy.method : !explicit] {\n    c = log(m)    :: [id=consumption]\n}\n",
-     "explicit-solution", "policy", ("has no executable compiled kernel", "under kernel-form"),
-     None),
-)
+def test_a_typing_of_the_derivative_operator_is_refused_over_the_range_of_its_entry():
+    """The entry `D.method : !Linear` is refused under
+    `no-method-for-derivative` over its range on line 3, at its term
+    address."""
+    error = refusal_of(EXAMPLES["no-method-for-derivative"])
+    # the entry, of eighteen characters, stands from column 1 to column 19;
+    # its term address, 7, counts the items of the stage with the typing
+    # entries after the blocks: the `@stage` line, β, the four blocks, then
+    # the entry
+    assert (error.rule, position(error)) == (
+        "no-method-for-derivative",
+        ("t.bl", 3, 1, 3, 19, "7"),
+    )
 
 
-@pytest.mark.parametrize("case", EXPLICIT_REFUSALS, ids=lambda case: case[0].split("\n")[0][:40])
-def test_an_explicit_solution_that_reads_a_value_states_a_relation_or_misses_an_output_is_refused(
-        case, perfect_foresight):
-    """An `!explicit` builder with no block of its id in an addition, a
-    forward builder, a relation, a read of a value input's derivative or of
-    the control at which a value builder's declared lines are read, an
-    operator, a field at another perch, a missing output and an output the
-    kernel compiler writes into no function are refused, and so is a
-    formula-only block under `!time_iteration`, each naming its cause and
-    the method under which such a line is written, at the line at fault or
-    at the typing entry where no line is."""
-    entries, rule, address, words, line = case
+def test_a_method_typed_twice_at_one_place_is_refused_at_the_second_naming_the_first():
+    """The method of the value of `cntn_to_dcsn`, typed by `evaluate.method`
+    and again by `evaluate[V].method`, is refused at the second typing,
+    with the first as its original declaration, named in the sentence by
+    position."""
+    error = refusal_of(EXAMPLES["component-typed-twice"])
+    # line 10 reads `    | evaluate.method : !Linear | evaluate[V].method :
+    # !pchip] {`: the first typing, of 25 characters, stands from column 7 to
+    # column 32, and the second, of 27 characters, from column 35 to column 62
+    assert position(error) == ("t.bl", 10, 35, 10, 62, "cntn_to_dcsn.evaluate[V].method")
+    assert tuple(error.related[0]) == (
+        "original declaration",
+        "t.bl",
+        10,
+        7,
+        10,
+        32,
+        "cntn_to_dcsn.evaluate.method",
+    )
+    assert "at t.bl:10:7 and by" in error.message
+
+
+def test_an_expectation_binder_already_bound_where_it_stands_is_refused_at_its_declaration():
+    """A distribution whose parameter reads `E_{z}(E_{z}(z))` is refused
+    under `declared-once` at its declaration, since the inner expectation
+    binds z where the outer one already binds it."""
     with pytest.raises(ConstructionError) as refused:
-        copy_native(perfect_foresight).methodize(
-            {"text": "@methods: perfect_foresight\n" + entries, "origin": "explicit.bl"})
+        stage_from_text("@stage: t\nz ~ N(0,1)\nw ~ N(E_{z}(E_{z}(z)), 1)\n")
     error = refused.value
-    assert (error.rule, error.address) == (rule, address)
-    if line is not None:
-        assert (error.file, error.line) == ("explicit.bl", line)
-    for word in words:
-        assert word in error.message, (word, error.message)
+    # the declaration of w is the third item of the file, on its third line,
+    # counting the `@stage` line as the first
+    assert (error.rule, error.address, error.line) == ("declared-once", "3", 3)
+    assert "binds 'z', a name already bound where it stands" in error.message
 
 
-# --- AMD-MT-003 unit D: the refusals of the scalar evaluators ---
-
-# each refusal of the scalar evaluators of the perfect-foresight
-# application's module (build contract §4): the construction, given the
-# module, and the words its message holds
-EVALUATOR_REFUSALS = {
-    "one node": (lambda check: check.Linear([0.0], [1.0]), "at least two nodes"),
-    "a value missing": (lambda check: check.Pchip([0.0, 1.0, 2.0], [1.0, 2.0]),
-                        "one value aligned with each node"),
-    "values on two coordinates": (lambda check: check.Linear([0.0, 1.0], [[1.0, 2.0], [3.0, 4.0]]),
-                                  "one-dimensional"),
-    "nodes out of order": (lambda check: check.Linear([0.0, 2.0, 1.0], [1.0, 2.0, 3.0]),
-                           "strictly increasing"),
-    "a repeated node": (lambda check: check.Pchip([0.0, 1.0, 1.0], [1.0, 2.0, 3.0]),
-                        "neither sorted nor merged"),
-    "a node that is not finite": (lambda check: check.Linear([0.0, math.inf], [1.0, 2.0]),
-                                  "not finite"),
-    "a value that is not finite": (lambda check: check.Pchip([0.0, 1.0], [math.nan, 2.0]),
-                                   "not finite"),
-    "nodes the conversion merges": (lambda check: check.Linear([2**53, 2**53 + 1], [1.0, 2.0]),
-                                    "merges distinct nodes"),
-    "a point outside the nodes": (lambda check: check.Linear([0.0, 1.0], [1.0, 2.0])(1.5),
-                                  "outside the closed node interval"),
-    "a PCHIP extrapolation": (lambda check: check.Pchip([0.0, 1.0, 2.0], [1.0, 2.0, 4.0])(-0.5),
-                              "PCHIP extrapolation is refused"),
-    "a derivative not offered": (
-        lambda check: check.Linear([0.0, 1.0], [1.0, 2.0]).derivative(0.5, 2),
-        "offers the derivatives of orders 1"),
-    "an extension below the limit": (
-        lambda check: check.Linear([0.0, 1.0], [0.5, 1.0]).extend(
-            [-2.0], check.EndpointSecant(-1.0)),
-        "restricted to the economic domain"),
-    "an infeasible extension": (
-        lambda check: check.Linear([0.0, 1.0], [0.1, 2.0]).extend(
-            [-0.5], check.EndpointSecant(-1.0)),
-        "leaves the feasible set"),
-}
+# --- the action of a refusal and the command line ---
 
 
-@pytest.mark.parametrize("case", sorted(EVALUATOR_REFUSALS))
-def test_a_scalar_evaluator_refuses_data_and_points_outside_its_rules(case):
-    """The Linear and PCHIP evaluators of the perfect-foresight application
-    refuse fewer than two nodes, values not aligned one to a node, nodes out
-    of order or repeated, nodes or values that are not finite, a conversion
-    to floating point that merges nodes, a point outside the closed node
-    interval, a PCHIP extrapolation and a derivative order not offered; the
-    endpoint-secant extension refuses a point at or below its limit and a
-    value outside the feasible set. Each message names its condition."""
-    construction, words = EVALUATOR_REFUSALS[case]
-    with pytest.raises(ValueError) as refused:
-        construction(closed_form_check())
-    assert words in str(refused.value), str(refused.value)
+def test_the_refusal_of_a_state_in_a_backward_header_writes_the_header_without_it():
+    """The action of the refusal of a backward header that lists the state
+    x_d is the header without x_d."""
+    error = refusal_of(EXAMPLES["header-coordinate"])
+    assert (
+        error.write == "Remove x_d from the header: `(V[>] : ℝ @ !vlu) -> (V : ℝ @ !vlu) : !dcsn`"
+    )
+
+
+def test_the_command_line_prints_a_refusal_as_its_first_line_and_then_its_action(tmp_path):
+    """On a refused stage file, `python -m bellman` prints the refusal's
+    position, sentence, address and rule on its first line and the action
+    on the next, exiting with status 1."""
+    example = EXAMPLES["header-coordinate"]
+    file = tmp_path / "t.bl"
+    file.write_text(text_of(example), encoding="utf-8")
+    error = refusal_of(example)
+    out = io.StringIO()
+    # `main` is the function that `python -m bellman` runs
+    with redirect_stdout(out):
+        assert main([str(file)]) == 1
+    first, *after = out.getvalue().splitlines()
+    # the refused block `cntn_to_dcsn` stands from line 5, column 1 to line
+    # 7, column 2
+    assert first == (
+        f"{file}:5:1-7:2: {error.message} (address 'cntn_to_dcsn'; rule header-coordinate)"
+    )
+    assert after == [f"  write: {error.write}"]

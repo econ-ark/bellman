@@ -136,9 +136,10 @@ $|V_\prec''(k)| = \rho\,R^{1-\rho}\kappa^{-\rho}(k - L)^{-\rho-1}$.
 Over a finite horizon of $N$ periods the coefficients are dated: human wealth
 is $h_N = \sum_{n=0}^{N-1} (\Gamma/R)^n$, the marginal propensity to consume
 is $\kappa_N = 1/\sum_{n=0}^{N-1} q^n$, and in the last period the household
-consumes its resources, $c = m$. Repeating the stationary stage with constant
-$h$ and $\kappa$ does not construct that problem, and no finite-horizon claim
-is made here.
+consumes its resources, $c = m$. The stage now computes human wealth backward.
+Its strict feasibility inequality still excludes that last-period choice, and
+the stationary methods retain constant $\kappa$. The numerical comparison
+of human wealth therefore does not establish a finite-horizon consumption solution.
 
 ## The conditions
 
@@ -162,9 +163,9 @@ value, and is not this stage.
 The files state each condition so that a calibration that breaks it is
 refused, with the condition named:
 
-| Condition | How it is stated | Where it is refused |
+| Condition | Declaration | Refusal |
 |---|---|---|
-| $\Gamma < R$ | the declared set of the growth factor, `Γ : (0, R)` | `calibrate`, which decides an interval whose endpoints are parameters |
+| $\Gamma < R$ | `h_lim : ℝ₊₊ := 1/(1 - Γ/R)` in the closed-form methods | `calibrate` with those methods; `gridded_route` also requires finite stationary human wealth |
 | $q < 1$ | the declared set of the discount factor, `β : ℝ₊₊ @ (0, R^(ρ-1))`, whose upper bound $R^{\rho-1}$ is the condition written for $\beta$, and the set that the definition of the return patience factor declares, `q : (0,1) := (β*R)^(1/ρ)/R` | `calibrate`, under each methods file; a discount factor one rounding step below the bound, at which $q$ computes to one, is refused by the set of $q$ |
 | $\rho > 1$ | the declared set `ρ : (1, inf)` | `calibrate` |
 | finite parameters | the declared sets of the four parameters | `calibrate` |
@@ -191,7 +192,9 @@ so a household with no assets, $m = 1$, consumes $c = \kappa h = 2$, twice
 its permanent income. A second calibration, $\beta = 0.9$, $\rho = 2$,
 $R = 1.04$ and $\Gamma = 1.01$, gives $h = 1/(1 - 1.01/1.04) \approx 34.7$.
 
-## What the stage file cannot state
+<a id="what-the-stage-file-cannot-state"></a>
+
+## Solution and horizon
 
 - **The solution.** The stage file states the problem; the closed form is a
   method's. The addition `methods.bl` types `!explicit` on the policy builder
@@ -206,12 +209,15 @@ $R = 1.04$ and $\Gamma = 1.01$, gives $h = 1/(1 - 1.01/1.04) \approx 34.7$.
 - **The domain of the solution.** The ambient sets of the stage are the real
   line, and the feasible set is empty at $m \le L$. The closed form holds on
   $m > L$, and the module refuses an evaluation elsewhere.
-- **The horizon.** The stage is one period of the stationary problem.
+- **The horizon.** The stage sends human wealth backward for one period. The methods file gives the stationary consumption coefficient, not its finite-horizon recursion.
 
 ## The two numerical routes
 
 The module `code/closed_form_check.py` binds each methods file through
-`elaborate`, `methodize`, `calibrate` and `configure`.
+`elaborate`, `methodize`, `calibrate` and `configure`. Each numerical route
+checks both continuation inputs, `V[>]` and `h[>]`, before constructing
+kernels or grids. Its result retains unresolved callable conditions as
+`input_conditions`.
 
 The closed-form route reads the consumption function, the decision value and
 the arrival value, with the two marginals, from the compiled kernels of the
@@ -244,8 +250,14 @@ $10^{-3}$ to 1, the converged policy of a grid of savings that starts just
 above $L$ is compared with the closed form by relative policy and Euler
 errors and by a Bellman residual scaled by the value.
 
+The separate function `gridded_step` computes one backward step for a supplied
+continuation value, finite human wealth, and marginal value. It requires no
+stationary human-wealth limit and remains usable when $\Gamma \ge R$. The
+supplied derivative must agree with the supplied value; this condition
+is not established by the computation.
+
 The notebook `code/closed-form-and-grid.ipynb` shows each step and each
-comparison.
+comparison, including terminal-zero and stationary human wealth.
 
 ## References
 

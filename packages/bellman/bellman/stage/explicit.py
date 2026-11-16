@@ -218,12 +218,11 @@ def explicit_faults(stage, block):
             if fault is not None:
                 faults.append(fault + (line.address,))
                 continue
-            name, side = _defined(core)
-            identity = ctx.resolve(name, block, side)
+            (identity,) = ctx.defined(core, block)
             if identity in roles:
                 defined.setdefault(identity, line.address)
             else:
-                local.add(name)
+                local.add(identity.field)
         inner = core.core if isinstance(core, T.Slack) else core
         rhs = derivative[2] if derivative is not None else inner.rhs
         fault = _reading_fault(ctx, block, perch, inputs, rhs, where, local)
@@ -244,16 +243,6 @@ def explicit_faults(stage, block):
     return tuple(faults)
 
 
-def _defined(core):
-    """The name and the perch mark of the one name a defining line's left
-    side writes."""
-    inner = core.core if isinstance(core, T.Slack) else core
-    symbol = inner.lhs.symbol
-    if isinstance(symbol, T.Variable) and isinstance(symbol.when, T.At):
-        return symbol.name, symbol.when.side
-    return symbol.name, None
-
-
 def _defining_fault(ctx, block, perch, core, where):
     """The fault of a line that defines no name by an expression at the
     builder's output perch: a relation, a complementarity, a left side that
@@ -267,9 +256,11 @@ def _defining_fault(ctx, block, perch, core, where):
             "Write the line as `<name> = <expression>`, or type !egm or !time_iteration on "
             "the builder for a block that states the relation",
         )
-    name, side = _defined(core)
-    identity = ctx.resolve(name, block, side)
-    if identity.kind == "field" and identity.perch not in (None, perch) and side is not None:
+    symbol = core.lhs.symbol
+    if not isinstance(symbol, T.Variable) or not isinstance(symbol.when, T.At):
+        return None
+    (identity,) = ctx.defined(core, block)
+    if identity.kind == "field" and identity.perch not in (None, perch):
         return (
             f"{where} defines {to_source(core.lhs)}, a field at another perch, the candidate a "
             "grid method computes at each point of its grid; an explicit solution defines its "

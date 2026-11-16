@@ -1,5 +1,7 @@
 @stage: keeper_cons
 
+Age := {20, …, 71}
+
 β   : (0,1)       :: ["discount factor"]
 α   : (0,1)       :: ["weight of consumption in utility"]
 γ_c : (1, inf)    :: ["curvature of utility from consumption"]
@@ -18,7 +20,7 @@
     z_nxt_kp = z_d                                     :: [id=income_state]
 }
 
-[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) -> (V : ℝ @ !vlu) : !dcsn] {
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, age : Age @ !vlu @ !cnst, c) : !cntn -> (V : ℝ @ !vlu, age) : !dcsn] {
     V = 𝑢(c, h_d) + β*V[>]                             :: [id=value]
 }
 

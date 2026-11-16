@@ -9,8 +9,9 @@ the effective period bindings.
 A field of a stage occurrence is identified by its period, its stage key,
 its perch and its local name: `cons.a` and `port.a` are two fields. A
 **use** eligible for a connection is a state field at the continuation
-perch, which leaves its stage, or at the arrival perch, which enters it; a
-decision field is no endpoint. An authored endpoint resolves to exactly one
+perch, which leaves its stage, or at the entry perch, which enters it.
+An authored connector may also pair a continuation value requirement
+with a value supplied at the entry perch. An authored endpoint resolves to exactly one
 eligible use: a bare name `a` where one use of that name stands at the
 perch in the period, a qualified name `cons.a` naming the exact stage key
 before the final dot, a keyed connector `{from: cons, to: port, fields:
@@ -71,12 +72,11 @@ those coordinates, the finite measure that holds the branch's mass; and
 where the backward components agree: the arrival value functions the
 destination supplies answer the continuation value functions the source's
 branch requires, each required component paired with a supplied one of its
-role (by a declared pairing of their coordinates read under the route's
-map, by one component of the role on each side where their declarations do
-not disagree, or by equal names where the route's permutation is the
-identity), its result set, read in the source's
-order where it is a product, lying in the required set, its shape the
-same. An authored cycle that includes a route, or a second authored claim
+role. Explicit pairs are resolved first, then equal names with perch marks
+removed, and finally a sole remaining pair when the required field is
+not kept. The supplied function may depend only on states that the state
+pairs associate with permitted coordinates of the required field. Its
+result set must lie in the required set. An authored cycle that includes a route, or a second authored claim
 on one of its continuation fields, withholds its certificate. A
 nonnegative marginal value admits zero and so
 does not satisfy a strictly positive requirement. One coordinate from each
@@ -110,8 +110,12 @@ from numbers import Real
 from types import MappingProxyType
 from typing import NamedTuple
 
-from bellman.fold.block_lines import parameter_sets
+from bellman.fold.block_lines import blocks_in_file_order, header_of, parameter_sets
 from bellman.fold.derived_parameters import derived_order, derived_value
+from bellman.fold.stage_fold import stage_blocks_of
+from bellman.fold.stage_names import StageNames, lines_of
+from bellman.native.identity import Identity
+from bellman.native.records import Condition
 from bellman.native.provenance import source_description
 from bellman.native.versions import StageVersion
 from bellman.refusals import Diagnostic, FactoryError, written_kind
@@ -119,7 +123,9 @@ from bellman.stage.grains import graph_of, graph_refusal
 from bellman.stage.stage_answers import branches, entry_perch, fields
 from bellman.syntax import terms as T
 from bellman.syntax.source import bound_name, bracket_of, to_source
+from bellman.syntax.vocabulary import DOC, VALUE_ROLES
 from bellman.typing import category_codes, sets
+from bellman.typing.typed_expressions import substitute
 
 __all__ = [
     "Candidate",
@@ -153,10 +159,12 @@ CERTIFIED, UNCERTIFIED = "certified", "uncertified"
 # the three keys of a keyed connector
 _KEYED = ("from", "to", "fields")
 # the two rules by which a required backward component is paired with a
-# supplied one, in the order they are tried (`_paired`); the pairing by
-# the coordinates two marginal values' names declared is retired with the
-# marginal roles (AMD-MB-001 R2)
+# supplied one where no connector writes its pair (`EXPLICIT_PAIR`):
+# `_paired` takes a written pair first, then equal names, then the one
+# field left on each side; the pairing by the coordinates two marginal
+# values' names declared is retired with the marginal roles (AMD-MB-001 R2)
 PAIRING_RULES = ("one wire per role", "equal name")
+EXPLICIT_PAIR = "explicit connector"
 # A constructed draft retains semantic conflicts. Operations that require a
 # valid dependency order still refuse the rules below.
 REFUSING_RULES = ("connector-shape", "use-claimed-twice", "authored-cycle", "selected-cycle")
@@ -245,7 +253,8 @@ class Component(NamedTuple):
     the `supplied` wire of the destination's arrival perch paired with it,
     or None; the `role`; the `status`; the `reason`; the `basis`, the
     bindings the comparison of the result sets read; and the `rule` that
-    paired the two, one of `PAIRING_RULES`, empty where none did."""
+    paired the two, `EXPLICIT_PAIR` or one of `PAIRING_RULES`, empty where
+    none did."""
 
     required: str
     supplied: object
@@ -306,7 +315,8 @@ class Selection(NamedTuple):
     and destination stage among the pairs, certified or not; `rejected`, the
     candidate pairs not selected, with why; `diagnostics`; `counts`; and
     `bindings`, the digest of the effective calibration at each position the
-    selection was given, the basis a compatibility result names."""
+    selection was given, the basis a compatibility result names; and
+    `value_uses`, the eligible endpoints of explicit backward pairs."""
 
     uses: tuple
     pairs: tuple
@@ -316,6 +326,7 @@ class Selection(NamedTuple):
     diagnostics: tuple
     counts: Mapping
     bindings: Mapping
+    value_uses: tuple = ()
 
 
 def select_connections(periods, inter_connectors, calibrations=None, *, first=0):
@@ -335,12 +346,13 @@ def select_connections(periods, inter_connectors, calibrations=None, *, first=0)
     nothing: what an author wrote that resolves to no pair, and what cannot
     be certified, stands in `diagnostics`."""
     uses, domains = _uses(periods, first)
-    index = _Index(uses)
-    pairs, diagnostics, reserved = _authored_connections(
+    types = _Types(periods, domains, calibrations, first)
+    value_uses = tuple(_value_uses(types))
+    index = _connection_index(uses, value_uses)
+    pairs, diagnostics, reserved, value_pairs = _authored_connections(
         periods, inter_connectors, index, first=first
     )
     groups, excluded = _candidates(periods, index, pairs, reserved, first)
-    types = _Types(periods, domains, calibrations, first)
     pairs = [types.checked(pair) for pair in pairs]
     for pair in pairs:
         if pair.compatibility != COMPATIBLE:
@@ -388,7 +400,8 @@ def select_connections(periods, inter_connectors, calibrations=None, *, first=0)
         is component_of.get((pair.reading.h, pair.reading.key))
     }
     routes = []
-    for route, depends_on in _conflicted_routes(_routes(selected, types), diagnostics, cyclic_pairs):
+    built = _routes(selected, types, value_pairs, diagnostics)
+    for route, depends_on in _conflicted_routes(built, diagnostics, cyclic_pairs):
         routes.append(route)
         if route.status != CERTIFIED:
             diagnostics.append(_route_diagnostic(route, depends_on))
@@ -415,6 +428,7 @@ def select_connections(periods, inter_connectors, calibrations=None, *, first=0)
         diagnostics=tuple(diagnostics),
         counts=MappingProxyType(counts),
         bindings=MappingProxyType(types.bindings),
+        value_uses=value_uses,
     )
 
 
@@ -520,6 +534,23 @@ def _uses(periods, first=0):
     return found, domains
 
 
+def _connection_index(uses, value_uses):
+    """The state and value endpoint indexes for one selection."""
+    return _Index(uses, values=_Index(value_uses))
+
+
+def _value_uses(types):
+    """The continuation requirements and the entry supplies of each stage."""
+    for h, period in enumerate(types.periods, types.first):
+        for key in period["stages"]:
+            text = types.text((h, key))
+            for sort in text.required:
+                name = sort.identity.field
+                yield FieldUse(h, key, WRITING, name, text.value_branches.get(name))
+            for sort in text.supplied:
+                yield FieldUse(h, key, text.entry, sort.identity.field, None)
+
+
 def _side(perch):
     """The side of a connector a use at `perch` stands on: `WRITING` at the
     continuation perch, `READING` at the entry perch, the arrival perch or,
@@ -531,7 +562,8 @@ class _Index:
     """The uses by period, side and field name, and by period, key and side;
     a side is named by `WRITING` or `READING` (`_side`)."""
 
-    def __init__(self, uses):
+    def __init__(self, uses, *, values=None):
+        self.values = values
         self.by_name = {}
         self.by_key = {}
         for use in uses:
@@ -567,10 +599,14 @@ def _authored_connections(periods, inter_connectors, index, *, first=0):
     reserved when its other endpoint fails. No type or route is checked.
     """
     pairs, diagnostics, claimed, reserved = [], [], {}, set()
+    value_pairs = {}
     for h, period in enumerate(periods, first):
         for number, connector in enumerate(period.get("connectors") or []):
             address = f"periods[{h}].connectors[{number}]"
-            _authored(connector, h, h, address, index, pairs, diagnostics, claimed, reserved)
+            _authored(
+                connector, h, h, address, index, pairs, diagnostics, claimed, reserved,
+                value_pairs=value_pairs,
+            )
     for i, mapping in enumerate(inter_connectors):
         if i + 1 >= len(periods):
             break
@@ -586,10 +622,10 @@ def _authored_connections(periods, inter_connectors, index, *, first=0):
             diagnostics,
             claimed,
             reserved,
-            between=True,
+            between=True, value_pairs=value_pairs,
         )
     _authored_cycles(pairs, diagnostics)
-    return pairs, diagnostics, reserved
+    return pairs, diagnostics, reserved, value_pairs
 
 
 def _authored(
@@ -603,6 +639,8 @@ def _authored(
     claimed,
     reserved,
     between=False,
+    *,
+    value_pairs,
 ):
     """The pairs the connector at `address` writes, from the continuation
     uses of `periods[h_from]` to the arrival uses of `periods[h_to]`,
@@ -657,9 +695,28 @@ def _authored(
         source_address = f"{address}.fields"
     for source, target in entries.items():
         source_entry = (source_address, str(source), str(target))
+        owner, role = index, "state"
+        source_name, target_name = str(source), str(target)
+        if index.values is not None:
+            values = index.values
+            state_from = index.resolve(source_name, h_from, WRITING, from_key)
+            state_to = index.resolve(target_name, h_to, READING, to_key)
+            value_from = values.resolve(_bare_field(source_name), h_from, WRITING, from_key)
+            value_to = values.resolve(_bare_field(target_name), h_to, READING, to_key)
+            if state_from and state_to and value_from and value_to:
+                diagnostics.append(Diagnostic(
+                    "endpoint-ambiguous", address,
+                    f"{source!r} and {target!r} name both state and value pairs; "
+                    "qualify the fields with their stage keys",
+                    tuple(state_from + state_to + value_from + value_to), (source_entry,),
+                ))
+                continue
+            if not (state_from and state_to) and (value_from or value_to):
+                owner, role = values, "value"
+                source_name, target_name = _bare_field(source_name), _bare_field(target_name)
         writing = _one(
-            index,
-            str(source),
+            owner,
+            source_name,
             h_from,
             WRITING,
             from_key,
@@ -667,10 +724,11 @@ def _authored(
             diagnostics,
             between,
             source_entry,
+            role=role,
         )
         reading = _one(
-            index,
-            str(target),
+            owner,
+            target_name,
             h_to,
             READING,
             to_key,
@@ -678,8 +736,12 @@ def _authored(
             diagnostics,
             between,
             source_entry,
+            role=role,
         )
-        reserved.update(use for use in (writing, reading) if use is not None)
+        if role == "state":
+            reserved.update(use for use in (writing, reading) if use is not None)
+        elif writing is not None and reading is None:
+            value_pairs.setdefault(writing, None)
         if writing is None or reading is None:
             continue
         pair = Pair(
@@ -715,12 +777,22 @@ def _authored(
                     _sources((claimed[writing], pair)),
                 )
             )
+            if role == "value":
+                value_pairs[writing] = None
             continue
         claimed[writing] = pair
-        pairs.append(pair)
+        if role == "value":
+            value_pairs[writing] = pair
+        else:
+            pairs.append(pair)
 
 
-def _one(index, token, h, perch, key, address, diagnostics, between, source_entry):
+def _bare_field(token):
+    """The connector spelling with any perch mark removed."""
+    return token.removesuffix("[>]").removesuffix("[<]")
+
+
+def _one(index, token, h, perch, key, address, diagnostics, between, source_entry, *, role="state"):
     """The one use the endpoint `token` names, or None with a diagnostic
     appended: `endpoint-unresolved` for no use, `endpoint-ambiguous` for
     several, which names them."""
@@ -762,8 +834,8 @@ def _one(index, token, h, perch, key, address, diagnostics, between, source_entr
             Diagnostic(
                 "endpoint-unresolved",
                 address,
-                f"{token!r} names no {side} state field of {where}{pair}; the {side} "
-                f"state fields {there} are {', '.join(held) or 'none'}",
+                f"{token!r} names no {side} {role} field of {where}{pair}; the {side} "
+                f"{role} fields {there} are {', '.join(held) or 'none'}",
                 source_entries=(source_entry,),
             )
         )
@@ -772,7 +844,7 @@ def _one(index, token, h, perch, key, address, diagnostics, between, source_entr
         Diagnostic(
             "endpoint-ambiguous",
             address,
-            f"{token!r} names {len(found)} {side} state fields of {where}{pair}: "
+            f"{token!r} names {len(found)} {side} {role} fields of {where}{pair}: "
             + ", ".join(f"{use.key}.{use.field}" for use in found)
             + "; write the stage key before the field, `<key>.<field>`",
             tuple(found),
@@ -957,6 +1029,12 @@ class _Text:
             for definition in stage.definitions.values()
             if definition.kind == "set" and definition.equations
         }
+        self.functions = {
+            definition.identity.field: definition.equations[0]
+            for definition in stage.definitions.values()
+            if definition.kind == "function" and definition.equations
+            and isinstance(definition.equations[0], T.FuncDef)
+        }
         self.categories = {
             definition.identity.field: definition.categories
             for definition in stage.definitions.values()
@@ -991,21 +1069,50 @@ class _Text:
         else:
             self.forward_refusal = refusal.reason
         self.required, self.supplied, self.backward_refusal = (), (), None
+        self.kept, self.value_branches = frozenset(), {}
         refusal = graph_refusal(stage, "builders", "backward")
         if refusal is None:
             graph = graph_of(stage, "builders", "backward")
             self.required = tuple(
                 sort
                 for sort in graph.dom.inside
-                if sort.kind == "function" and sort.perch == WRITING and sort.coordinates
+                if sort.kind == "function" and sort.perch == WRITING and sort.role in VALUE_ROLES
             )
             self.supplied = tuple(
                 sort
                 for sort in graph.cod.inside
-                if sort.kind == "function" and sort.perch == self.entry
+                if sort.kind == "function" and sort.perch == self.entry and sort.role in VALUE_ROLES
             )
+            self.kept = _kept_requirements(stage)
+            if self.branch_fields:
+                self.value_branches = {
+                    identity.field: branch
+                    for identity, (_, branch) in stage_blocks_of(stage).bases.items()
+                }
         else:
             self.backward_refusal = refusal.reason
+
+
+def _kept_requirements(stage):
+    """Continuation names returned unchanged by a backward block."""
+    ctx = StageNames(stage)
+    kept = set()
+    for box in blocks_in_file_order(stage):
+        inputs, outputs = header_of(box)
+        required = {sort.identity.field for sort in inputs
+                    if sort.perch == WRITING and sort.role in VALUE_ROLES}
+        if not required:
+            continue
+        written = {
+            identity for _, line in lines_of(stage, box) if line.role != DOC
+            for identity in ctx.defined(line.core, box.name)
+        }
+        kept.update(
+            sort.identity.field for sort in outputs
+            if sort.perch == "dcsn" and sort.role in VALUE_ROLES
+            and sort.identity.field in required and sort.identity not in written
+        )
+    return frozenset(kept)
 
 
 class _Types:
@@ -1140,6 +1247,30 @@ def _bounds(term):
     return frozenset(found)
 
 
+def _interval_calls(term, functions, endpoint=False, active=frozenset()):
+    """Read calls in interval endpoints using the definitions of their stage."""
+    if endpoint and isinstance(term, T.Call) and term.fun in functions and term.fun not in active:
+        definition = functions[term.fun]
+        if len(definition.params) == len(term.args):
+            arguments = tuple(_interval_calls(arg, functions, True, active) for arg in term.args)
+            names = (param.stem for param in definition.params)
+            body = substitute(definition.body, dict(zip(names, arguments)))
+            return _interval_calls(body, functions, True, active | {term.fun})
+    endpoint = endpoint or isinstance(term, T.Interval)
+    if dataclasses.is_dataclass(term) and not isinstance(term, type):
+        changes = {}
+        for field in dataclasses.fields(term):
+            old = getattr(term, field.name)
+            new = _interval_calls(old, functions, endpoint, active)
+            if new is not old:
+                changes[field.name] = new
+        return dataclasses.replace(term, **changes) if changes else term
+    if isinstance(term, tuple):
+        new = tuple(_interval_calls(item, functions, endpoint, active) for item in term)
+        return new if any(a is not b for a, b in zip(new, term)) else term
+    return term
+
+
 def _valued(term, values):
     """The set term with each bound named in `values` replaced by its
     number, `[a_min, inf)` at `a_min = 1` being `[1, inf)` and at
@@ -1206,7 +1337,11 @@ def _within(inner, outer, inner_values=None, outer_values=None):
         writing = _domain_members(inner, inner_values)
         reading = _domain_members(outer, outer_values)
         if writing is None or reading is None:
-            return None
+            forward = _within(inner.domain, outer.domain, inner_values, outer_values)
+            reverse = _within(outer.domain, inner.domain, outer_values, inner_values)
+            if forward is not True or reverse is not True:
+                return None
+            return _within(inner.codomain, outer.codomain, inner_values, outer_values)
         if len(writing) != len(reading) or any(
             len(a) != len(b)
             or any(sets.key_position((right,), left) is None for left, right in zip(a, b))
@@ -1225,21 +1360,19 @@ def _within(inner, outer, inner_values=None, outer_values=None):
         outer, (T.Product, T.Comprehension, T.FiniteSet)
     ):
         return None
-    return sets.within(
-        _evaluated(_valued(inner, inner_values)),
-        _evaluated(_valued(outer, outer_values)),
-        {},
-    )
+    inner = _evaluated(_valued(inner, inner_values))
+    outer = _evaluated(_valued(outer, outer_values))
+    if not (_conditions_in_names(inner) and _conditions_in_names(outer)):
+        return None
+    return sets.within(inner, outer, {})
 
 
 def _conditions_in_names(term):
-    """Whether each condition of each set with conditions inside a set term
-    compares two terms written in numbers and names
-    (`sets.parameters_read`), so that two uses of the term are one set where
-    each name has one value. False where a condition calls a function,
-    selects an entry or has another form: the function may read a parameter
-    that has another value at the other use, so the term alone does not fix
-    the members that the condition admits."""
+    """Whether a set term has only explicit arithmetic and comparisons."""
+    if isinstance(term, (T.Call, T.Select)):
+        return False
+    if isinstance(term, T.Interval) and not _bounds(term):
+        return sets.endpoints(_evaluated(term)) is not None
     if isinstance(term, T.Comprehension) and not all(
         isinstance(condition, T.Rel)
         and sets.parameters_read(condition.left) is not None
@@ -1343,7 +1476,17 @@ def _evaluated(term):
     so that `{0, …, J − 1}` at `J = 3` is compared as `{0, …, 2}`."""
     if isinstance(term, (T.Add, T.Sub, T.Mul, T.Div, T.Pow, T.Neg)):
         value = sets.number_at(term, {}).value
-        return term if value is None else _number_term(value)
+        if value is not None:
+            return _number_term(value)
+    if isinstance(term, (T.Call, T.Conditional, T.Add, T.Sub, T.Mul, T.Div, T.Pow, T.Neg)):
+        try:
+            value = derived_value(term, {})
+        except (ValueError, KeyError):
+            return term
+        if math.isinf(value):
+            infinity = T.Sym(T.Constant("inf"))
+            return T.Neg(infinity) if value < 0 else infinity
+        return _number_term(value)
     if dataclasses.is_dataclass(term) and not isinstance(term, type):
         changes = {}
         for field in dataclasses.fields(term):
@@ -1393,8 +1536,8 @@ def _included(
             (),
         )
     inner_text, outer_text = types.text(inner_position), types.text(outer_position)
-    inner = sets.resolved(inner_term, inner_text.definitions)
-    outer = sets.resolved(outer_term, outer_text.definitions)
+    inner = _interval_calls(sets.resolved(inner_term, inner_text.definitions), inner_text.functions)
+    outer = _interval_calls(sets.resolved(outer_term, outer_text.definitions), outer_text.functions)
     inner_bounds, outer_bounds = _bounds(inner), _bounds(outer)
     one_term = inner == outer and _conditions_in_names(inner)
     if one_term and not inner_bounds:
@@ -1703,17 +1846,6 @@ def _verb(decided):
     return "is of a form the package does not compare against"
 
 
-def _shape(term):
-    """The shape a result set gives a component: `scalar` for a set that is
-    no product, the number of its coordinates for a product, and a collection
-    on its index set for a set of functions."""
-    if isinstance(term, T.Product):
-        return f"{len(term.factors)} coordinates"
-    if isinstance(term, T.Functions):
-        return f"a collection on {to_source(term.domain)}"
-    return "scalar"
-
-
 # --- the inferred pairs selected ---
 
 
@@ -1874,10 +2006,9 @@ def _components(edges):
 # --- the routes certified ---
 
 
-def _routes(selected, types):
-    """One `Route` per source position, branch and destination position
-    among the selected pairs, in order of first appearance."""
-    grouped, into = {}, {}
+def _routes(selected, types, value_pairs, diagnostics):
+    """One route per source, branch and destination in state-pair order."""
+    grouped, into, from_source = {}, {}, {}
     for pair in selected:
         source, destination = (
             (pair.writing.h, pair.writing.key),
@@ -1885,13 +2016,125 @@ def _routes(selected, types):
         )
         grouped.setdefault((source, pair.writing.branch, destination), []).append(pair)
         into.setdefault(destination, []).append(pair)
+    for source, branch, destination in grouped:
+        from_source.setdefault(source, []).append((branch, destination))
+
+    explicit = {}
+    for use, pair in value_pairs.items():
+        source = (use.h, use.key)
+        explicit.setdefault(source, {})[use.field] = pair
+        if pair is None:
+            continue
+        destination = (pair.reading.h, pair.reading.key)
+        if not any(
+            target == destination and (use.branch is None or branch == use.branch)
+            for branch, target in from_source.get(source, ())
+        ):
+            diagnostics.append(Diagnostic(
+                "route-not-established", pair.address,
+                f"the value pair {use} → {pair.reading} has no state route between "
+                "those stage occurrences for that field",
+                (pair,), _sources((pair,)),
+            ))
+
+    assigned = {
+        source: _constant_suppliers(source, routes, explicit.get(source, {}), types)
+        for source, routes in from_source.items()
+    }
     return [
-        _route(source, branch, destination, found, into[destination], types)
+        _route(
+            source, branch, destination, found, into[destination], types,
+            explicit.get(source, {}), *assigned[source],
+        )
         for (source, branch, destination), found in grouped.items()
     ]
 
 
-def _route(source, branch, destination, found, into, types):
+def _constant_suppliers(source, routes, explicit, types):
+    """The supplier of each constant whose name no selection tuple places."""
+    text = types.text(source)
+    if not text.branch_fields:
+        return {}, ()
+    reached = tuple(dict.fromkeys(destination for _, destination in routes))
+    outside = [
+        sort for sort in text.required
+        if sort.constant and sort.identity.field not in text.value_branches
+    ]
+    found, ambiguous, unmatched = {}, {}, []
+    for sort in outside:
+        name = sort.identity.field
+        if name in explicit:
+            pair = explicit[name]
+            target = (pair.reading.h, pair.reading.key) if pair is not None else None
+            candidates = (target,) if target in reached else ()
+        elif len(reached) == 1:
+            candidates = reached
+        else:
+            candidates = tuple(
+                target for target in reached
+                if name not in _explicit_names(explicit, target).values()
+                and any(other.identity.field == name and other.role == sort.role
+                        for other in types.text(target).supplied)
+            )
+            if not candidates:
+                unmatched.append(sort)
+                continue
+        if len(candidates) == 1:
+            found[name] = candidates[0]
+        else:
+            ambiguous[name] = candidates
+
+    remaining = {}
+    for sort in unmatched:
+        name = sort.identity.field
+        candidates = tuple(
+            target for target in reached
+            if all(
+                _sole_branch_supplier(text, branch, sort, types.text(target), explicit, target, found)
+                for branch, destination in routes
+                if destination == target
+            )
+        )
+        if len(candidates) == 1:
+            remaining[name] = candidates[0]
+        else:
+            ambiguous[name] = candidates
+    found.update(remaining)
+    missing = tuple(
+        f"{sort.identity} has no unique supplier among "
+        f"{', '.join(_at(target) for target in ambiguous[sort.identity.field] or reached)}. "
+        f"Write an explicit connector pair for {sort.identity.field}"
+        for sort in outside
+        if sort.identity.field in ambiguous
+    )
+    return found, missing
+
+
+def _sole_branch_supplier(text, branch, constant, supplier, explicit, destination, assigned):
+    """Whether one field remains available for a constant at this supplier."""
+    if constant.identity.field in text.kept:
+        return False
+    of_role = [
+        sort for sort in text.required
+        if sort.role == constant.role
+        and (text.value_branches.get(sort.identity.field) == branch
+             or assigned.get(sort.identity.field) == destination)
+    ]
+    supplied = [sort for sort in supplier.supplied if sort.role == constant.role]
+    matched, refused = _paired(of_role, supplied, text.kept, _explicit_names(explicit, destination))
+    return not refused and len(matched) == len(of_role) and len(supplied) - len(matched) == 1
+
+
+def _explicit_names(explicit, destination):
+    """Each expressly named value on the destination of this route."""
+    return {
+        name: pair.reading.field
+        if pair is not None and (pair.reading.h, pair.reading.key) == destination else None
+        for name, pair in explicit.items()
+    }
+
+
+def _route(source, branch, destination, found, into, types, explicit, suppliers, missing_values):
     """The route of the pairs `found` from `source` on `branch` into
     `destination` certified or not: the complete ordered state tuple, the
     compatibility of the pairs, the joint law of the branch and the
@@ -1901,7 +2144,7 @@ def _route(source, branch, destination, found, into, types):
         text_s.branch_fields.get(branch, ()) if branch is not None else text_s.writing_fields
     )
     destination_fields = text_d.reading_fields
-    obligations = []
+    obligations = list(missing_values)
     by_reading = {}
     for pair in found:
         by_reading.setdefault(pair.reading.field, []).append(pair)
@@ -1962,12 +2205,13 @@ def _route(source, branch, destination, found, into, types):
         source,
         branch,
         destination,
-        source_fields,
-        destination_fields,
         ordered if complete else found,
-        inverse,
         types,
+        explicit,
+        suppliers,
     )
+    if missing_values:
+        backward = _together((backward, NOT_ESTABLISHED))
     for component in components:
         if component.status != COMPATIBLE:
             obligations.append(
@@ -1976,7 +2220,8 @@ def _route(source, branch, destination, found, into, types):
             )
     status = (
         CERTIFIED
-        if complete and compatibility == COMPATIBLE and law is not None and backward == COMPATIBLE
+        if complete and compatibility == COMPATIBLE and law is not None
+        and backward == COMPATIBLE and not missing_values
         else UNCERTIFIED
     )
     basis = tuple(
@@ -2030,21 +2275,8 @@ def _missing(field, source, branch, destination, into):
     )
 
 
-def _backward(
-    source, branch, destination, source_fields, destination_fields, found, inverse, types
-):
-    """The backward components of a route: each function wire the source's
-    branch requires at its continuation perch paired with the one the
-    destination supplies at its entry perch, and the status of all
-    together. A required component is paired, where one component of the
-    role stands on each side, with that one; else by equal names, where
-    the route's permutation is the identity (`_paired`). A paired component is
-    compatible where the supplied result set, its coordinates in the
-    source's order under the route where it is a product, lies in the
-    required one and the shapes agree. A required component whose declared
-    coordinate no supplied component answers is incompatible; an unpaired
-    one is incompatible where no supplied result set of its role lies in
-    the required set, and otherwise not established."""
+def _backward(source, branch, destination, found, types, explicit, suppliers):
+    """Pair the backward fields each route requires and compare their sorts."""
     text_s, text_d = types.text(source), types.text(destination)
     if text_s.backward_refusal is not None or text_d.backward_refusal is not None:
         at, reason = (
@@ -2061,19 +2293,17 @@ def _backward(
         )
         return (component,), NOT_ESTABLISHED
     required = [
-        sort
-        for sort in text_s.required
-        if all(coordinate.field in source_fields for coordinate in sort.coordinates)
+        sort for sort in text_s.required
+        if branch is None
+        or text_s.value_branches.get(sort.identity.field) == branch
+        or suppliers.get(sort.identity.field) == destination
     ]
-    image_of = {pair.writing.field: pair.reading.field for pair in found}
-    # the permutation is the identity where the route is complete and sends
-    # each coordinate to the destination coordinate of the same index
-    in_order = bool(inverse) and list(inverse) == sorted(inverse)
+    explicit_names = _explicit_names(explicit, destination)
     components = []
     for role in dict.fromkeys(sort.role for sort in required):
         of_role = [sort for sort in required if sort.role == role]
         supplied = [sort for sort in text_d.supplied if sort.role == role]
-        paired, refused = _paired(of_role, supplied, in_order)
+        paired, refused = _paired(of_role, supplied, text_s.kept, explicit_names)
         taken = {other.identity.field for other, _ in paired.values()}
         for sort in of_role:
             name = str(sort.identity)
@@ -2085,7 +2315,7 @@ def _backward(
             other, rule = paired.get(sort.identity.field, (None, ""))
             if other is not None:
                 status, reason, basis = _result_within(
-                    types, source, destination, sort, other, inverse, destination_fields
+                    types, source, destination, sort, other, found
                 )
                 components.append(
                     Component(name, str(other.identity), role, status, reason, basis, rule)
@@ -2118,7 +2348,7 @@ def _backward(
                 continue
             answers = [
                 _result_within(
-                    types, source, destination, sort, other, inverse, destination_fields
+                    types, source, destination, sort, other, found
                 )
                 for other in free
             ]
@@ -2136,18 +2366,10 @@ def _backward(
                     )
                 )
                 continue
-            equal = [other for other in free if other.identity.field == sort.identity.field]
-            sends = ", ".join(
-                f"{writing} to {image_of[writing]}"
-                for writing in source_fields
-                if writing in image_of and image_of[writing] != writing
-            )
             why = (
-                f"the name of {equal[0].identity} is equal, but "
-                + (f"the route sends {sends}" if inverse else "the route is not complete")
-                + ", so an equal name tells no correspondence, and no pairing is declared"
-                if equal and not in_order
-                else "no pairing and no equal name tells"
+                "a kept field needs its own name or an explicit connector pair;"
+                if sort.identity.field in text_s.kept
+                else "no explicit pair or unique remaining name tells"
             )
             components.append(
                 Component(
@@ -2161,90 +2383,67 @@ def _backward(
     return tuple(components), _together(component.status for component in components)
 
 
-def _result_within(types, source, destination, required, supplied, inverse, destination_fields):
-    """Whether the result set of the `supplied` component lies in the set
-    the `required` one requires, with the shapes agreeing: `(status,
-    reason, basis)`. A product-valued result set of the destination has
-    its coordinates in the destination's order, and is read in the
-    source's order under the route, by `inverse`, where the route is
-    complete and the product has one factor per coordinate of the
-    destination's tuple; otherwise which factor answers which coordinate
-    is not established."""
-    text_s, text_d = types.text(source), types.text(destination)
-    name = str(required.identity)
-    required_set = sets.resolved(required.domain, text_s.definitions)
-    supplied_set = sets.resolved(supplied.domain, text_d.definitions)
-    if isinstance(supplied_set, T.Product):
-        if not inverse or len(supplied_set.factors) != len(destination_fields):
+def _result_within(types, source, destination, required, supplied, found):
+    """Whether the supplied function has permitted coordinates and values."""
+    inverse = {pair.reading.field: pair.writing.field for pair in found}
+    allowed = {identity.field for identity in required.coordinates}
+    for coordinate in supplied.coordinates:
+        matched = inverse.get(coordinate.field)
+        if matched is None:
             return (
                 NOT_ESTABLISHED,
-                f"the result set of {supplied.identity}, {to_source(supplied_set)}, has "
-                f"{len(supplied_set.factors)} coordinates"
-                + (
-                    f" where the route's tuple {_tuple(destination_fields)} has "
-                    f"{len(destination_fields)}"
-                    if inverse
-                    else " and the route is not complete"
-                )
-                + ", so the package does not say which coordinate answers which",
+                f"{supplied.identity} reads {coordinate.field}, which has no paired state",
                 (),
             )
-        supplied_set = T.Product(
-            tuple(supplied_set.factors[inverse[j]] for j in range(len(inverse)))
-        )
-    status, reason, basis = _included(
+        if matched not in allowed:
+            return (
+                INCOMPATIBLE,
+                f"{supplied.identity} depends on {coordinate.field}, paired with {matched}, "
+                f"which {required.identity} may not read",
+                (),
+            )
+    return _included(
         types,
         destination,
-        supplied_set,
+        supplied.domain,
         source,
-        required_set,
-        f"the result set of {supplied.identity}"
-        + (
-            " in the source's order under the route"
-            if isinstance(supplied_set, T.Product) and list(inverse) != sorted(inverse)
-            else ""
-        ),
-        f"the result set required of {name}",
+        required.domain,
+        f"the result set of {supplied.identity}",
+        f"the result set required of {required.identity}",
     )
-    if status == COMPATIBLE and _shape(required_set) != _shape(supplied_set):
-        return (
-            INCOMPATIBLE,
-            f"{supplied.identity} is {_shape(supplied_set)} where {name} requires "
-            f"{_shape(required_set)}",
-            basis,
-        )
-    return status, reason, basis
 
 
-def _paired(required, supplied, in_order):
-    """The supplied component paired with each required one, by the
-    required's field name, each with the rule of `PAIRING_RULES` that
-    paired them, and the required components refused, of which there are
-    none: where one component of the role stands on each side, that one;
-    then by equal names, each unique, only where the route's permutation is
-    the identity (`in_order`), since under another permutation an equal name
-    tells no correspondence. The pairing by the coordinates two marginal
-    values' names declared is retired with the marginal roles (AMD-MB-001
-    R2); `refused` stays in the answer, empty, for the caller's reading."""
+def _paired(required, supplied, kept, explicit):
+    """The explicit pairs, equal names and finally the sole remaining pair."""
     one_per_role, equal_name = PAIRING_RULES
     paired, refused, taken = {}, {}, set()
-    rest, free = list(required), list(supplied)
-    if len(required) == 1 and len(supplied) == 1:
-        sort, other = rest[0], free[0]
-        paired[sort.identity.field] = (other, one_per_role)
-        taken.add(other.identity.field)
-        rest, free = [], []
-    if in_order:
-        for sort in rest:
-            matches = [
-                other
-                for other in free
-                if other.identity.field == sort.identity.field
-                and other.identity.field not in taken
-            ]
-            if len(matches) == 1:
-                paired[sort.identity.field] = (matches[0], equal_name)
-                taken.add(matches[0].identity.field)
+    by_name = {other.identity.field: other for other in supplied}
+    for sort in required:
+        name = sort.identity.field
+        if name not in explicit:
+            continue
+        target = explicit[name]
+        if target not in by_name:
+            refused[name] = f"no explicit connector pair supplies {sort.identity} on this route"
+        elif target in taken:
+            refused[name] = f"another required field is already paired with {target}"
+        else:
+            paired[name] = (by_name[target], EXPLICIT_PAIR)
+            taken.add(target)
+    for sort in required:
+        name = sort.identity.field
+        if name not in paired and name not in refused and name in by_name and name not in taken:
+            paired[name] = (by_name[name], equal_name)
+            taken.add(name)
+    remaining = [
+        sort for sort in required
+        if sort.identity.field not in paired and sort.identity.field not in refused
+    ]
+    free = [other for other in supplied if other.identity.field not in taken]
+    if len(remaining) == len(free) == 1:
+        name = remaining[0].identity.field
+        if name not in kept:
+            paired[name] = (free[0], one_per_role)
     return paired, refused
 
 
@@ -2367,7 +2566,9 @@ class ConnectionReport(NamedTuple):
     trellis's provenance names, or None; `rejected`, the unselected inferred
     candidates touching a chosen position; and `unjoined`, the open state
     fields at chosen positions, separated into internal and possible exterior
-    writing and reading ports. `str` prints these records."""
+    writing and reading ports. `obligations` records the joint support
+    condition on the external coordinates of the earliest period.
+    `str` prints these records."""
 
     pairs: tuple
     routes: tuple
@@ -2378,6 +2579,7 @@ class ConnectionReport(NamedTuple):
     file: object
     rejected: tuple = ()
     unjoined: Mapping | None = None
+    obligations: tuple = ()
 
     def __str__(self):
         return "\n".join(report_lines(self))
@@ -2430,6 +2632,13 @@ def connection_report(trellis, *, periods=None, stages=None, selection=None):
     )
     open_fields = _unjoined_from_selection(selection)
     last = len(trellis["periods"]) - 1
+    open_reading = set(open_fields["reading"])
+    external = tuple(
+        use for use in selection.uses
+        if use.h == last and _side(use.perch) == READING
+        and (use.h, use.key, use.field) in open_reading
+    )
+    obligations = _initial_law(external) if any(at(use) for use in external) else ()
     unjoined = MappingProxyType(
         {
             scope: MappingProxyType(
@@ -2466,7 +2675,26 @@ def connection_report(trellis, *, periods=None, stages=None, selection=None):
         file,
         rejected,
         unjoined,
+        obligations,
     )
+
+
+def _initial_law(external):
+    """The joint support condition on the external coordinates of the earliest period."""
+    identities = tuple(
+        Identity("field", stage=f"periods[{use.h}].{use.key}", perch=use.perch, field=use.field)
+        for use in external
+    )
+    fields = ", ".join(str(use) for use in external)
+    return (Condition(
+        "initial-law-supported",
+        identities,
+        status="required",
+        explanation=(
+            f"The joint initial law of ({fields}) must give mass one "
+            "to the first chronological period's admissible arrival set."
+        ),
+    ),)
 
 
 def _chosen(trellis, periods, stages):
@@ -2576,4 +2804,6 @@ def report_lines(report):
         for side, fields in sides.items():
             for h, key, field in fields:
                 lines.append(f"unjoined {scope} {side} state field: periods[{h}].{key}.{field}")
+    for condition in report.obligations:
+        lines.append(f"{condition.status} {condition.condition}: {condition.explanation}")
     return lines

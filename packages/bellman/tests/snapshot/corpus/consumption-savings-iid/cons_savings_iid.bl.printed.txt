@@ -1,0 +1,909 @@
+BELLMAN-SYM / STAGE cons_savings_iid                      [VERSION = SYMBOLIC]
+a stage occurrence of applications/consumption-savings-iid/declaration/stages/
+cons_savings_iid/cons_savings_iid.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        b≺ state, V≺ value
+  ∼ decision       w state, c control, V value
+  ≻ continuation   a≻ state, V≻ value
+  ≺ → ∼            y drawn after arrival, before decision
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           b≺ at arrival, w at decision, a≻ at continuation
+  controls         c at decision
+  values           V at every perch
+  shocks           y, drawn between arrival and decision
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → arvl_to_dcsn   (b≺, y) : !arvl -> (w) : !dcsn
+  → dcsn_to_cntn   (w) : !dcsn, at c -> (a≻) : !cntn
+  ← cntn_to_dcsn   (V≻) : !cntn, at c -> (V) : !dcsn
+  ← dcsn_to_arvl   (V) : !dcsn -> (V≺) : !arvl
+  ← policy         (V≻) : !cntn -> (c) : !dcsn
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  sets                     1   Y := ℝ₊
+  distributions            1   y
+  parameters               6   β : ℝ₊₊; γ : (1, inf); R : ℝ₊₊; μ_y : ℝ;
+                               σ_y : ℝ₊; p_zero : (0, 1)
+  functions                1   𝑢 on ℝ₊₊
+  function aliases         2   𝑑𝑢, 𝑑𝑢𝑖𝑛𝑣
+  correspondences          1   Γ : ℝ₊ ⇉ ℝ₊₊
+  laws of motion           2   w = y + b*R; a = w - c
+  value aggregators        3   V = 𝑢(c) + β*V[>]; V[<] = E_{y}(V);
+                               c = argmax_{cp : Γ(w)}(𝑢(cp) + β*V[>])
+  block lines              5   arvl_to_dcsn.cash_on_hand, dcsn_to_cntn.1,
+                               cntn_to_dcsn.value, dcsn_to_arvl.value,
+                               policy.optimality
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   𝑉≻ ↦ 𝑉≺, 𝑐(w)
+                    forward    μ≺ ↦ μ≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ≺ b≺  → y drawn →  ∼ w  →  ≻ a≻
+  backward   ≺ V≺  ←  ∼ V  ←  ≻ V≻
+  policy     ∼ c  ←  ≻ V≻
+
+==== stage ====
+STAGE cons_savings_iid
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑉≻  : ℝ₊ → ℝ
+         ──────────────────────────────────────
+    out  𝑉≺  : ℝ₊ → ℝ
+         𝑐   : ℝ₊ → ℝ₊₊,  𝑐(w) ∈ Γ(w)
+  forward
+    in   μ≺  : finite measure on ℝ₊
+         ──────────────────────────────────────
+    out  μ≻  : finite measure on ℝ₊
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉≻                           out: 𝑉
+
+    2  dcsn_to_arvl
+       in: 𝑉                            out: 𝑉≺
+
+    3  policy
+       in: 𝑉≻                           out: 𝑐
+
+  forward
+    1  arvl_to_dcsn
+       in: μ≺                           out: μ
+
+    2  dcsn_to_cntn
+       in: μ                            out: μ≻
+
+Conditions
+  cntn_to_dcsn:Aggregation  𝑉(w) ∈ ℝ
+  dcsn_to_arvl:Aggregation  𝑉≺(b) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  13  y ~ Mixture((p_zero, 0), (1 - p_zero, LogNormal(μ_y, σ_y)))
+  21  w = y + b*R
+        :: [id=cash_on_hand, "market_resources are blah blah"]
+  25  a = w - c
+  28  V = 𝑢(c) + β*V[>]
+        :: [id=value]
+  31  V[<] = E_{y}(V)
+        :: [id=value]
+  34  c = argmax_{cp : Γ(w)}(𝑢(cp) + β*V[>])
+        :: [id=optimality]
+
+Definitions referenced
+  Γ     cons_savings_iid:correspondence:Γ
+
+File
+  applications/consumption-savings-iid/declaration/stages/cons_savings_iid/
+  cons_savings_iid.bl
+
+Perches
+  ≺  arrival, written [<]
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE cons_savings_iid / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻}
+       ──────────
+  out  V   : {V}
+
+Conditions
+  𝑉(w) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  28  V = 𝑢(c) + β*V[>]  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward dcsn_to_arvl ====
+STAGE cons_savings_iid / BACKWARD BLOCK dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V   : {V}
+       ──────────
+  out  V≺  : {V≺}
+
+Conditions
+  𝑉≺(b) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  31  V[<] = E_{y}(V)  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward policy ====
+STAGE cons_savings_iid / POLICY BLOCK policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻}
+       ──────────
+  out  c   : {c}
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  34  c = argmax_{cp : Γ(w)}(𝑢(cp) + β*V[>])  :: [id=optimality]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward arvl_to_dcsn ====
+STAGE cons_savings_iid / FORWARD BLOCK arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   b≺  : {b≺}
+       y   : {y}
+       ──────────
+  out  w   : {w}
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  21  w = y + b*R  :: [id=cash_on_hand, "market_resources are blah blah"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE cons_savings_iid / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   w   : {w}
+       ──────────
+  out  a≻  : {a≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  25  a = w - c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE cons_savings_iid / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊ → ℝ
+       ───────────────────────────────────────────────────
+  out  𝑉   : ℝ₊ → ℝ
+
+At
+  𝑐  : ℝ₊ → ℝ₊₊,  𝑐(w) ∈ Γ(w)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻(·, 𝑐)
+     ─────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻(·, 𝑐))(w) = 𝑉≻(𝑔≻(w, 𝑐(w)))
+
+  2  Aggregation
+     in: (1)                            out: 𝑉
+     ─────────────────────────────────────────────────────
+     rule: 𝑉(w) = 𝑢(𝑐(w)) + β · 𝑉≻(𝑔≻(w, 𝑐(w)))
+
+  3  Evaluation
+     in: 𝑉                              out: 𝑉
+     ─────────────────────────────────────────────────────
+     rule: 𝑉 : ℝ₊ → ℝ
+
+Conditions
+  Aggregation  𝑉(w) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  28  V = 𝑢(c) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  β     cons_savings_iid:parameter:β
+  𝑢     cons_savings_iid:function:𝑢
+  Γ     cons_savings_iid:correspondence:Γ
+  𝑔≻    cons_savings_iid:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback ====
+STAGE cons_savings_iid / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊ → ℝ
+       ─────────────
+  out  𝑉≻ ∘ 𝑔≻(·, 𝑐)
+           : ℝ₊ → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻(·, 𝑐))(w) = 𝑉≻(𝑔≻(w, 𝑐(w)))
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  25  a = w - c
+
+Definitions referenced
+  𝑔≻    cons_savings_iid:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE cons_savings_iid / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻(·, 𝑐)
+          : ℝ₊ → ℝ
+       ─────────────
+  out  𝑉  : ℝ₊ → ℝ
+
+Rule
+  𝑉(w) = 𝑢(𝑐(w)) + β · 𝑉≻(𝑔≻(w, 𝑐(w)))
+
+Conditions
+  𝑉(w) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  28  V = 𝑢(c) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  β     cons_savings_iid:parameter:β
+  𝑢     cons_savings_iid:function:𝑢
+  𝑔≻    cons_savings_iid:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE cons_savings_iid / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : ℝ₊ → ℝ
+       ───────────
+  out  𝑉  : ℝ₊ → ℝ
+
+Rule
+  𝑉(w) = 𝑢(𝑐(w)) + β · 𝑉≻(𝑔≻(w, 𝑐(w)))
+  𝑉 : ℝ₊ → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  β     cons_savings_iid:parameter:β
+  𝑢     cons_savings_iid:function:𝑢
+  𝑔≻    cons_savings_iid:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl ====
+STAGE cons_savings_iid / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉   : ℝ₊ → ℝ
+       ────────────────────────────────────────────────────────────
+  out  𝑉≺  : ℝ₊ → ℝ
+
+Operations
+  1  Pullback
+     in: 𝑉                              out: 𝑉 ∘ 𝑔≺
+     ──────────────────────────────────────────────────────────────
+     rule: (𝑉 ∘ 𝑔≺)(b, y) = 𝑉(𝑔≺(b, y))
+
+  2  value:Expectation:1
+     in: (1)                            out: b ↦ E_{y}[𝑉(𝑔≺(b, y))]
+     ──────────────────────────────────────────────────────────────
+     rule: (2)(b) = E_{y}[𝑉(𝑔≺(b, y))]
+
+  3  Aggregation
+     in: (2)                            out: 𝑉≺
+     ──────────────────────────────────────────────────────────────
+     rule: 𝑉≺(b) = E_{y}[𝑉(𝑔≺(b, y))]
+
+  4  Evaluation
+     in: 𝑉≺                             out: 𝑉≺
+     ──────────────────────────────────────────────────────────────
+     rule: 𝑉≺ : ℝ₊ → ℝ
+
+Conditions
+  Aggregation  𝑉≺(b) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  31  V[<] = E_{y}(V)  :: [id=value]
+
+Definitions referenced
+  y     cons_savings_iid:distribution:y
+  𝑔≺    cons_savings_iid:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Pullback ====
+STAGE cons_savings_iid / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+  / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : ℝ₊ → ℝ
+       ───────────────
+  out  𝑉 ∘ 𝑔≺
+          : ℝ₊ × Y → ℝ
+
+Rule
+  (𝑉 ∘ 𝑔≺)(b, y) = 𝑉(𝑔≺(b, y))
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  21  w = y + b*R  :: [id=cash_on_hand, "market_resources are blah blah"]
+
+Definitions referenced
+  Y     cons_savings_iid:set:Y
+  y     cons_savings_iid:distribution:y
+  𝑔≺    cons_savings_iid:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / value:Expectation:1 ====
+STAGE cons_savings_iid / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+  / value:Expectation:1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉 ∘ 𝑔≺
+         : ℝ₊ × Y → ℝ
+       ──────────────────────
+  out  b ↦ E_{y}[𝑉(𝑔≺(b, y))]
+         : ℝ₊ → ℝ
+
+Rule
+  value:Expectation:1(b) = E_{y}[𝑉(𝑔≺(b, y))]
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  13  y ~ Mixture((p_zero, 0), (1 - p_zero, LogNormal(μ_y, σ_y)))
+  31  V[<] = E_{y}(V)  :: [id=value]
+
+Definitions referenced
+  Y     cons_savings_iid:set:Y
+  y     cons_savings_iid:distribution:y
+  𝑔≺    cons_savings_iid:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Aggregation ====
+STAGE cons_savings_iid / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+  / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   b ↦ E_{y}[𝑉(𝑔≺(b, y))]
+           : ℝ₊ → ℝ
+       ──────────────────────
+  out  𝑉≺  : ℝ₊ → ℝ
+
+Rule
+  𝑉≺(b) = E_{y}[𝑉(𝑔≺(b, y))]
+
+Conditions
+  𝑉≺(b) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  31  V[<] = E_{y}(V)  :: [id=value]
+
+Definitions referenced
+  y     cons_savings_iid:distribution:y
+  𝑔≺    cons_savings_iid:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Evaluation ====
+STAGE cons_savings_iid / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+  / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≺  : ℝ₊ → ℝ
+       ────────────
+  out  𝑉≺  : ℝ₊ → ℝ
+
+Rule
+  𝑉≺(b) = E_{y}[𝑉(𝑔≺(b, y))]
+  𝑉≺ : ℝ₊ → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  y     cons_savings_iid:distribution:y
+  𝑔≺    cons_savings_iid:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy ====
+STAGE cons_savings_iid / POLICY BUILDER policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊ → ℝ
+       ──────────────────────────────────────────────────────────────────────
+  out  𝑐   : ℝ₊ → ℝ₊₊,  𝑐(w) ∈ Γ(w)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻
+     ────────────────────────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻)(w, c) = 𝑉≻(𝑔≻(w, c))
+
+  2  optimality:Aggregation
+     in: (1)                            out: (w, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(w, c))
+     ────────────────────────────────────────────────────────────────────────
+     rule: (w, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(w, c))
+
+  3  optimality:Argmax
+     in: (2)                            out: 𝑐
+     ────────────────────────────────────────────────────────────────────────
+     rule: 𝑐(w) ∈ argmax_{cp ∈ Γ(w)} [𝑢(cp) + β · 𝑉≻(𝑔≻(w, cp))]
+
+  4  Evaluation
+     in: 𝑐                              out: 𝑐
+     ────────────────────────────────────────────────────────────────────────
+     rule: 𝑐 : ℝ₊ → ℝ₊₊,  𝑐(w) ∈ Γ(w)
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  34  c = argmax_{cp : Γ(w)}(𝑢(cp) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  β     cons_savings_iid:parameter:β
+  𝑢     cons_savings_iid:function:𝑢
+  Γ     cons_savings_iid:correspondence:Γ
+  𝑔≻    cons_savings_iid:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback ====
+STAGE cons_savings_iid / POLICY BUILDER policy / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊ → ℝ
+       ──────────────────────────────────────
+  out  𝑉≻ ∘ 𝑔≻
+           : {w, c ∈ ℝ₊ × ℝ₊₊ | c ∈ Γ(w)} → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻)(w, c) = 𝑉≻(𝑔≻(w, c))
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  25  a = w - c
+
+Definitions referenced
+  Γ     cons_savings_iid:correspondence:Γ
+  𝑔≻    cons_savings_iid:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / optimality:Aggregation ====
+STAGE cons_savings_iid / POLICY BUILDER policy / optimality:Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻
+         : {w, c ∈ ℝ₊ × ℝ₊₊ | c ∈ Γ(w)} → ℝ
+       ────────────────────────────────────
+  out  (w, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(w, c))
+         : {w, c ∈ ℝ₊ × ℝ₊₊ | c ∈ Γ(w)} → ℝ
+
+Rule
+  (w, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(w, c))
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  34  c = argmax_{cp : Γ(w)}(𝑢(cp) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  β     cons_savings_iid:parameter:β
+  𝑢     cons_savings_iid:function:𝑢
+  Γ     cons_savings_iid:correspondence:Γ
+  𝑔≻    cons_savings_iid:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / optimality:Argmax ====
+STAGE cons_savings_iid / POLICY BUILDER policy / optimality:Argmax
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (w, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(w, c))
+          : {w, c ∈ ℝ₊ × ℝ₊₊ | c ∈ Γ(w)} → ℝ
+       ─────────────────────────────────────
+  out  𝑐  : ℝ₊ → ℝ₊₊,  𝑐(w) ∈ Γ(w)
+
+Rule
+  𝑐(w) ∈ argmax_{cp ∈ Γ(w)} [𝑢(cp) + β · 𝑉≻(𝑔≻(w, cp))]
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  34  c = argmax_{cp : Γ(w)}(𝑢(cp) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  β     cons_savings_iid:parameter:β
+  𝑢     cons_savings_iid:function:𝑢
+  Γ     cons_savings_iid:correspondence:Γ
+  𝑔≻    cons_savings_iid:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Evaluation ====
+STAGE cons_savings_iid / POLICY BUILDER policy / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑐  : ℝ₊ → ℝ₊₊,  𝑐(w) ∈ Γ(w)
+       ───────────────────────────
+  out  𝑐  : ℝ₊ → ℝ₊₊,  𝑐(w) ∈ Γ(w)
+
+Rule
+  𝑐(w) ∈ argmax_{cp ∈ Γ(w)} [𝑢(cp) + β · 𝑉≻(𝑔≻(w, cp))]
+  𝑐 : ℝ₊ → ℝ₊₊,  𝑐(w) ∈ Γ(w)
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  β     cons_savings_iid:parameter:β
+  𝑢     cons_savings_iid:function:𝑢
+  Γ     cons_savings_iid:correspondence:Γ
+  𝑔≻    cons_savings_iid:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn ====
+STAGE cons_savings_iid / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on ℝ₊
+       ────────────────────────────────────────────
+  out  μ   : finite measure on ℝ₊
+
+Operations
+  1  DistributionExtension:y
+     in: μ≺                             out: μ≺⊗P_y
+     ──────────────────────────────────────────────
+     rule: μ≺⊗P_y(B) = ∫_{b ∈ ℝ₊} [P_y({y ∈ Y | (b, y) ∈ B})] μ≺(db)
+
+  2  Pushforward
+     in: (1)                            out: μ
+     ──────────────────────────────────────────────
+     rule: μ(B) = μ≺⊗P_y({b≺, y ∈ ℝ₊ × Y | 𝑔≺(b≺, y) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  21  w = y + b*R  :: [id=cash_on_hand, "market_resources are blah blah"]
+
+Definitions referenced
+  Y     cons_savings_iid:set:Y
+  y     cons_savings_iid:distribution:y
+  P_y   cons_savings_iid:distribution:y
+  𝑔≺    cons_savings_iid:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / DistributionExtension:y ====
+STAGE cons_savings_iid / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+  / DistributionExtension:y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on ℝ₊
+       ──────────────────────────────
+  out  μ≺⊗P_y
+           : finite measure on ℝ₊ × Y
+
+Rule
+  μ≺⊗P_y(B) = ∫_{b ∈ ℝ₊} [P_y({y ∈ Y | (b, y) ∈ B})] μ≺(db)
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  13  y ~ Mixture((p_zero, 0), (1 - p_zero, LogNormal(μ_y, σ_y)))
+
+Definitions referenced
+  Y     cons_savings_iid:set:Y
+  y     cons_savings_iid:distribution:y
+  P_y   cons_savings_iid:distribution:y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / Pushforward ====
+STAGE cons_savings_iid / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+  / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺⊗P_y
+          : finite measure on ℝ₊ × Y
+       ─────────────────────────────
+  out  μ  : finite measure on ℝ₊
+
+Rule
+  μ(B) = μ≺⊗P_y({b≺, y ∈ ℝ₊ × Y | 𝑔≺(b≺, y) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  21  w = y + b*R  :: [id=cash_on_hand, "market_resources are blah blah"]
+
+Definitions referenced
+  Y     cons_savings_iid:set:Y
+  y     cons_savings_iid:distribution:y
+  P_y   cons_savings_iid:distribution:y
+  𝑔≺    cons_savings_iid:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE cons_savings_iid / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on ℝ₊
+       ────────────────────────────────────────
+  out  μ≻  : finite measure on ℝ₊
+
+At
+  𝑐  : ℝ₊ → ℝ₊₊,  𝑐(w) ∈ Γ(w)
+
+Operations
+  1  Pushforward
+     in: μ                              out: μ≻
+     ──────────────────────────────────────────
+     rule: μ≻(B) = μ({w ∈ ℝ₊ | 𝑔≻(w, 𝑐(w)) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  25  a = w - c
+
+Definitions referenced
+  Γ     cons_savings_iid:correspondence:Γ
+  𝑔≻    cons_savings_iid:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE cons_savings_iid / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+  / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on ℝ₊
+       ──────────────────────────
+  out  μ≻  : finite measure on ℝ₊
+
+Rule
+  μ≻(B) = μ({w ∈ ℝ₊ | 𝑔≻(w, 𝑐(w)) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  25  a = w - c
+
+Definitions referenced
+  𝑔≻    cons_savings_iid:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons_savings_iid:set:Y ====
+STAGE cons_savings_iid / SET Y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Y  = ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  3  Y := ℝ₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons_savings_iid:parameter:β ====
+STAGE cons_savings_iid / PARAMETER β
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  β  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  5  β : ℝ₊₊  :: ["discount factor must be a strictly positive number"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons_savings_iid:parameter:γ ====
+STAGE cons_savings_iid / PARAMETER γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  γ  ∈ (1, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  6  γ : (1, inf)  :: ["Relative risk aversion must be greater than 1"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons_savings_iid:parameter:R ====
+STAGE cons_savings_iid / PARAMETER R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  R  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  7  R : ℝ₊₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons_savings_iid:parameter:μ_y ====
+STAGE cons_savings_iid / PARAMETER μ_y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  μ_y  ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  8  μ_y : ℝ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons_savings_iid:parameter:σ_y ====
+STAGE cons_savings_iid / PARAMETER σ_y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  σ_y  ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  9  σ_y : ℝ₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons_savings_iid:parameter:p_zero ====
+STAGE cons_savings_iid / PARAMETER p_zero
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  p_zero  ∈ (0, 1)
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  10  p_zero : (0,1)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons_savings_iid:distribution:y ====
+STAGE cons_savings_iid / DISTRIBUTION y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  y  ~ Mixture((p_zero, 0), (1 − p_zero, LogNormal(μ_y, σ_y)))
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  13  y ~ Mixture((p_zero, 0), (1 - p_zero, LogNormal(μ_y, σ_y)))
+
+Definitions referenced
+  μ_y     cons_savings_iid:parameter:μ_y
+  σ_y     cons_savings_iid:parameter:σ_y
+  p_zero  cons_savings_iid:parameter:p_zero
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons_savings_iid:function:𝑢 ====
+STAGE cons_savings_iid / FUNCTION 𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑢  : ℝ₊₊ → (−∞, 0),  c ↦ c^(1 − γ)/(1 − γ)
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  15  𝑢(c : ℝ₊₊) := c^(1-γ)/(1-γ)  :: [id=util]
+
+Definitions referenced
+  γ     cons_savings_iid:parameter:γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons_savings_iid:function:𝑑𝑢 ====
+STAGE cons_savings_iid / FUNCTION 𝑑𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑑𝑢  : {()} → UNRESOLVED[𝑑𝑢; defining function result],  D_{c}(𝑢)
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  16  𝑑𝑢     := D_{c}(𝑢)  :: [id=marg_util]
+
+Definitions referenced
+  𝑢     cons_savings_iid:function:𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons_savings_iid:function:𝑑𝑢𝑖𝑛𝑣 ====
+STAGE cons_savings_iid / FUNCTION 𝑑𝑢𝑖𝑛𝑣
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑑𝑢𝑖𝑛𝑣  : {()} → UNRESOLVED[𝑑𝑢𝑖𝑛𝑣; defining function result],  Inv(𝑑𝑢)
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  17  𝑑𝑢𝑖𝑛𝑣 := Inv(𝑑𝑢)  :: [id=inv_marg_util]
+
+Definitions referenced
+  𝑑𝑢    cons_savings_iid:function:𝑑𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons_savings_iid:correspondence:Γ ====
+STAGE cons_savings_iid / CORRESPONDENCE Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Γ  : ℝ₊ ⇉ ℝ₊₊,  x ↦ (0, x]
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  18  Γ(x : ℝ₊) := (0, x]  :: [id=feasible_consumption]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.cash_on_hand ====
+STAGE cons_savings_iid / FORWARD BLOCK arvl_to_dcsn / cash_on_hand
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  cons_savings_iid.bl
+  21  w = y + b*R  :: [id=cash_on_hand, "market_resources are blah blah"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.1 ====
+STAGE cons_savings_iid / FORWARD BLOCK dcsn_to_cntn / 1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  cons_savings_iid.bl
+  25  a = w - c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.value ====
+STAGE cons_savings_iid / BACKWARD BLOCK cntn_to_dcsn / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(w) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  28  V = 𝑢(c) + β*V[>]  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.value ====
+STAGE cons_savings_iid / BACKWARD BLOCK dcsn_to_arvl / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉≺(b) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  31  V[<] = E_{y}(V)  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== policy.optimality ====
+STAGE cons_savings_iid / POLICY BLOCK policy / optimality
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  cons_savings_iid.bl
+  34  c = argmax_{cp : Γ(w)}(𝑢(cp) + β*V[>])  :: [id=optimality]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons_savings_iid:g:arvl_to_dcsn ====
+STAGE cons_savings_iid / LAW OF MOTION arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≺  : ℝ₊ × Y → ℝ₊,  (b, y) ↦ y + b · R
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  21  w = y + b*R  :: [id=cash_on_hand, "market_resources are blah blah"]
+
+Definitions referenced
+  Y     cons_savings_iid:set:Y
+  R     cons_savings_iid:parameter:R
+  y     cons_savings_iid:distribution:y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons_savings_iid:g:dcsn_to_cntn ====
+STAGE cons_savings_iid / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : {w, c ∈ ℝ₊ × ℝ₊₊ | c ∈ Γ(w)} → ℝ₊,  (w, c) ↦ w − c
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  25  a = w - c
+
+Definitions referenced
+  Γ     cons_savings_iid:correspondence:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons_savings_iid:G:cntn_to_dcsn ====
+STAGE cons_savings_iid / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, w, c ∈ ℝ × ℝ₊ × ℝ₊₊ | c ∈ Γ(w)} → ℝ,  (V≻, w, c) ↦ 𝑢(c) + β · V≻
+
+Conditions
+  𝑉(w) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  28  V = 𝑢(c) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  β     cons_savings_iid:parameter:β
+  𝑢     cons_savings_iid:function:𝑢
+  Γ     cons_savings_iid:correspondence:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons_savings_iid:G:dcsn_to_arvl ====
+STAGE cons_savings_iid / VALUE AGGREGATOR dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≺  : ℝ × ℝ₊ → ℝ,  (w, b) ↦ w
+
+Conditions
+  𝑉≺(b) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  31  V[<] = E_{y}(V)  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cons_savings_iid:G:policy ====
+STAGE cons_savings_iid / VALUE AGGREGATOR policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, w, c ∈ ℝ × ℝ₊ × ℝ₊₊ | c ∈ Γ(w)} → ℝ,  (V≻, w, c) ↦ 𝑢(c) + β · V≻
+──────────────────────────────────────────────────────────────────────────────
+Source  cons_savings_iid.bl
+  34  c = argmax_{cp : Γ(w)}(𝑢(cp) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  β     cons_savings_iid:parameter:β
+  𝑢     cons_savings_iid:function:𝑢
+  Γ     cons_savings_iid:correspondence:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

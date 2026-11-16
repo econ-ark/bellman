@@ -103,6 +103,7 @@ class Example:
     stages: dict = dataclasses.field(default_factory=dict)
     connectors: list = dataclasses.field(default_factory=list)
     additions: tuple = ()
+    inputs: dict = dataclasses.field(default_factory=dict)
 
 
 def corrected(example):
@@ -223,6 +224,29 @@ EXPLICIT_POLICY = """@methods: perfect_foresight
 }
 """
 
+_VALUE_FIELDS = """@stage: two_fields
+Γ_c(x : ℝ) := [0, x]
+[id=arvl_to_dcsn, (k : ℝ) : !arvl -> (m : ℝ) : !dcsn] {
+    m = k + 1
+}
+[id=dcsn_to_cntn, (m, c : ℝ₊ @ !ctrl) : !dcsn -> (a : ℝ) : !cntn] {
+    a = m - c
+}
+[id=cntn_to_dcsn, (W[>] : ℝ @ !vlu, c) : !cntn
+    -> (W : ℝ @ !vlu, B : ℝ @ !vlu) : !dcsn] {
+    W = c + W[>]/2
+    B = c/2
+}
+[id=dcsn_to_arvl, (W, B) : !dcsn
+    -> (W[<] : ℝ @ !vlu, B[<] : ℝ @ !vlu) : !arvl] {
+    W[<] = W
+    B[<] = B
+}
+[id=policy, (W[>]) : !cntn -> (c : ℝ₊ @ !ctrl) : !dcsn] {
+    c = argmax_{cp : Γ_c(m)}(cp + W[>]/2)
+}
+"""
+
 # The two-node stage, two shocks integrated by two nodes of one backward
 # block, which two examples change and the fixtures module of the tests reads
 # for the stages it builds.
@@ -251,7 +275,7 @@ z ~ N(0,1)
     V[<] = V
 }
 [id=policy, (V[>]) -> c] {
-    c = argmax_{c : Γ(k_d)}(E_{y,z}(V[>])) :: [id=objective]
+    c = argmax_{c : Γ(k_d)}(E_{y,z}(β*V[>]) + E_{y,z}(β*V[>])) :: [id=objective]
 }
 """
 
@@ -263,6 +287,7 @@ _TWO_NODES_PARTS = {
     "transition": "    a = k_d*(c*y + (1-c)*R) + z\n",
     "declarations": "y ~ N(0,1)\nz : ℝ\nz ~ N(0,1)\n",
     "header": "(V[>] : ℝ @ !vlu) : !cntn -> (V : ℝ @ !vlu) : !dcsn]",
+    "policy": "    c = argmax_{c : Γ(k_d)}(E_{y,z}(β*V[>]) + E_{y,z}(β*V[>])) :: [id=objective]\n",
 }
 
 
@@ -392,6 +417,27 @@ def write_registry(directory, files):
 # The smallest text that breaks each rule of `RULES`, by rule name; the
 # examples of `TARGET_RULES` and `FACTORY_RULES` join the table below.
 EXAMPLES = {
+    "law-requirement": Example(
+        rule="law-requirement", address="arvl_to_dcsn", words=("age", "arvl_to_dcsn"),
+        text="""@stage: t
+y : ℝ
+y(_age) ~ N(_age, 1)
+[id=arvl_to_dcsn, (k : ℝ, y, age) : !arvl -> (m : ℝ) : !dcsn] {
+    m = k + y(age)
+}
+[id=cntn_to_dcsn, (age : ℝ @ !vlu @ !cnst) : !cntn -> (B : ℝ @ !vlu @ !cnst) : !dcsn] {
+    B = age
+}
+""", provokes="numerical-law", target="arvl_to_dcsn", write={"inputs": {"age": 2}},
+    ),
+    "continuation-input": Example(
+        rule="continuation-input", address="inputs.L", words=("L", "2", "(-inf, 0]"),
+        text="""@stage: t
+[id=cntn_to_dcsn, (L : (-inf, 0] @ !vlu @ !cnst) : !cntn -> (B : ℝ @ !vlu @ !cnst) : !dcsn] {
+    B = L
+}
+""", provokes="check_inputs", inputs={"L": 2}, write={"inputs": {"L": -2}},
+    ),
     "syntax": Example(
         rule="syntax",
         corpus="cons",
@@ -513,6 +559,34 @@ EXAMPLES = {
         address="dcsn_to_arvl.value",
         words=("arvl perch", "mentions V", "shock y", "E_{y}"),
         write={"changes": ()},
+    ),
+    "constant-dependence": Example(
+        rule="constant-dependence",
+        text=_VALUE_FIELDS.replace("B : ℝ @ !vlu", "B : ℝ @ !vlu @ !cnst"),
+        address="cntn_to_dcsn.2",
+        words=("constant field B", "control c"),
+        write={"edits": (("B = c/2", "B = 0"),)},
+    ),
+    "policy-objective": Example(
+        rule="policy-objective",
+        text=_VALUE_FIELDS.replace("B = c/2", "B = c + W[>]/2"),
+        address="policy.1",
+        words=("argmax objective", "W, B"),
+        write={"edits": (("B = c + W[>]/2", "B = c/2"),)},
+    ),
+    "policy-feasibility": Example(
+        rule="policy-feasibility",
+        text=_VALUE_FIELDS.replace(
+            "Γ_c(x : ℝ) := [0, x]", "Γ_c(x : ℝ) := {cp : ℝ₊ | cp <= x - B}"
+        ).replace("[id=policy, (W[>])", "[id=policy, (W[>], B)"),
+        address="policy.1",
+        words=("feasible set reads B", "depends on the choice"),
+        write={
+            "edits": (
+                ("Γ_c(x : ℝ) := {cp : ℝ₊ | cp <= x - B}", "Γ_c(x : ℝ) := [0, x]"),
+                ("[id=policy, (W[>], B)", "[id=policy, (W[>])"),
+            )
+        },
     ),
     # the application writes the grid line in the method block of a block file
     # (AMD-MB-001 §4.1); the example writes the policy block of the stage file
@@ -1051,6 +1125,7 @@ EXAMPLES = {
         text=_two_nodes(
             backward="    V = E_{y,z}(V[>]) + y :: [id=value]\n",
             header="(V[>] : ℝ @ !vlu, y) : !cntn -> (V : ℝ @ !vlu) : !dcsn]",
+            policy="    c = 1/2 :: [id=objective]\n",
         ),
         address="cntn_to_dcsn.value",
         words=(
@@ -1107,6 +1182,7 @@ EXAMPLES = {
             backward="    V = E_{z}(E_{y}(V[>])) :: [id=value]\n",
             transition="    a = y\n",
             declarations="z : ℝ\nr : [-1,1]\n(y, z) ~ N((0,0),((1,0),(0,0)))\n",
+            policy="    c = 1/2 :: [id=objective]\n",
         ),
         address="cntn_to_dcsn.value",
         words=("the expectation over y on line cntn_to_dcsn.value", "y given z", "singular",

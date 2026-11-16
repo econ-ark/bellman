@@ -18,7 +18,7 @@ topic: [factory]
 
 ## 1 A period with one stage
 
-A period holds one record for each [stage occurrence](../stage/01-the-stage.md), under its key, and the **within-period connectors**, which identify continuation fields of one stage with arrival fields of another. This period holds the discounting stage alone and needs no connector. From the repository root, the period's one record is written from the stage file, the period is appended to an empty trellis as its terminal period, and the trellis is elaborated and bound:
+A period holds one record for each [stage occurrence](../stage/01-the-stage.md), under its key, and the **within-period connectors**, which select matching continuation and arrival fields and can name pairs of value-type fields sent backward. This period holds the discounting stage alone and needs no connector. From the repository root, the period's one record is written from the stage file, the period is appended to an empty trellis as its terminal period, and the trellis is elaborated and bound:
 
 ```python
 from bellman.stage import load_stage

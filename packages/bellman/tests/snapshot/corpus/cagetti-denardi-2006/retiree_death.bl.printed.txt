@@ -1,0 +1,855 @@
+BELLMAN-SYM / STAGE retiree_death                         [VERSION = SYMBOLIC]
+a stage occurrence of applications/cagetti-denardi-2006/declaration/stages/
+retiree_death/retiree_death.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        a_rd≺ state, V≺ value
+  ∼ decision       a state, y state, θ state, V value
+  ≻ continuation   a_rd_rt≻ state, a_rd_yc≻ state, y_rd_yc≻ state, θ_rd_yc≻
+                   state, W_r≻ value, V_young≻ value
+  ≺ → ∼            y_n, θ_n drawn after arrival, before decision
+  ∼ → ≻            s drawn after decision, before continuation
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           a_rd≺ at arrival, a at decision, y at decision, θ at
+                   decision, a_rd_rt≻ at continuation, a_rd_yc≻ at
+                   continuation, y_rd_yc≻ at continuation, θ_rd_yc≻ at
+                   continuation
+  controls         none
+  values           V at the arrival, decision perches; W_r at the continuation
+                   perch; V_young at the continuation perch
+  shocks           y_n, θ_n, drawn between arrival and decision; s, drawn
+                   between decision and continuation
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → arvl_to_dcsn   (a_rd≺, y_n, θ_n) : !arvl -> (a, y, θ) : !dcsn
+  → dcsn_to_cntn   (a, y, θ, s) : !dcsn ->
+                   (a_rd_rt≻, a_rd_yc≻, y_rd_yc≻, θ_rd_yc≻) : !cntn
+  ← cntn_to_dcsn   (W_r≻, V_young≻) : !cntn -> (V) : !dcsn
+  ← dcsn_to_arvl   (V) : !dcsn -> (V≺) : !arvl
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  sets                     3   Xa := ℝ₊, Y := ℝ₊₊, Θ := ℝ₊
+  distributions            3   y_n, θ_n, s
+  parameters               8   β : (0, 1); η : [0, 1]; π_o : [0, 1];
+                               P_y : [0, 1]; y_grid : ℝ₊₊; ρ_θ0 : [0, 1];
+                               ρ_θ1 : [0, 1]; θ_e : ℝ₊₊
+  laws of motion           2   a = a_rd; y = y_n; θ = θ_n;
+                               a_rd_rt = a; a_rd_yc = a; y_rd_yc = y; θ_rd_yc
+                               = θ
+  value aggregators        2   V = β*E_{s}((W_r[>], η*V_young[>])[s]);
+                               V[<] = E_{y_n, θ_n}(V)
+  block lines              9   arvl_to_dcsn.1, arvl_to_dcsn.2,
+                               arvl_to_dcsn.3, dcsn_to_cntn.survive.1,
+                               dcsn_to_cntn.die.1, dcsn_to_cntn.die.2,
+                               dcsn_to_cntn.die.3, cntn_to_dcsn.value,
+                               dcsn_to_arvl.value
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   (𝑊_r≻, 𝑉_young≻) ↦ 𝑉≺
+                    forward    refused under not-constructed
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ≺ a_rd≺  → y_n, θ_n drawn →  ∼ a, y, θ  → s drawn →  ≻ a_rd_rt≻,
+             a_rd_yc≻, y_rd_yc≻, θ_rd_yc≻
+  backward   ≺ V≺  ←  ∼ V  ←  ≻ W_r≻, V_young≻
+
+==== stage ====
+STAGE retiree_death
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑊_r≻      : Xa → ℝ
+         𝑉_young≻  : Xa × Y × Θ → ℝ
+         ──────────────────────────────────────
+    out  𝑉≺        : Xa → ℝ
+
+Where
+  (a, y, θ) = 𝑔≺(a_rd, y_n, θ_n)
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑊_r≻, 𝑉_young≻               out: 𝑉
+
+    2  dcsn_to_arvl
+       in: 𝑉                            out: 𝑉≺
+
+Conditions
+  cntn_to_dcsn:Aggregation  𝑉(a, y, θ) ∈ ℝ
+  dcsn_to_arvl:Aggregation  𝑉≺(a_rd) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  17  y_n ~ Invariant(P_y, y_grid)
+        :: ["the working ability of an offspring, drawn from the invariant
+        distribution of P_y"]
+  19  θ_n ~ Invariant(((ρ_θ0, 1 - ρ_θ0), (1 - ρ_θ1, ρ_θ1)), (0, θ_e))
+        :: ["the entrepreneurial ability of an offspring, drawn from the
+        invariant distribution of the ability chain"]
+  24  a = a_rd
+  25  y = y_n
+  26  θ = θ_n
+  31  a_rd_rt = a
+  34  a_rd_yc = a
+  35  y_rd_yc = y
+  36  θ_rd_yc = θ
+  41  V = β*E_{s}((W_r[>], η*V_young[>])[s])
+        :: [id=value]
+  45  V[<] = E_{y_n,θ_n}(V)
+        :: [id=value]
+
+Definitions referenced
+  Xa    retiree_death:set:Xa
+  Y     retiree_death:set:Y
+  Θ     retiree_death:set:Θ
+  y_n   retiree_death:distribution:y_n
+  θ_n   retiree_death:distribution:θ_n
+  𝑔≺    retiree_death:g:arvl_to_dcsn
+
+File
+  applications/cagetti-denardi-2006/declaration/stages/retiree_death/
+  retiree_death.bl
+
+Perches
+  ≺  arrival, written [<]
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE retiree_death / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   W_r≻      : {W_r≻, V_young≻}
+       V_young≻  : {W_r≻, V_young≻}
+       ────────────────────────────
+  out  V         : {V}
+
+Conditions
+  𝑉(a, y, θ) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  41  V = β*E_{s}((W_r[>], η*V_young[>])[s])  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward dcsn_to_arvl ====
+STAGE retiree_death / BACKWARD BLOCK dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V   : {V}
+       ──────────
+  out  V≺  : {V≺}
+
+Conditions
+  𝑉≺(a_rd) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  45  V[<] = E_{y_n,θ_n}(V)  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward arvl_to_dcsn ====
+STAGE retiree_death / FORWARD BLOCK arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a_rd≺  : {a_rd≺}
+       y_n    : {y_n}
+       θ_n    : {y_n, θ_n}
+       ───────────────────
+  out  a      : {a, y, θ}
+       y      : {y}
+       θ      : {a, y, θ}
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  24  a = a_rd
+  25  y = y_n
+  26  θ = θ_n
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE retiree_death / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a         : {a, y, θ}
+       y         : {y}
+       θ         : {a, y, θ}
+       s         : {s}
+       ────────────────────────────────────────────────────
+  out  a_rd_rt≻  : {a_rd_rt≻, a_rd_yc≻, y_rd_yc≻, θ_rd_yc≻}
+       a_rd_yc≻  : {a_rd_rt≻, a_rd_yc≻, y_rd_yc≻, θ_rd_yc≻}
+       y_rd_yc≻  : {y_rd_yc≻}
+       θ_rd_yc≻  : {a_rd_rt≻, a_rd_yc≻, y_rd_yc≻, θ_rd_yc≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  31  a_rd_rt = a
+  34  a_rd_yc = a
+  35  y_rd_yc = y
+  36  θ_rd_yc = θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn / survive ====
+STAGE retiree_death / FORWARD BLOCK dcsn_to_cntn / survive
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a         : {a, y, θ}
+       ────────────────────────────────────────────────────
+  out  a_rd_rt≻  : {a_rd_rt≻, a_rd_yc≻, y_rd_yc≻, θ_rd_yc≻}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn / die ====
+STAGE retiree_death / FORWARD BLOCK dcsn_to_cntn / die
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a         : {a, y, θ}
+       y         : {y}
+       θ         : {a, y, θ}
+       ────────────────────────────────────────────────────
+  out  a_rd_yc≻  : {a_rd_rt≻, a_rd_yc≻, y_rd_yc≻, θ_rd_yc≻}
+       y_rd_yc≻  : {y_rd_yc≻}
+       θ_rd_yc≻  : {a_rd_rt≻, a_rd_yc≻, y_rd_yc≻, θ_rd_yc≻}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE retiree_death / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑊_r≻      : Xa → ℝ
+       𝑉_young≻  : Xa × Y × Θ → ℝ
+       ───────────────────────────────────────────────────────
+  out  𝑉         : Xa × Y × Θ → ℝ
+
+Where
+  𝑔_survive≻  : Xa × Y × Θ → Xa,  𝑔_survive≻(a, y, θ) = 𝑔≻(a, y, θ, survive)
+  𝑔_die≻      : Xa × Y × Θ → Xa × Y × Θ,  𝑔_die≻(a, y, θ) = 𝑔≻(a, y, θ, die)
+
+Operations
+  1  Pullback:survive
+     in: 𝑊_r≻                           out: 𝑊_r≻ ∘ 𝑔_survive≻
+     ─────────────────────────────────────────────────────────
+     rule: (𝑊_r≻ ∘ 𝑔_survive≻)(a, y, θ) = 𝑊_r≻(𝑔_survive≻(a, y, θ))
+
+  2  Pullback:die
+     in: 𝑉_young≻                       out: 𝑉_young≻ ∘ 𝑔_die≻
+     ─────────────────────────────────────────────────────────
+     rule: (𝑉_young≻ ∘ 𝑔_die≻)(a, y, θ) = 𝑉_young≻(𝑔_die≻(a, y, θ))
+
+  3  Aggregation
+     in: (1), (2)                       out: 𝑉
+     ─────────────────────────────────────────────────────────
+     rule: 𝑉
+             = β · E_{s}[(𝑊_r≻(𝑔_survive≻(a, y, θ)),
+                          η · 𝑉_young≻(𝑔_die≻(a, y, θ)))[s]]
+           on (a, y, θ) ∈ Xa × Y × Θ
+
+  4  Evaluation
+     in: 𝑉                              out: 𝑉
+     ─────────────────────────────────────────────────────────
+     rule: 𝑉 : Xa × Y × Θ → ℝ
+
+Conditions
+  Aggregation  𝑉(a, y, θ) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  41  V = β*E_{s}((W_r[>], η*V_young[>])[s])  :: [id=value]
+
+Definitions referenced
+  Xa    retiree_death:set:Xa
+  Y     retiree_death:set:Y
+  Θ     retiree_death:set:Θ
+  β     retiree_death:parameter:β
+  η     retiree_death:parameter:η
+  s     retiree_death:distribution:s
+  𝑔≻    retiree_death:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback:survive ====
+STAGE retiree_death / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Pullback:survive
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑊_r≻  : Xa → ℝ
+       ──────────────────────
+  out  𝑊_r≻ ∘ 𝑔_survive≻
+             : Xa × Y × Θ → ℝ
+
+Where
+  𝑔_survive≻  : Xa × Y × Θ → Xa,  𝑔_survive≻(a, y, θ) = 𝑔≻(a, y, θ, survive)
+
+Rule
+  (𝑊_r≻ ∘ 𝑔_survive≻)(a, y, θ) = 𝑊_r≻(𝑔_survive≻(a, y, θ))
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  31  a_rd_rt = a
+  34  a_rd_yc = a
+  35  y_rd_yc = y
+  36  θ_rd_yc = θ
+
+Definitions referenced
+  Xa    retiree_death:set:Xa
+  Y     retiree_death:set:Y
+  Θ     retiree_death:set:Θ
+  𝑔≻    retiree_death:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback:die ====
+STAGE retiree_death / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Pullback:die
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_young≻  : Xa × Y × Θ → ℝ
+       ──────────────────────────
+  out  𝑉_young≻ ∘ 𝑔_die≻
+                 : Xa × Y × Θ → ℝ
+
+Where
+  𝑔_die≻  : Xa × Y × Θ → Xa × Y × Θ,  𝑔_die≻(a, y, θ) = 𝑔≻(a, y, θ, die)
+
+Rule
+  (𝑉_young≻ ∘ 𝑔_die≻)(a, y, θ) = 𝑉_young≻(𝑔_die≻(a, y, θ))
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  31  a_rd_rt = a
+  34  a_rd_yc = a
+  35  y_rd_yc = y
+  36  θ_rd_yc = θ
+
+Definitions referenced
+  Xa    retiree_death:set:Xa
+  Y     retiree_death:set:Y
+  Θ     retiree_death:set:Θ
+  𝑔≻    retiree_death:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE retiree_death / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑊_r≻ ∘ 𝑔_survive≻
+          : Xa × Y × Θ → ℝ
+       𝑉_young≻ ∘ 𝑔_die≻
+          : Xa × Y × Θ → ℝ
+       ───────────────────
+  out  𝑉  : Xa × Y × Θ → ℝ
+
+Where
+  𝑔_survive≻  : Xa × Y × Θ → Xa,  𝑔_survive≻(a, y, θ) = 𝑔≻(a, y, θ, survive)
+  𝑔_die≻      : Xa × Y × Θ → Xa × Y × Θ,  𝑔_die≻(a, y, θ) = 𝑔≻(a, y, θ, die)
+
+Rule
+  𝑉 = β · E_{s}[(𝑊_r≻(𝑔_survive≻(a, y, θ)), η · 𝑉_young≻(𝑔_die≻(a, y, θ)))[s]]
+  on (a, y, θ) ∈ Xa × Y × Θ
+
+Conditions
+  𝑉(a, y, θ) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  41  V = β*E_{s}((W_r[>], η*V_young[>])[s])  :: [id=value]
+
+Definitions referenced
+  Xa    retiree_death:set:Xa
+  Y     retiree_death:set:Y
+  Θ     retiree_death:set:Θ
+  β     retiree_death:parameter:β
+  η     retiree_death:parameter:η
+  s     retiree_death:distribution:s
+  𝑔≻    retiree_death:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE retiree_death / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : Xa × Y × Θ → ℝ
+       ───────────────────
+  out  𝑉  : Xa × Y × Θ → ℝ
+
+Where
+  𝑔_survive≻  : Xa × Y × Θ → Xa,  𝑔_survive≻(a, y, θ) = 𝑔≻(a, y, θ, survive)
+  𝑔_die≻      : Xa × Y × Θ → Xa × Y × Θ,  𝑔_die≻(a, y, θ) = 𝑔≻(a, y, θ, die)
+
+Rule
+  𝑉 = β · E_{s}[(𝑊_r≻(𝑔_survive≻(a, y, θ)), η · 𝑉_young≻(𝑔_die≻(a, y, θ)))[s]]
+  on (a, y, θ) ∈ Xa × Y × Θ
+  𝑉 : Xa × Y × Θ → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xa    retiree_death:set:Xa
+  Y     retiree_death:set:Y
+  Θ     retiree_death:set:Θ
+  β     retiree_death:parameter:β
+  η     retiree_death:parameter:η
+  s     retiree_death:distribution:s
+  𝑔≻    retiree_death:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl ====
+STAGE retiree_death / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉   : Xa × Y × Θ → ℝ
+       ─────────────────────────────────────────────
+  out  𝑉≺  : Xa → ℝ
+
+Operations
+  1  Pullback
+     in: 𝑉                              out: 𝑉 ∘ 𝑔≺
+     ───────────────────────────────────────────────
+     rule: (𝑉 ∘ 𝑔≺)(a_rd, y_n, θ_n) = 𝑉(𝑔≺(a_rd, y_n, θ_n))
+
+  2  value:Expectation:1
+     in: (1)
+     out: a_rd ↦ E_{y_n, θ_n}[𝑉(𝑔≺(a_rd, y_n, θ_n))]
+     ───────────────────────────────────────────────
+     rule: (2)(a_rd) = E_{y_n, θ_n}[𝑉(𝑔≺(a_rd, y_n, θ_n))]
+
+  3  Aggregation
+     in: (2)                            out: 𝑉≺
+     ───────────────────────────────────────────────
+     rule: 𝑉≺(a_rd) = E_{y_n, θ_n}[𝑉(𝑔≺(a_rd, y_n, θ_n))]
+
+  4  Evaluation
+     in: 𝑉≺                             out: 𝑉≺
+     ───────────────────────────────────────────────
+     rule: 𝑉≺ : Xa → ℝ
+
+Conditions
+  Aggregation  𝑉≺(a_rd) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  45  V[<] = E_{y_n,θ_n}(V)  :: [id=value]
+
+Definitions referenced
+  Xa    retiree_death:set:Xa
+  Y     retiree_death:set:Y
+  Θ     retiree_death:set:Θ
+  y_n   retiree_death:distribution:y_n
+  θ_n   retiree_death:distribution:θ_n
+  𝑔≺    retiree_death:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Pullback ====
+STAGE retiree_death / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : Xa × Y × Θ → ℝ
+       ───────────────────
+  out  𝑉 ∘ 𝑔≺
+          : Xa × Y × Θ → ℝ
+
+Rule
+  (𝑉 ∘ 𝑔≺)(a_rd, y_n, θ_n) = 𝑉(𝑔≺(a_rd, y_n, θ_n))
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  24  a = a_rd
+  25  y = y_n
+  26  θ = θ_n
+
+Definitions referenced
+  Xa    retiree_death:set:Xa
+  Y     retiree_death:set:Y
+  Θ     retiree_death:set:Θ
+  y_n   retiree_death:distribution:y_n
+  θ_n   retiree_death:distribution:θ_n
+  𝑔≺    retiree_death:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / value:Expectation:1 ====
+STAGE retiree_death / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+  / value:Expectation:1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉 ∘ 𝑔≺
+         : Xa × Y × Θ → ℝ
+       ──────────────────────────────────────────
+  out  a_rd ↦ E_{y_n, θ_n}[𝑉(𝑔≺(a_rd, y_n, θ_n))]
+         : Xa → ℝ
+
+Rule
+  value:Expectation:1(a_rd) = E_{y_n, θ_n}[𝑉(𝑔≺(a_rd, y_n, θ_n))]
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  17  y_n ~ Invariant(P_y, y_grid)
+        :: ["the working ability of an offspring, drawn from the invariant
+        distribution of P_y"]
+  19  θ_n ~ Invariant(((ρ_θ0, 1 - ρ_θ0), (1 - ρ_θ1, ρ_θ1)), (0, θ_e))
+        :: ["the entrepreneurial ability of an offspring, drawn from the
+        invariant distribution of the ability chain"]
+  45  V[<] = E_{y_n,θ_n}(V)
+        :: [id=value]
+
+Definitions referenced
+  Xa    retiree_death:set:Xa
+  Y     retiree_death:set:Y
+  Θ     retiree_death:set:Θ
+  y_n   retiree_death:distribution:y_n
+  θ_n   retiree_death:distribution:θ_n
+  𝑔≺    retiree_death:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Aggregation ====
+STAGE retiree_death / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+  / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a_rd ↦ E_{y_n, θ_n}[𝑉(𝑔≺(a_rd, y_n, θ_n))]
+           : Xa → ℝ
+       ──────────────────────────────────────────
+  out  𝑉≺  : Xa → ℝ
+
+Rule
+  𝑉≺(a_rd) = E_{y_n, θ_n}[𝑉(𝑔≺(a_rd, y_n, θ_n))]
+
+Conditions
+  𝑉≺(a_rd) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  45  V[<] = E_{y_n,θ_n}(V)  :: [id=value]
+
+Definitions referenced
+  Xa    retiree_death:set:Xa
+  y_n   retiree_death:distribution:y_n
+  θ_n   retiree_death:distribution:θ_n
+  𝑔≺    retiree_death:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Evaluation ====
+STAGE retiree_death / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≺  : Xa → ℝ
+       ────────────
+  out  𝑉≺  : Xa → ℝ
+
+Rule
+  𝑉≺(a_rd) = E_{y_n, θ_n}[𝑉(𝑔≺(a_rd, y_n, θ_n))]
+  𝑉≺ : Xa → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xa    retiree_death:set:Xa
+  y_n   retiree_death:distribution:y_n
+  θ_n   retiree_death:distribution:θ_n
+  𝑔≺    retiree_death:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward ====
+refused: NotConstructed: applications/cagetti-denardi-2006/declaration/stages/retiree_death/retiree_death.bl:17:1-17:165: the forward measures are not constructed: the distribution of y_n is written with the family 'Invariant', whose result set is not declared; the forward measure is constructed only for the families N, LogNormal, Uniform, TruncatedNormal, TruncatedLogNormal, TypeIExtremeValue, DiscreteMarkov, MarkovChain, Mixture, Categorical, Bernoulli (address 'applications/cagetti-denardi-2006/declaration/stages/retiree_death/retiree_death.bl:17'; rule not-constructed)
+
+==== retiree_death:set:Xa ====
+STAGE retiree_death / SET Xa
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xa  = ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  3  Xa := ℝ₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_death:set:Y ====
+STAGE retiree_death / SET Y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Y  = ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  4  Y  := ℝ₊₊
+       :: ["working ability; the positive reals stand in for its finite grid,
+       whose number of points is a numerical choice"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_death:set:Θ ====
+STAGE retiree_death / SET Θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Θ  = ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  5  Θ  := ℝ₊
+       :: ["entrepreneurial ability; the nonnegative reals stand in for its
+       two levels, 0 and θ_e"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_death:parameter:β ====
+STAGE retiree_death / PARAMETER β
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  β  ∈ (0, 1)
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  7  β      : (0,1)  :: ["discount factor"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_death:parameter:η ====
+STAGE retiree_death / PARAMETER η
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  η  ∈ [0, 1]
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  8  η      : [0,1]  :: ["weight on the utility of the descendants"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_death:parameter:π_o ====
+STAGE retiree_death / PARAMETER π_o
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  π_o  ∈ [0, 1]
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  9  π_o    : [0,1]
+       :: ["probability that an old person survives for another period"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_death:parameter:P_y ====
+STAGE retiree_death / PARAMETER P_y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  P_y  ∈ [0, 1]
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  10  P_y    : [0,1]
+        :: ["transition matrix of working ability; the set of one probability
+        stands in for the matrix"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_death:parameter:y_grid ====
+STAGE retiree_death / PARAMETER y_grid
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  y_grid  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  11  y_grid : ℝ₊₊
+        :: ["grid points of working ability, normalised to an average of one;
+        the positive reals stand in for the vector"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_death:parameter:ρ_θ0 ====
+STAGE retiree_death / PARAMETER ρ_θ0
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  ρ_θ0  ∈ [0, 1]
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  12  ρ_θ0   : [0,1]
+        :: ["probability that zero entrepreneurial ability persists"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_death:parameter:ρ_θ1 ====
+STAGE retiree_death / PARAMETER ρ_θ1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  ρ_θ1  ∈ [0, 1]
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  13  ρ_θ1   : [0,1]
+        :: ["probability that the positive entrepreneurial ability persists"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_death:parameter:θ_e ====
+STAGE retiree_death / PARAMETER θ_e
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  θ_e  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  14  θ_e    : ℝ₊₊  :: ["the positive level of entrepreneurial ability"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_death:distribution:y_n ====
+STAGE retiree_death / DISTRIBUTION y_n
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  y_n  ~ UNRESOLVED[Invariant; mathematical definition]
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  17  y_n ~ Invariant(P_y, y_grid)
+        :: ["the working ability of an offspring, drawn from the invariant
+        distribution of P_y"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_death:distribution:θ_n ====
+STAGE retiree_death / DISTRIBUTION θ_n
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  θ_n  ~ UNRESOLVED[Invariant; mathematical definition]
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  19  θ_n ~ Invariant(((ρ_θ0, 1 - ρ_θ0), (1 - ρ_θ1, ρ_θ1)), (0, θ_e))
+        :: ["the entrepreneurial ability of an offspring, drawn from the
+        invariant distribution of the ability chain"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_death:distribution:s ====
+STAGE retiree_death / DISTRIBUTION s
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  s  ~ Categorical(π_o, 1 − π_o)
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  21  s ~ Categorical((π_o, 1 - π_o))
+        :: ["surviving or dying, with probabilities in the order of the
+        labels"]
+
+Definitions referenced
+  π_o   retiree_death:parameter:π_o
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.1 ====
+STAGE retiree_death / FORWARD BLOCK arvl_to_dcsn / 1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  retiree_death.bl
+  24  a = a_rd
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.2 ====
+STAGE retiree_death / FORWARD BLOCK arvl_to_dcsn / 2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  retiree_death.bl
+  25  y = y_n
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.3 ====
+STAGE retiree_death / FORWARD BLOCK arvl_to_dcsn / 3
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  retiree_death.bl
+  26  θ = θ_n
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.survive.1 ====
+STAGE retiree_death / FORWARD BLOCK dcsn_to_cntn / survive.1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  retiree_death.bl
+  31  a_rd_rt = a
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.die.1 ====
+STAGE retiree_death / FORWARD BLOCK dcsn_to_cntn / die.1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  retiree_death.bl
+  34  a_rd_yc = a
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.die.2 ====
+STAGE retiree_death / FORWARD BLOCK dcsn_to_cntn / die.2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  retiree_death.bl
+  35  y_rd_yc = y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.die.3 ====
+STAGE retiree_death / FORWARD BLOCK dcsn_to_cntn / die.3
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  retiree_death.bl
+  36  θ_rd_yc = θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.value ====
+STAGE retiree_death / BACKWARD BLOCK cntn_to_dcsn / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(a, y, θ) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  41  V = β*E_{s}((W_r[>], η*V_young[>])[s])  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.value ====
+STAGE retiree_death / BACKWARD BLOCK dcsn_to_arvl / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉≺(a_rd) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  45  V[<] = E_{y_n,θ_n}(V)  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_death:g:arvl_to_dcsn ====
+STAGE retiree_death / LAW OF MOTION arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≺  : Xa × Y × Θ → Xa × Y × Θ,  (a_rd, y_n, θ_n) ↦ (a_rd, y_n, θ_n)
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  24  a = a_rd
+  25  y = y_n
+  26  θ = θ_n
+
+Definitions referenced
+  Xa    retiree_death:set:Xa
+  Y     retiree_death:set:Y
+  Θ     retiree_death:set:Θ
+  y_n   retiree_death:distribution:y_n
+  θ_n   retiree_death:distribution:θ_n
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_death:g:dcsn_to_cntn ====
+STAGE retiree_death / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : Xa × Y × Θ × {survive, die} → (Xa, Xa × Y × Θ)[s],
+        (a, y, θ, s) ↦ (a, (a, y, θ))[s]
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  31  a_rd_rt = a
+  34  a_rd_yc = a
+  35  y_rd_yc = y
+  36  θ_rd_yc = θ
+
+Definitions referenced
+  Xa    retiree_death:set:Xa
+  Y     retiree_death:set:Y
+  Θ     retiree_death:set:Θ
+  s     retiree_death:distribution:s
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_death:G:cntn_to_dcsn ====
+STAGE retiree_death / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : ℝ × ℝ × Xa × Y × Θ → ℝ,
+        (W_r≻, V_young≻, a, y, θ)
+          ↦ β · (π_o · W_r≻ + (1 − π_o) · (η · V_young≻))
+
+Conditions
+  𝑉(a, y, θ) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  41  V = β*E_{s}((W_r[>], η*V_young[>])[s])  :: [id=value]
+
+Definitions referenced
+  Xa    retiree_death:set:Xa
+  Y     retiree_death:set:Y
+  Θ     retiree_death:set:Θ
+  β     retiree_death:parameter:β
+  η     retiree_death:parameter:η
+  π_o   retiree_death:parameter:π_o
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_death:G:dcsn_to_arvl ====
+STAGE retiree_death / VALUE AGGREGATOR dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≺  : ℝ × Xa → ℝ,  (w, a_rd) ↦ w
+
+Conditions
+  𝑉≺(a_rd) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_death.bl
+  45  V[<] = E_{y_n,θ_n}(V)  :: [id=value]
+
+Definitions referenced
+  Xa    retiree_death:set:Xa
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

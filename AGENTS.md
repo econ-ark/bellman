@@ -16,8 +16,8 @@ This repository is the public export of the team's private development repositor
 ./install-dev.sh                      # venv/ with the dependencies and the packages bellman, asva, bellman-workbench
 source venv/bin/activate
 python -m bellman applications/cons-port/declaration/stages/cons/cons.bl   # prints one stage's sheet
-pytest packages/bellman -n auto       # the fast core of the package's tests
-pytest packages/bellman -n auto -m sweep   # the sweeps over the corpus stages, run before a merge
+pytest packages/bellman -n auto       # the default set of the package's tests: every case not marked complete_set
+pytest packages/bellman -n auto --complete   # the complete set: every case, run before a merge
 pytest tests applications tutorials packages/asva/tests -n auto
 mkdocs build --strict                 # the documentation site into site/
 ```

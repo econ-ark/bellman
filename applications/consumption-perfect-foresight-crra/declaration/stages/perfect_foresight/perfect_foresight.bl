@@ -1,21 +1,9 @@
 @stage: perfect_foresight
 
-# The unconstrained perfect foresight consumption model with CRRA utility,
-# normalized by permanent income: one state, market resources m, one control,
-# consumption c, and no shock. It is the buffer-stock stage of
-# applications/buffer-stock/ without its two income shocks. Two declared sets
-# state the model's two conditions: the upper bound R^(ρ-1) of the discount
-# factor is the return impatience condition, and the upper bound R of the
-# growth factor is the finite human wealth condition. Three derived
-# parameters, constants the stage defines from its parameters and the
-# calibration does not supply, state the model's quantities: the return
-# patience factor q, which is below one exactly under the return impatience
-# condition, human wealth h, the present value of permanent income, and the
-# natural borrowing limit L = 1 - h. Total wealth m - L, resources less this
-# period's income plus human wealth, is positive exactly above the limit, and
-# the feasible set is consumption below total wealth. The consumption
-# function is known in closed form, c = κ(m - L) with κ = 1 - q, on m > L
-# (economics.md).
+# Perfect foresight consumption with human wealth sent backward.
+# The decision field h includes this period's income; h[>] is the present
+# value of the next period's human wealth. The stage sends h*Γ/R backward.
+# The last period takes in zero. Feasibility reads h[>], with bound -h[>].
 
 Xm := ℝ
 Xa := ℝ
@@ -23,18 +11,13 @@ Xa := ℝ
 β : ℝ₊₊ @ (0, R^(ρ-1))   :: ["discount factor; its upper bound R^(ρ-1) is the return impatience condition, q < 1"]
 ρ : (1, inf)               :: ["coefficient of relative risk aversion, greater than one"]
 R : ℝ₊₊                    :: ["gross interest factor"]
-Γ : (0, R)                 :: ["permanent income growth factor; its upper bound R is the finite human wealth condition"]
+Γ : ℝ₊₊                    :: ["permanent income growth factor"]
 
 q : (0,1) := (β*R)^(1/ρ)/R   :: ["the return patience factor; the return impatience condition is q < 1"]
-h := 1/(1 - Γ/R)     :: ["human wealth, the present discounted value of permanent income"]
-L := 1 - h           :: ["the natural borrowing limit on market resources, above which total wealth m - L is positive"]
-
-# q needs to be fixed as a condition. 
-# 12 November 2026: the definition of q above now carries the set (0,1), which calibration holds.
 
 𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)         :: [id=util]
 
-Γ_c(x : Xm) := {c : ℝ₊₊ | c < x - L}   :: [id=feasible_consumption]
+Γ_c(x : Xm) := {c : ℝ₊₊ | c < x + h[>]}   :: [id=feasible_consumption]
 
 [id=arvl_to_dcsn, (k : Xa) : !arvl -> (m : Xm) : !dcsn] {
     m = R*k/Γ + 1                   :: [id=market_resources]
@@ -44,14 +27,16 @@ L := 1 - h           :: ["the natural borrowing limit on market resources, above
     a = m - c                       :: [id=savings]
 }
 
-[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, h[>] : ℝ₊ @ !vlu @ !cnst, c) : !cntn -> (V : ℝ @ !vlu, h : ℝ₊ @ !vlu @ !cnst) : !dcsn] {
     V = 𝑢(c) + β*V[>]               :: [id=value]
+    h = 1 + h[>]                    :: [id=human_wealth]
 }
 
-[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+[id=dcsn_to_arvl, (V, h) : !dcsn -> (V[<] : ℝ @ !vlu, h[<] : ℝ₊ @ !vlu @ !cnst) : !arvl] {
     V[<] = Γ^(1-ρ) * V              :: [id=value]
+    h[<] = h*Γ/R                    :: [id=human_wealth]
 }
 
-[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+[id=policy, (V[>] : ℝ @ !vlu, h[>] : ℝ₊ @ !vlu @ !cnst) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
     c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])     :: [id=optimality]
 }

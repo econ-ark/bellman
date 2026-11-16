@@ -87,8 +87,9 @@ def test_item_2_the_reference_structure_is_reproduced(reference_runs, manifest, 
             assert actual[key].shape == legacy.shape, key
             if key.endswith("/grid"):
                 np.testing.assert_array_equal(actual[key], legacy, err_msg=key)
-            for sentinel in (tool.LOW, tool.HIGH):
-                np.testing.assert_array_equal(actual[key] == sentinel, legacy == sentinel, err_msg=key)
+            if configuration != "beginning_vfi":
+                for sentinel in (tool.LOW, tool.HIGH):
+                    np.testing.assert_array_equal(actual[key] == sentinel, legacy == sentinel, err_msg=key)
             np.testing.assert_array_equal(np.isfinite(actual[key]), np.isfinite(legacy), err_msg=key)
     # the six expressions of the reference are kernels of cons.bl with its methods file, equal at a hundred points:
     # each the function of a piece of the builders' kernels, called with the arguments it names and then the
@@ -100,7 +101,9 @@ def test_item_2_the_reference_structure_is_reproduced(reference_runs, manifest, 
     names = {"rho": manifest["calibration_as_loaded"]["ρ"], "c": c, "a": a, "m_d": m_d, "V_cont": continuation,
              "dV_cont": lambda x: np.interp(x, a, dv)}
     legacy = {role: eval(text, {"__builtins__": {}}, names) for role, text in manifest["expressions"].items()}
-    decision, policy = cons.dcsn.builder.bwd.kernels(), cons.builder.policy.kernels()
+    inputs = {"V[>]": continuation}
+    cons.check_inputs(inputs)
+    decision, policy = cons.dcsn.builder.bwd.kernels(inputs=inputs), cons.builder.policy.kernels(inputs=inputs)
     continued = continuation(tool.by_name(decision, "Pullback", {"m": m_d, "c": c}))
     at_decision = {"V≻": continued, "m": m_d, "c": c}
     kernels = {"vfi_maximand": tool.by_name(decision, "Aggregation", at_decision),
@@ -143,7 +146,13 @@ def share_ties(port, continuation, computed, reference):
     apart = np.flatnonzero(np.isclose(np.abs(computed - reference), step, rtol=0, atol=1e-12))
     if len(apart) == 0:
         return apart
-    objective, capital = tool.share_objective(port), tool.evaluation_grid(port)
+    inputs = {"V[>]": continuation}
+    port.check_inputs(inputs)
+    record = port.dcsn.builder.bwd.kernels(inputs=inputs)
+    method = tool.method_at(port, tool.expectation_place(port))
+    counts = {name: int(tool.setting(port, value)) for name, value in tool.keyword_arguments(method).items()}
+    nodes, weights = tool.expectation_rule(record, method.handler, counts)
+    objective, capital = tool.share_objective(record, nodes, weights, historical=True), tool.evaluation_grid(record)
     tied = []
     for i in apart:
         at_reference, at_computed = objective(continuation, capital[i], np.array([reference[i], computed[i]]))
@@ -152,7 +161,7 @@ def share_ties(port, continuation, computed, reference):
     return np.array(tied, dtype=int)
 
 
-def test_item_3_the_reference_values_are_reproduced_to_1e_12(reference_runs, manifest, archive, ending):
+def test_item_3_the_reference_values_are_reproduced_to_1e_12(reference_runs, manifest, archive, ending, corrected_vfi):
     """Every array of the fixed reference is reproduced to 1e-12, except that the portfolio share may lie one step
     of its grid from the reference's share at a state where the share objective takes the same value at both.
 
@@ -176,8 +185,11 @@ def test_item_3_the_reference_values_are_reproduced_to_1e_12(reference_runs, man
         for h in range(manifest["horizon"] + 1):
             keys = sorted(key for key in actual if key.startswith(f"{configuration}/h{h}/") and not key.endswith("/grid"))
             if configuration == "beginning_vfi":
-                rows.append({"configuration": configuration, "h": h, "arrays": len(keys), "largest difference": None,
-                             "share ties": None, "result": "structural only: " + manifest["vfi_structural_only_reason"]})
+                difference = max(float(np.max(np.abs(actual[key] - archive[key]))) for key in keys)
+                assert all(np.all(np.isfinite(actual[key])) for key in keys)
+                rows.append({"configuration": configuration, "h": h, "arrays": len(keys),
+                             "largest difference": difference, "share ties": None,
+                             "result": "historical handler; invalid value comparator: " + manifest["vfi_structural_only_reason"]})
                 continue
             largest, tied_here = 0.0, 0
             for key in keys:
@@ -197,6 +209,14 @@ def test_item_3_the_reference_values_are_reproduced_to_1e_12(reference_runs, man
                       f"grid from the reference's share, as ties of the share objective to within {TIE_TOLERANCE:g} of "
                       "its size: " + "; ".join(f"{key} {count} of {archive[key].size}" for key, count in sorted(ties.items())),
                       stacklevel=1)
+    model, solutions, terminal = corrected_vfi
+    actual = tool.reference_arrays("beginning_vfi", solutions)
+    for h in range(6):
+        keys = [key for key in actual if key.startswith(f"beginning_vfi/h{h}/") and not key.endswith("/grid")]
+        rows.append({"configuration": "beginning_vfi_corrected", "h": h, "arrays": len(keys),
+                     "largest difference": max(float(np.max(np.abs(actual[key] - archive[key]))) for key in keys),
+                     "share ties": None,
+                     "result": "ordinary share_search and gauss_hermite; finite feasible solve; invalid historical comparator"})
     if os.environ.get("CONS_PORT_WRITE_EVIDENCE") == "1":
         EVIDENCE.mkdir(exist_ok=True)
         (EVIDENCE / "reference-comparison.json").write_text(json.dumps(rows, indent=1) + "\n", encoding="utf-8")
@@ -204,19 +224,50 @@ def test_item_3_the_reference_values_are_reproduced_to_1e_12(reference_runs, man
         lines += [f"{row['configuration']:15s} {row['h']:2d} {row['arrays']:6d} "
                   f"{'' if row['largest difference'] is None else format(row['largest difference'], '.2e'):>19s} "
                   f"{'' if row['share ties'] is None else row['share ties']:>10}  "
-                  f"{row['result'][:22]}" for row in rows]
+                  f"{row['result'].split(': ', 1)[0]}" for row in rows]
         (EVIDENCE / "reference-comparison.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
     recorded = json.loads((EVIDENCE / "reference-comparison.json").read_text(encoding="utf-8"))
     assert [(row["configuration"], row["h"], row["arrays"]) for row in recorded] == \
            [(row["configuration"], row["h"], row["arrays"]) for row in rows]
 
 
-def test_item_4_the_reference_quadrature_adds_the_mean_of_the_logarithms_twice(reference_runs):
+def test_corrected_fifth_configuration_has_finite_feasible_solutions(corrected_vfi):
+    model, solutions, terminal = corrected_vfi
+    for h, solution in enumerate(solutions):
+        port = model["periods"][h]["stages"]["port"]
+        assert tool.method_at(port, "policy").handler == "cons-port:share_search"
+        assert tool.method_at(port, "cntn_to_dcsn.E_Ψ_θ").handler == "cons-port:gauss_hermite"
+        for value in solution.values():
+            assert np.all(np.isfinite(value.values))
+            assert np.all(np.isfinite(value.dvalues))
+            assert value.input_conditions
+        assert np.all((solution["cons"].policy["c"] > 0) &
+                      (solution["cons"].policy["c"] <= solution["cons"].grid))
+        assert np.all((solution["port"].policy["varsigma"] >= 0) &
+                      (solution["port"].policy["varsigma"] <= 1))
+        cons = model["periods"][h]["stages"]["cons"]
+        rho = float(cons.par["ρ"].value)
+        count = int(cons.settings["n_c"].value)
+        # Direct maximization of the declared consumption objective, without
+        # package kernels or the application's candidate constructor.
+        for index in (0, 1, 100, 400):
+            resources = solution["cons"].grid[index]
+            delta = min(1e-6, resources * 1e-6)
+            candidates = np.linspace(delta, resources - delta, count)
+            objective = candidates ** (1 - rho) / (1 - rho) + solution["disc"](resources - candidates)
+            best = int(np.argmax(objective))
+            assert solution["cons"].policy["c"][index] == candidates[best]
+            np.testing.assert_allclose(solution["cons"].values[index], objective[best], rtol=1e-14, atol=0)
+    assert solutions[0]["port"].values[0] < tool.LOW
+
+
+def test_item_4_the_reference_quadrature_adds_the_mean_of_the_logarithms_twice(reference_runs, ending):
     runs, _ = reference_runs
     port = runs["beginning_egm"][0]["periods"][0]["stages"]["port"]
     noport = runs["cons_only"][0]["periods"][0]["stages"]["noport"]
+    terminal = tool.terminal_value(ending, TERMINAL["a"])
     assert tool.method_at(port, "cntn_to_dcsn.E_Ψ_θ").handler == "cons-port:gauss_hermite_reference"
-    shocks, mean, covariance = tool.lognormal_law(port)
+    shocks, mean, covariance = tool.lognormal_law(port.dcsn.builder.bwd.kernels(inputs={"V[>]": terminal}))
     assert shocks == ("Ψ", "θ")
     declared, weights = tool.normal_nodes(mean, covariance, [7, 7])
     doubled, same_weights = tool.reference_normal_nodes(mean, covariance, [7, 7])
@@ -225,7 +276,7 @@ def test_item_4_the_reference_quadrature_adds_the_mean_of_the_logarithms_twice(r
     np.testing.assert_allclose(weights @ np.exp(declared), [1.040000, 1.000000], atol=5e-7)
     np.testing.assert_allclose(weights @ np.exp(doubled), [1.070524, 0.988813], atol=5e-7)
     # in one dimension the earlier library added the mean once, so the two rules agree
-    _, mean_1, covariance_1 = tool.lognormal_law(noport)
+    _, mean_1, covariance_1 = tool.lognormal_law(noport.dcsn.builder.bwd.kernels(inputs={"V[>]": terminal}))
     np.testing.assert_array_equal(tool.normal_nodes(mean_1, covariance_1, [7])[0],
                                   tool.reference_normal_nodes(mean_1, covariance_1, [7])[0])
 
@@ -269,7 +320,7 @@ def test_an_unknown_handler_is_refused_with_the_handlers_the_tool_realizes():
     cons = consumption_stage().methodize(addition_text("methods.bl", '"cons-port:egm"', '"cons-port:unknown"')
                                          ).configure(str(DECLARATION / "settings" / "cons.yml"))
     with pytest.raises(ValueError) as refused:
-        tool.stage_operator(cons)
+        tool.stage_operator(cons, {"V[>]": tool.ValueFn([0, 100], [-1, 0], [1, 0.01])})
     assert "'cons-port:unknown'" in str(refused.value) and "cons-port:egm" in str(refused.value)
 
 
@@ -309,14 +360,16 @@ def test_the_endogenous_grid_operator_is_built_from_the_records_under_a_new_cali
     # a stage of its own, since a binding binds the stage it is called on (SB-10); the methods file's grids are
     # multi-exponential, the word !expmult of their factors
     stage = consumption_stage().calibrate({"ρ": ρ}).methodize(str(STAGES / "cons" / "methods.bl")).configure(settings)
-    operator = tool.egm(stage)
+    grid = tool.expmult_grid(50.0, 400)
+    continuation = tool.ValueFn(grid, -1.0 / (grid + 0.5), 1.0 / (grid + 0.5) ** 2)
+    operator = tool.stage_operator(stage, {"V[>]": continuation})
     # the operator's saved form names neither the class of the stage nor the module that defines it
     saved = cloudpickle.dumps(operator)
     assert type(stage).__qualname__.encode() not in saved and type(stage).__module__.encode() not in saved
     grid = tool.expmult_grid(50.0, 400)
     continuation = tool.ValueFn(grid, -1.0 / (grid + 0.5), 1.0 / (grid + 0.5) ** 2)
     solved = operator(continuation)
-    savings, resources = tool.savings_grid(stage), tool.evaluation_grid(stage)
+    savings, resources = tool.savings_grid(stage.builder.policy.kernels(inputs={"V[>]": continuation})), tool.evaluation_grid(stage.dcsn.builder.bwd.kernels(inputs={"V[>]": continuation}))
     assert (len(savings), len(resources)) == (300, 150)
 
     def expression(role, **names):
@@ -335,27 +388,30 @@ def test_the_endogenous_grid_operator_is_built_from_the_records_under_a_new_cali
 
 
 def test_the_spacing_word_of_a_grid_factor_gives_the_even_and_the_multi_exponential_grid():
+    continuation = tool.ValueFn([0, 2000], [-1, 0], [1, 0.01])
     settings = {"n_m": 500, "m_min": 0.01, "m_max": 2000.0, "n_a": 400, "a_min": 1.0e-6, "a_max": 100.0}
     # no spacing word, the grids of methods.reference.bl: numpy.linspace from the lower bound to the upper, bit
     # for bit; a stage of its own, since a binding binds the stage it is called on (SB-10)
     stage = consumption_stage().methodize(str(STAGES / "cons" / "methods.reference.bl")).configure(settings)
-    np.testing.assert_array_equal(tool.evaluation_grid(stage), np.linspace(0.01, 2000.0, 500))
-    np.testing.assert_array_equal(tool.savings_grid(stage), np.linspace(1.0e-6, 100.0, 400))
+    np.testing.assert_array_equal(tool.evaluation_grid(stage.dcsn.builder.bwd.kernels(inputs={"V[>]": continuation})), np.linspace(0.01, 2000.0, 500))
+    np.testing.assert_array_equal(tool.savings_grid(stage.builder.policy.kernels(inputs={"V[>]": continuation})), np.linspace(1.0e-6, 100.0, 400))
     # `!expmult`, the grids of methods.bl: the count asked, strictly increasing from just above the lower bound to
     # the upper bound, the multi-exponential grid of the tool shifted by the lower bound, and dense near it: the
     # first spacing is less than a thousandth of the last, and more than half of the points lie in the lowest
     # tenth of the range
     stage = consumption_stage().methodize(str(STAGES / "cons" / "methods.bl")).configure(settings)
-    for grid, (low, high, count) in ((tool.evaluation_grid(stage), (0.01, 2000.0, 500)),
-                                     (tool.savings_grid(stage), (1.0e-6, 100.0, 400))):
+    for grid, (low, high, count) in ((tool.evaluation_grid(stage.dcsn.builder.bwd.kernels(inputs={"V[>]": continuation})), (0.01, 2000.0, 500)),
+                                     (tool.savings_grid(stage.builder.policy.kernels(inputs={"V[>]": continuation})), (1.0e-6, 100.0, 400))):
         assert len(grid) == count and low < grid[0] and np.isclose(grid[-1], high, rtol=1e-12, atol=0)
         assert np.all(np.diff(grid) > 0) and np.diff(grid)[0] < np.diff(grid)[-1] / 1000
         assert (grid <= low + (high - low) / 10).sum() > count / 2
-        np.testing.assert_array_equal(grid, low + tool.expmult_grid(high - low, count))
+        expected = low + tool.expmult_grid(high - low, count)
+        expected[-1] = high
+        np.testing.assert_array_equal(grid, expected)
     # a spacing word the tool does not read is refused with the words it reads
     stage = consumption_stage().methodize(addition_text("methods.bl", "!expmult", "!geometric")).configure(settings)
     with pytest.raises(ValueError) as refused:
-        tool.evaluation_grid(stage)
+        tool.evaluation_grid(stage.dcsn.builder.bwd.kernels(inputs={"V[>]": continuation}))
     assert "!geometric" in str(refused.value) and "!expmult" in str(refused.value)
 
 
@@ -364,6 +420,6 @@ def test_solve_period_gives_the_same_values_whatever_the_list_order(reference_ru
     model, solutions = runs["end_returns"]
     period = model["periods"][1]
     listed = {"stages": dict(reversed(list(period["stages"].items()))), "connectors": period["connectors"]}
-    again = tool.solve_period(listed, solutions[0]["cons"])
+    again = tool.solve_period(listed, {"V[>]": solutions[0]["cons"]})
     for key, held in solutions[1].items():
         np.testing.assert_array_equal(again[key].values, held.values)

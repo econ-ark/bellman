@@ -31,13 +31,15 @@ topic: [calculus]
 The **Bellman calculus** is a mathematical account of staged **recursive dynamic programs**, sequential decision problems specified by states, feasible actions, rewards, transitions and continuation values. The modeler writes stage equations in `.bl`, with supporting YAML for composition and numerical choices. Their [semantics](../wiki/semantics.md) states what those expressions mean. Numerical methods approximate the resulting operations under separate assumptions.
 
 > [!info] Recursive dynamic programs
-> A fixed-policy operator $\mathbb T_\pi$ evaluates a specified policy $\pi$; an optimizing Bellman operator $\mathbb T$ takes the supremum over feasible actions. Finite-horizon problems use backward recursion from a terminal value. In a stationary infinite-horizon problem, a value can be characterized by a fixed point under suitable existence and optimality conditions. A type signature alone does not establish those conditions; see [Periods and the trellis](./08-periods-and-trellis.md).
+> A fixed-policy operator $\mathbb T_\pi$ evaluates a specified policy $\pi$; an optimizing Bellman operator $\mathbb T$ takes the supremum over feasible actions. Finite-horizon problems use backward recursion from terminal data for every field taken in. In a stationary infinite-horizon problem, all fields sent backward must be at a fixed point under suitable existence and optimality conditions. A type signature alone does not establish those conditions; see [Periods and the trellis](./08-periods-and-trellis.md).
 
-A [stage](./03-Stages%20and%20perches.md) organizes a local decision around its available information, transitions, rewards and controls. Stages compose into [periods](./07-stage-composition.md), and periods compose across time into a [trellis](./08-periods-and-trellis.md), the declared sequence of period occurrences and their inter-period connections. A stage can be examined separately once its continuation input and other required inputs have been supplied. Replacing it in a larger model requires compatible boundaries and may change values elsewhere in that model.
+A [stage](./03-Stages%20and%20perches.md) organizes a local decision around its available information, transitions, rewards and controls. Stages compose into [periods](./07-stage-composition.md), and periods compose across time into a [trellis](./08-periods-and-trellis.md), a diagram of periods joined by connections. A stage can be examined separately once its continuation fields have been supplied, including any age, bound or other value-type input. Replacing it in a larger model requires compatible boundaries and may change values elsewhere in that model.
 
 <a id="modularity"></a>
 
 ## 1. Modularity
+
+[Appendix H](./APPX-H-MODULARITY.md) defines modularity: repeated occurrences share a declaration's operators and calibration rule.
 
 Dynamic programming studies operators on value functions; their composition makes the dependence between local problems explicit.[^dp-tradition] Consider two fixed-policy operators
 
@@ -47,7 +49,7 @@ $$
 \mathbb T_{B,\pi}:\mathsf V_1\to\mathsf V_2.
 $$
 
-Here each $\mathsf V_i$ is a specified class of functions on the corresponding state space, and $\pi$ collects the relevant fixed policies. With primitives and other free inputs held fixed, define $v_A=\mathbb T_{A,\pi}v$ and $v_B=\mathbb T_{B,\pi}v_A$. The second operation receives the first operation's result as its continuation input. More generally, $K$ operators with matching types $\mathbb T_{k,\pi}:\mathsf V_{k-1}\to\mathsf V_k$ compose as
+In this scalar specialization, each $\mathsf V_i$ is a specified class of functions on the corresponding state space. With several value-type fields, use the tuple carrier of [Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) §6. The index $\pi$ collects the relevant fixed policies. With primitives and other free inputs held fixed, define $v_A=\mathbb T_{A,\pi}v$ and $v_B=\mathbb T_{B,\pi}v_A$. The second operation receives the first operation's result as its continuation input. More generally, $K$ operators with matching types $\mathbb T_{k,\pi}:\mathsf V_{k-1}\to\mathsf V_k$ compose as
 
 $$
 \mathbb T_\pi=\mathbb T_{K,\pi}\circ\mathbb T_{K-1,\pi}\circ\cdots\circ\mathbb T_{1,\pi},
@@ -80,7 +82,7 @@ The calculus therefore names the operations and the inputs on which they depend.
 
 A [denotational semantics](../wiki/semantics.md) assigns mathematical meanings to expressions, with a compound expression interpreted from its constituents and the relevant input environment.[^stoy-denotation] The environment assigns values to free inputs, such as a continuation function. In the specified construction, arithmetic in `.bl` equations is parsed; the temporary **abstract syntax tree**, a record of the source's grammatical structure, and the recorded source locations are used during interpretation. Retained stage equations, local definitions and typed diagrams record the interpreted structure. This is the specified construction rather than a statement that every runtime component already implements it.
 
-YAML declarations of [periods](../wiki/period.md) and the [trellis](../wiki/trellis.md) retain the outer model organization, and each occurrence has fresh stage objects. A connector identifies compatible boundary quantities by declared renaming; a nonidentity economic transformation requires an authored equation. No single stored graph of the entire trellis is required by these statements.
+YAML declarations of [periods](../wiki/period.md) and the [trellis](../wiki/trellis.md) retain the outer model organization, and each occurrence has fresh stage objects. In a modular model, those objects reuse their declaration’s recorded calibration sources and operator family. Their supplied field arguments may differ; methods and settings are outside this condition. A connector identifies compatible boundary quantities by declared renaming; a nonidentity economic transformation requires an authored equation. No single stored graph of the entire trellis is required by these statements.
 
 Several related calculations may be derived from a model. Under a fixed feasible policy $\pi$, the backward transition expectation $P_\pi$ and forward distribution operator $\mathbb M_\pi$ satisfy the restricted expectation–measure pairing described in [Operators and builders](./05-Operators%20and%20builders.md) §3. A reward-bearing or optimizing Bellman operator $\mathbb T$ does not have that linear-distribution pairing in general. Relations between alternative value representations require their own conditions; see [Semi-conjugacy](./10-semi-conjugacy.md).
 

@@ -15,3 +15,5 @@
     $$
 
     where the next period's state $m_{t+1}$ is produced by a transition from the current state, the savings choice $a_t = m_t - c_t$, and the **next-period shock** $y_{t+1}$ realised at the start of next period. The expectation is taken over $y_{t+1}$, a *fresh, next-period* draw of the same income process that produced the current $m_t$ through $m_t = R\, k_t + y_t$, not the $y_t$ already baked into $m_t$. In the running example this same draw becomes the next stage's *pre-decision* shock.
+
+    These date subscripts distinguish successive value fields. Each backward step applies the same declared operator to the next tuple; the operator itself has no date argument. The terminal tuple is supplied when the model is realized.

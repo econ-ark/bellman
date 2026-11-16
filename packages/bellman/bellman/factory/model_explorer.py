@@ -88,8 +88,8 @@ lacks.
 answers or one the trellis verbs bound, answers the two builders graphs of
 the trellis, and since design pass 14 §7 its two initial diagrams as well
 (`_trellis_initial_graph`). Each period is a layer `periods[h]`, the
-periods side by side as the trellis drawing places them, its attribute `age`
-where the registry gives one; each stage occurrence is a layer
+periods side by side as the trellis drawing places them, labelled by position;
+each stage occurrence is a layer
 `periods[h]/<key>` inside its period, the stages of a period in their forward
 order, holding the occurrence's builders exactly as the stage view does,
 every id and every namespace prefixed by the occurrence's address; and each
@@ -105,9 +105,9 @@ writes on the route's state tuple supplies the destination's arrival
 measure; backward, the arrival value and marginal values the destination
 supplies answer the continuation value and marginal values the source's
 branch requires, each paired as the route's backward component records
-it, by the coordinate the two names declare under the route's map, by one
-wire of a role on each side, or by equal names where the route's
-permutation is the identity (`connections.PAIRING_RULES`), and the reading
+it, by a pair that the connector writes (`connections.EXPLICIT_PAIR`), by
+equal names, or by the one wire left on each side
+(`connections.PAIRING_RULES`), and the reading
 port of a backward join names that rule in its attribute `paired by` and,
 where the component is not compatible, its status in `compatibility`, so
 that a pairing by equal names and an uncertified pair are never silent. No
@@ -281,7 +281,7 @@ from bellman.factory.connections import (  # noqa: F401, PAIRING_RULES keeps its
 )
 from bellman.factory.joins import forward_order, unjoined_fields
 from bellman.factory.trellis import written_bindings
-from bellman.factory.trellis_drawings import chosen_periods, join_label, period_age
+from bellman.factory.trellis_drawings import chosen_periods, join_label
 from bellman.fold.block_lines import blocks_in_file_order, header_of
 from bellman.fold.conditions import parameters_named
 from bellman.native.identity import SEPARATOR, Identity, box_identity
@@ -1772,7 +1772,9 @@ def _setting_lines(stage, clause):
     configured = stage.settings
     return [
         str(configured[name])
-        for name in dict.fromkeys([*setting_names(clause.method), *setting_names(clause.grid)])
+        for name in dict.fromkeys([
+            *setting_names(clause.method), *setting_names(clause.grid, declared=configured)
+        ])
         if name in configured
     ]
 
@@ -1948,7 +1950,7 @@ def _selection(trellis, periods=None, stages=None, selection=None):
     )
 
 
-def _leaving(crossing, hypergraphs, direction, entries):
+def _leaving(crossing, hypergraphs, direction, entries, selection):
     """The wires the joins that leave a restricted view carry at the end the
     view holds, by that occurrence's address and the port id of the wire,
     each with the join's label and the address of the occurrence at the
@@ -1963,8 +1965,14 @@ def _leaving(crossing, hypergraphs, direction, entries):
     found = {}
     roles = JOINED_ROLES[direction]
     backward = direction == "backward"
+    routes = _routes_of_joins(selection)
     for join in crossing:
         entry = entries.get(join.target, "arvl")
+        route = routes[(join.source, join.field, join.target, join.arrival)]
+        # the constants that the join's route pairs, backward alone
+        read, written = (
+            (_required(route), _supplied_names(route)) if backward else ((), ())
+        )
         reader = (
             (join.source, "cntn", join.field) if backward else (join.target, entry, join.arrival)
         )
@@ -1973,10 +1981,10 @@ def _leaving(crossing, hypergraphs, direction, entries):
         )
         if reader[0] in hypergraphs:
             (inside, perch, field), outside = reader, writer[0]
-            wires = _carried(hypergraphs[inside].dom.inside, perch, field, roles)
+            wires = _carried(hypergraphs[inside].dom.inside, perch, field, roles, read)
         else:
             (inside, perch, field), outside = writer, reader[0]
-            wires = _carried(hypergraphs[inside].cod.inside, perch, field, roles)
+            wires = _carried(hypergraphs[inside].cod.inside, perch, field, roles, written)
         for sort in wires:
             found.setdefault((inside, str(sort.identity)), []).append((join.label, outside))
     return found
@@ -2382,7 +2390,7 @@ def _trellis_graph(
     # perch otherwise (`stage_answers.entry_perch`; the plan's P2)
     entries = {occurrence.address: entry_perch(occurrence.stage) for occurrence in occurrences}
     # the wires of the joins that leave a restricted view, at the end it holds
-    leaving = _leaving(crossing, hypergraphs, direction, entries)
+    leaving = _leaving(crossing, hypergraphs, direction, entries, selection)
     # one stage view per version: the occurrences of one version hold the
     # same graphs and bindings, so their views are one (`_version_key`)
     views = {}
@@ -2637,7 +2645,7 @@ def _trellis_graph(
     return graph_builder.Graph(
         id=direction,
         nodes=nodes,
-        groupNodeAttributes=_trellis_layers(trellis, occurrences, views),
+        groupNodeAttributes=_trellis_layers(occurrences, views),
         groupNodeConfigs=layouts,
     )
 
@@ -2891,14 +2899,21 @@ def _trellis_initial_graph(
             found[4].append(edge)
 
     roles = JOINED_ROLES[direction]
+    routes = _routes_of_joins(selection)
     for join in crossing:
         entry = entries.get(join.target, "arvl")
         if direction == "backward":
+            route = routes[(join.source, join.field, join.target, join.arrival)]
             if join.source in sorts:
-                for sort in _carried(hypergraphs[join.source].dom.inside, "cntn", join.field, roles):
+                for sort in _carried(
+                    hypergraphs[join.source].dom.inside, "cntn", join.field, roles, _required(route)
+                ):
                     mark(value_field(join.source, str(sort.identity)), join.source, join.target, join.label, True)
             if join.target in sorts:
-                for sort in _carried(hypergraphs[join.target].cod.inside, entry, join.arrival, roles):
+                for sort in _carried(
+                    hypergraphs[join.target].cod.inside, entry, join.arrival, roles,
+                    _supplied_names(route),
+                ):
                     mark(value_field(join.target, str(sort.identity)), join.target, join.source, join.label, False)
             continue
         if join.target in sorts and stage_of.get(join.target):
@@ -2929,7 +2944,7 @@ def _trellis_initial_graph(
     return graph_builder.Graph(
         id=graph_id,
         nodes=ordered,
-        groupNodeAttributes=_trellis_layers(trellis, occurrences, diagrams),
+        groupNodeAttributes=_trellis_layers(occurrences, diagrams),
         groupNodeConfigs=layouts,
     )
 
@@ -3155,18 +3170,16 @@ def _field_item(graph_builder, occurrence, identity, sort, sources, unjoined, co
     return graph_builder.MetadataItem(id=port_id, attrs=_key_values(graph_builder, shown))
 
 
-def _trellis_layers(trellis, occurrences, views):
+def _trellis_layers(occurrences, views):
     """The attributes of the layers of a graph of a trellis by namespace: a
-    period's `h` and, where the trellis's registry gives the last age, `age`
-    (`period_age`); an occurrence's `stage`, the label of its stage view;
+    period's position in its namespace; an occurrence's `stage`, the label of its stage view;
     and the layers of each occurrence's stage view, `views[address]`, under
     the occurrence's address."""
     layers = {}
     for occurrence in occurrences:
-        age = period_age(trellis, occurrence.h)
         # the period's index stands in the layer's name, `periods[1]`, and is
         # not written again
-        layers.setdefault(f"periods[{occurrence.h}]", {} if age is None else {"age": str(age)})
+        layers.setdefault(f"periods[{occurrence.h}]", {})
         layers[occurrence.address] = {"stage": _collection_label(occurrence.stage)}
         for namespace, shown in views[occurrence.address].groupNodeAttributes.items():
             layers[f"{occurrence.address}/{namespace}"] = shown
@@ -3233,7 +3246,8 @@ def _route_pairs(joins, hypergraphs, direction, selection):
     writes on the route's state tuple (`Route.law`) supplies each arrival
     measure of the destination whose coordinates hold the join's field; a
     route without a law leaves those measures unpaired. A join carries the
-    wires of the roles of `JOINED_ROLES` whose coordinates hold its field
+    wires of the roles of `JOINED_ROLES` whose coordinates hold its field,
+    and backward the constants that its route's components name
     (`_carried`), and is named on them.
 
     Answers `(supplied, undetermined)`: `supplied` holds, by the reading
@@ -3249,24 +3263,16 @@ def _route_pairs(joins, hypergraphs, direction, selection):
     perch or, for a stage that declares none, the decision perch
     (`_entry_perch_of`; the plan's P2)."""
     backward, roles = direction == "backward", JOINED_ROLES[direction]
-    routes = {}
-    for route in selection.routes:
-        for pair in route.pairs:
-            routes[
-                (
-                    f"periods[{pair.writing.h}]/{pair.writing.key}",
-                    pair.writing.field,
-                    f"periods[{pair.reading.h}]/{pair.reading.key}",
-                    pair.reading.field,
-                )
-            ] = route
+    routes = _routes_of_joins(selection)
     supplied, undetermined = {}, []
     for join in joins:
         route = routes[(join.source, join.field, join.target, join.arrival)]
         unpaired = []
         if backward:
             reader, writer = join.source, join.target
-            carried = _carried(hypergraphs[reader].dom.inside, "cntn", join.field, roles)
+            carried = _carried(
+                hypergraphs[reader].dom.inside, "cntn", join.field, roles, _required(route)
+            )
             by_name = {str(sort.identity): sort for sort in carried}
             for component in route.components:
                 sort = by_name.get(component.required)
@@ -3355,18 +3361,52 @@ def _entry_perch_of(forward_graph):
     return "dcsn" if "dcsn" in perches and "arvl" not in perches else "arvl"
 
 
-def _carried(wires, perch, field, roles):
+def _carried(wires, perch, field, roles, named=()):
     """The wires among `wires` a join carries at `perch` for its field
     `field`: those at the perch whose role is one of `roles` and whose
     coordinates hold the field, so that the fields a branch's wires are on
-    choose the branch."""
+    choose the branch; and each constant among `named`, the names that the
+    join's route pairs at that end. A constant has no coordinates, so no
+    field of a join chooses it."""
     return [
         sort
         for sort in wires
         if sort.identity.perch == perch
         and sort.role in roles
-        and any(point.perch == perch and point.field == field for point in sort.coordinates)
+        and (
+            any(point.perch == perch and point.field == field for point in sort.coordinates)
+            or (not sort.coordinates and str(sort.identity) in named)
+        )
     ]
+
+
+def _routes_of_joins(selection):
+    """The route of each join of a selection, by the join's two occurrences
+    and its two fields: the route whose pairs hold the join."""
+    return {
+        (
+            f"periods[{pair.writing.h}]/{pair.writing.key}",
+            pair.writing.field,
+            f"periods[{pair.reading.h}]/{pair.reading.key}",
+            pair.reading.field,
+        ): route
+        for route in selection.routes
+        for pair in route.pairs
+    }
+
+
+def _required(route):
+    """The names of the wires that a route's backward components require
+    at the continuation perch of its source."""
+    return frozenset(component.required for component in route.components)
+
+
+def _supplied_names(route):
+    """The names of the wires that a route's backward components take
+    from the entry perch of its destination."""
+    return frozenset(
+        component.supplied for component in route.components if component.supplied is not None
+    )
 
 
 def _unpaired_label(direction, undetermined):
@@ -3728,7 +3768,6 @@ def serve(graph_path, *, port=VIEWER_PORT, graph_id=None, layers=(), located=Non
     # the host `VIEWER_HOST` is written out, since a colon between two
     # replacement fields is the form of an identity's spelling, which no
     # module but `native/identity.py` assembles
-    # (tests/tools/identity_parse_sites.py)
     page = f"http://localhost:{port}/"
     if not _viewer_answers(port):
         threading.Thread(

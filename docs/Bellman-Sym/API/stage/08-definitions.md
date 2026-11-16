@@ -12,7 +12,7 @@ topic: [stage-object]
 # The definitions table
 
 > [!summary]
-> `stage.definitions` is the read-only table of everything a stage file declares, each name once, and of every line its [blocks](../../01-stage.md#3-builder-blocks) write, in file order. A record is read by its identity as a key, `list()` answers the table grouped by kind and `denote(identity)` the card of one record. Every listing is printed by the package from `applications/portfolio-choice/declaration/stages/cons/cons.bl`, except the last, which is printed from the perfect-foresight stage file `applications/consumption-perfect-foresight-crra/declaration/stages/perfect_foresight/perfect_foresight.bl` with its methods file `methods.bl`, which defines a derived parameter, and its calibration file.
+> `stage.definitions` is the read-only table of everything a stage file declares, each name once, and of every line its [blocks](../../01-stage.md#3-builder-blocks) write, in file order. A record is read by its identity as a key, `list()` answers the table grouped by kind and `denote(identity)` the card of one record. Every listing is printed by the package from `applications/portfolio-choice/declaration/stages/cons/cons.bl`, except the last, which is printed from the perfect-foresight stage file `applications/consumption-perfect-foresight-crra/declaration/stages/perfect_foresight/perfect_foresight.bl` with its methods file `methods.bl`, which defines the stationary coefficients, and its calibration file.
 
 > [!info]- Relationship with other documents
 > **Builds on** — [The stage](01-the-stage.md): the object `stage` below; [Stage tutorial](../../01-stage.md): the declarations as the file writes them.
@@ -81,10 +81,12 @@ VALUE AGGREGATORS 3 ────────────────────
                                      point read; listed and not checked
                                      [required]
   cons:G:dcsn_to_arvl   𝐺≺  : [−∞, ∞) × Xm × ℝ₊ → ℝ,  (V, m, l) ↦ V
-                        conditions 𝑉≺(m, l) ∈ ℝ
+                        conditions 𝑉≺(m) ∈ ℝ
+                                   𝑉≺(m, l) ∈ ℝ
   cons:G:policy         𝐺≻  : {V≻, m_d, c ∈ [−∞, ∞) × Xm × ℝ₊₊ | c ∈ Γ(m_d)}
-                                → UNRESOLVED[𝐺; result set],
+                                → [−∞, ∞),
                               (V≻, m_d, c) ↦ 𝑢(c) + V≻
+                        conditions ¬(𝑢(cp) ∈ [∞, ∞] ∧ V[>] ∈ [−∞, −∞])
 
 BLOCK LINES 6 ────────────────────────────────────────────────────────────────
   arvl_to_dcsn.1          m_d = m
@@ -106,9 +108,11 @@ BLOCK LINES 6 ──────────────────────
                                        point read; listed and not checked
                                        [required]
   dcsn_to_arvl.value      V[<] = V                        :: [id=value]
-                          conditions 𝑉≺(m, l) ∈ ℝ
+                          conditions 𝑉≺(m) ∈ ℝ
+                                     𝑉≺(m, l) ∈ ℝ
   policy.optimality       c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])
                             :: [id=optimality]
+                          conditions ¬(𝑢(cp) ∈ [∞, ∞] ∧ V[>] ∈ [−∞, −∞])
 ```
 
 The answer of `list()` also reads as a mapping from each kind to the identities of its records:
@@ -150,6 +154,8 @@ coordinates  ['V', 'c']
 ```
 
 ## 3 The card of a record
+
+A distribution card binds the local arguments of a law such as `s(_age) ~ Categorical((ψ[_age], 1 - ψ[_age]))`. The corresponding forward measure's extension applies that definition to the supplied age. The [life-cycle example](04-builder.md#5-the-kernels-of-a-builder) asks the builder for this applied law as detached numerical data.
 
 `stage.definitions.denote(identity)` answers the card of one record: the function or set it defines, the conditions on its values, the lines of the file it comes from and the records of the declared names it refers to. The card is asked of the table, since a record does not hold the stage it belongs to. The card of a set marked `!categories` prints the set's category map, the second object the set denotes ([A piece](05-piece.md) §6), on the row under the set, `0 ↦ newborn, 1 ↦ old (categories household_status)`, and `list()` prints the same row. The card of a distribution declared by `N`, `LogNormal`, `Uniform`, `TruncatedNormal` or `TypeIExtremeValue` prints in the same way the second object the declaration denotes, its measure at the written arguments ([Shock distributions](../../reference/laws.md) §1), on the row under the law: `y ~ N(0, 1)` is followed by `P_y = measure on ℝ given by B ↦ …`, and `list()` prints the same row. The row stands on the declaration's own card alone: the card of another record that reads the declaration lists it by its law.
 
@@ -227,9 +233,9 @@ Defines
      = 0.03846153846153855
 ──────────────────────────────────────────────────────────────────────────────
 Source  methods.bl
-  24  κ := 1 - q
-        :: ["the marginal propensity to consume, one minus the return patience
-        factor"]
+  5  κ := 1 - q
+       :: ["the marginal propensity to consume, one minus the return patience
+       factor"]
 
 Definitions referenced
   q     perfect_foresight:derived:q

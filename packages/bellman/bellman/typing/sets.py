@@ -736,17 +736,14 @@ def index_sets(setterm, definitions):
     `(I, A)`, for `I × K → A` the pair `(I, K → A)`, so that a nested
     selection reads one factor at a time, the first key on the first factor.
     None for a set that is no set of functions."""
-    term = defined(setterm, definitions)
-    if isinstance(term, T.Space):
-        term = defined(term.set, definitions)
-    if not isinstance(term, T.Functions):
+    indexed = index_factors(setterm, definitions)
+    if indexed is None:
         return None
-    domain = defined(term.domain, definitions)
-    if isinstance(domain, T.Product) and len(domain.factors) > 1:
-        rest = domain.factors[1:]
-        remainder = T.Functions(rest[0] if len(rest) == 1 else T.Product(rest), term.codomain)
-        return domain.factors[0], remainder
-    return domain, term.codomain
+    (first, *rest), codomain = indexed
+    if rest:
+        domain = rest[0] if len(rest) == 1 else T.Product(tuple(rest))
+        return first, T.Functions(domain, codomain)
+    return first, codomain
 
 
 def index_factors(setterm, definitions):
@@ -756,11 +753,21 @@ def index_factors(setterm, definitions):
     term = defined(setterm, definitions)
     if isinstance(term, T.Space):
         term = defined(term.set, definitions)
-    if not isinstance(term, T.Functions):
+    if not isinstance(term, T.Functions) or not is_index_set(term.domain, definitions):
         return None
     domain = defined(term.domain, definitions)
     factors = tuple(domain.factors) if isinstance(domain, T.Product) else (domain,)
     return factors, term.codomain
+
+
+def callable_set(setterm, definitions):
+    """The set of functions if its domain is not a finite index set."""
+    term = defined(setterm, definitions)
+    if isinstance(term, T.Space):
+        term = defined(term.set, definitions)
+    if isinstance(term, T.Functions) and not is_index_set(term.domain, definitions):
+        return term
+    return None
 
 
 def is_index_set(setterm, definitions) -> bool:
@@ -853,17 +860,27 @@ def _finite_within(a, b, definitions):
     """`within` for a pair in which a finite index set stands: the integers
     of a range lie in ℤ, in ℕ where the lower bound is a number of at least
     one, and in a real set or an interval where its numeric bounds do; the
-    numbers of a listed set lie in a set that holds each of them; a set of
-    labels lies in no set but itself. None where the bounds or the members
-    are not numbers, or where the pair is of another form."""
+    numbers of a listed set lie in a set that holds each of them. An infinite
+    numeric set is never included in a finite set. A nonempty set of labels
+    does not lie in a numeric set. None where the form or bounds leave
+    membership undecided."""
     if isinstance(b, (T.IntegerRange, T.Points, T.FiniteSet)):
         if isinstance(a, (T.IntegerRange, T.Points, T.FiniteSet)):
             return index_within(a, b, definitions)
-        return None
-    if isinstance(a, T.FiniteSet):
+        if numeric_primitive(a):
+            return False
+        bounds = endpoints(a) if isinstance(a, T.Interval) else None
+        if bounds is not None and bounds.lower < bounds.upper:
+            return False
         return None
     primitive = primitive_of(b)
+    if isinstance(a, T.FiniteSet):
+        if a.members and (numeric_primitive(b) or isinstance(b, T.Interval)):
+            return False
+        return None
     if isinstance(a, T.IntegerRange):
+        if primitive is not None and primitive.kind == REAL and primitive.order == 0:
+            return True
         if primitive is not None and primitive.kind == INTEGER:
             if primitive.order == 0:
                 return True

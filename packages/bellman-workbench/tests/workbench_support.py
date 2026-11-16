@@ -610,10 +610,10 @@ DETAILS_HOLDING_JS = """
 # too (design pass §2; unit K, Task 3): the head's text, then each row's
 # key with the text of its lines
 ADJUSTER_CONS_DETAILS = (
-    "adjuster_cons periods[1] · age 69 forward",
+    "adjuster_cons periods[1] forward",
     [
         ("file", ["declaration/stages/adjuster_cons/adjuster_cons.bl"]),
-        ("bound", ["methodized · configured"]),
+        ("bound", ["calibrated · methodized · configured"]),
         ("periods", ["0–50"]),
         ("also", ["declaration/spec.two-stages.yml · periods 0–50"]),
         ("from", ["tenure (adjust) w_adj → m · z_adj → z_d"]),
@@ -621,8 +621,8 @@ ADJUSTER_CONS_DETAILS = (
         (
             "fields",
             [
-                "∼ m ℝ₊₊ · z_d ℝ₊₊ · c ℝ₊₊ !ctrl · h_choice ℝ₊₊ !ctrl · V ℝ !vlu",
-                "≻ a_nxt_adj ℝ₊ · h_nxt_adj ℝ₊₊ · z_nxt_adj ℝ₊₊ · V ℝ !vlu",
+                "∼ m ℝ₊₊ · z_d ℝ₊₊ · c ℝ₊₊ !ctrl · h_choice ℝ₊₊ !ctrl · V ℝ !vlu · age Age !vlu",
+                "≻ a_nxt_adj ℝ₊ · h_nxt_adj ℝ₊₊ · z_nxt_adj ℝ₊₊ · V ℝ !vlu · age Age !vlu",
             ],
         ),
         # the occurrence's inputs, outputs and policies (design pass 10 §8; unit N, Task 7);
@@ -899,7 +899,7 @@ DURABLES_SLOT_KEYWORDS = ["fill"]
 # the verbs applied of the trellis's status line for the durables model's
 # recipe, with their separator, which stand in its line after `trellis`
 # where the line with them fits (spec 0.4 §5.7; unit K, Task 6)
-DURABLES_STATUS_BOUND = " · methodized, configured"
+DURABLES_STATUS_BOUND = " · calibrated, methodized, configured"
 # the rest of the same status line, periods 0–2, its parts after the loop's
 # seconds (design pass §1 item 10; unit K, Task 6): the periods and the
 # occurrences, and the unjoined fields of the forward graph
@@ -1299,16 +1299,17 @@ def written_from_the_forms(folder: Path, stages=DEMO_STAGES, repeat: int = 6) ->
 
 
 def stage_files() -> list[Path]:
-    """The stage files of the applications, `STAGE_FILES` of
-    `packages/bellman/tests/conftest.py`, the one listing of them: every
-    tracked `.bl` file under `applications/` whose first line is `@stage:`,
-    an addition beside a stage file being none. The module is loaded from
-    its file under the name `bellman_tests_conftest`, since the name
-    `conftest` stands for this folder's own (see `conftest.py`)."""
+    """The stage files of the applications, the list `STAGE_FILES` of the
+    module `packages/bellman/tests/application_files.py`: every `.bl` file
+    in a stage folder of the layout of a model folder under `applications/`
+    whose first line is `@stage:`. The function loads that module from its
+    path, under the name `bellman_tests_application_files`, since the folder
+    of the package's tests is not on the module path of this folder's tests;
+    the module imports nothing from its own folder."""
     import importlib.util
 
     spec = importlib.util.spec_from_file_location(
-        "bellman_tests_conftest", ROOT / "packages/bellman/tests/conftest.py"
+        "bellman_tests_application_files", ROOT / "packages/bellman/tests/application_files.py"
     )
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -1316,35 +1317,36 @@ def stage_files() -> list[Path]:
 
 
 def layout_faults_of(folder: Path) -> list[str]:
-    """The faults of the files under `folder` against the one layout of a
-    model folder, one sentence each, by the layout's own check,
-    `layout_faults` of `packages/bellman/tests/test_layout.py`, which reads
-    paths from the repository's root under `applications/`: each file is
-    given as `applications/<the folder's name>/<its path from the
-    folder>`, git's own folder left out. The module is loaded from its file
-    under the name `bellman_layout_rule`. Its import `from conftest import
-    ROOT` names the package tests' `conftest`, while the name `conftest`
-    stands for this folder's own (see `conftest.py`); during the load the
-    name stands for a module holding ROOT alone, and is given back after
-    it."""
+    """The faults of the files under `folder` against the layout of a model
+    folder, one sentence each, by the layout's own check, `layout_faults` of
+    `tests/test_application_layout.py`, which reads paths from the
+    repository's root under `applications/`: each file is given as
+    `applications/<the folder's name>/<its path from the folder>`, git's own
+    folder left out. The function loads that test file from its path, under
+    the name `bellman_layout_rule`. The file imports `ROOT` from the module
+    `application_files` of the package's tests, whose folder is not on the
+    module path of this folder's tests. During the load, `sys.modules` holds
+    under the name `application_files` a stand-in module that holds `ROOT`
+    alone; after the load, it holds the module that it held before, or no
+    module under that name."""
     import importlib.util
     import types
 
     spec = importlib.util.spec_from_file_location(
-        "bellman_layout_rule", ROOT / "packages/bellman/tests/test_layout.py"
+        "bellman_layout_rule", ROOT / "tests/test_application_layout.py"
     )
     rule = importlib.util.module_from_spec(spec)
-    stand_in = types.ModuleType("conftest")
+    stand_in = types.ModuleType("application_files")
     stand_in.ROOT = ROOT
-    held = sys.modules.get("conftest")
-    sys.modules["conftest"] = stand_in
+    held = sys.modules.get("application_files")
+    sys.modules["application_files"] = stand_in
     try:
         spec.loader.exec_module(rule)
     finally:
         if held is None:
-            del sys.modules["conftest"]
+            del sys.modules["application_files"]
         else:
-            sys.modules["conftest"] = held
+            sys.modules["application_files"] = held
     paths = sorted(
         f"applications/{folder.name}/{path.relative_to(folder).as_posix()}"
         for path in folder.rglob("*")
@@ -1464,7 +1466,7 @@ PENSIONS_WORKING_YEARS = Path(__file__).resolve().parent / "fixtures" / "pension
 # The same pension model as the post-doc left it, eighty-five periods and
 # 686 stage occurrences (the record's `model/`): the recipe, the trellis
 # file and the renter's settings file of `model/`, laid over the files of
-# PENSIONS_WORKING_YEARS, which equal those of `model/` byte for byte; the
+# PENSIONS_WORKING_YEARS; the
 # two files `model/` holds that no trellis reads, `period.extra_year.yml`
 # and `stages/bequest_dur/`, are left out (unit L, Task 20).
 PENSIONS_LIFE_CYCLE = Path(__file__).resolve().parent / "fixtures" / "pensions-life-cycle"
@@ -1478,6 +1480,9 @@ def pensions_copy(target: Path, fixture: Path = PENSIONS) -> Path:
     in the durables folder; answers the copy."""
     folder = repository_copy(DURABLES, target)
     shutil.copytree(fixture / "declaration", folder / "declaration", dirs_exist_ok=True)
+    if fixture != PENSIONS:
+        profiles = Path("declaration/calibration/pension_age_profiles.yml")
+        shutil.copyfile(PENSIONS / profiles, folder / profiles)
     return folder
 
 
@@ -1505,7 +1510,9 @@ def pensions_with_bequest_dur(target: Path) -> Path:
     assert durables.startswith("@stage: bequest\n")
     # This connector fixture admits zero housing, as the pension source does.
     stage.write_text(durables.replace("@stage: bequest", "@stage: bequest_dur", 1)
-                     .replace("h_bq : ℝ₊₊", "h_bq : ℝ₊"), "utf-8")
+                     .replace("h_bq : ℝ₊₊", "h_bq : ℝ₊")
+                     .replace("age : Age", "age_dur : Age")
+                     .replace(", age)", ", age_dur)"), "utf-8")
     recipe_file, trellis_file = folder / PENSIONS_RECIPE, folder / PENSIONS_TRELLIS
     row = (
         "  bequest_dur: {stage: stages/bequest_dur/bequest_dur.bl, calibration: {all: "
@@ -1513,8 +1520,7 @@ def pensions_with_bequest_dur(target: Path) -> Path:
         "[]}}\n"
     )
     text = recipe_file.read_text(encoding="utf-8")
-    assert text.count("registry:") == 1
-    recipe_file.write_text(text.replace("registry:", row + "registry:"), encoding="utf-8")
+    recipe_file.write_text(text + row, encoding="utf-8")
     text = trellis_file.read_text(encoding="utf-8")
     assert text.count(PENSIONS_TERMINAL) == 1
     trellis_file.write_text(
@@ -7903,17 +7909,10 @@ SELECTABLE_WIRES_JS = (
     "() => document.querySelectorAll('.bl-view-host .react-flow__edge.selectable').length"
 )
 
-# the point of the screen at the middle of the line of the join wire from
-# the stage occurrence `from` to `to`, measured along the first part of its
-# path, the path's `M` and `L` points read from its `d`: for a wire of a
-# bundle, the part from its writer to the piece the bundle draws (unit K's
-# decision K-D5); for any other wire, its whole route; null where none is
-# drawn. On a wire of a bundle between compact frames (AAS, L-D7), the part
-# at the reader's frame can lie within the press circles of other wires'
-# reading ends, the pair's among them, which then take a click there
-# (K-D23, K-I226); row L-I54, for AAS, records the measured target.
+# The midpoint used for zooming and dragging, or ordered path points for
+# clicking. click_join checks each point after pointer movement and hover.
 JOIN_POINT_JS = """
-([from, to]) => {
+([from, to, candidates = false]) => {
   const edge = document.querySelector(
     `.bl-view-host .react-flow__edge.bf-join-wire[data-from="${from}"][data-to="${to}"]`);
   if (!edge) return null;
@@ -7938,7 +7937,11 @@ JOIN_POINT_JS = """
   }
   if (!point) point = path.getPointAtLength(path.getTotalLength() / 2);
   const m = path.getScreenCTM();
-  return {x: m.a * point.x + m.c * point.y + m.e, y: m.b * point.x + m.d * point.y + m.f};
+  const screen = (at) => ({x: m.a * at.x + m.c * at.y + m.e,
+                          y: m.b * at.x + m.d * at.y + m.f});
+  if (!candidates) return screen(point);
+  return [point, ...Array.from({length: 39}, (_, i) =>
+    path.getPointAtLength(path.getTotalLength() * (i + 1) / 40))].map(screen);
 }
 """
 
@@ -7996,13 +7999,28 @@ def _zoom_over(page, place) -> dict:
 
 
 def click_join(page, writing: str, reading: str) -> None:
-    """A click by the pointer on the middle of the line of the join wire
-    from the stage occurrence `writing` to `reading`, each by its address,
-    `periods[2]/port`, the region enlarged first, so that the click finds
-    the line (unit J's decision J-D33; amendment 02, ruling 11)."""
-    point = _zoom_over(page, lambda: page.evaluate(JOIN_POINT_JS, [writing, reading]))
-    page.mouse.click(point["x"], point["y"])
+    """A pointer click on the requested join wire, after enlargement.
+    Each candidate is checked after hover can expose a port or drag handle."""
+    _zoom_over(page, lambda: page.evaluate(JOIN_POINT_JS, [writing, reading]))
     page.evaluate(TWO_FRAMES_JS)
+    for point in page.evaluate(JOIN_POINT_JS, [writing, reading, True]):
+        page.mouse.move(point["x"], point["y"])
+        page.evaluate(TWO_FRAMES_JS)
+        exposed = page.evaluate(
+            """([point, from, to]) => {
+              const hit = document.elementFromPoint(point.x, point.y);
+              const edge = hit?.closest('.react-flow__edge');
+              return hit?.tagName.toLowerCase() === 'path' &&
+                !hit.classList.contains('bf-wire-end') &&
+                edge?.dataset.from === from && edge?.dataset.to === to;
+            }""",
+            [point, writing, reading],
+        )
+        if exposed:
+            page.mouse.click(point["x"], point["y"])
+            page.evaluate(TWO_FRAMES_JS)
+            return
+    raise AssertionError(f"no exposed join path from {writing} to {reading}")
 
 
 def move_join_end(page, writing: str, reading: str, end: str, port: str) -> None:

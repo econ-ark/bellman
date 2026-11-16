@@ -1,0 +1,9 @@
+@methods: ret_choice
+# A deliberate conflict: the line id choice_value is written in the block
+# cntn_to_dcsn of choice.bl already. A line id names one line of its block,
+# so the package refuses the union of this file with choice.bl and names
+# both lines (`declared-twice`).
+
+[id=cntn_to_dcsn] {
+    V = (V_w[>], V_r[>])[d]                           :: [id=choice_value]
+}

@@ -2,32 +2,32 @@
 # The methods of the consumption-savings stage with independent income, whose
 # stage file is
 # applications/consumption-savings-iid/declaration/stages/cons_savings_iid/cons_savings_iid.bl,
-# as an addition to that file: the three entries of
-# applications/consumption-savings-iid/declaration/methods/cons_savings_iid.yml
-# and nothing else. The endogenous grid method on the policy builder with its
-# grid of savings and the three lines of cons_savings_iid_egm.bl, and
-# the derivative lines of the decision value and of the arrival value from
-# marginals.bl. The policy block's lines are written as the block file writes
-# them, the identification line c[~] = c[>] included: under D8, decided by AAS
-# on 4 November 2026, a block whose slot holds a solution method is read with
-# the method's lines in place of the declared lines at the operative level,
-# and stage.declared keeps the stage file's maximization. The entries the YAML
-# does not bind stand in methods.additions.bl, added after this file.
+# as an addition to that file. The endogenous grid method stands on the
+# policy builder with its grid of savings a; its three lines, the inverted
+# Euler equation, the inverted law of motion and the identification of the
+# chosen consumption with the candidate, stand in place of the maximization
+# at the operative level, and stage.declared keeps the maximization. Each
+# value builder gains its derivative line: the envelope condition of the
+# decision value, and the derivative of the arrival value. The other entries
+# of the stage stand in methods.additions.bl, which is read after this file;
+# the application's methods file,
+# applications/consumption-savings-iid/declaration/stages/cons_savings_iid/methods.bl,
+# holds the union of the two files.
 
-# The settings this file reads, declared with their sets (writer's sheet §6):
-# the bounds are points of ℝ₊, the set the stage gives the savings a, and the
-# count is in ℕ. The values stay in
+# The settings this file reads, declared with their sets: the bounds are
+# points of ℝ₊, the set the stage gives the savings a, and the count is in ℕ.
+# Their values stand in the settings file of the application,
 # applications/consumption-savings-iid/declaration/settings/cons_savings_iid.yml.
-# The grid of savings is the typing entry policy.grid of the policy block
-# (D5, decided; writer's sheet §7).
+# The grid of savings is the grid entry policy.grid of the block policy,
+# written in the bracket of the block below.
 n_a : ℕ          :: ["number of points of the savings grid"]
 a_min : ℝ₊       :: ["lower bound of the savings grid"]
 a_max : ℝ₊       :: ["upper bound of the savings grid"]
 
-# The endogenous grid method, its grid of savings on the coordinate a, and the
-# three lines of cons_savings_iid_egm.bl: the inverted Euler equation, the
-# inverted law of motion and the identification of the decision's consumption
-# with the candidate.
+# The endogenous grid method, its grid of savings on the coordinate a, and its
+# three lines: the inverted Euler equation, the inverted law of motion and the
+# identification of the decision's consumption with the candidate, which the
+# package reads in place of the maximization of the stage file.
 [id=policy, method : !egm
     | policy.grid : !Cartesian(a=(a_min, a_max, n_a))] {
     c[>] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[>])       :: [id=InvEuler]

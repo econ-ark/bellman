@@ -6,7 +6,9 @@ topic: [user-interface]
 
 # Create and connect stages
 
-A **trellis** is the model's arrangement of stages across periods. A **stage occurrence** is one use of a stage in one period. To connect two occurrences, pair a continuation state field of the writing stage with an arrival state field of the reading stage. The [stage](../Bellman-Sym/01-stage.md) defines the equations. The [connector](../Bellman-Sym/06-period.md#2-connectors) identifies which state field supplies which.
+A **trellis** is a diagram of periods joined by connections. A **stage occurrence** is one use of a stage in one period. To connect two occurrences, pair a continuation state field of the writing stage with an arrival state field of the reading stage. The [stage](../Bellman-Sym/01-stage.md) defines the equations. The [connector](../Bellman-Sym/06-period.md#2-connectors) identifies which state field supplies which.
+
+Repeated occurrences have separate stage objects. In a [modular model](../bellman-calculus/APPX-H-MODULARITY.md), occurrences of one declaration retain its operators and calibration sources. Quantities that differ with age are supplied as fields; numerical methods and settings may differ by occurrence. Recipe ranges also permit positional calibration without enforcing this condition.
 
 ## 1 Create the model folder
 
@@ -32,7 +34,7 @@ The Workbench reads a stage library from `BELLMAN_STAGE_LIBRARY`, a list of loca
 
 1. In **Trellis → Operator → Forward**, choose **+ Period** before the earliest period or between two periods. If the target period is outside the current range, select **all** in the period selector, then **Fit**. Open a collapsed period with its chevron. You can also drop a stage from **Stages** on that control to select it for the new period.
 2. In **Add period**, enter a **Label**, choose at least one stage, and select **Add the period**. The form writes `declaration/period.<label>.yml` immediately. It adds the reference to the trellis in the editor. Save that tab to keep the reference. In a trellis that lists stage records directly, the control inserts a period with the neighbouring period's stages.
-3. Inspect the new joins. Inserting between two periods increases the indices of periods on the earlier side and adjusts the recipe's corresponding ranges. Check any age or calibration schedule keyed by period index. To add a period after the terminal period, edit the trellis file directly. [Trellis syntax and period numbering](../Bellman-Sym/07-trellis.md).
+3. Inspect the new joins. Inserting between two periods increases the indices of periods on the earlier side and adjusts the recipe's corresponding ranges. Check positional calibration ranges and the terminal data you supply at realization. Where stages compute age backward, a changed horizon changes the ages reached by that recurrence; the position labels do not compute them. To add a period after the terminal period, edit the trellis file directly. [Trellis syntax and period numbering](../Bellman-Sym/07-trellis.md).
 
 ## 4 Connect two stages
 
@@ -52,6 +54,8 @@ An incomplete pairing can write the ticked pairs as a draft. **Problems** identi
 - To remove an authored connection, select its cable and choose **Remove** in **Details**, or press Backspace or Delete with focus on the forward graph. If **Details** says **joined by the names**, the connection has no authored entry. Use **Rename** there to change the arrival field's name, or move the join to write an explicit replacement.
 - Inspect the edited source line and the affected periods before saving. Command+Z on macOS or Ctrl+Z on Windows and Linux reverses the latest edit in the editor. For a graph gesture that changes several files, undo from one of the affected tabs while the files still hold the gesture's edits. **Save** writes the open file. Open and save each file marked **unsaved** to keep the whole change. New stage and period files created by placement are already on disk.
 - After undo, let the graph finish updating before dragging the same connection again.
+
+A move is refused if it would leave an authored backward value pairing, such as an age pairing, without the state connection it belongs to. Edit the coupled state and value pairings in the connector source, then inspect the complete connection again. The graph gesture does not rewrite backward pairings for you.
 
 ## 6 Remove a stage or period
 

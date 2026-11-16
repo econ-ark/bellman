@@ -41,25 +41,24 @@ assignment: plain_name _ASSIGN assigned_value STMT_META?
       | comprehension
       | assignment_product
       | assignment_functions
-      | "(" formula "," formula "]" -> interval_open_closed
-      | "[" formula "," formula ")" -> interval_closed_open
-      | "[" formula "," formula "]" -> interval_closed_closed
-      | formula
+      | "(" expression{plain_name} "," expression{plain_name} "]" -> interval_open_closed
+      | "[" expression{plain_name} "," expression{plain_name} ")" -> interval_closed_open
+      | "[" expression{plain_name} "," expression{plain_name} "]" -> interval_closed_closed
+      | expression{plain_name}
       | conditional
 // A definition by cases, `a : ℝ_{+∞} := if Γ < R then 1/(R - Γ) else inf`:
 // the right side of a derived parameter's definition is the first branch
 // where the test holds and the second otherwise, and the branch not chosen
 // is not evaluated. A branch is a formula or a further conditional, so that
 // three cases are written `if a < 0 then -1 else if a = 0 then 0 else 1`.
-// The form stands as the whole right side after `:=`, in a definition
-// without a declared set (rule `assigned_value`) and in one that declares a
-// set (rule `declared_value`), and inside no formula. `if`, `then` and
+// The form stands as the whole right side of a definition after `:=` or
+// a block equation after `=`, or as a branch of a conditional. `if`, `then` and
 // `else` are words of the language: the lowering refuses each of them
 // wherever the parser reads it as a name (AMD-GRAM-006).
 conditional: _IF condition _THEN _branch _ELSE _branch
-_branch: formula | conditional
-?condition: formula RELOP formula -> comprehension_condition
-    | formula "=" formula -> comprehension_equality
+_branch: expression{plain_name} | conditional
+?condition: expression{plain_name} RELOP expression{plain_name} -> comprehension_condition
+    | expression{plain_name} "=" expression{plain_name} -> comprehension_equality
 // A named fixed product uses the existing set term. Keeping its first
 // factor outside the interval rule preserves (a, b) as an expression tuple.
 // A set of functions after `:=`, `Q := L_J → ℝ₊`, names its domain first.
@@ -94,7 +93,7 @@ tuple_subject: "(" coordinate ("," coordinate)* ")"
 coordinate: bracketed_name typing? | plain_name typing? | tuple_subject typing?
 // the value a declaration carries, `q : (0,1) := (β*R)^(1/ρ)/R`: a formula,
 // or a definition by cases, `q : (0, 3) := if β < R then 1 else 2`
-declared_value: _ASSIGN (formula | conditional)
+declared_value: _ASSIGN (expression{plain_name} | conditional)
 _ASSIGN.2: "<-" | ":="
 
 // the subject of a declaration, of a law, of a bare side and of a typing
@@ -111,8 +110,13 @@ _ASSIGN.2: "<-" | ":="
 // the law statement: y ~ N(μ, σ); a joint law takes a tuple subject, whose
 // coordinates are names alone: the lowering refuses a type written inside
 // its parentheses
-law: subject_path "~" formula STMT_META?
-   | tuple_subject "~" formula STMT_META?
+law: subject_path "~" expression{plain_name} STMT_META?
+   | tuple_subject "~" expression{plain_name} STMT_META?
+   | plain_name "(" law_parameters ")" "~" expression{law_name} STMT_META? -> parameterized_law
+// A law has one or more local arguments, `y(_age) ~ N(_age, 1)`. A leading
+// underscore is a spelling for names in this list and the law's expression.
+law_parameters: law_name ("," law_name)*
+?law_name: plain_name | LOCAL_NAME -> name
 
 // a function definition: 𝑢(c : ℝ₊₊) := c^(1-γ)/(1-γ); every binder
 // carries its type. A set-expression body makes it a correspondence
@@ -123,27 +127,27 @@ law: subject_path "~" formula STMT_META?
 // and relates expressions after the bar; it lowers to the abstract
 // Comprehension(subject bound, setexpr base, cond* conds).
 function_definition: plain_name "(" function_parameter ("," function_parameter)* ")" _ASSIGN function_body STMT_META?
-?function_body: formula
+?function_body: expression{plain_name}
     | correspondence_product
     | brace_set
     | integer_range
     | comprehension
-    | "(" formula "," formula "]" -> interval_open_closed
-    | "[" formula "," formula ")" -> interval_closed_open
-    | "[" formula "," formula "]" -> interval_closed_closed
+    | "(" expression{plain_name} "," expression{plain_name} "]" -> interval_open_closed
+    | "[" expression{plain_name} "," expression{plain_name} ")" -> interval_closed_open
+    | "[" expression{plain_name} "," expression{plain_name} "]" -> interval_closed_closed
 // A product body requires ×, so (a, b) alone remains an expression tuple.
 correspondence_product: correspondence_factor "×" set_product_level -> set_product
 ?correspondence_factor: named_set
     | brace_set
     | integer_range
-    | "(" formula "," formula "]" -> interval_open_closed
-    | "[" formula "," formula ")" -> interval_closed_open
-    | "[" formula "," formula "]" -> interval_closed_closed
+    | "(" expression{plain_name} "," expression{plain_name} "]" -> interval_open_closed
+    | "[" expression{plain_name} "," expression{plain_name} ")" -> interval_closed_open
+    | "[" expression{plain_name} "," expression{plain_name} "]" -> interval_closed_closed
     | tuple -> open_interval_factor
 function_parameter: plain_name typing
 comprehension: "{" plain_name typing "|" comprehension_condition ("," comprehension_condition)* "}"
-comprehension_condition: formula RELOP formula
-    | formula "=" formula -> comprehension_equality
+comprehension_condition: expression{plain_name} RELOP expression{plain_name}
+    | expression{plain_name} "=" expression{plain_name} -> comprehension_equality
 
 // blocks: parsed header + body
 block: header _body
@@ -180,7 +184,8 @@ signature: side "->" side
 side: "(" [coordinate ("," coordinate)*] ")" typing? | bare_side
 bare_side: subject_path typing?
 
-_body: "{" _NL? block_item (_NL block_item)* _NL? "}"
+// a block that keeps every output writes no line: its body is empty
+_body: "{" _NL? (block_item (_NL block_item)*)? _NL? "}"
 ?block_item: block | function_definition | statement | block_declaration
 // the ⟂ clause states complementary slackness between the residual of a
 // line and its bound, or between a declared multiplier and its bound; the
@@ -190,7 +195,7 @@ _body: "{" _NL? block_item (_NL block_item)* _NL? "}"
 statement: (equality | inequality) slackness_clause? STMT_META?
 // a declaration inside a block body, `μ[>] : ℝ₊ ⟂ a >= 0`; the typing reads the mark
 block_declaration: single_subject typing slackness_clause STMT_META?
-slackness_clause: _PERP formula RELOP formula (RELOP formula)?
+slackness_clause: _PERP expression{plain_name} RELOP expression{plain_name} (RELOP expression{plain_name})?
 _PERP: "⟂"
 
 // the typing: one colon, then an unordered @-joined conjunction
@@ -202,14 +207,18 @@ type: component (_AT component)*
 word_type: TAGBANG arguments?
 // keyword arguments, `(n_ψ=n_ψ_nodes, n_ξ=n_ξ_nodes)`: a value is a name,
 // a number, a quoted string, a tuple of values, or a !-word with its own
-// arguments, `(a_min, a_max, n_a, !expmult(nest=grid_phi))`
+// arguments, `(a_min, a_max, n_a, !expmult(nest=grid_phi))`. A grid factor
+// may also use a sum of two names in a position of this tuple.
 arguments: "(" keyword ("," keyword)* ")"
 keyword: plain_name "=" argument
 ?argument: plain_name -> argument_name
     | NUMBER -> argument_number
     | STAGE_STRING -> argument_string
-    | "(" argument ("," argument)+ ")" -> argument_tuple
+    | "(" argument_item ("," argument_item)+ ")" -> argument_tuple
     | word_type -> argument_word
+?argument_item: argument | grid_operand "+" grid_operand -> expression_argument
+?grid_operand: plain_name -> constant
+    | marked_name{plain_name}
 
 // a set expression after a typing colon. A union, `A \/ B`, and a
 // difference, `A \ B`, of sets of numbers stand at one level and are read
@@ -239,56 +248,62 @@ named_set: BBSET | RPLUS | plain_name
 // its standard short alias. (Subscript forms ℝ̄₊/ℝ̄₋ were rejected:
 // they read as sign restrictions beside ℝ₊.)
 BBSET.3: /ℝ_\{[+\-±]∞\}|ℝ̄|ℝ₊{0,2}|ℕ|ℤ/
-interval: "(" formula "," formula ")"   -> interval_open_open
-    | "(" formula "," formula "]"       -> interval_open_closed
-    | "[" formula "," formula ")"       -> interval_closed_open
-    | "[" formula "," formula "]"       -> interval_closed_closed
+interval: "(" expression{plain_name} "," expression{plain_name} ")"   -> interval_open_open
+    | "(" expression{plain_name} "," expression{plain_name} "]"       -> interval_open_closed
+    | "[" expression{plain_name} "," expression{plain_name} ")"       -> interval_closed_open
+    | "[" expression{plain_name} "," expression{plain_name} "]"       -> interval_closed_closed
 // one brace list of formulas: the lowering reads names alone as a finite
 // set of labels, numbers alone as a set of numbers, and any list followed
 // by the set its members lie in, `{0, θ} ⊂ ℝ`, as a set of numbers whose
 // members are the formulas; `{0, …, J}` is the integer range from the
 // first bound to the second, inclusive
-brace_set: "{" formula ("," formula)* "}" ("⊂" set_atom)?
-integer_range: "{" formula "," _ELLIPSIS "," formula "}"
+brace_set: "{" expression{plain_name} ("," expression{plain_name})* "}" ("⊂" set_atom)?
+integer_range: "{" expression{plain_name} "," _ELLIPSIS "," expression{plain_name} "}"
 _ELLIPSIS: "…" | "..."
 
 // dynspec's expression ladder (duplicated) + Operator braces + perch marks
-equality: formula "=" formula
+equality: expression{plain_name} "=" _branch
 // an inequality statement, `c[>] <= 𝑑𝑢𝑖𝑛𝑣(dV[>])`: a valid spelling of an
 // occasionally binding constraint (ruling D20, 9 Sep 2026)
 inequality: formula RELOP formula
-?formula: sum
-?sum: product
-    | sum "+" product  -> add
-    | sum "-" product  -> sub
-    | "-" product      -> neg
-?product: molecule
-    | product "*" molecule -> mul
-    | product "/" molecule -> div
-?molecule: atom
-    | atom _POW atom   -> pow
+?formula: expression{plain_name}
+// The expression rules take a name rule as an argument. The right side of
+// a parameterized law uses the same expressions with local names admitted.
+?expression{identifier}: sum{identifier}
+?sum{identifier}: product{identifier}
+    | sum{identifier} "+" product{identifier}  -> add
+    | sum{identifier} "-" product{identifier}  -> sub
+    | "-" product{identifier}                  -> neg
+?product{identifier}: molecule{identifier}
+    | product{identifier} "*" molecule{identifier} -> mul
+    | product{identifier} "/" molecule{identifier} -> div
+?molecule{identifier}: atom{identifier}
+    | atom{identifier} _POW atom{identifier} -> pow
 _POW: "^" | "**"
-?atom: NUMBER          -> number
+?atom{identifier}: NUMBER -> number
     | INFTY            -> infinity
-    | tuple_selection
-    | tuple
-    | bracketed_name
-    | operator_call
-    | call
-    | plain_name            -> constant
-    | "(" formula ")"
+    | tuple_selection{identifier}
+    | tuple_expression{identifier}
+    | name_with_selectors{identifier}
+    | operator_expression{identifier}
+    | identifier "(" expression{identifier} ("," expression{identifier})* ")" -> call
+    | identifier -> constant
+    | "(" expression{identifier} ")"
 
 // one tuple rule for the whole grammar: law parameters and formula
 // position alike; a tuple is a finite family, selection evaluates it
-tuple: "(" formula ("," formula)+ ")"
-tuple_selection: tuple "[" formula "]"
+?tuple: tuple_expression{plain_name}
+tuple_expression{identifier}: "(" expression{identifier} ("," expression{identifier})+ ")" -> tuple
+tuple_selection{identifier}: tuple_expression{identifier} "[" expression{identifier} "]" -> tuple_selection
 // every bracket is selection along an axis of the head: dates (dyno),
 // the perch marks < ~ >, a name key, or a 1-based position. In a stage
 // file ~ marks the decision perch; a field at that perch is written
 // bare, so x[~] lowers to the same term as x (AAS, 6 Sep 2026). It is
 // not dyno's steady-state marker k[~], which a stage has no use for.
-bracketed_name: plain_name ("[" bracket_index "]")+
-?bracket_index: PMARK | plain_name | NUMBER
+?bracketed_name: name_with_selectors{plain_name}
+name_with_selectors{identifier}: identifier ("[" bracket_index{identifier} "]")+ -> bracketed_name
+?bracket_index{identifier}: PMARK | identifier | NUMBER | marked_name{identifier} -> marked_key
+marked_name{identifier}: identifier "[" PMARK "]" -> bracketed_name
 PMARK: "<" | ">" | "~"
 // an operator subscript is a binder name, or a binder constrained to
 // a feasible set — argmax_{cp : Γ(w)}; the colon types the binder,
@@ -300,13 +315,14 @@ PMARK: "<" | ">" | "~"
 // `D_{a}V[>]`, `D_{m}V` and `D_{w}V[<]` lower to the term `D_{a}(V[>])`
 // lowers to, through the same aliases `bracketed_name` and `constant`
 // (AMD-MB-001 §4.2, decision D2)
-operator_call: plain_name "{" operator_subscript ("," operator_subscript)* "}" "(" formula ("," formula)* ")"
-    | plain_name "{" operator_subscript ("," operator_subscript)* "}" operator_field
-?operator_field: bracketed_name
-    | plain_name -> constant
-?operator_subscript: plain_name
-    | plain_name _COLON formula -> member_subscript
-?call: plain_name "(" formula ("," formula)* ")" -> call
+?operator_call: operator_expression{plain_name}
+operator_expression{identifier}: _operator_head{identifier} "(" expression{identifier} ("," expression{identifier})* ")" -> operator_call
+    | _operator_head{identifier} operator_field{identifier} -> operator_call
+_operator_head{identifier}: identifier "{" operator_subscript{identifier} ("," operator_subscript{identifier})* "}"
+?operator_field{identifier}: name_with_selectors{identifier}
+    | identifier -> constant
+?operator_subscript{identifier}: identifier
+    | identifier _COLON expression{identifier} -> member_subscript
 
 !plain_name: NAME -> name
 
@@ -331,6 +347,7 @@ STMT_META.3: /[ \t]*::[ \t]*(?:\[(?:[^\]"\r\n]|"[^"\r\n]*")*\]|"[^"\r\n]*"|[^\r\
 _NL: NEWLINE+
 UNICODE_LETTER: /[^\W\d_\$ℝℕℤ]/
 NAME: UNICODE_LETTER ("_"|UNICODE_LETTER|DIGIT)*
+LOCAL_NAME: "_" NAME
 
 %import common.DIGIT
 %import common.NUMBER

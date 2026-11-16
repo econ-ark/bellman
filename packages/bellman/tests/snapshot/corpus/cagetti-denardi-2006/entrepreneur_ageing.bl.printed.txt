@@ -1,0 +1,1155 @@
+BELLMAN-SYM / STAGE entrepreneur_ageing                   [VERSION = SYMBOLIC]
+a stage occurrence of applications/cagetti-denardi-2006/declaration/stages/
+entrepreneur_ageing/entrepreneur_ageing.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        a_ea≺ state, y_ea≺ state, θ_ea≺ state, V≺ value
+  ∼ decision       a state, y state, θ state, V value
+  ≻ continuation   a_ea_yc≻ state, y_ea_yc≻ state, θ_ea_yc≻ state, a_ea_oc≻
+                   state, θ_ea_oc≻ state, V_young≻ value, W_old≻ value
+  ≺ → ∼            y_n, θ_n drawn after arrival, before decision
+  ∼ → ≻            s drawn after decision, before continuation
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           a_ea≺ at arrival, y_ea≺ at arrival, θ_ea≺ at arrival, a at
+                   decision, y at decision, θ at decision, a_ea_yc≻ at
+                   continuation, y_ea_yc≻ at continuation, θ_ea_yc≻ at
+                   continuation, a_ea_oc≻ at continuation, θ_ea_oc≻ at
+                   continuation
+  controls         none
+  values           V at the arrival, decision perches; V_young at the
+                   continuation perch; W_old at the continuation perch
+  shocks           y_n, θ_n, drawn between arrival and decision; s, drawn
+                   between decision and continuation
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → arvl_to_dcsn   (a_ea≺, y_ea≺, θ_ea≺, y_n, θ_n) : !arvl -> (a, y, θ) :
+                   !dcsn
+  → dcsn_to_cntn   (a, y, θ, s) : !dcsn ->
+                   (a_ea_yc≻, y_ea_yc≻, θ_ea_yc≻, a_ea_oc≻, θ_ea_oc≻) : !cntn
+  ← cntn_to_dcsn   (V_young≻, W_old≻) : !cntn -> (V) : !dcsn
+  ← dcsn_to_arvl   (V) : !dcsn -> (V≺) : !arvl
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  sets                     3   Xa := ℝ₊, Y := ℝ₊₊, Θ := ℝ₊
+  distributions            3   y_n, θ_n, s
+  parameters               7   β : (0, 1); π_y : [0, 1]; P_y : [0, 1];
+                               y_grid : ℝ₊₊; ρ_θ0 : [0, 1]; ρ_θ1 : [0, 1];
+                               θ_e : ℝ₊₊
+  laws of motion           2   a = a_ea; y = y_n; θ = θ_n;
+                               a_ea_yc = a; y_ea_yc = y; θ_ea_yc = θ; a_ea_oc
+                               = a; θ_ea_oc = θ
+  value aggregators        2   V = β*E_{s}((V_young[>], W_old[>])[s]);
+                               V[<] = E_{y_n, θ_n}(V)
+  block lines             10   arvl_to_dcsn.1, arvl_to_dcsn.2,
+                               arvl_to_dcsn.3, dcsn_to_cntn.young.1,
+                               dcsn_to_cntn.young.2, dcsn_to_cntn.young.3,
+                               dcsn_to_cntn.old.1, dcsn_to_cntn.old.2,
+                               cntn_to_dcsn.value, dcsn_to_arvl.value
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   (𝑉_young≻, 𝑊_old≻) ↦ 𝑉≺
+                    forward    μ≺ ↦ μ_young≻, μ_old≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ≺ a_ea≺, y_ea≺, θ_ea≺  → y_n, θ_n drawn →  ∼ a, y, θ  → s drawn →
+             ≻ a_ea_yc≻, y_ea_yc≻, θ_ea_yc≻, a_ea_oc≻, θ_ea_oc≻
+  backward   ≺ V≺  ←  ∼ V  ←  ≻ V_young≻, W_old≻
+
+==== stage ====
+STAGE entrepreneur_ageing
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑉_young≻  : Xa × Y × Θ → ℝ
+         𝑊_old≻    : Xa × Θ → ℝ
+         ────────────────────────────────────────────────────
+    out  𝑉≺        : Xa × Y × Θ → ℝ
+  forward
+    in   μ≺        : finite measure on Xa × Y × Θ
+         ────────────────────────────────────────────────────
+    out  μ_young≻  : finite measure on Xa × Y × Θ
+         μ_old≻    : finite measure on Xa × Θ
+
+Where
+  (a, y, θ) = 𝑔≺(a_ea, y_ea, θ_ea, y_n, θ_n)
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉_young≻, 𝑊_old≻             out: 𝑉
+
+    2  dcsn_to_arvl
+       in: 𝑉                            out: 𝑉≺
+
+  forward
+    1  arvl_to_dcsn
+       in: μ≺                           out: μ
+
+    2  dcsn_to_cntn
+       in: μ                            out: μ_young≻, μ_old≻
+
+Conditions
+  cntn_to_dcsn:Aggregation  𝑉(a, y, θ) ∈ ℝ
+  dcsn_to_arvl:Aggregation  𝑉≺(a_ea, y_ea, θ_ea) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  16  y_n ~ MarkovChain(P_y, y_grid, y_ea)
+        :: ["this period's working ability, drawn from the row of P_y at last
+        period's ability y_ea"]
+  18  θ_n ~ MarkovChain(((ρ_θ0, 1 - ρ_θ0), (1 - ρ_θ1, ρ_θ1)), (0, θ_e), θ_ea)
+        :: ["this period's entrepreneurial ability, drawn from the row at last
+        period's ability θ_ea"]
+  20  s ~ Categorical((π_y, 1 - π_y))
+        :: ["remaining young or ageing, with probabilities in the order of the
+        labels"]
+  23  a = a_ea
+  24  y = y_n
+  25  θ = θ_n
+  30  a_ea_yc = a
+  31  y_ea_yc = y
+  32  θ_ea_yc = θ
+  35  a_ea_oc = a
+  36  θ_ea_oc = θ
+  41  V = β*E_{s}((V_young[>], W_old[>])[s])
+        :: [id=value]
+  45  V[<] = E_{y_n,θ_n}(V)
+        :: [id=value]
+
+Definitions referenced
+  Xa    entrepreneur_ageing:set:Xa
+  Y     entrepreneur_ageing:set:Y
+  Θ     entrepreneur_ageing:set:Θ
+  y_n   entrepreneur_ageing:distribution:y_n
+  θ_n   entrepreneur_ageing:distribution:θ_n
+  𝑔≺    entrepreneur_ageing:g:arvl_to_dcsn
+
+File
+  applications/cagetti-denardi-2006/declaration/stages/entrepreneur_ageing/
+  entrepreneur_ageing.bl
+
+Perches
+  ≺  arrival, written [<]
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE entrepreneur_ageing / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V_young≻  : {V_young≻, W_old≻}
+       W_old≻    : {V_young≻, W_old≻}
+       ──────────────────────────────
+  out  V         : {V}
+
+Conditions
+  𝑉(a, y, θ) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  41  V = β*E_{s}((V_young[>], W_old[>])[s])  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward dcsn_to_arvl ====
+STAGE entrepreneur_ageing / BACKWARD BLOCK dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V   : {V}
+       ──────────
+  out  V≺  : {V≺}
+
+Conditions
+  𝑉≺(a_ea, y_ea, θ_ea) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  45  V[<] = E_{y_n,θ_n}(V)  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward arvl_to_dcsn ====
+STAGE entrepreneur_ageing / FORWARD BLOCK arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a_ea≺  : {a_ea≺, y_ea≺, θ_ea≺}
+       y_ea≺  : {y_ea≺}
+       θ_ea≺  : {a_ea≺, y_ea≺, θ_ea≺}
+       y_n    : {y_n}
+       θ_n    : {y_n, θ_n}
+       ──────────────────────────────
+  out  a      : {a, y, θ}
+       y      : {y}
+       θ      : {a, y, θ}
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  23  a = a_ea
+  24  y = y_n
+  25  θ = θ_n
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE entrepreneur_ageing / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a         : {a, y, θ}
+       y         : {y}
+       θ         : {a, y, θ}
+       s         : {s}
+       ──────────────────────────────────────────────────────────────
+  out  a_ea_yc≻  : {a_ea_yc≻, y_ea_yc≻, θ_ea_yc≻, a_ea_oc≻, θ_ea_oc≻}
+       y_ea_yc≻  : {y_ea_yc≻}
+       θ_ea_yc≻  : {a_ea_yc≻, y_ea_yc≻, θ_ea_yc≻, a_ea_oc≻, θ_ea_oc≻}
+       a_ea_oc≻  : {a_ea_yc≻, y_ea_yc≻, θ_ea_yc≻, a_ea_oc≻, θ_ea_oc≻}
+       θ_ea_oc≻  : {a_ea_yc≻, y_ea_yc≻, θ_ea_yc≻, a_ea_oc≻, θ_ea_oc≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  30  a_ea_yc = a
+  31  y_ea_yc = y
+  32  θ_ea_yc = θ
+  35  a_ea_oc = a
+  36  θ_ea_oc = θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn / young ====
+STAGE entrepreneur_ageing / FORWARD BLOCK dcsn_to_cntn / young
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a         : {a, y, θ}
+       y         : {y}
+       θ         : {a, y, θ}
+       ──────────────────────────────────────────────────────────────
+  out  a_ea_yc≻  : {a_ea_yc≻, y_ea_yc≻, θ_ea_yc≻, a_ea_oc≻, θ_ea_oc≻}
+       y_ea_yc≻  : {y_ea_yc≻}
+       θ_ea_yc≻  : {a_ea_yc≻, y_ea_yc≻, θ_ea_yc≻, a_ea_oc≻, θ_ea_oc≻}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn / old ====
+STAGE entrepreneur_ageing / FORWARD BLOCK dcsn_to_cntn / old
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a         : {a, y, θ}
+       θ         : {a, y, θ}
+       ──────────────────────────────────────────────────────────────
+  out  a_ea_oc≻  : {a_ea_yc≻, y_ea_yc≻, θ_ea_yc≻, a_ea_oc≻, θ_ea_oc≻}
+       θ_ea_oc≻  : {a_ea_yc≻, y_ea_yc≻, θ_ea_yc≻, a_ea_oc≻, θ_ea_oc≻}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE entrepreneur_ageing / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_young≻  : Xa × Y × Θ → ℝ
+       𝑊_old≻    : Xa × Θ → ℝ
+       ─────────────────────────────────────────────────────────
+  out  𝑉         : Xa × Y × Θ → ℝ
+
+Where
+  𝑔_young≻  : Xa × Y × Θ → Xa × Y × Θ,  𝑔_young≻(a, y, θ) = 𝑔≻(a, y, θ, young)
+  𝑔_old≻    : Xa × Y × Θ → Xa × Θ,  𝑔_old≻(a, y, θ) = 𝑔≻(a, y, θ, old)
+
+Operations
+  1  Pullback:young
+     in: 𝑉_young≻                       out: 𝑉_young≻ ∘ 𝑔_young≻
+     ───────────────────────────────────────────────────────────
+     rule: (𝑉_young≻ ∘ 𝑔_young≻)(a, y, θ) = 𝑉_young≻(𝑔_young≻(a, y, θ))
+
+  2  Pullback:old
+     in: 𝑊_old≻                         out: 𝑊_old≻ ∘ 𝑔_old≻
+     ───────────────────────────────────────────────────────────
+     rule: (𝑊_old≻ ∘ 𝑔_old≻)(a, y, θ) = 𝑊_old≻(𝑔_old≻(a, y, θ))
+
+  3  Aggregation
+     in: (1), (2)                       out: 𝑉
+     ───────────────────────────────────────────────────────────
+     rule: 𝑉
+             = β · E_{s}[(𝑉_young≻(𝑔_young≻(a, y, θ)),
+                          𝑊_old≻(𝑔_old≻(a, y, θ)))[s]]
+           on (a, y, θ) ∈ Xa × Y × Θ
+
+  4  Evaluation
+     in: 𝑉                              out: 𝑉
+     ───────────────────────────────────────────────────────────
+     rule: 𝑉 : Xa × Y × Θ → ℝ
+
+Conditions
+  Aggregation  𝑉(a, y, θ) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  41  V = β*E_{s}((V_young[>], W_old[>])[s])  :: [id=value]
+
+Definitions referenced
+  Xa    entrepreneur_ageing:set:Xa
+  Y     entrepreneur_ageing:set:Y
+  Θ     entrepreneur_ageing:set:Θ
+  β     entrepreneur_ageing:parameter:β
+  s     entrepreneur_ageing:distribution:s
+  𝑔≻    entrepreneur_ageing:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback:young ====
+STAGE entrepreneur_ageing / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Pullback:young
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_young≻  : Xa × Y × Θ → ℝ
+       ──────────────────────────
+  out  𝑉_young≻ ∘ 𝑔_young≻
+                 : Xa × Y × Θ → ℝ
+
+Where
+  𝑔_young≻  : Xa × Y × Θ → Xa × Y × Θ,  𝑔_young≻(a, y, θ) = 𝑔≻(a, y, θ, young)
+
+Rule
+  (𝑉_young≻ ∘ 𝑔_young≻)(a, y, θ) = 𝑉_young≻(𝑔_young≻(a, y, θ))
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  30  a_ea_yc = a
+  31  y_ea_yc = y
+  32  θ_ea_yc = θ
+  35  a_ea_oc = a
+  36  θ_ea_oc = θ
+
+Definitions referenced
+  Xa    entrepreneur_ageing:set:Xa
+  Y     entrepreneur_ageing:set:Y
+  Θ     entrepreneur_ageing:set:Θ
+  𝑔≻    entrepreneur_ageing:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback:old ====
+STAGE entrepreneur_ageing / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Pullback:old
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑊_old≻  : Xa × Θ → ℝ
+       ────────────────────────
+  out  𝑊_old≻ ∘ 𝑔_old≻
+               : Xa × Y × Θ → ℝ
+
+Where
+  𝑔_old≻  : Xa × Y × Θ → Xa × Θ,  𝑔_old≻(a, y, θ) = 𝑔≻(a, y, θ, old)
+
+Rule
+  (𝑊_old≻ ∘ 𝑔_old≻)(a, y, θ) = 𝑊_old≻(𝑔_old≻(a, y, θ))
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  30  a_ea_yc = a
+  31  y_ea_yc = y
+  32  θ_ea_yc = θ
+  35  a_ea_oc = a
+  36  θ_ea_oc = θ
+
+Definitions referenced
+  Xa    entrepreneur_ageing:set:Xa
+  Y     entrepreneur_ageing:set:Y
+  Θ     entrepreneur_ageing:set:Θ
+  𝑔≻    entrepreneur_ageing:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE entrepreneur_ageing / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_young≻ ∘ 𝑔_young≻
+          : Xa × Y × Θ → ℝ
+       𝑊_old≻ ∘ 𝑔_old≻
+          : Xa × Y × Θ → ℝ
+       ───────────────────
+  out  𝑉  : Xa × Y × Θ → ℝ
+
+Where
+  𝑔_young≻  : Xa × Y × Θ → Xa × Y × Θ,  𝑔_young≻(a, y, θ) = 𝑔≻(a, y, θ, young)
+  𝑔_old≻    : Xa × Y × Θ → Xa × Θ,  𝑔_old≻(a, y, θ) = 𝑔≻(a, y, θ, old)
+
+Rule
+  𝑉 = β · E_{s}[(𝑉_young≻(𝑔_young≻(a, y, θ)), 𝑊_old≻(𝑔_old≻(a, y, θ)))[s]]
+  on (a, y, θ) ∈ Xa × Y × Θ
+
+Conditions
+  𝑉(a, y, θ) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  41  V = β*E_{s}((V_young[>], W_old[>])[s])  :: [id=value]
+
+Definitions referenced
+  Xa    entrepreneur_ageing:set:Xa
+  Y     entrepreneur_ageing:set:Y
+  Θ     entrepreneur_ageing:set:Θ
+  β     entrepreneur_ageing:parameter:β
+  s     entrepreneur_ageing:distribution:s
+  𝑔≻    entrepreneur_ageing:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE entrepreneur_ageing / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : Xa × Y × Θ → ℝ
+       ───────────────────
+  out  𝑉  : Xa × Y × Θ → ℝ
+
+Where
+  𝑔_young≻  : Xa × Y × Θ → Xa × Y × Θ,  𝑔_young≻(a, y, θ) = 𝑔≻(a, y, θ, young)
+  𝑔_old≻    : Xa × Y × Θ → Xa × Θ,  𝑔_old≻(a, y, θ) = 𝑔≻(a, y, θ, old)
+
+Rule
+  𝑉 = β · E_{s}[(𝑉_young≻(𝑔_young≻(a, y, θ)), 𝑊_old≻(𝑔_old≻(a, y, θ)))[s]]
+  on (a, y, θ) ∈ Xa × Y × Θ
+  𝑉 : Xa × Y × Θ → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xa    entrepreneur_ageing:set:Xa
+  Y     entrepreneur_ageing:set:Y
+  Θ     entrepreneur_ageing:set:Θ
+  β     entrepreneur_ageing:parameter:β
+  s     entrepreneur_ageing:distribution:s
+  𝑔≻    entrepreneur_ageing:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl ====
+STAGE entrepreneur_ageing / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉   : Xa × Y × Θ → ℝ
+       ───────────────────────────────────────────────────────────────────────
+  out  𝑉≺  : Xa × Y × Θ → ℝ
+
+Operations
+  1  Pullback
+     in: 𝑉                              out: 𝑉 ∘ 𝑔≺
+     ─────────────────────────────────────────────────────────────────────────
+     rule: (𝑉 ∘ 𝑔≺)(a_ea, y_ea, θ_ea, y_n, θ_n)
+             = 𝑉(𝑔≺(a_ea, y_ea, θ_ea, y_n, θ_n))
+
+  2  value:Expectation:1
+     in: (1)
+     out: (a_ea, y_ea, θ_ea) ↦ E_{y_n, θ_n}[𝑉(𝑔≺(a_ea, y_ea, θ_ea, y_n, θ_n))]
+     ─────────────────────────────────────────────────────────────────────────
+     rule: (2)(a_ea, y_ea, θ_ea)
+             = E_{y_n, θ_n}[𝑉(𝑔≺(a_ea, y_ea, θ_ea, y_n, θ_n))]
+
+  3  Aggregation
+     in: (2)                            out: 𝑉≺
+     ─────────────────────────────────────────────────────────────────────────
+     rule: 𝑉≺ = E_{y_n, θ_n}[𝑉(𝑔≺(a_ea, y_ea, θ_ea, y_n, θ_n))]
+           on (a_ea, y_ea, θ_ea) ∈ Xa × Y × Θ
+
+  4  Evaluation
+     in: 𝑉≺                             out: 𝑉≺
+     ─────────────────────────────────────────────────────────────────────────
+     rule: 𝑉≺ : Xa × Y × Θ → ℝ
+
+Conditions
+  Aggregation  𝑉≺(a_ea, y_ea, θ_ea) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  45  V[<] = E_{y_n,θ_n}(V)  :: [id=value]
+
+Definitions referenced
+  Xa    entrepreneur_ageing:set:Xa
+  Y     entrepreneur_ageing:set:Y
+  Θ     entrepreneur_ageing:set:Θ
+  y_n   entrepreneur_ageing:distribution:y_n
+  θ_n   entrepreneur_ageing:distribution:θ_n
+  𝑔≺    entrepreneur_ageing:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Pullback ====
+STAGE entrepreneur_ageing / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+  / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : Xa × Y × Θ → ℝ
+       ───────────────────────────
+  out  𝑉 ∘ 𝑔≺
+          : Xa × Y × Θ × Y × Θ → ℝ
+
+Rule
+  (𝑉 ∘ 𝑔≺)(a_ea, y_ea, θ_ea, y_n, θ_n) = 𝑉(𝑔≺(a_ea, y_ea, θ_ea, y_n, θ_n))
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  23  a = a_ea
+  24  y = y_n
+  25  θ = θ_n
+
+Definitions referenced
+  Xa    entrepreneur_ageing:set:Xa
+  Y     entrepreneur_ageing:set:Y
+  Θ     entrepreneur_ageing:set:Θ
+  y_n   entrepreneur_ageing:distribution:y_n
+  θ_n   entrepreneur_ageing:distribution:θ_n
+  𝑔≺    entrepreneur_ageing:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / value:Expectation:1 ====
+STAGE entrepreneur_ageing / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+  / value:Expectation:1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉 ∘ 𝑔≺
+         : Xa × Y × Θ × Y × Θ → ℝ
+       ────────────────────────────────────────────────────────────────────
+  out  (a_ea, y_ea, θ_ea) ↦ E_{y_n, θ_n}[𝑉(𝑔≺(a_ea, y_ea, θ_ea, y_n, θ_n))]
+         : Xa × Y × Θ → ℝ
+
+Rule
+  value:Expectation:1(a_ea, y_ea, θ_ea)
+    = E_{y_n, θ_n}[𝑉(𝑔≺(a_ea, y_ea, θ_ea, y_n, θ_n))]
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  16  y_n ~ MarkovChain(P_y, y_grid, y_ea)
+        :: ["this period's working ability, drawn from the row of P_y at last
+        period's ability y_ea"]
+  18  θ_n ~ MarkovChain(((ρ_θ0, 1 - ρ_θ0), (1 - ρ_θ1, ρ_θ1)), (0, θ_e), θ_ea)
+        :: ["this period's entrepreneurial ability, drawn from the row at last
+        period's ability θ_ea"]
+  45  V[<] = E_{y_n,θ_n}(V)
+        :: [id=value]
+
+Definitions referenced
+  Xa    entrepreneur_ageing:set:Xa
+  Y     entrepreneur_ageing:set:Y
+  Θ     entrepreneur_ageing:set:Θ
+  y_n   entrepreneur_ageing:distribution:y_n
+  θ_n   entrepreneur_ageing:distribution:θ_n
+  𝑔≺    entrepreneur_ageing:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Aggregation ====
+STAGE entrepreneur_ageing / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+  / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (a_ea, y_ea, θ_ea) ↦ E_{y_n, θ_n}[𝑉(𝑔≺(a_ea, y_ea, θ_ea, y_n, θ_n))]
+           : Xa × Y × Θ → ℝ
+       ────────────────────────────────────────────────────────────────────
+  out  𝑉≺  : Xa × Y × Θ → ℝ
+
+Rule
+  𝑉≺ = E_{y_n, θ_n}[𝑉(𝑔≺(a_ea, y_ea, θ_ea, y_n, θ_n))]
+  on (a_ea, y_ea, θ_ea) ∈ Xa × Y × Θ
+
+Conditions
+  𝑉≺(a_ea, y_ea, θ_ea) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  45  V[<] = E_{y_n,θ_n}(V)  :: [id=value]
+
+Definitions referenced
+  Xa    entrepreneur_ageing:set:Xa
+  Y     entrepreneur_ageing:set:Y
+  Θ     entrepreneur_ageing:set:Θ
+  y_n   entrepreneur_ageing:distribution:y_n
+  θ_n   entrepreneur_ageing:distribution:θ_n
+  𝑔≺    entrepreneur_ageing:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Evaluation ====
+STAGE entrepreneur_ageing / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+  / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≺  : Xa × Y × Θ → ℝ
+       ────────────────────
+  out  𝑉≺  : Xa × Y × Θ → ℝ
+
+Rule
+  𝑉≺ = E_{y_n, θ_n}[𝑉(𝑔≺(a_ea, y_ea, θ_ea, y_n, θ_n))]
+  on (a_ea, y_ea, θ_ea) ∈ Xa × Y × Θ
+  𝑉≺ : Xa × Y × Θ → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xa    entrepreneur_ageing:set:Xa
+  Y     entrepreneur_ageing:set:Y
+  Θ     entrepreneur_ageing:set:Θ
+  y_n   entrepreneur_ageing:distribution:y_n
+  θ_n   entrepreneur_ageing:distribution:θ_n
+  𝑔≺    entrepreneur_ageing:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn ====
+STAGE entrepreneur_ageing / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Xa × Y × Θ
+       ──────────────────────────────────────────────────────────────────
+  out  μ   : finite measure on Xa × Y × Θ
+
+Operations
+  1  DistributionExtension:y_n
+     in: μ≺                             out: μ≺⊗P_{y_n|y_ea}
+     ────────────────────────────────────────────────────────────────────
+     rule: μ≺⊗P_{y_n|y_ea}(B)
+             = ∫_{(a_ea, y_ea, θ_ea) ∈ Xa × Y × Θ}
+                 [P_{y_n|y_ea}(y_ea)({y_n ∈ Y | (a_ea, y_ea, θ_ea, y_n) ∈ B})]
+               μ≺(d(a_ea, y_ea, θ_ea))
+
+  2  DistributionExtension:θ_n
+     in: (1)                            out: μ≺⊗P_{y_n|y_ea}⊗P_{θ_n|θ_ea}
+     ────────────────────────────────────────────────────────────────────
+     rule: μ≺⊗P_{y_n|y_ea}⊗P_{θ_n|θ_ea}(B)
+             = ∫_{(a_ea, y_ea, θ_ea, y_n) ∈ Xa × Y × Θ × Y}
+                 [P_{θ_n|θ_ea}(θ_ea)({θ_n ∈ Θ |
+                               (a_ea, y_ea, θ_ea, y_n, θ_n) ∈ B})]
+               μ≺⊗P_{y_n|y_ea}(d(a_ea, y_ea, θ_ea, y_n))
+
+  3  Pushforward
+     in: (2)                            out: μ
+     ────────────────────────────────────────────────────────────────────
+     rule: μ(B)
+             = μ≺⊗P_{y_n|y_ea}⊗P_{θ_n|θ_ea}({a_ea≺, y_ea≺, θ_ea≺, y_n, θ_n ∈
+                               Xa × Y × Θ × Y × Θ |
+                               𝑔≺(a_ea≺, y_ea≺, θ_ea≺, y_n, θ_n) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  23  a = a_ea
+  24  y = y_n
+  25  θ = θ_n
+
+Definitions referenced
+  Xa            entrepreneur_ageing:set:Xa
+  Y             entrepreneur_ageing:set:Y
+  Θ             entrepreneur_ageing:set:Θ
+  P_{y_n|y_ea}  entrepreneur_ageing:distribution:y_n
+  y_n           entrepreneur_ageing:distribution:y_n
+  P_{θ_n|θ_ea}  entrepreneur_ageing:distribution:θ_n
+  θ_n           entrepreneur_ageing:distribution:θ_n
+  𝑔≺            entrepreneur_ageing:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / DistributionExtension:y_n ====
+STAGE entrepreneur_ageing / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+  / DistributionExtension:y_n
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Xa × Y × Θ
+       ──────────────────────────────────────
+  out  μ≺⊗P_{y_n|y_ea}
+           : finite measure on Xa × Y × Θ × Y
+
+Rule
+  μ≺⊗P_{y_n|y_ea}(B)
+    = ∫_{(a_ea, y_ea, θ_ea) ∈ Xa × Y × Θ}
+        [P_{y_n|y_ea}(y_ea)({y_n ∈ Y | (a_ea, y_ea, θ_ea, y_n) ∈ B})]
+      μ≺(d(a_ea, y_ea, θ_ea))
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  16  y_n ~ MarkovChain(P_y, y_grid, y_ea)
+        :: ["this period's working ability, drawn from the row of P_y at last
+        period's ability y_ea"]
+
+Definitions referenced
+  Xa            entrepreneur_ageing:set:Xa
+  Y             entrepreneur_ageing:set:Y
+  Θ             entrepreneur_ageing:set:Θ
+  P_{y_n|y_ea}  entrepreneur_ageing:distribution:y_n
+  y_n           entrepreneur_ageing:distribution:y_n
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / DistributionExtension:θ_n ====
+STAGE entrepreneur_ageing / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+  / DistributionExtension:θ_n
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺⊗P_{y_n|y_ea}
+         : finite measure on Xa × Y × Θ × Y
+       ────────────────────────────────────────
+  out  μ≺⊗P_{y_n|y_ea}⊗P_{θ_n|θ_ea}
+         : finite measure on Xa × Y × Θ × Y × Θ
+
+Rule
+  μ≺⊗P_{y_n|y_ea}⊗P_{θ_n|θ_ea}(B)
+    = ∫_{(a_ea, y_ea, θ_ea, y_n) ∈ Xa × Y × Θ × Y}
+        [P_{θ_n|θ_ea}(θ_ea)({θ_n ∈ Θ | (a_ea, y_ea, θ_ea, y_n, θ_n) ∈ B})]
+      μ≺⊗P_{y_n|y_ea}(d(a_ea, y_ea, θ_ea, y_n))
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  18  θ_n ~ MarkovChain(((ρ_θ0, 1 - ρ_θ0), (1 - ρ_θ1, ρ_θ1)), (0, θ_e), θ_ea)
+        :: ["this period's entrepreneurial ability, drawn from the row at last
+        period's ability θ_ea"]
+
+Definitions referenced
+  Xa            entrepreneur_ageing:set:Xa
+  Y             entrepreneur_ageing:set:Y
+  Θ             entrepreneur_ageing:set:Θ
+  P_{y_n|y_ea}  entrepreneur_ageing:distribution:y_n
+  y_n           entrepreneur_ageing:distribution:y_n
+  P_{θ_n|θ_ea}  entrepreneur_ageing:distribution:θ_n
+  θ_n           entrepreneur_ageing:distribution:θ_n
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / Pushforward ====
+STAGE entrepreneur_ageing / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+  / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺⊗P_{y_n|y_ea}⊗P_{θ_n|θ_ea}
+          : finite measure on Xa × Y × Θ × Y × Θ
+       ─────────────────────────────────────────
+  out  μ  : finite measure on Xa × Y × Θ
+
+Rule
+  μ(B)
+    = μ≺⊗P_{y_n|y_ea}⊗P_{θ_n|θ_ea}({a_ea≺, y_ea≺, θ_ea≺, y_n, θ_n ∈
+                      Xa × Y × Θ × Y × Θ |
+                      𝑔≺(a_ea≺, y_ea≺, θ_ea≺, y_n, θ_n) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  23  a = a_ea
+  24  y = y_n
+  25  θ = θ_n
+
+Definitions referenced
+  Xa            entrepreneur_ageing:set:Xa
+  Y             entrepreneur_ageing:set:Y
+  Θ             entrepreneur_ageing:set:Θ
+  P_{y_n|y_ea}  entrepreneur_ageing:distribution:y_n
+  y_n           entrepreneur_ageing:distribution:y_n
+  P_{θ_n|θ_ea}  entrepreneur_ageing:distribution:θ_n
+  θ_n           entrepreneur_ageing:distribution:θ_n
+  𝑔≺            entrepreneur_ageing:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE entrepreneur_ageing / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ         : finite measure on Xa × Y × Θ
+       ──────────────────────────────────────────────────────
+  out  μ_young≻  : finite measure on Xa × Y × Θ
+       μ_old≻    : finite measure on Xa × Θ
+
+Where
+  𝑔_young≻  : Xa × Y × Θ → Xa × Y × Θ,  𝑔_young≻(a, y, θ) = 𝑔≻(a, y, θ, young)
+  𝑔_old≻    : Xa × Y × Θ → Xa × Θ,  𝑔_old≻(a, y, θ) = 𝑔≻(a, y, θ, old)
+
+Operations
+  1  DistributionExtension:s
+     in: μ                              out: μ⊗P_s
+     ────────────────────────────────────────────────────────
+     rule: μ⊗P_s(B)
+             = ∫_{(a, y, θ) ∈ Xa × Y × Θ}
+                 [P_s({s ∈ {young, old} | (a, y, θ, s) ∈ B})] μ(d(a, y, θ))
+
+  2  Pushforward
+     in: (1)                            out: μ_young≻, μ_old≻
+     ────────────────────────────────────────────────────────
+     rule: μ_young≻(B)
+             = μ⊗P_s({a, y, θ, s ∈ Xa × Y × Θ × {young, old} |
+                       s = young ∧ 𝑔_young≻(a, y, θ) ∈ B})
+           μ_old≻(B)
+             = μ⊗P_s({a, y, θ, s ∈ Xa × Y × Θ × {young, old} |
+                       s = old ∧ 𝑔_old≻(a, y, θ) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  30  a_ea_yc = a
+  31  y_ea_yc = y
+  32  θ_ea_yc = θ
+  35  a_ea_oc = a
+  36  θ_ea_oc = θ
+
+Definitions referenced
+  Xa    entrepreneur_ageing:set:Xa
+  Y     entrepreneur_ageing:set:Y
+  Θ     entrepreneur_ageing:set:Θ
+  s     entrepreneur_ageing:distribution:s
+  P_s   entrepreneur_ageing:distribution:s
+  𝑔≻    entrepreneur_ageing:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / DistributionExtension:s ====
+STAGE entrepreneur_ageing / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+  / DistributionExtension:s
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ  : finite measure on Xa × Y × Θ
+       ────────────────────────────────────────────────
+  out  μ⊗P_s
+          : finite measure on Xa × Y × Θ × {young, old}
+
+Rule
+  μ⊗P_s(B)
+    = ∫_{(a, y, θ) ∈ Xa × Y × Θ} [P_s({s ∈ {young, old} | (a, y, θ, s) ∈ B})]
+      μ(d(a, y, θ))
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  20  s ~ Categorical((π_y, 1 - π_y))
+        :: ["remaining young or ageing, with probabilities in the order of the
+        labels"]
+
+Definitions referenced
+  Xa    entrepreneur_ageing:set:Xa
+  Y     entrepreneur_ageing:set:Y
+  Θ     entrepreneur_ageing:set:Θ
+  s     entrepreneur_ageing:distribution:s
+  P_s   entrepreneur_ageing:distribution:s
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE entrepreneur_ageing / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+  / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ⊗P_s
+                 : finite measure on Xa × Y × Θ × {young, old}
+       ───────────────────────────────────────────────────────
+  out  μ_young≻  : finite measure on Xa × Y × Θ
+       μ_old≻    : finite measure on Xa × Θ
+
+Where
+  𝑔_young≻  : Xa × Y × Θ → Xa × Y × Θ,  𝑔_young≻(a, y, θ) = 𝑔≻(a, y, θ, young)
+  𝑔_old≻    : Xa × Y × Θ → Xa × Θ,  𝑔_old≻(a, y, θ) = 𝑔≻(a, y, θ, old)
+
+Rule
+  μ_young≻(B)
+    = μ⊗P_s({a, y, θ, s ∈ Xa × Y × Θ × {young, old} |
+              s = young ∧ 𝑔_young≻(a, y, θ) ∈ B})
+  μ_old≻(B)
+    = μ⊗P_s({a, y, θ, s ∈ Xa × Y × Θ × {young, old} |
+              s = old ∧ 𝑔_old≻(a, y, θ) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  30  a_ea_yc = a
+  31  y_ea_yc = y
+  32  θ_ea_yc = θ
+  35  a_ea_oc = a
+  36  θ_ea_oc = θ
+
+Definitions referenced
+  Xa    entrepreneur_ageing:set:Xa
+  Y     entrepreneur_ageing:set:Y
+  Θ     entrepreneur_ageing:set:Θ
+  s     entrepreneur_ageing:distribution:s
+  P_s   entrepreneur_ageing:distribution:s
+  𝑔≻    entrepreneur_ageing:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== entrepreneur_ageing:set:Xa ====
+STAGE entrepreneur_ageing / SET Xa
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xa  = ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  3  Xa := ℝ₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== entrepreneur_ageing:set:Y ====
+STAGE entrepreneur_ageing / SET Y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Y  = ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  4  Y  := ℝ₊₊
+       :: ["working ability; the positive reals stand in for its finite grid,
+       whose number of points is a numerical choice"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== entrepreneur_ageing:set:Θ ====
+STAGE entrepreneur_ageing / SET Θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Θ  = ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  5  Θ  := ℝ₊
+       :: ["entrepreneurial ability; the nonnegative reals stand in for its
+       two levels, 0 and θ_e"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== entrepreneur_ageing:parameter:β ====
+STAGE entrepreneur_ageing / PARAMETER β
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  β  ∈ (0, 1)
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  7  β      : (0,1)  :: ["discount factor"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== entrepreneur_ageing:parameter:π_y ====
+STAGE entrepreneur_ageing / PARAMETER π_y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  π_y  ∈ [0, 1]
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  8  π_y    : [0,1]
+       :: ["probability that a young person remains young for another period"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== entrepreneur_ageing:parameter:P_y ====
+STAGE entrepreneur_ageing / PARAMETER P_y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  P_y  ∈ [0, 1]
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  9  P_y    : [0,1]
+       :: ["transition matrix of working ability; the set of one probability
+       stands in for the matrix"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== entrepreneur_ageing:parameter:y_grid ====
+STAGE entrepreneur_ageing / PARAMETER y_grid
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  y_grid  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  10  y_grid : ℝ₊₊
+        :: ["grid points of working ability, normalised to an average of one;
+        the positive reals stand in for the vector"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== entrepreneur_ageing:parameter:ρ_θ0 ====
+STAGE entrepreneur_ageing / PARAMETER ρ_θ0
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  ρ_θ0  ∈ [0, 1]
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  11  ρ_θ0   : [0,1]
+        :: ["probability that zero entrepreneurial ability persists"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== entrepreneur_ageing:parameter:ρ_θ1 ====
+STAGE entrepreneur_ageing / PARAMETER ρ_θ1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  ρ_θ1  ∈ [0, 1]
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  12  ρ_θ1   : [0,1]
+        :: ["probability that the positive entrepreneurial ability persists"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== entrepreneur_ageing:parameter:θ_e ====
+STAGE entrepreneur_ageing / PARAMETER θ_e
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  θ_e  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  13  θ_e    : ℝ₊₊  :: ["the positive level of entrepreneurial ability"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== entrepreneur_ageing:distribution:y_n ====
+STAGE entrepreneur_ageing / DISTRIBUTION y_n
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  P_{y_n|y_ea}  ~ y_ea ↦ MarkovChain(P_y, y_grid, y_ea)
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  16  y_n ~ MarkovChain(P_y, y_grid, y_ea)
+        :: ["this period's working ability, drawn from the row of P_y at last
+        period's ability y_ea"]
+
+Definitions referenced
+  P_y     entrepreneur_ageing:parameter:P_y
+  y_grid  entrepreneur_ageing:parameter:y_grid
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== entrepreneur_ageing:distribution:θ_n ====
+STAGE entrepreneur_ageing / DISTRIBUTION θ_n
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  P_{θ_n|θ_ea}
+    ~ θ_ea ↦ MarkovChain(((ρ_θ0, 1 − ρ_θ0), (1 − ρ_θ1, ρ_θ1)), (0, θ_e), θ_ea)
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  18  θ_n ~ MarkovChain(((ρ_θ0, 1 - ρ_θ0), (1 - ρ_θ1, ρ_θ1)), (0, θ_e), θ_ea)
+        :: ["this period's entrepreneurial ability, drawn from the row at last
+        period's ability θ_ea"]
+
+Definitions referenced
+  ρ_θ0  entrepreneur_ageing:parameter:ρ_θ0
+  ρ_θ1  entrepreneur_ageing:parameter:ρ_θ1
+  θ_e   entrepreneur_ageing:parameter:θ_e
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== entrepreneur_ageing:distribution:s ====
+STAGE entrepreneur_ageing / DISTRIBUTION s
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  s  ~ Categorical(π_y, 1 − π_y)
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  20  s ~ Categorical((π_y, 1 - π_y))
+        :: ["remaining young or ageing, with probabilities in the order of the
+        labels"]
+
+Definitions referenced
+  π_y   entrepreneur_ageing:parameter:π_y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.1 ====
+STAGE entrepreneur_ageing / FORWARD BLOCK arvl_to_dcsn / 1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  entrepreneur_ageing.bl
+  23  a = a_ea
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.2 ====
+STAGE entrepreneur_ageing / FORWARD BLOCK arvl_to_dcsn / 2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  entrepreneur_ageing.bl
+  24  y = y_n
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.3 ====
+STAGE entrepreneur_ageing / FORWARD BLOCK arvl_to_dcsn / 3
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  entrepreneur_ageing.bl
+  25  θ = θ_n
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.young.1 ====
+STAGE entrepreneur_ageing / FORWARD BLOCK dcsn_to_cntn / young.1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  entrepreneur_ageing.bl
+  30  a_ea_yc = a
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.young.2 ====
+STAGE entrepreneur_ageing / FORWARD BLOCK dcsn_to_cntn / young.2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  entrepreneur_ageing.bl
+  31  y_ea_yc = y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.young.3 ====
+STAGE entrepreneur_ageing / FORWARD BLOCK dcsn_to_cntn / young.3
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  entrepreneur_ageing.bl
+  32  θ_ea_yc = θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.old.1 ====
+STAGE entrepreneur_ageing / FORWARD BLOCK dcsn_to_cntn / old.1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  entrepreneur_ageing.bl
+  35  a_ea_oc = a
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.old.2 ====
+STAGE entrepreneur_ageing / FORWARD BLOCK dcsn_to_cntn / old.2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  entrepreneur_ageing.bl
+  36  θ_ea_oc = θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.value ====
+STAGE entrepreneur_ageing / BACKWARD BLOCK cntn_to_dcsn / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(a, y, θ) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  41  V = β*E_{s}((V_young[>], W_old[>])[s])  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.value ====
+STAGE entrepreneur_ageing / BACKWARD BLOCK dcsn_to_arvl / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉≺(a_ea, y_ea, θ_ea) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  45  V[<] = E_{y_n,θ_n}(V)  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== entrepreneur_ageing:g:arvl_to_dcsn ====
+STAGE entrepreneur_ageing / LAW OF MOTION arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≺  : Xa × Y × Θ × Y × Θ → Xa × Y × Θ,
+        (a_ea, y_ea, θ_ea, y_n, θ_n) ↦ (a_ea, y_n, θ_n)
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  23  a = a_ea
+  24  y = y_n
+  25  θ = θ_n
+
+Definitions referenced
+  Xa    entrepreneur_ageing:set:Xa
+  Y     entrepreneur_ageing:set:Y
+  Θ     entrepreneur_ageing:set:Θ
+  y_n   entrepreneur_ageing:distribution:y_n
+  θ_n   entrepreneur_ageing:distribution:θ_n
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== entrepreneur_ageing:g:dcsn_to_cntn ====
+STAGE entrepreneur_ageing / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : Xa × Y × Θ × {young, old} → (Xa × Y × Θ, Xa × Θ)[s],
+        (a, y, θ, s) ↦ ((a, y, θ), (a, θ))[s]
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  30  a_ea_yc = a
+  31  y_ea_yc = y
+  32  θ_ea_yc = θ
+  35  a_ea_oc = a
+  36  θ_ea_oc = θ
+
+Definitions referenced
+  Xa    entrepreneur_ageing:set:Xa
+  Y     entrepreneur_ageing:set:Y
+  Θ     entrepreneur_ageing:set:Θ
+  s     entrepreneur_ageing:distribution:s
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== entrepreneur_ageing:G:cntn_to_dcsn ====
+STAGE entrepreneur_ageing / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : ℝ × ℝ × Xa × Y × Θ → ℝ,
+        (V_young≻, W_old≻, a, y, θ)
+          ↦ β · (π_y · V_young≻ + (1 − π_y) · W_old≻)
+
+Conditions
+  𝑉(a, y, θ) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  41  V = β*E_{s}((V_young[>], W_old[>])[s])  :: [id=value]
+
+Definitions referenced
+  Xa    entrepreneur_ageing:set:Xa
+  Y     entrepreneur_ageing:set:Y
+  Θ     entrepreneur_ageing:set:Θ
+  β     entrepreneur_ageing:parameter:β
+  π_y   entrepreneur_ageing:parameter:π_y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== entrepreneur_ageing:G:dcsn_to_arvl ====
+STAGE entrepreneur_ageing / VALUE AGGREGATOR dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≺  : ℝ × Xa × Y × Θ → ℝ,  (w, a_ea, y_ea, θ_ea) ↦ w
+
+Conditions
+  𝑉≺(a_ea, y_ea, θ_ea) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  entrepreneur_ageing.bl
+  45  V[<] = E_{y_n,θ_n}(V)  :: [id=value]
+
+Definitions referenced
+  Xa    entrepreneur_ageing:set:Xa
+  Y     entrepreneur_ageing:set:Y
+  Θ     entrepreneur_ageing:set:Θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

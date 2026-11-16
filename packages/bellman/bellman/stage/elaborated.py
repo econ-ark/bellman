@@ -5,7 +5,9 @@ A stage is the unit a modeler writes in Bellman-SYM: one modular Bellman
 operator with its three information sets — arrival, decision, continuation —
 and the laws of motion, the value recursion, and the policy between them.
 `ElaboratedStage` is the object built for one occurrence of a stage in one
-period: the stage after elaboration. It holds seven attributes and no other:
+period: the stage after elaboration. Its position in provenance is an
+address in the trellis diagram, not an input to its operator.
+It holds seven attributes and no other:
 the declared name; the metadata of the file's `@` lines; the definitions
 table, every declared name once as retained terms, an ordered read-only
 mapping from each identity to its record; `initial`, the two initial
@@ -71,6 +73,7 @@ from bellman.stage import binding_verbs, denotations, stage_answers
 from bellman.stage.encoding import encoding
 from bellman.stage.inventory import stage_sheet, version_word
 from bellman.stage.components import check_components
+from bellman.stage.input_requirements import check_inputs
 from bellman.stage.levels import construct, declared_version
 from bellman.stage.pieces import (
     BoundMethods,
@@ -221,6 +224,7 @@ class ElaboratedStage(StageVersion):
     fields = stage_answers.fields
     obligations = stage_answers.obligations
     diagnostics = stage_answers.diagnostics
+    check_inputs = check_inputs
     denote = denotations.denote
     encoding = encoding
     places = places

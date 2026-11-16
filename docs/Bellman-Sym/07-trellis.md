@@ -55,7 +55,7 @@ periods:
   - stages: [tenure, keeper_cons, adjuster_cons, bequest]
     connectors:
       - {a_nxt_kp: a_bq, h_nxt_kp: h_bq, z_nxt_kp: z_bq, a_nxt_adj: a_bq, h_nxt_adj: h_bq, z_nxt_adj: z_bq}
-      - {w_kp: w_d, h_kp: h_d, z_kp: keeper_cons.z_d, w_adj: m, z_adj: adjuster_cons.z_d}
+      - {w_kp: w_d, h_kp: h_d, z_kp: keeper_cons.z_d, w_adj: m, z_adj: adjuster_cons.z_d, age_kp: keeper_cons.age, age_adj: adjuster_cons.age}
   - {template: period.yml, repeat: 50}
 inter_connectors:
   - {a_nxt_kp: a, h_nxt_kp: h, z_nxt_kp: z, a_nxt_adj: a, h_nxt_adj: h, z_nxt_adj: z}
@@ -63,7 +63,7 @@ inter_connectors:
 
 Its first entry writes the terminal period out, because that period alone holds the bequest and the connector that carries the savings, the housing and the income state of both consumption stages onto the bequest's arrival fields, and the template's connector after it, which joins the tenure stage's branches to the consumption stages; its second entry gives the fifty earlier periods as one template repeated. The one mapping under `inter_connectors` stands for every adjacent pair, and joins the continuation fields of both consumption stages to the arrival fields `a`, `h` and `z` of the next period's tenure stage.
 
-The **period file**, `period.yml`, is a template: one period, written once and repeated by the trellis file under `template:`. It lists the keys of the stages the period holds and the connectors within the period. The order of its list carries no meaning, since the order of the stages is derived from their fields ([Periods](06-period.md) §3). Its one connector joins the fields each branch of the tenure stage ends at to the decision states of the consumption stage the branch enters, each consumption stage beginning at its decision perch; `z_d`, which both consumption stages read, is written with its stage key:
+The **period file**, `period.yml`, is a template: one period, written once and repeated by the trellis file under `template:`. It lists the keys of the stages the period holds and the connectors within the period. The order of its list carries no meaning, since the order of the stages is derived from their fields ([Periods](06-period.md) §3). Its one connector joins the fields each branch of the tenure stage ends at to the decision states of the consumption stage the branch enters, each consumption stage beginning at its decision perch; `z_d`, which both consumption stages read, is written with its stage key. The same connector pairs each incoming branch age with the age its consumption stage returns.
 
 ```yaml
 !period
@@ -73,20 +73,18 @@ stages:
   - keeper_cons
   - adjuster_cons
 connectors:
-  - {w_kp: w_d, h_kp: h_d, z_kp: keeper_cons.z_d, w_adj: m, z_adj: adjuster_cons.z_d}
+  - {w_kp: w_d, h_kp: h_d, z_kp: keeper_cons.z_d, w_adj: m, z_adj: adjuster_cons.z_d, age_kp: keeper_cons.age, age_adj: adjuster_cons.age}
 ```
 
-The **recipe**, `spec.yml`, names the files. At its top it names the trellis file under `trellis:`, and for each stage key the two files above use it names the stage's file under `stage:` and the files whose values the stage receives, each by a path written from the recipe's own folder. What the recipe does with those files, the order of its lists, the entries written `$fill`, the `registry` block and the bequest's `periods: [0, 0]`, is the subject of [The Bellman factory](08-bellman-factory.md) §3; on this page the recipe is read for what it names. The durables recipe, with its comment lines left out:
+The **recipe**, `spec.yml`, names the files. At its top it names the trellis file under `trellis:`, and for each stage key the two files above use it names the stage's file under `stage:` and the files whose values the stage receives, each by a path written from the recipe's own folder. What the recipe does with those files, the order of its lists, the entries written `$fill` and the bequest's `periods: [0, 0]`, is the subject of [The Bellman factory](08-bellman-factory.md) §3; on this page the recipe is read for what it names. The durables recipe, with its comment lines left out:
 
 ```yaml
 trellis: trellis.yml
 stages:
-  tenure:        {stage: stages/tenure/tenure.bl,               calibration: {all: [calibration/durables, $fill]}, settings: {all: [settings/durables, $fill]}, methods: {all: [stages/tenure/methods.bl]}}
+  tenure:        {stage: stages/tenure/tenure.bl,               calibration: {all: [calibration/durables, calibration/wage_schedule, $fill]}, settings: {all: [settings/durables, $fill]}, methods: {all: [stages/tenure/methods.bl]}}
   keeper_cons:   {stage: stages/keeper_cons/keeper_cons.bl,     calibration: {all: [calibration/durables, $fill]}, settings: {all: [settings/durables, $fill]}, methods: {all: [stages/keeper_cons/methods.bl]}}
   adjuster_cons: {stage: stages/adjuster_cons/adjuster_cons.bl, calibration: {all: [calibration/durables, $fill]}, settings: {all: [settings/durables, $fill]}, methods: {all: [stages/adjuster_cons/methods.bl]}}
   bequest:       {stage: stages/bequest/bequest.bl,             calibration: {all: [calibration/durables, $fill]}, methods: {all: [stages/bequest/methods.bl]}, periods: [0, 0]}
-registry:
-  calibration: [calibration/wage_schedule]
 ```
 
 The division of labor is strict. The trellis file and the period file hold stage keys, connectors and inter-period connectors, and the trellis file the path of the period file it repeats, under `template:`; they hold no value, no method, no setting and no stage file. Reading them tells the package which stages occur where and how their fields are joined, and tells it nothing about what any stage receives. A stage key is a name the author chooses; which file it names, and which files that stage is bound from, the recipe says, and the recipe in turn writes no connector and determines the sequence of periods only through the trellis file it names at its top. The recipe is the file of the **specification factory**, the part of the Bellman factory that merges the sources a recipe names, which the next page explains ([wiki](../wiki/spec_factory.md)). The call `bellman.trellis.load_recipe("applications/durables/declaration", "spec.yml")` reads the three files and returns the syntactic trellis, one record per stage and period (§6). A recipe cannot make a trellis on its own: without the trellis file it names there is no list of periods to write records for.
@@ -118,9 +116,11 @@ The two period definitions of the preceding page leave different fields at their
 
 For the first definition, `port.m_next` of period `h+1` supplies `cons.m` of period `h`. For the second, `disc.k_next` supplies `port.k`. Each pairing requires [compatible declared sets](06-period.md#2-connectors), the outgoing field's set contained in the incoming field's, and the author's economic justification for the quantity, units and information. Use the matching within-period and inter-period choices together; reversing a stage list does not move a boundary.
 
-The **terminal continuation value** is the value function that a stage of the terminal period reads after its decisions. Keep its input explicit: declare `V[>]` in the backward block's input header, including when the terminal payoff is given in closed form. You supply the function on the declared continuation-state domain. It may be identically zero, as in the durables model's bequest stage, but death, exit or the end of the horizon does not set it to zero automatically. A zero value does not require removing the continuation-state fields.
+**Terminal data** supply every unconnected value-type field that a stage of the terminal period takes in. Supply them when the model is realized, using their exact spellings in the owning backward header. For example, a mapping can give a representing function for `V[>]` and a number for the constant `age`. See [Supplied continuation fields](API/stage/01-the-stage.md#51-supplied-continuation-fields). The trellis file describes the connections and contains no terminal data.
 
-Supply this function as terminal data when the model is realized; no entry of `inter_connectors` is reserved for it. For the value-only stage files of the preceding page, use the domain in the table and the analytic conditions in [Periods](06-period.md#31-choosing-the-period-boundary). A constant zero terminal value is admissible for those equations. Terminal data for a continuation given in closed form must also carry the derivatives that the blocks of the stage reading it name by their terms, `D_{a}V[>]`, agreeing with the supplied value function (§2.1). The join rule above prescribes no representation for terminal data.
+In the bequest example the author supplies a zero function for `V[>]` on its declared state domain. A terminal value supplied in closed form must also provide the derivatives its receiving stage reads, such as `D_{a}V[>]`, consistent with the supplied function (§2.1). In a stationary problem without a last period, each field sent backward has its own fixed-point requirement. See [Periods and trellises](../bellman-calculus/08-periods-and-trellis.md).
+
+The initial arrival law gives mass one to the joint admissible arrival set of the first period in time, `periods[-1]`. This condition covers all external arrival coordinates, including the decision inputs of a stage whose arrival and decision coincide. The [connection report](API/factory/trellis-factory.md#9-inspect-the-selected-connections) records the condition without assuming independent coordinates.
 
 In a retirement model, a connector for one adjacent period pair must contain both routes when both are needed: working continuation fields connect to the next working or choice stage, and retired continuation fields connect to the next retired stage. Writing the two routes as separate entries of `inter_connectors` would assign them to different period joins. Retirement is absorbing only if the retired route continues to exclude a return to working stages.
 
@@ -149,20 +149,23 @@ periods:
       bequest:       {stage: stages/bequest/bequest.bl, calibration: calibration/durables.yml, methods: stages/bequest/methods.bl}
     connectors:
       - {a_nxt_kp: a_bq, h_nxt_kp: h_bq, z_nxt_kp: z_bq, a_nxt_adj: a_bq, h_nxt_adj: h_bq, z_nxt_adj: z_bq}
-      - {w_kp: w_d, h_kp: h_d, z_kp: keeper_cons.z_d, w_adj: m, z_adj: adjuster_cons.z_d}
+      - {w_kp: w_d, h_kp: h_d, z_kp: keeper_cons.z_d, w_adj: m, z_adj: adjuster_cons.z_d, age_kp: keeper_cons.age, age_adj: adjuster_cons.age}
   - stages:
       tenure:        {stage: stages/tenure/tenure.bl, calibration: calibration/durables.yml, settings: settings/durables.yml, methods: stages/tenure/methods.bl}
       keeper_cons:   {stage: stages/keeper_cons/keeper_cons.bl, calibration: calibration/durables.yml, settings: settings/durables.yml, methods: stages/keeper_cons/methods.bl}
       adjuster_cons: {stage: stages/adjuster_cons/adjuster_cons.bl, calibration: calibration/durables.yml, settings: settings/durables.yml, methods: stages/adjuster_cons/methods.bl}
     connectors:
-      - {w_kp: w_d, h_kp: h_d, z_kp: keeper_cons.z_d, w_adj: m, z_adj: adjuster_cons.z_d}
+      - {w_kp: w_d, h_kp: h_d, z_kp: keeper_cons.z_d, w_adj: m, z_adj: adjuster_cons.z_d, age_kp: keeper_cons.age, age_adj: adjuster_cons.age}
 inter_connectors:
   - {a_nxt_kp: a, h_nxt_kp: h, z_nxt_kp: z, a_nxt_adj: a, h_nxt_adj: h, z_nxt_adj: z}
 ```
 
 The bequest's record names a calibration file and a methods file and no settings, so its settings are empty. A mapping written inline, `settings: {n_a: 200}`, stands where a path does. A record's methods are never written inline: `methods:` names a `.bl` file, the addition beside the stage file, or a list of additions applied in the order written, a structural addition followed by the addition that types the methods of the stage it enlarges, `methods: [additions/pension.bl, additions/egm.bl]`. A record that gives one stage file different methods at different periods names a replacing selection in place of the first in the other period's record, `methods: stages/cons/methods.vfi.bl` where the first period's record names `stages/cons/methods.bl`. A record holds one source of each kind and nothing more, so that a value which differs by period is written in this route directly, each period's records naming their own files; what a recipe writes instead is the subject of [The Bellman factory](08-bellman-factory.md) §3. The trellis files of records of `applications/cons-port/declaration/`, `trellis.port-cons-vfi.yml` and the five `trellis.reference-<name>.yml` of its fixed reference, are written in this shape, each `stage:` path naming a stage file of the folder's own `stages/`.
 
-In this route the tenure record of each period gives a calibration, a file or an inline mapping, that holds that period's income `Y` and retirement income `y_R` beside the common values, since these vary with age and a record merges nothing; the fragment above names the common file in both periods, so `bellman.trellis.load_trellis` reads it and `bellman.trellis.elaborate_trellis` constructs it, but `bellman.trellis.calibrate_trellis` refuses it at `Y`.
+The example of direct records names the common calibration. Binding
+tenure would also require the two fixed tables `Y` and `y_R` in that record's
+calibration source. The recipe above merges the common calibration and the table
+file. The tenure stage determines which row to use from the age it takes in.
 
 The two shapes are told apart by the shape alone, a list or a mapping, and are not mixed: a file that writes one period as keys and another as records is refused by both calls, each naming the shape it reads. A stage entry of the second shape is a key with a record, never a key with a bare list of files. Either shape may stand in a period written out in the trellis file or in a period file named under `template:`, and whichever shape a model uses, the two calls return the same kind of dictionary, the syntactic trellis of §6, which the same calls then elaborate and bind.
 
@@ -179,13 +182,13 @@ periods:
   - stages: [tenure, keeper_cons, adjuster_cons, bequest]
     connectors:
       - {a_nxt_kp: a_bq, h_nxt_kp: h_bq, z_nxt_kp: z_bq, a_nxt_adj: a_bq, h_nxt_adj: h_bq, z_nxt_adj: z_bq}
-      - {w_kp: w_d, h_kp: h_d, z_kp: keeper_cons.z_d, w_adj: m, z_adj: adjuster_cons.z_d}
+      - {w_kp: w_d, h_kp: h_d, z_kp: keeper_cons.z_d, w_adj: m, z_adj: adjuster_cons.z_d, age_kp: keeper_cons.age, age_adj: adjuster_cons.age}
   - stages: [tenure, keeper_cons, adjuster_cons]
     connectors:
-      - {w_kp: w_d, h_kp: h_d, z_kp: keeper_cons.z_d, w_adj: m, z_adj: adjuster_cons.z_d}
+      - {w_kp: w_d, h_kp: h_d, z_kp: keeper_cons.z_d, w_adj: m, z_adj: adjuster_cons.z_d, age_kp: keeper_cons.age, age_adj: adjuster_cons.age}
   - stages: [tenure, keeper_cons, adjuster_cons]
     connectors:
-      - {w_kp: w_d, h_kp: h_d, z_kp: keeper_cons.z_d, w_adj: m, z_adj: adjuster_cons.z_d}
+      - {w_kp: w_d, h_kp: h_d, z_kp: keeper_cons.z_d, w_adj: m, z_adj: adjuster_cons.z_d, age_kp: keeper_cons.age, age_adj: adjuster_cons.age}
 inter_connectors:
   - {a_nxt_kp: a, h_nxt_kp: h, z_nxt_kp: z, a_nxt_adj: a, h_nxt_adj: h, z_nxt_adj: z}
   - {a_nxt_kp: a, h_nxt_kp: h, z_nxt_kp: z, a_nxt_adj: a, h_nxt_adj: h, z_nxt_adj: z}

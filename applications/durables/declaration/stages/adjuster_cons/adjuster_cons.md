@@ -90,12 +90,14 @@ state the constraint the feasible sets above repeat for the maximisation.
 
 ## Values
 
+The backward block keeps the incoming age. It lists `age` on both sides of its header.
+
 The backward block states current utility plus the discounted continuation
 value. The decision value is the value the stage exports, which the tenure
 stage reads on the adjust branch.
 
 ```bl
-[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c, h_choice) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, age : Age @ !vlu @ !cnst, c, h_choice) : !cntn -> (V : ℝ @ !vlu, age) : !dcsn] {
     V = 𝑢(c, h_choice) + β*V[>]                        :: [id=value]
 }
 ```

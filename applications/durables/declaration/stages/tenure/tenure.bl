@@ -1,17 +1,17 @@
 @stage: tenure
 
+Age := {20, …, 71}
+
 R   : ℝ₊₊       :: ["gross return on financial assets"]
 R_H : ℝ₊₊       :: ["gross return on housing, received when the house is sold"]
 δ   : [0,1)     :: ["depreciation rate of housing"]
 ρ_z : (0,1)     :: ["persistence of log income"]
 σ_z : ℝ₊        :: ["standard deviation of the innovation to log income"]
-Y   : ℝ₊        :: ["earnings per unit of the income state at the age of the period"]
-y_R : ℝ₊        :: ["income that does not depend on the income state at the age of the period"]
+Y   : Age → ℝ₊        :: ["earnings per unit of the income state at the age of the period"]
+y_R : Age → ℝ₊        :: ["income that does not depend on the income state at the age of the period"]
 
 ε : ℝ
 ε ~ N(0, 1)
-
-𝑦(z : ℝ₊₊) := Y*z + y_R                                 :: [id=income]
 
 [id=arvl_to_dcsn, (a : ℝ₊, h : ℝ₊₊, z : ℝ₊₊, ε) : !arvl -> (a_d : ℝ₊, h_d : ℝ₊₊, z_d : ℝ₊₊) : !dcsn] {
     a_d = a
@@ -19,23 +19,26 @@ y_R : ℝ₊        :: ["income that does not depend on the income state at the 
     z_d = z^ρ_z*exp(σ_z*ε)                              :: [id=income_state]
 }
 
-[id=dcsn_to_cntn, (a_d, h_d, z_d, d : !ctrl @ {keep, adjust}) : !dcsn -> ()] {
+[id=dcsn_to_cntn, (a_d, h_d, z_d, age_kp[>], age_adj[>], d : !ctrl @ {keep, adjust}) : !dcsn -> ()] {
     [label=keep, () -> (w_kp : ℝ₊₊, h_kp : ℝ₊₊, z_kp : ℝ₊₊) : !cntn] {
-        w_kp = R*a_d + 𝑦(z_d)                           :: [id=cash_on_hand]
+        w_kp = R*a_d + Y[age_kp[>]]*z_d + y_R[age_kp[>]] :: [id=cash_on_hand]
         h_kp = (1 - δ)*h_d                              :: [id=housing_kept]
         z_kp = z_d
     }
     [label=adjust, () -> (w_adj : ℝ₊₊, z_adj : ℝ₊₊) : !cntn] {
-        w_adj = R*a_d + R_H*(1 - δ)*h_d + 𝑦(z_d)        :: [id=total_wealth]
+        w_adj = R*a_d + R_H*(1 - δ)*h_d + Y[age_adj[>]]*z_d + y_R[age_adj[>]] :: [id=total_wealth]
         z_adj = z_d
     }
 }
 
-[id=cntn_to_dcsn, (V_kp[>] : ℝ @ !vlu, V_adj[>] : ℝ @ !vlu, d) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+[id=cntn_to_dcsn, (V_kp[>] : ℝ @ !vlu, V_adj[>] : ℝ @ !vlu,
+    age_kp[>] : Age @ !vlu @ !cnst, age_adj[>] : Age @ !vlu @ !cnst, d) : !cntn
+    -> (V : ℝ @ !vlu, age : Age @ !vlu @ !cnst) : !dcsn] {
     V = (V_kp[>], V_adj[>])[d]                                                     :: [id=choice_value]
+    age = age_kp[>] - 1                              :: [id=age]
 }
 
-[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+[id=dcsn_to_arvl, (V, age) : !dcsn -> (V[<] : ℝ @ !vlu, age) : !arvl] {
     V[<]    = E_{ε}(V)                                  :: [id=value]
 }
 

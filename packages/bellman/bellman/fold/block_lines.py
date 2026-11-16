@@ -31,9 +31,14 @@ from bellman.syntax.vocabulary import (
     PERCHES,
     SHCK,
     SHOCK,
+    STATE,
     VALUE,
     VALUE_ROLES,
+    WRITTEN_MARK,
 )
+
+# the perch marks a header writes after a name, `[<]` and `[>]`
+_WRITTEN_MARKS = tuple(mark for mark in WRITTEN_MARK.values() if mark)
 
 # --- the stage and its blocks ---
 
@@ -193,6 +198,24 @@ def header_of(box):
     return DeclaredSides(inputs=tuple(box.dom.inside), outputs=tuple(box.cod.inside))
 
 
+def marked_inputs_of(box):
+    """The identities of the inputs that a block's header writes with a
+    perch mark, `W[>]`. Where the header also lists the bare name `W`, a
+    bare `W` on a line of the block is that other field. Semantic
+    identities alone do not tell a bare continuation name from a marked
+    one, so the retained spellings of the header are read
+    (`BlockHeader.input_spellings`); none on a box that retains none."""
+    declared = header_of(box).inputs
+    spellings = getattr(getattr(box, "data", None), "input_spellings", ())
+    if len(spellings) != len(declared):
+        return ()
+    return tuple(
+        sort.identity
+        for sort, spelling in zip(declared, spellings)
+        if spelling.endswith(_WRITTEN_MARKS)
+    )
+
+
 def unread_inputs_of(box):
     """The sorts of the value inputs a block's header lists and no line of
     the block reads, in header order (AAS, 17 October 2026): held by the
@@ -249,6 +272,8 @@ def perches_of(box, ports):
     data = box.data
     if isinstance(data, BlockData):
         return data.perch_from, data.perch_to
+    if outputs and all(i in ports and ports[i].role == STATE for i in outputs):
+        inputs = tuple(i for i in inputs if i not in ports or not ports[i].constant)
     return side_perch(inputs, ports), side_perch(outputs, ports)
 
 

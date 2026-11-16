@@ -290,7 +290,7 @@ Signature
   backward
     in   𝑉≻  : Xa → [−∞, ∞)
          ──────────────────────────────────────
-    out  𝑉≺  : Xm × ℝ₊ → ℝ
+    out  𝑉≺  : Xm → ℝ
          𝑐   : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
   forward
     in   μ≺  : finite measure on Xm × ℝ₊
@@ -316,20 +316,23 @@ Operations
        in: μ                            out: μ≻
 
 Conditions
-  cntn_to_dcsn:Aggregation  𝑉(m_d) ∈ [−∞, ∞)
-  dcsn_to_arvl:Aggregation  𝑉≺(m, l) ∈ ℝ
-  𝑢                         ¬(1 − ρ = 0)
-  cntn_to_dcsn.marginal     marginal-reading: the right side of each
-                              derivative line equals the derivative, in the
-                              named coordinate, of the value the builder
-                              writes, under the envelope conditions: concavity
-                              of the continuation value, interiority of the
-                              maximizer or the multiplier's term at a binding
-                              constraint, differentiability of the reward in
-                              the control, a measurable selection of the
-                              policy, and differentiability of the value at
-                              the point read; listed and not checked
-                              [required]
+  cntn_to_dcsn:Aggregation       𝑉(m_d) ∈ [−∞, ∞)
+  dcsn_to_arvl:Aggregation       𝑉≺(m) ∈ ℝ
+  dcsn_to_arvl:Aggregation       𝑉≺(m, l) ∈ ℝ
+  policy.optimality:Aggregation  ¬(𝑢(cp) ∈ [∞, ∞] ∧ V[>] ∈ [−∞, −∞])
+  𝑢                              ¬(1 − ρ = 0)
+  cntn_to_dcsn.marginal          marginal-reading: the right side of each
+                                   derivative line equals the derivative, in
+                                   the named coordinate, of the value the
+                                   builder writes, under the envelope
+                                   conditions: concavity of the continuation
+                                   value, interiority of the maximizer or the
+                                   multiplier's term at a binding constraint,
+                                   differentiability of the reward in the
+                                   control, a measurable selection of the
+                                   policy, and differentiability of the value
+                                   at the point read; listed and not checked
+                                   [required]
 ──────────────────────────────────────────────────────────────────────────────
 Source  cons.bl
   13  m_d = m
@@ -389,12 +392,13 @@ print(stage.diagnostics())
 
 ```text
 arithmetic-definedness      ¬(1 − ρ = 0)
-finite-real-arithmetic      The operands of Add at policy.optimality must be finite real numbers.
+finite-real-arithmetic      ¬(𝑢(cp) ∈ [∞, ∞] ∧ V[>] ∈ [−∞, −∞])
 aggregation-admissibility   V(m_d) ∈ [−∞, ∞)
 marginal-reading            the right side of each derivative line equals the derivative, in the named coordinate, of the value the builder writes, under the envelope conditions: concavity of the continuation value, interiority of the maximizer or the multiplier's term at a binding constraint, differentiability of the reward in the control, a measurable selection of the policy, and differentiability of the value at the point read; listed and not checked
-aggregation-admissibility   V≺(m, l) ∈ ℝ
-finite-real-arithmetic      The operands of Add at policy must be finite real numbers.
+aggregation-admissibility   V≺(m) ∈ ℝ
 range-compatibility         m_d − c(m_d) ∈ Xa   [established]
+range-compatibility         V≺(m, l) ∈ ℝ
+continuation-input          The representing function for V[>] must be measurable on its declared domain, depend only on (a) in that order, and take values in [-inf, inf).
 
 complete_signature         True
 missing_builders           none
@@ -434,7 +438,7 @@ print(sorted(stage.encoding()))
 ['bindings', 'builders', 'definitions', 'derived', 'diagnostics', 'initial_diagrams', 'metadata', 'name', 'obligations', 'package_version', 'provenance', 'schema', 'version']
 ```
 
-The package holds one schema, `bellman/display/stage-encoding-2.6.schema.json`, whose identifier ends in `/stage-encoding/2.6`; it describes the whole document, and every document the package's tests store for a stage file is written under it. Under `derived` stand the answers the denotations give, each node with a kind spelled `<namespace>.<Kind>`, such as `records.Wire` or `terms.Sym`, in one of the five namespaces the schema lists, `terms`, `semantic`, `records`, `predicates` and `methods`. A namespace is a name of the schema and names no module of the package, so the modules may be rearranged without changing a stored document. The methods stand within the pieces where they are bound, with the values of the settings they name on a configured version, and the source text is not encoded. Each application stage that elaborates has its document `<stage>.bl.stage.json` in `packages/bellman/tests/snapshot/corpus/<application>/`, written on one line, and the specified consumption stage also has `cons.bl.specified.stage.json`. One record of the definitions table, the law of motion of `dcsn_to_cntn`, as the encoding writes it:
+The package holds one schema, `bellman/display/stage-encoding-2.6.schema.json`, whose identifier ends in `/stage-encoding/2.6`; it describes the whole document, and the package's tests validate the document of every application stage against it. Under `derived` stand the answers the denotations give, each node with a kind spelled `<namespace>.<Kind>`, such as `records.Wire` or `terms.Sym`, in one of the five namespaces the schema lists, `terms`, `semantic`, `records`, `predicates` and `methods`. A namespace is a name of the schema and names no module of the package, so the modules may be rearranged without changing a document. The methods stand within the pieces where they are bound, with the values of the settings they name on a configured version, and the source text is not encoded. One record of the definitions table, the law of motion of `dcsn_to_cntn`, as the encoding writes it:
 
 ```python
 import json
@@ -484,6 +488,38 @@ A value an author writes, in a binding, in a method's settings or in the provena
 Within Python a version, and so a trellis of versions, is written and read back by the standard `pickle`, the form in which `multiprocessing` and `mpi4py` send an object from one process to another: what is read back equals what was written, and computes its answers again when they are asked for. Importing the module `bellman.native.hypergraphs`, which nearly every public name of the package imports (`load_stage`, `load_trellis`, the error classes and a bare `import bellman` do not) and which reading such a pickle imports, registers with the standard module `copyreg` a rule for `types.MappingProxyType` that holds in the whole Python process: `pickle` and `copy.deepcopy`, which otherwise refuse a read-only mapping, then accept any read-only mapping in that process and write it as a new read-only mapping over a copy of its entries.
 
 From a shell, `python -m bellman applications/portfolio-choice/declaration/stages/cons/cons.bl` prints the printed view of §3; `--encoding` prints the encoding, `--dossier` the printed answers of the stage with its source, and `--refusals` the catalogue of refusals. A command that succeeds exits with status zero; a refused stage exits with status one and its explanation.
+
+### 5.1 Supplied continuation fields
+
+`stage.check_inputs(values)` checks the fields received at the continuation perch. The mapping names every external input exactly as its owning backward header writes it: `V[>]` keeps its mark, while a kept name such as `L` stays bare. Fields produced inside the stage are excluded. Selecting a method does not change these declared requirements.
+
+A field typed `!cnst` receives its whole value. A scalar or finite table is checked against its declared set, using calibrated parameters and supplied constants where its bounds read them. For example:
+
+```python
+from bellman.stage import elaborate_text
+
+bound = elaborate_text("""@stage: bound
+[id=cntn_to_dcsn, (L : (-inf, 0] @ !vlu @ !cnst) : !cntn
+    -> (B : ℝ @ !vlu @ !cnst) : !dcsn] {
+    B = L
+}
+""", "bound.bl")
+assert bound.check_inputs({"L": -2}) == ()
+```
+
+Supplying `L = 2` raises `ConstructionError`, naming `L` and its declared set. Missing and unknown names also raise `ConstructionError`. These failures use the rule [`continuation-input`](../../reference/refusals.md#continuation-input). The check preserves the supplied mapping, arrays and other values.
+
+An ordinary value field receives a function of its declared state coordinates. For the consumption stage used above:
+
+```python
+conditions = stage.check_inputs({"V[>]": lambda a: 0.0})
+for condition in conditions:
+    print(condition)
+```
+
+The returned conditions remain `required`: the checker does not evaluate the function or prove its domain, range, dependence or measurability. A fixed callable supplied as the whole value of a function-valued constant likewise leaves membership unresolved. An empty tuple means that the supplied representation decided all input checks; it proves nothing about the stage's other conditions.
+
+`stage.obligations()` lists the input requirements before data are supplied. Checking data does not change that list or any binding. Numerical callers retain the returned conditions and pass the same mapping to [a builder's `kernels(inputs=values)`](04-builder.md#5-the-kernels-of-a-builder) before constructing grids or numerical operators.
 
 ## 6 What each check establishes
 

@@ -73,7 +73,7 @@ def specified(name):
     the folder, read with `load_recipe`."""
     syntactic = (load_recipe(DECLARATION, name) if name.startswith("spec.")
                  else load_trellis(str(DECLARATION / f"trellis.{name}.yml")))
-    return configure_trellis(methodize_trellis(calibrate_trellis(
+    return configure_trellis(calibrate_trellis(methodize_trellis(
         elaborate_trellis(syntactic), syntactic), syntactic), syntactic)
 
 
@@ -104,7 +104,7 @@ def reference_runs(ending):
     runs = {}
     for name, (file, grid) in CONFIGURATIONS.items():
         model = specified(file)
-        runs[name] = (model, tool.solve_trellis(model, tool.terminal_value(ending, TERMINAL[grid])))
+        runs[name] = (model, tool.solve_trellis(model, {"V[>]": tool.terminal_value(ending, TERMINAL[grid])}))
     return runs, OPENED[start:]
 
 
@@ -112,3 +112,17 @@ def reference_runs(ending):
 def orders():
     """The two orders the notebooks present, specified."""
     return {name: specified(f"spec.{name}.yml") for name in ("port-cons", "cons-port")}
+
+
+@pytest.fixture(scope="session")
+def corrected_vfi(ending):
+    """Six periods on the fifth configuration's grids, with ordinary portfolio handlers."""
+    model = specified("reference-port-cons-vfi")
+    path = STAGES / "port" / "methods.reference.bl"
+    text = path.read_text(encoding="utf-8")
+    text = text.replace('"cons-port:share_search_reference"', '"cons-port:share_search"')
+    text = text.replace('"cons-port:gauss_hermite_reference"', '"cons-port:gauss_hermite"')
+    for period in model["periods"]:
+        period["stages"]["port"].methodize({"text": text, "origin": str(path) + " (ordinary handlers)"})
+    terminal = tool.terminal_value(ending, TERMINAL["a"])
+    return model, tool.solve_trellis(model, {"V[>]": terminal}), terminal

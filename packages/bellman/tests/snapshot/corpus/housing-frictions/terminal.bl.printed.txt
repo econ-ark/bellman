@@ -1,0 +1,411 @@
+BELLMAN-SYM / STAGE terminal                              [VERSION = SYMBOLIC]
+a stage occurrence of
+applications/housing-frictions/declaration/stages/terminal/terminal.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        y_f_T≺ state, y_h_T≺ state, V≺ value
+  ∼ decision       y_f_d state, y_h_d state, V value
+  ≻ continuation   V≻ value
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           y_f_T≺ at arrival, y_h_T≺ at arrival, y_f_d at decision,
+                   y_h_d at decision
+  controls         none
+  values           V at every perch
+  shocks           none
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → arvl_to_dcsn   (y_f_T≺, y_h_T≺) : !arvl -> (y_f_d, y_h_d) : !dcsn
+  ← cntn_to_dcsn   (V≻) : !cntn -> (V) : !dcsn
+  ← dcsn_to_arvl   (V) : !dcsn -> (V≺) : !arvl
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  laws of motion           1   y_f_d = y_f_T; y_h_d = y_h_T
+  value aggregators        2   V = V[>]; V[<] = V
+  block lines              4   arvl_to_dcsn.financial_assets,
+                               arvl_to_dcsn.housing, cntn_to_dcsn.value,
+                               dcsn_to_arvl.value
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   𝑉≻ ↦ 𝑉≺
+                    forward    μ≺ ↦ μ
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ≺ y_f_T≺, y_h_T≺  →  ∼ y_f_d, y_h_d
+  backward   ≺ V≺  ←  ∼ V  ←  ≻ V≻
+
+==== stage ====
+STAGE terminal
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑉≻  : {()} → ℝ
+         ──────────────────────────────────────
+    out  𝑉≺  : {()} → ℝ
+  forward
+    in   μ≺  : finite measure on ℝ₊ × ℝ₊₊
+         ──────────────────────────────────────
+    out  μ   : finite measure on ℝ₊ × ℝ₊₊
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉≻                           out: 𝑉
+
+    2  dcsn_to_arvl
+       in: 𝑉                            out: 𝑉≺
+
+  forward
+    1  arvl_to_dcsn
+       in: μ≺                           out: μ
+
+Conditions
+  cntn_to_dcsn:Aggregation  𝑉 ∈ ℝ
+  dcsn_to_arvl:Aggregation  𝑉≺ ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  15  y_f_d = y_f_T  :: [id=financial_assets]
+  16  y_h_d = y_h_T  :: [id=housing]
+  21  V = V[>]       :: [id=value]
+  25  V[<] = V       :: [id=value]
+
+File
+  applications/housing-frictions/declaration/stages/terminal/terminal.bl
+
+Perches
+  ≺  arrival, written [<]
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE terminal / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻}
+       ──────────
+  out  V   : {V}
+
+Conditions
+  𝑉 ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  21  V = V[>]  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward dcsn_to_arvl ====
+STAGE terminal / BACKWARD BLOCK dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V   : {V}
+       ──────────
+  out  V≺  : {V≺}
+
+Conditions
+  𝑉≺ ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  25  V[<] = V  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward arvl_to_dcsn ====
+STAGE terminal / FORWARD BLOCK arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   y_f_T≺  : {y_f_T≺, y_h_T≺}
+       y_h_T≺  : {y_h_T≺}
+       ──────────────────────────
+  out  y_f_d   : {y_f_d, y_h_d}
+       y_h_d   : {y_h_d}
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  15  y_f_d = y_f_T  :: [id=financial_assets]
+  16  y_h_d = y_h_T  :: [id=housing]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE terminal / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : {()} → ℝ
+       ───────────────────────────────────────
+  out  𝑉   : {()} → ℝ
+
+Operations
+  1  Aggregation
+     in: 𝑉≻                             out: 𝑉
+     ─────────────────────────────────────────
+     rule: 𝑉 = 𝑉≻                                 on (y_f_d, y_h_d) ∈ ℝ₊ × ℝ₊₊
+
+  2  Evaluation
+     in: 𝑉                              out: 𝑉
+     ─────────────────────────────────────────
+     rule: 𝑉 : {()} → ℝ
+
+Conditions
+  Aggregation  𝑉 ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  21  V = V[>]  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE terminal / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : {()} → ℝ
+       ──────────────────
+  out  𝑉   : ℝ₊ × ℝ₊₊ → ℝ
+
+Rule
+  𝑉 = 𝑉≻                                          on (y_f_d, y_h_d) ∈ ℝ₊ × ℝ₊₊
+
+Conditions
+  𝑉 ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  21  V = V[>]  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE terminal / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : ℝ₊ × ℝ₊₊ → ℝ
+       ─────────────────
+  out  𝑉  : {()} → ℝ
+
+Rule
+  𝑉 = 𝑉≻                                          on (y_f_d, y_h_d) ∈ ℝ₊ × ℝ₊₊
+  𝑉 : {()} → ℝ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl ====
+STAGE terminal / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉   : {()} → ℝ
+       ──────────────────────────────────────────────────────────────
+  out  𝑉≺  : {()} → ℝ
+
+Where
+  (y_f_d, y_h_d) = 𝑔≺(y_f_T, y_h_T)
+
+Operations
+  1  Pullback
+     in: 𝑉
+     out: (y_f_T, y_h_T) ↦ 𝑉(((y_f_d, y_h_d) ↦ ())(𝑔≺(y_f_T, y_h_T)))
+     ────────────────────────────────────────────────────────────────
+     rule: (y_f_T, y_h_T) ↦ 𝑉(((y_f_d, y_h_d) ↦ ())(𝑔≺(y_f_T, y_h_T)))
+
+  2  Aggregation
+     in: (1)                            out: 𝑉≺
+     ────────────────────────────────────────────────────────────────
+     rule: 𝑉≺ = 𝑉(((y_f_d, y_h_d) ↦ ())(𝑔≺(y_f_T, y_h_T)))
+           on (y_f_T, y_h_T) ∈ ℝ₊ × ℝ₊₊
+
+  3  Evaluation
+     in: 𝑉≺                             out: 𝑉≺
+     ────────────────────────────────────────────────────────────────
+     rule: 𝑉≺ : {()} → ℝ
+
+Conditions
+  Aggregation  𝑉≺ ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  25  V[<] = V  :: [id=value]
+
+Definitions referenced
+  𝑔≺    terminal:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Pullback ====
+STAGE terminal / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : {()} → ℝ
+       ───────────────────────────────────────────────────────────
+  out  (y_f_T, y_h_T) ↦ 𝑉(((y_f_d, y_h_d) ↦ ())(𝑔≺(y_f_T, y_h_T)))
+          : ℝ₊ × ℝ₊₊ → ℝ
+
+Where
+  (y_f_d, y_h_d) = 𝑔≺(y_f_T, y_h_T)
+
+Rule
+  (y_f_T, y_h_T) ↦ 𝑉(((y_f_d, y_h_d) ↦ ())(𝑔≺(y_f_T, y_h_T)))
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  15  y_f_d = y_f_T  :: [id=financial_assets]
+  16  y_h_d = y_h_T  :: [id=housing]
+
+Definitions referenced
+  𝑔≺    terminal:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Aggregation ====
+STAGE terminal / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (y_f_T, y_h_T) ↦ 𝑉(((y_f_d, y_h_d) ↦ ())(𝑔≺(y_f_T, y_h_T)))
+           : ℝ₊ × ℝ₊₊ → ℝ
+       ───────────────────────────────────────────────────────────
+  out  𝑉≺  : ℝ₊ × ℝ₊₊ → ℝ
+
+Where
+  (y_f_d, y_h_d) = 𝑔≺(y_f_T, y_h_T)
+
+Rule
+  𝑉≺ = 𝑉(((y_f_d, y_h_d) ↦ ())(𝑔≺(y_f_T, y_h_T)))
+  on (y_f_T, y_h_T) ∈ ℝ₊ × ℝ₊₊
+
+Conditions
+  𝑉≺ ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  25  V[<] = V  :: [id=value]
+
+Definitions referenced
+  𝑔≺    terminal:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Evaluation ====
+STAGE terminal / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≺  : ℝ₊ × ℝ₊₊ → ℝ
+       ──────────────────
+  out  𝑉≺  : {()} → ℝ
+
+Rule
+  𝑉≺ = 𝑉(((y_f_d, y_h_d) ↦ ())(𝑔≺(y_f_T, y_h_T)))
+  on (y_f_T, y_h_T) ∈ ℝ₊ × ℝ₊₊
+  𝑉≺ : {()} → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  𝑔≺    terminal:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn ====
+STAGE terminal / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on ℝ₊ × ℝ₊₊
+       ───────────────────────────────────────
+  out  μ   : finite measure on ℝ₊ × ℝ₊₊
+
+Operations
+  1  Pushforward
+     in: μ≺                             out: μ
+     ─────────────────────────────────────────
+     rule: μ(B) = μ≺({y_f_T≺, y_h_T≺ ∈ ℝ₊ × ℝ₊₊ | 𝑔≺(y_f_T≺, y_h_T≺) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  15  y_f_d = y_f_T  :: [id=financial_assets]
+  16  y_h_d = y_h_T  :: [id=housing]
+
+Definitions referenced
+  𝑔≺    terminal:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / Pushforward ====
+STAGE terminal / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on ℝ₊ × ℝ₊₊
+       ────────────────────────────────
+  out  μ   : finite measure on ℝ₊ × ℝ₊₊
+
+Rule
+  μ(B) = μ≺({y_f_T≺, y_h_T≺ ∈ ℝ₊ × ℝ₊₊ | 𝑔≺(y_f_T≺, y_h_T≺) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  15  y_f_d = y_f_T  :: [id=financial_assets]
+  16  y_h_d = y_h_T  :: [id=housing]
+
+Definitions referenced
+  𝑔≺    terminal:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.financial_assets ====
+STAGE terminal / FORWARD BLOCK arvl_to_dcsn / financial_assets
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  terminal.bl
+  15  y_f_d = y_f_T  :: [id=financial_assets]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.housing ====
+STAGE terminal / FORWARD BLOCK arvl_to_dcsn / housing
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  terminal.bl
+  16  y_h_d = y_h_T  :: [id=housing]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.value ====
+STAGE terminal / BACKWARD BLOCK cntn_to_dcsn / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉 ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  21  V = V[>]  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.value ====
+STAGE terminal / BACKWARD BLOCK dcsn_to_arvl / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉≺ ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  25  V[<] = V  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== terminal:g:arvl_to_dcsn ====
+STAGE terminal / LAW OF MOTION arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≺  : ℝ₊ × ℝ₊₊ → ℝ₊ × ℝ₊₊,  (y_f_T, y_h_T) ↦ (y_f_T, y_h_T)
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  15  y_f_d = y_f_T  :: [id=financial_assets]
+  16  y_h_d = y_h_T  :: [id=housing]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== terminal:G:cntn_to_dcsn ====
+STAGE terminal / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : ℝ × ℝ₊ × ℝ₊₊ → ℝ,  (V≻, y_f_d, y_h_d) ↦ V≻
+
+Conditions
+  𝑉 ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  21  V = V[>]  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== terminal:G:dcsn_to_arvl ====
+STAGE terminal / VALUE AGGREGATOR dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≺  : ℝ × ℝ₊ × ℝ₊₊ → ℝ,  (V, y_f_T, y_h_T) ↦ V
+
+Conditions
+  𝑉≺ ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  terminal.bl
+  25  V[<] = V  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

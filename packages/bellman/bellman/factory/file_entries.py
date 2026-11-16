@@ -50,8 +50,8 @@ import yaml
 from bellman.factory.connections import (
     AUTHORED,
     INFERRED,
-    _Index,
     _authored_connections,
+    _connection_index,
     trellis_selection,
 )
 from bellman.factory.joins import _state_fields, unjoined_fields
@@ -1150,7 +1150,7 @@ def connector_entry(trellis, writing, reading, texts=None, *, selection=None, re
         return ConnectorEntry(None, None, (), None, "port-joined", None, None)
     file = Path(trellis["provenance"]["trellis"]["path"])
     document, repeats = _trellis_read(file, texts)
-    index = _Index(selection.uses)
+    index = _connection_index(selection.uses, selection.value_uses)
     if h2 == h:
         sources = unjoined["sources"].get(arrival, ())
         group_sources = tuple(
@@ -1203,7 +1203,7 @@ def _round_trips(periods, inter_connectors, index, addresses, writing, reading):
     or its route complete is the selection's answer and no condition of
     the writing. `index` holds the unchanged eligible uses of the supplied
     selection."""
-    pairs, _, _ = _authored_connections(periods, inter_connectors, index)
+    pairs, _, _, _ = _authored_connections(periods, inter_connectors, index)
     return all(
         any(
             pair.origin == AUTHORED

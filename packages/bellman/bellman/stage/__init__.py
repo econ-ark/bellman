@@ -171,6 +171,10 @@ _EXPORTS = {
     # fields of each branch, the printer of a declared set, and the words of
     # the roles and of the primitive sets.
     "header_of": "bellman.fold.block_lines",
+    # The field each listing of a block header names, read from a text
+    # without the construction of the stage, which the classification table
+    # reads while the construction of a text is refused.
+    "header_fields": "bellman.factory.elaboration",
     "branches": "bellman.stage.stage_answers",
     "to_source": "bellman.syntax.source",
     "ROLE_WORD": "bellman.syntax.vocabulary",

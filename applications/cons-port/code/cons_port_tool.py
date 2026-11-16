@@ -5,23 +5,25 @@ specified trellis and solves the trellis period by period. Every equation it eva
 compiles from a stage file and the methods file added to it, taken from the record a builder's `kernels()`
 answers and called with the parameter values the record holds; the endogenous-grid operator is one call of
 asva's `egm` on two such records, the decision builder's without the piece of the stated derivative, which the
-tool evaluates itself, and no operator reads the stage once it is made. Every grid is the grid component of a
-place of the stage, `!Cartesian(a=(a_min, a_max, n_a, !expmult))`, its bounds and counts settings the stage
-occurrence holds and its spacing the word of its factor; every node count is a keyword argument of the
-quadrature's method word; the distribution of the shocks is read from the stage's `~` declaration under its
-calibration. Among realizations it chooses only by the handler a methods file names, and it refuses a handler
+tool evaluates itself, and no operator reads the stage once it is made. `stage_operator` checks the complete
+supplied input mapping before constructing kernels, grids or numerical operators. Grids, feasible factors
+and calibrated probability laws come from the detached kernel records. Node counts come from the bound
+quadrature selection at construction. Unresolved input conditions remain on the operator and its results.
+Among realizations it chooses only by the handler a methods file names, and it refuses a handler
 it does not realize. It replaces ffp_utils.py for the notebooks, which stays as a recorded source of the fixed
 reference.
 
 `hermite_nodes` and `normal_nodes` follow `hermgauss` and `gauss_hermite_nodes` of dolo 0.4.9
 (dolo/numeric/discretization/quadrature.py, ported there from the CompEcon toolbox of Miranda and Fackler),
 which the fixed reference used through `Normal.discretize`; `reference_normal_nodes` adds the mean of the
-logarithms once more, as that library did in two or more dimensions. The sentinels LOW and HIGH, the
-clipping of consumption at 1e-10 and the candidates from 1e-6 are those of ffp_utils.py.
+logarithms once more, as that library did in two or more dimensions. The explicitly named historical share
+handler retains its finite floor. Ordinary share maximization accepts every finite objective value.
+Consumption search uses a 1e-6 inset, capped at 1e-6 of the feasible interval's width.
 """
 from __future__ import annotations
 
 import itertools
+from collections.abc import Mapping
 from functools import reduce
 from types import SimpleNamespace
 
@@ -34,7 +36,8 @@ from bellman.syntax import terms as T
 from bellman.syntax.source import to_source
 from bellman.trellis import inter_period_joins
 from bellman.distributions.families import numeric_value
-from bellman.distributions.edges import distribution_declarations
+from bellman.stage.grids import (RealizedGrid, SpacedGridFactor, FeasibleGridFactor,
+                                 check_grid_factor_points, feasible_interval)
 
 # the value where consumption is not positive, and the marginal value there (ffp_utils.py lines 753 and 760)
 LOW, HIGH = -1e10, 1e10
@@ -44,10 +47,11 @@ class ValueFn:
     """A value function on a one-dimensional grid, with its marginal values and the policy arrays of the stage
     that produced it. Called at points it interpolates linearly and holds the end values beyond the grid."""
 
-    def __init__(self, grid, values, dvalues=None, policy=None):
+    def __init__(self, grid, values, dvalues=None, policy=None, input_conditions=()):
         self.grid, self.values = np.asarray(grid), np.asarray(values)
         self.dvalues = None if dvalues is None else np.asarray(dvalues)
         self.policy = dict(policy or {})
+        self.input_conditions = tuple(input_conditions)
 
     def __call__(self, x):
         return np.interp(x, self.grid, self.values)
@@ -128,78 +132,86 @@ def keyword_arguments(method):
     return {keyword.key: keyword.value for keyword in method.method.arguments}
 
 
-def spaced(spacing, low, high, count):
-    """`count` points from `low` to `high` with the spacing the grid factor's word names: no word is
-    `numpy.linspace`, and `!expmult`, the word the methods files write where the fixed reference's settings
-    wrote `grid_spacing: expmult`, is `low` plus the multi-exponential grid of `expmult_grid` up to
-    `high − low`, dense near `low`. Any other word is refused."""
-    if spacing is None:
-        return np.linspace(low, high, count)
-    if spacing.name == "expmult" and not spacing.arguments:
-        return low + expmult_grid(high - low, count)
-    raise ValueError(f"the spacing word {to_source(T.Method(spacing))} is not one this tool reads; it reads no "
-                     "word, evenly spaced points, and !expmult without arguments")
+def cartesian_points(record, address):
+    """Numerical points from a detached realized grid or spacing factor."""
+    grid = (record.grids or {}).get(address)
+    if isinstance(grid, RealizedGrid):
+        if len(grid.coordinates) != 1:
+            raise ValueError(f"The grid at {address} must have one coordinate.")
+        exact = tuple(row[0] for row in grid.points)
+        # The saved reference uses NumPy's floating-point construction of a
+        # uniform grid. Its endpoints and count come from this detached record.
+        uniform = len(exact) > 1 and all(right - left == exact[1] - exact[0]
+                                        for left, right in zip(exact, exact[1:]))
+        points = (np.linspace(float(exact[0]), float(exact[-1]), len(exact)) if uniform
+                  else np.array([float(point) for point in exact]))
+        if np.any(np.diff(points) <= 0):
+            raise ValueError(f"Floating-point conversion merges grid points at {address}.")
+        return points
+    factor = (record.grid_factors or {}).get(address)
+    if not isinstance(factor, SpacedGridFactor):
+        raise ValueError(f"No supported detached spacing factor at {address}: {grid}")
+    if factor.spacing != "expmult" or factor.options:
+        raise ValueError(f"Unsupported spacing !{factor.spacing} with options {factor.options}; this tool realizes !expmult without options.")
+    points = float(factor.lower) + expmult_grid(float(factor.upper - factor.lower), factor.count)
+    # Repeated logarithms and exponentials can overshoot the declared bound.
+    # The upper endpoint is authored data and is represented exactly here.
+    points[-1] = float(factor.upper)
+    check_grid_factor_points(factor, points)
+    return points
 
 
-def cartesian_points(stage, method):
-    """The points of the one-dimensional grid of a bound place, its grid component `!Cartesian(a=(a_min,
-    a_max, n_a, !expmult))`: the bounds and the count of its one spaced factor, read against the stage
-    occurrence's settings and spaced as the factor's word says (`spaced`). A place that writes no grid, a grid
-    of another constructor, a grid of several factors and a factor that is no
-    spaced triple are refused."""
-    grid = method.grid
-    if (not isinstance(grid, T.Cartesian) or len(grid.factors) != 1
-            or not isinstance(grid.factors[0], T.Spaced)):
-        raise ValueError(f"stage {stage.name!r}: the method {method.word} names the grid "
-                         f"{None if grid is None else to_source(T.Grid(grid))!s}; this tool reads one spaced factor, "
-                         "`!Cartesian(a=(a_min, a_max, n_a))`")
-    factor = grid.factors[0]
-    low, high, order = (setting(stage, part) for part in (factor.lower, factor.upper, factor.count))
-    try:
-        return spaced(factor.spacing, float(low), float(high), int(order))
-    except ValueError as refusal:
-        raise ValueError(f"stage {stage.name!r}, the grid of {method.word}: {refusal}") from None
+def feasible_points(factor, at, *, inset=0.0, cache=None):
+    """Checked candidate points inside a detached feasible interval."""
+    if not isinstance(factor, FeasibleGridFactor):
+        raise ValueError("The search requires a detached feasible grid factor.")
+    bounds = feasible_interval(factor, at)
+    # This cache belongs to one factor. Every state is checked above; equal
+    # exact bounds give the same candidates and point-domain requirements.
+    key = (*bounds, inset)
+    if cache is not None and key in cache:
+        return cache[key]
+    low, left_closed, high, right_closed = bounds
+    low, high = float(low), float(high)
+    # Preserve the reference's 1e-6 inset on intervals of width at least one.
+    # Narrow intervals use the same relative inset, so their endpoints stay ordered.
+    margin = min(inset, (high - low) * inset)
+    lower = low + margin if margin else (low if left_closed else np.nextafter(low, high))
+    upper = high - margin if margin else (high if right_closed else np.nextafter(high, low))
+    points = np.linspace(lower, upper, factor.count)
+    check_grid_factor_points(factor, points, at=at)
+    if cache is not None:
+        points.setflags(write=False)
+        cache[key] = points
+    return points
 
 
-def feasible_count(stage, method):
-    """The count of the one feasible factor of a bound place's grid, `!Cartesian(c=(Γ, n_c))`: the number
-    of candidates a search compares on the control's feasible set; a grid of
-    another constructor is refused."""
-    grid = method.grid
-    if (not isinstance(grid, T.Cartesian) or len(grid.factors) != 1
-            or not isinstance(grid.factors[0], T.Feasible)):
-        raise ValueError(f"stage {stage.name!r}: the method {method.word} names the grid "
-                         f"{None if grid is None else to_source(T.Grid(grid))!s}; this tool reads one feasible factor, "
-                         "`!Cartesian(c=(Γ, n_c))`")
-    return int(setting(stage, grid.factors[0].count))
+def evaluation_grid(record):
+    """The detached grid of the decision value's representation."""
+    return cartesian_points(record, EVALUATION)
 
 
-def evaluation_grid(stage):
-    """The grid on which the stage occurrence represents its value: the grid of the representation at
-    `cntn_to_dcsn.evaluate` (`cartesian_points`)."""
-    return cartesian_points(stage, method_at(stage, EVALUATION))
+def savings_grid(record):
+    """The detached savings grid of the endogenous-grid policy builder."""
+    return cartesian_points(record, "policy")
 
 
-def savings_grid(stage):
-    """The exogenous grid of savings of the endogenous-grid method: the grid of `!egm` on the policy builder
-    (`cartesian_points`), `!Cartesian(a=(a_min, a_max, n_a, !expmult))` in the consumption stage's methods
-    file."""
-    return cartesian_points(stage, method_at(stage, "policy"))
-
-
-def lognormal_law(stage):
-    """The shocks of the stage's one `~` declaration in the order it writes them, and the means and the
-    covariance matrix of their logarithms as numbers under its calibration: `LogNormal(μ, σ)` of one shock
-    has variance σ², `LogNormal((μ₁, …), Σ)` of several has covariance matrix Σ."""
-    (owner,) = distribution_declarations(stage.definitions.values(), lambda name: False)
-    if owner.term.fun != "LogNormal":
-        raise ValueError(f"stage {stage.name!r} declares {owner.term.fun}; this tool integrates a lognormal law only")
-    values = {name: parameter.value for name, parameter in stage.par.items()}
+def lognormal_law(record):
+    """The selected joint lognormal law, with its already bound parameters."""
+    expected = [piece.key for piece in record.pieces if piece.kind == "Expectation"]
+    if len(expected) != 1:
+        raise ValueError("The numerical rule requires one expectation of a joint law.")
+    law = (record.laws or {}).get(expected[0])
+    if law is None or not hasattr(law, "edge") or law.given or len(law.edge.declarations) != 1:
+        raise ValueError(f"The numerical rule requires one unconditional law: {law}")
+    owner, = law.edge.declarations
+    if owner.term.fun != "LogNormal" or tuple(law.integrated) != tuple(owner.subjects):
+        raise ValueError("The numerical rule integrates the whole declared lognormal vector.")
     location, scale = owner.term.args
     if len(owner.subjects) == 1:
-        return owner.subjects, np.array([numeric_value(location, values)]), np.array([[numeric_value(scale, values) ** 2]])
-    return (owner.subjects, np.array([numeric_value(item, values) for item in location.items]),
-            np.array([[numeric_value(entry, values) for entry in row.items] for row in scale.items]))
+        return owner.subjects, np.array([numeric_value(location, {})]), np.array([[numeric_value(scale, {}) ** 2]])
+    return (owner.subjects, np.array([numeric_value(item, {}) for item in location.items]),
+            np.array([[numeric_value(entry, {}) for entry in row.items] for row in scale.items]))
 
 
 def hermite_nodes(n):
@@ -267,18 +279,12 @@ def _realized(table, handler, stage, place):
     return table[handler]
 
 
-def expectation_rule(stage):
-    """The nodes of the shocks, by name, and their weights: the rule the handler at the expectation of the
-    backward decision builder names, with the node count of each shock, the keyword argument `n_<shock>` of
-    the method word, on the distribution the stage declares."""
-    place = expectation_place(stage)
-    if place is None:
-        raise ValueError(f"stage {stage.name!r} binds no method at an expectation of cntn_to_dcsn")
-    method = method_at(stage, place)
-    rule = _realized(QUADRATURE, method.handler, stage, place)
-    shocks, mean, covariance = lognormal_law(stage)
-    counts = keyword_arguments(method)
-    log_nodes, weights = rule(mean, covariance, [int(setting(stage, counts[f"n_{shock}"])) for shock in shocks])
+def expectation_rule(record, handler, counts):
+    """Quadrature from a detached law, handler name, and bound node counts."""
+    if handler not in QUADRATURE:
+        raise ValueError(f"Unsupported quadrature handler {handler!r}.")
+    shocks, mean, covariance = lognormal_law(record)
+    log_nodes, weights = QUADRATURE[handler](mean, covariance, [counts[f"n_{shock}"] for shock in shocks])
     return {shock: np.exp(log_nodes[:, j]) for j, shock in enumerate(shocks)}, weights
 
 
@@ -351,7 +357,7 @@ def without_piece(record, key):
                            parameters=record.parameters, parameter_values=record.parameter_values)
 
 
-def egm(stage):
+def egm(decision, policy, *, input_conditions=()):
     """The endogenous-grid operator of the consumption stage: one call of asva's `egm` on the kernels of the
     policy builder and of the backward decision builder, `stage.builder.policy.kernels()` and
     `stage.dcsn.builder.bwd.kernels()`, with the savings grid of `!egm` and the evaluation grid of the
@@ -360,13 +366,12 @@ def egm(stage):
     interpolated onto the evaluation grid and held in (1e-10, m_d − 1e-10); savings follow from the law of
     motion, held to the savings grid; the value from the aggregation and the marginal value from the piece of
     the stated derivative. The operator reads no stage."""
-    resources = evaluation_grid(stage)
-    decision = stage.dcsn.builder.bwd.kernels()
+    resources = evaluation_grid(decision)
     # D4 of AMD-MB-001: the stated derivative of the value stands at the decision builder's Evaluation, and its
     # kernel is the piece `<line id>:Derivative:1`; asva reads the law of motion and the aggregation, so the
     # record it is given leaves that piece out, and the tool evaluates the piece itself.
     key = marginal_key(decision)
-    step = asva.egm(stage.builder.policy.kernels(), without_piece(decision, key), savings_grid(stage), resources)
+    step = asva.egm(policy, without_piece(decision, key), savings_grid(policy), resources)
     names = piece_arguments(decision, "Aggregation")
 
     def operator(continuation):
@@ -374,18 +379,19 @@ def egm(stage):
         c, continued = held.control, held.continuation_value
         marginal = by_name(decision, key, dict(zip(names, (continued, resources, c))))
         return ValueFn(resources, np.where(c > 0, held.value, LOW + continued), np.where(c > 0, marginal, HIGH),
-                       {"c": c, "a": held.continuation_state})
+                       {"c": c, "a": held.continuation_state}, input_conditions=input_conditions)
     return operator
 
 
-def consumption_search(stage):
+def consumption_search(decision, *, input_conditions=()):
     """A grid search on the consumption stage: at each point of the evaluation grid the aggregation at the law
-    of motion over the candidates the feasible factor of `!vfi` counts, `!Cartesian(c=(Γ, n_c))`, from 1e-6 to
-    m_d − 1e-6; the first largest is chosen; the marginal value is the difference quotient of the values. The
+    of motion over the candidates the feasible factor of `!vfi` counts, `!Cartesian(c=(Γ, n_c))`. The endpoint
+    inset is min(1e-6, 1e-6 times the interval width). The first maximum is chosen; the marginal value is the
+    difference quotient of the values. The
     aggregation's value is its first output where it also writes the marginal value, and its one output where
     no derivative line is stated."""
-    resources, count = evaluation_grid(stage), feasible_count(stage, method_at(stage, "cntn_to_dcsn"))
-    decision = stage.dcsn.builder.bwd.kernels()
+    resources = evaluation_grid(decision)
+    factor = decision.grid_factors["cntn_to_dcsn"]
     law, aggregate = piece_function(decision, "Pullback"), piece_function(decision, "Aggregation")
     # whether the aggregation writes the marginal value beside the value, as its piece's outputs name them
     pair = len(next(held for held in decision.pieces if held.key == "Aggregation").outputs) > 1
@@ -393,49 +399,50 @@ def consumption_search(stage):
     def operator(continuation):
         values, chosen = np.full(len(resources), LOW), np.zeros(len(resources))
         for i, m_d in enumerate(resources):
-            c = np.linspace(1e-6, m_d - 1e-6, count)
+            c = feasible_points(factor, {"m": m_d}, inset=1e-6)
             outputs = aggregate(continuation(law(m_d, c)), m_d, c)
             objective = outputs[0] if pair else outputs
-            objective = np.where(np.isfinite(objective), objective, LOW)
+            if not np.all(np.isfinite(objective)):
+                raise ValueError("The consumption objective must be finite at every candidate.")
             best = int(np.argmax(objective))
             values[i], chosen[i] = objective[best], c[best]
-        return ValueFn(resources, values, np.gradient(values, resources), {"c": chosen})
+        return ValueFn(resources, values, np.gradient(values, resources), {"c": chosen}, input_conditions=input_conditions)
     return operator
 
 
-def share_objective(stage):
+def share_objective(decision, nodes, weights, *, historical=False):
     """The objective of the share choice, the line `objective` of the portfolio stage's policy block (port.bl
     line 25), as a function of a continuation value, a point k_d of the evaluation grid and an array of shares:
-    at each share, the continuation value at the law of motion, held to the grid, integrated by the rule at
-    the expectation of `cntn_to_dcsn`. `share_search` chooses the first share at which it is largest."""
-    capital = evaluation_grid(stage)
-    nodes, weights = expectation_rule(stage)
+    at each share, the supplied continuation value at the law of motion, integrated by the rule at the
+    expectation of `cntn_to_dcsn`. Only the historical handler clips resources to the decision grid.
+    `share_search` chooses the first share at which the objective is largest."""
+    capital = evaluation_grid(decision) if historical else None
     Ψ, θ = nodes["Ψ"], nodes["θ"]
-    law = piece_function(stage.dcsn.builder.bwd.kernels(), "Pullback")
+    law = piece_function(decision, "Pullback")
 
     def objective(continuation, k_d, shares):
-        reached = continuation(np.clip(law(k_d, shares[:, None], Ψ, θ), capital[0], capital[-1]))
+        resources = law(k_d, shares[:, None], Ψ, θ)
+        if historical:
+            resources = np.clip(resources, capital[0], capital[-1])
+        reached = continuation(resources)
         return np.array([np.dot(weights, row) for row in reached])
     return objective
 
 
-def share_search(stage):
+def share_search(decision, policy, nodes, weights, by_the_line, *, input_conditions=()):
     """A grid search over the risky share: at each point k_d of the evaluation grid, the objective of
     `share_objective` at the shares the feasible factor of the policy builder's grid counts,
     `!Cartesian(ς=(Γ_ς, n_ς))`, evenly spaced on Γ_ς(k_d) = [0, 1] (port.bl line 10); the first share with the
     largest expectation is chosen. The marginal value follows the handler of the method that solves the
     policy: `cons-port:share_search` integrates the envelope line at the chosen share,
-    `cons-port:share_search_reference` takes the difference quotient of the values, as the fixed reference did."""
-    capital = evaluation_grid(stage)
-    place, method = policy_method(stage)
-    shares = np.linspace(0.0, 1.0, feasible_count(stage, method))
-    objective = share_objective(stage)
-    nodes, weights = expectation_rule(stage)
+    `cons-port:share_search_reference` takes the difference quotient of the values and retains the reference's
+    −1e10 floor. That historical handler does not solve a problem whose maximum lies below the floor."""
+    capital = evaluation_grid(decision)
+    factor = policy.grid_factors["policy"]
+    points_by_interval = {}
+    objective = share_objective(decision, nodes, weights, historical=not by_the_line)
     Ψ, θ = nodes["Ψ"], nodes["θ"]
-    decision = stage.dcsn.builder.bwd.kernels()
     law, law_names = piece_function(decision, "Pullback"), piece_arguments(decision, "Pullback")
-    by_the_line = _realized({"cons-port:share_search": True, "cons-port:share_search_reference": False},
-                            method.handler, stage, place)
     # D4 of AMD-MB-001: the stated derivative's kernel is the piece `<line id>:Derivative:1` of the decision
     # builder, which reads the derivative of the continuation value under the term's printed form
     key = marginal_key(decision) if by_the_line else None
@@ -443,12 +450,21 @@ def share_search(stage):
     def operator(continuation):
         values, chosen = np.full(len(capital), LOW), np.zeros(len(capital))
         for i, k_d in enumerate(capital):
+            shares = feasible_points(factor, {"k": k_d}, cache=points_by_interval)
             expected = objective(continuation, k_d, shares)
-            best = int(np.argmax(np.where(np.isnan(expected), -np.inf, expected)))
-            if expected[best] > LOW:
+            if by_the_line:
+                if not np.all(np.isfinite(expected)):
+                    raise ValueError("The portfolio objective must be finite at every candidate share.")
+                best = int(np.argmax(expected))
                 values[i], chosen[i] = expected[best], shares[best]
+            else:
+                # Only the explicitly selected historical handler retains its
+                # finite floor. It is not the maximum when every value is lower.
+                best = int(np.argmax(np.where(np.isnan(expected), -np.inf, expected)))
+                if expected[best] > LOW:
+                    values[i], chosen[i] = expected[best], shares[best]
         if by_the_line:
-            resources = np.clip(law(capital[:, None], chosen[:, None], Ψ, θ), capital[0], capital[-1])
+            resources = law(capital[:, None], chosen[:, None], Ψ, θ)
             # the integrand of the derivative line at the nodes of the value's expectation, summed with its weights
             supplied = integrand_inputs(decision, key, tuple(nodes), law_names, values[:, None])
             supplied.update(zip(law_names, (capital[:, None], chosen[:, None], Ψ, θ)))
@@ -456,18 +472,16 @@ def share_search(stage):
             marginal = by_name(decision, key, supplied) @ weights
         else:
             marginal = np.gradient(values, capital)
-        return ValueFn(capital, values, marginal, {"varsigma": chosen})
+        return ValueFn(capital, values, marginal, {"varsigma": chosen}, input_conditions=input_conditions)
     return operator
 
 
-def expectation(stage):
+def expectation(decision, nodes, weights, *, input_conditions=()):
     """A stage with an expectation and no choice (noport): at each point k_d of the evaluation grid the
     continuation value and the envelope line are integrated at the law of motion, the resources held to the
     continuation's grid, by the rule at the expectation of `cntn_to_dcsn`."""
-    capital = evaluation_grid(stage)
-    nodes, weights = expectation_rule(stage)
+    capital = evaluation_grid(decision)
     θ = nodes["θ"]
-    decision = stage.dcsn.builder.bwd.kernels()
     law, law_names = piece_function(decision, "Pullback"), piece_arguments(decision, "Pullback")
     # D4 of AMD-MB-001: the stated derivative's kernel is the piece `<line id>:Derivative:1` of the decision
     # builder, which reads the derivative of the continuation value under the term's printed form
@@ -481,21 +495,21 @@ def expectation(stage):
         supplied.update(zip(law_names, (capital[:, None], θ)))
         supplied[derivative_input(decision, key)] = continuation.dV(resources)
         lines = by_name(decision, key, supplied)
-        return ValueFn(capital, values, np.array([np.dot(weights, row) for row in lines]), {})
+        return ValueFn(capital, values, np.array([np.dot(weights, row) for row in lines]), {}, input_conditions=input_conditions)
     return operator
 
 
-def aggregation(stage):
+def aggregation(decision, *, input_conditions=()):
     """A stage with neither a choice nor an expectation (disc): its aggregation at each point of the
     continuation's grid, applied to the values and to the derivative values the continuation holds."""
-    aggregate = piece_function(stage.dcsn.builder.bwd.kernels(), "Aggregation")
+    aggregate = piece_function(decision, "Aggregation")
 
     def operator(continuation):
         value = aggregate(continuation.values, continuation.grid)
         # D3 of AMD-MB-001: a line that scales the value it reads, through a law that leaves the state unchanged,
         # carries the stored derivative values by the same map, here multiplication by β.
         marginal = None if continuation.dvalues is None else aggregate(continuation.dvalues, continuation.grid)
-        return ValueFn(continuation.grid, value, marginal, {})
+        return ValueFn(continuation.grid, value, marginal, {}, input_conditions=input_conditions)
     return operator
 
 
@@ -524,28 +538,52 @@ def marginal_key(record):
     return found[0] if found else f"{MARGINAL_LINES[0]}:Derivative:1"
 
 
-def stage_operator(stage):
-    """The operator of one specified stage occurrence: chosen by the handler of the method that solves its
-    policy, at a place of POLICY_PLACES; for a stage without such a method, the expectation where it binds a
-    method at an expectation of `cntn_to_dcsn` and the aggregation otherwise."""
+def stage_operator(stage, inputs):
+    """An operator constructed after checking the complete continuation mapping."""
+    conditions = stage.check_inputs(inputs)
+    decision = stage.dcsn.builder.bwd.kernels(inputs=inputs)
+    expected = expectation_place(stage)
+    if expected is not None:
+        method = method_at(stage, expected)
+        counts = {name: int(setting(stage, value)) for name, value in keyword_arguments(method).items()}
+        nodes, weights = expectation_rule(decision, method.handler, counts)
     found = policy_method(stage)
     if found:
         place, method = found
-        return _realized(POLICY, method.handler, stage, place)(stage)
-    return expectation(stage) if expectation_place(stage) else aggregation(stage)
+        construct = _realized(POLICY, method.handler, stage, place)
+        if construct is consumption_search:
+            operator = construct(decision, input_conditions=conditions)
+        else:
+            policy = stage.builder.policy.kernels(inputs=inputs)
+            operator = (construct(decision, policy, input_conditions=conditions) if construct is egm else
+                        construct(decision, policy, nodes, weights,
+                                  method.handler == "cons-port:share_search", input_conditions=conditions))
+    else:
+        operator = (expectation(decision, nodes, weights, input_conditions=conditions) if expected
+                    else aggregation(decision, input_conditions=conditions))
+    operator.input_conditions = conditions
+    return operator
+
+
+def zero_value(points):
+    """Zero value after the terminal consumption decision."""
+    return np.zeros_like(points, dtype=float)
 
 
 def terminal_value(consumption, grid):
     """The value of ending with the resources `grid`: all of it consumed and nothing continued, the consumption
     stage's aggregation 𝐺(V≻, m, c) at V≻ = 0 and c = m, and the stated derivative of the value at the same
     point; the values −10¹⁰ and 10¹⁰ where a point is not positive."""
-    record = consumption.dcsn.builder.bwd.kernels()
+    inputs = {"V[>]": zero_value}
+    conditions = consumption.check_inputs(inputs)
+    record = consumption.dcsn.builder.bwd.kernels(inputs=inputs)
     arguments = (np.zeros_like(grid), grid, grid)
     value = piece_function(record, "Aggregation")(*arguments)
     # D4 of AMD-MB-001: the stated derivative's kernel is the piece `<line id>:Derivative:1`, which takes the
     # inputs of the Aggregation
     marginal = by_name(record, marginal_key(record), dict(zip(piece_arguments(record, "Aggregation"), arguments)))
-    return ValueFn(grid, np.where(grid > 0, value, LOW), np.where(grid > 0, marginal, HIGH))
+    return ValueFn(grid, np.where(grid > 0, value, LOW), np.where(grid > 0, marginal, HIGH),
+                   input_conditions=conditions)
 
 
 def solve_period(period, continuation):
@@ -560,7 +598,9 @@ def solve_period(period, continuation):
         after = successors.get(key, set())
         if len(after) > 1:
             raise ValueError(f"stage {key!r} continues to {sorted(after)}; a stage joined to two stages waits for branching (B02)")
-        solved[key] = stage_operator(period["stages"][key])(solved[after.pop()] if after else continuation)
+        inputs = {"V[>]": solved[after.pop()]} if after else continuation
+        operator = stage_operator(period["stages"][key], inputs)
+        solved[key] = operator(inputs["V[>]"])
     return solved
 
 
@@ -574,11 +614,14 @@ def continuation_across(model, h, solved):
 
 def solve_trellis(model, terminal):
     """The solutions of a specified trellis, one mapping from stage key to arrival value per period, in the order
-    of `periods`, the terminal period first: the terminal period reads `terminal`, and each earlier period the
-    value its inter-period connector names. The trellis is read and not changed."""
+    of `periods`, the terminal period first. `terminal` is the complete declared input mapping, for example
+    {"V[>]": terminal_value(stage, grid)}. Each earlier period reads the value its inter-period connector
+    names. Results retain unresolved input conditions. The trellis is read and not changed."""
+    if not isinstance(terminal, Mapping):
+        raise TypeError("Terminal data must be the complete declared input mapping, such as {'V[>]': value}.")
     solved = []
     for h, period in enumerate(model["periods"]):
-        solved.append(solve_period(period, terminal if h == 0 else continuation_across(model, h, solved)))
+        solved.append(solve_period(period, terminal if h == 0 else {"V[>]": continuation_across(model, h, solved)}))
     return solved
 
 

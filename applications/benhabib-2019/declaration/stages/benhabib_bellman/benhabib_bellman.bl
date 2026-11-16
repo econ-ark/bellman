@@ -3,26 +3,29 @@
 Xa     := ℝ₊
 Tau    := {q1, q2, q3, q4, q5, q6, q7, q8, q9, q10}
 R_type := {r1, r2, r3, r4, r5}
+Age    := {25, …, 61}
 
 β       : (0,1)
 σ       : ℝ₊₊ \ {1}
 μ       : ℝ₊ \ {1}
 A       : ℝ₊
-wage_fn : ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊
+wage_fn : Age × Tau → ℝ₊
 R_vec   : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊
 tau     : Tau
 r_type  : R_type
 
 Γ_c(x : Xa) := [0, x]
 
-[id=dcsn_to_cntn, (m : Xa, c : !ctrl @ ℝ₊) : !dcsn -> (a : Xa) : !cntn] {
-    a = R_vec[r_type] * (m - c) + wage_fn[tau]    :: [id=savings]
+[id=dcsn_to_cntn, (m : Xa, c : !ctrl @ ℝ₊, age[>]) : !dcsn -> (a : Xa) : !cntn] {
+    a = R_vec[r_type] * (m - c) + wage_fn[age[>]][tau]    :: [id=savings]
 }
 
-[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, age[>] : Age @ !vlu @ !cnst, c) : !cntn
+    -> (V : ℝ @ !vlu, age : Age @ !vlu @ !cnst) : !dcsn] {
     V = c^(1-σ)/(1-σ) + β*V[>]    :: [id=value]
+    age = age[>] - 1             :: [id=age]
 }
 
-[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : !ctrl) : !dcsn] {
+[id=policy, (V[>] : ℝ @ !vlu, age[>]) : !cntn -> (c : !ctrl) : !dcsn] {
     c = argmax_{cp : Γ_c(m)}(cp^(1-σ)/(1-σ) + β*V[>])   :: [id=optimality]
 }

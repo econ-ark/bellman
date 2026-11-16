@@ -1,7 +1,0 @@
-@methods: buffer_stock
-# A deliberate conflict: read after egm.bl at one occurrence, this file fills
-# the slot policy.method a second time with different content. The union must
-# refuse it, naming this line and the bracket of egm.bl (rule 4, F18, F21),
-# unless D3 rules a precedence between files. The checker exits 1 on it.
-
-policy.method : !vfi

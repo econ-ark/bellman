@@ -1,0 +1,27 @@
+@stage: terminal
+# The terminal stage takes the continuation value and age as data.
+
+Xa := ℝ₊                  :: ["assets"]
+J : ℤ @ [1, inf)          :: ["number of ages"]
+Clock := {0, …, J}        :: ["the ages, including the endpoint after the last period"]
+Z := {1, 2, 3}
+
+[id=arvl_to_dcsn, (z_4 : Z, a_4 : Xa) : !arvl -> (z_T : Z, a_T : Xa) : !dcsn] {
+    z_T = z_4
+    a_T = a_4
+}
+
+[id=dcsn_to_cntn, (z_T, a_T) : !dcsn -> (z_end : Z, a_end : Xa) : !cntn] {
+    z_end = z_T
+    a_end = a_T
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, age : Clock @ !vlu @ !cnst) : !cntn -> (V : ℝ @ !vlu, age) : !dcsn] {
+    V = V[>]                       :: [id=value]
+    D_{a_T}V = D_{a_end}V[>]  :: [id=marginal_decision]
+}
+
+[id=dcsn_to_arvl, (V, age) : !dcsn -> (V[<] : ℝ @ !vlu, age) : !arvl] {
+    V[<]   = V                     :: [id=value]
+    D_{a_4}V[<] = D_{a_T}V  :: [id=marginal_arrival]
+}

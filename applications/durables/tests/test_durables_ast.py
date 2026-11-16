@@ -38,22 +38,22 @@ import pathlib
 import sys
 
 _REPO = pathlib.Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(_REPO / "packages" / "bellman" / "tests" / "tools"))
+sys.path.insert(0, str(_REPO / "applications"))
 
 import pytest
 
 import stage_ast
 from stage_ast import arvl, block, check, cntn, dom, one_minus, parsed, run_checks, sym
-from stage_types import (
-    Add, Annotation, Arrival, At, Block, Call, Cartesian, Closed, Constant,
+from bellman.syntax.terms import (
+    Add, Annotation, Arrival, Assignment, At, Block, Call, Cartesian, Closed, Constancy, Constant,
     Continuation, Control, Coordinate, CorrDef, Declaration, Declare, Decision,
-    Div, Domain, Equation, FiniteSet, FuncDef, Grid, Handler, In, Inequality,
-    Infoset, Interval, Key, KeyValue, Keyword, Law, Le, Metadata, Method, Mul,
+    Div, Domain, Equation, FiniteSet, FuncDef, Functions, Grid, Handler, In, Inequality,
+    Infoset, IntegerRange, Interval, Key, KeyValue, Keyword, Law, Le, Metadata, Method, Mul,
     Name, Named, Neg, Number, Open, Operator, Points, Pow, Range, Role, Segment,
-    Select, Signature, Spaced, Statement, Sub, Subject, Sym, Tag, Term, Tuple,
+    Select, Signature, Space, Spaced, Statement, Sub, Subject, Sym, Tag, Term, Tuple,
     Typer, Value, Var, Word,
 )
-from stage_types import Path as TermPath
+from bellman.syntax.terms import Path as TermPath
 
 STAGES = pathlib.Path(__file__).resolve().parents[1] / "declaration" / "stages"
 TENURE = parsed(STAGES / "tenure" / "tenure.bl")
@@ -88,6 +88,10 @@ def coord(stem, at=None, classifiers=()):
 def value(space="ℝ"):
     """The classifiers of a value field, domain then role as written."""
     return [dom(space), Role(Value(0))]
+
+
+AGE = Statement(Assignment(Constant("Age"), Space(IntegerRange(Number(20), Number(71)))), None)
+CONSTANT_AGE = [*value("Age"), Constancy()]
 
 
 def derivative(coordinate, field):
@@ -178,10 +182,10 @@ def scalar_declarations(items, offset, expected):
 # --- tenure.bl ---------------------------------------------------------------
 
 def test_tenure_file_shape():
-    # One metadata line, seven parameters, the innovation, its law, the income
-    # function, and the five blocks.
+    # Metadata, the set of ages, seven parameters, the innovation and its law,
+    # then five blocks.
     kinds = [type(item).__name__ for item in TENURE.items]
-    assert kinds == (["Metadata"] + ["Declare"] * 8 + ["Statement"] * 2
+    assert kinds == (["Metadata", "Statement"] + ["Declare"] * 8 + ["Statement"]
                      + ["Block"] * 5), kinds
     assert stage_ast.unlowered_parse_nodes(TENURE) == []
 
@@ -191,7 +195,8 @@ def test_tenure_declarations():
     # `δ : [0,1)` is closed at zero and open at one; `ρ_z : (0,1)` is open at
     # both ends. Each trailing `:: [...]` explanation is a Tag on the
     # declaration's annotation; the innovation `ε : ℝ` is written without one.
-    scalar_declarations(TENURE.items, 1, [
+    check(TENURE.items[1], AGE, "items[1]")
+    scalar_declarations(TENURE.items, 2, [
         ("R", Named("ℝ₊₊"), "gross return on financial assets"),
         ("R_H", Named("ℝ₊₊"),
          "gross return on housing, received when the house is sold"),
@@ -201,26 +206,18 @@ def test_tenure_declarations():
          "persistence of log income"),
         ("σ_z", Named("ℝ₊"),
          "standard deviation of the innovation to log income"),
-        ("Y", Named("ℝ₊"),
+        ("Y", Functions(Named("Age"), Named("ℝ₊")),
          "earnings per unit of the income state at the age of the period"),
-        ("y_R", Named("ℝ₊"),
+        ("y_R", Functions(Named("Age"), Named("ℝ₊")),
          "income that does not depend on the income state at the age of"
          " the period"),
         ("ε", Named("ℝ"), None),
     ])
 
 
-def test_tenure_law_and_income_function():
-    # `ε ~ N(0, 1)`: a Statement whose core is Law(subjects, law), the law an
-    # ordinary call. `𝑦(z : ℝ₊₊) := Y*z + y_R`: a function of the income state
-    # whose two parameters the occurrence supplies.
-    check(TENURE.items[9],
-          Statement(Law(["ε"], Call("N", [Number(0), Number(1)])), None),
-          "items[9]")
+def test_tenure_innovation_law():
     check(TENURE.items[10],
-          Statement(FuncDef("𝑦", [coord("z", None, [dom("ℝ₊₊")])],
-                            Add(Mul(sym("Y"), sym("z")), sym("y_R"))),
-                    ident("income")),
+          Statement(Law(["ε"], Call("N", [Number(0), Number(1)])), None),
           "items[10]")
 
 
@@ -260,8 +257,9 @@ def test_tenure_branching_transition():
                          coord("z_kp", None, [dom("ℝ₊₊")])],
                         [Infoset(Continuation())])]),
         [Statement(Equation(sym("w_kp"),
-                            Add(Mul(sym("R"), sym("a_d")),
-                                Call("𝑦", [sym("z_d")]))),
+                            Add(Add(Mul(sym("R"), sym("a_d")),
+                                    Mul(Select(sym("Y"), Term(cntn("age_kp"))), sym("z_d"))),
+                                Select(sym("y_R"), Term(cntn("age_kp"))))),
                    ident("cash_on_hand")),
          Statement(Equation(sym("h_kp"), Mul(one_minus("δ"), sym("h_d"))),
                    ident("housing_kept")),
@@ -273,15 +271,16 @@ def test_tenure_branching_transition():
                          coord("z_adj", None, [dom("ℝ₊₊")])],
                         [Infoset(Continuation())])]),
         [Statement(Equation(sym("w_adj"),
-                            Add(Add(Mul(sym("R"), sym("a_d")),
-                                    Mul(Mul(sym("R_H"), one_minus("δ")),
-                                        sym("h_d"))),
-                                Call("𝑦", [sym("z_d")]))),
+                            Add(Add(Add(Mul(sym("R"), sym("a_d")),
+                                        Mul(Mul(sym("R_H"), one_minus("δ")), sym("h_d"))),
+                                    Mul(Select(sym("Y"), Term(cntn("age_adj"))), sym("z_d"))),
+                                Select(sym("y_R"), Term(cntn("age_adj"))))),
                    ident("total_wealth")),
          Statement(Equation(sym("z_adj"), sym("z_d")), None)])
     want = Block(
         header("dcsn_to_cntn", sig(
             [coord("a_d"), coord("h_d"), coord("z_d"),
+             coord("age_kp", At(Continuation())), coord("age_adj", At(Continuation())),
              coord("d", None, [Role(Control()),
                                Domain(FiniteSet(["keep", "adjust"]))])],
             [Infoset(Decision())], [], [])),
@@ -300,14 +299,17 @@ def test_tenure_branch_selection():
         header("cntn_to_dcsn", sig(
             [coord("V_kp", At(Continuation()), value()),
              coord("V_adj", At(Continuation()), value()),
+             coord("age_kp", At(Continuation()), CONSTANT_AGE),
+             coord("age_adj", At(Continuation()), CONSTANT_AGE),
              coord("d")],
             [Infoset(Continuation())],
-            [coord("V", None, value())],
+            [coord("V", None, value()), coord("age", None, CONSTANT_AGE)],
             [Infoset(Decision())])),
         [Statement(Equation(sym("V"),
                             Select(Tuple([cntn("V_kp"), cntn("V_adj")]),
                                    Key("d"))),
-                   ident("choice_value"))])
+                   ident("choice_value")),
+         Statement(Equation(sym("age"), Sub(cntn("age_kp"), Number(1))), ident("age"))])
     check(TENURE.items[13], want, "items[13]")
     # The addition's block of the same id carries no signature: its header
     # types the representation of the value at the Evaluation, with its
@@ -343,9 +345,9 @@ def test_tenure_arrival_expectation():
     # file writes no derivative line here.
     want = Block(
         header("dcsn_to_arvl", sig(
-            [coord("V")],
+            [coord("V"), coord("age")],
             [Infoset(Decision())],
-            [coord("V", At(Arrival()), value())],
+            [coord("V", At(Arrival()), value()), coord("age")],
             [Infoset(Arrival())])),
         [Statement(Equation(arvl("V"), Operator("E", [Var("ε")], [sym("V")])),
                    ident("value"))])
@@ -414,7 +416,7 @@ def test_keeper_file_shape():
     # correspondence definition, then the three blocks: the decision perch is
     # the stage's entry perch, and no arrival block stands before it.
     kinds = [type(item).__name__ for item in KEEPER.items]
-    assert kinds == (["Metadata"] + ["Declare"] * 5 + ["Statement"] * 5
+    assert kinds == (["Metadata", "Statement"] + ["Declare"] * 5 + ["Statement"] * 5
                      + ["Block"] * 3), kinds
     assert stage_ast.unlowered_parse_nodes(KEEPER) == []
     check(KEEPER.items[0], Metadata("stage", "keeper_cons"), "items[0]")
@@ -423,7 +425,8 @@ def test_keeper_file_shape():
 def test_keeper_declarations():
     # Both curvatures are declared above one: at one the written expression
     # divides by zero.
-    scalar_declarations(KEEPER.items, 1, [
+    check(KEEPER.items[1], AGE, "items[1]")
+    scalar_declarations(KEEPER.items, 2, [
         ("β", Interval(Range(Open(), Number(0), Number(1), Open())),
          "discount factor"),
         ("α", Interval(Range(Open(), Number(0), Number(1), Open())),
@@ -439,10 +442,10 @@ def test_keeper_declarations():
 
 
 def test_keeper_functions_and_feasible_set():
-    preference_functions(KEEPER.items, 6)
+    preference_functions(KEEPER.items, 7)
     # A definition whose body is a set is a correspondence definition: from
     # cash on hand to the interval of feasible consumption.
-    check(KEEPER.items[10],
+    check(KEEPER.items[11],
           Statement(CorrDef("Γ", [coord("x", None, [dom("ℝ₊₊")])],
                             Interval(Range(Open(), Number(0), sym("x"),
                                            Closed()))),
@@ -470,7 +473,7 @@ def test_keeper_transitions():
          Statement(Equation(sym("h_nxt_kp"), sym("h_d")), ident("housing")),
          Statement(Equation(sym("z_nxt_kp"), sym("z_d")),
                    ident("income_state"))])
-    check(KEEPER.items[11], budget, "items[11]")
+    check(KEEPER.items[12], budget, "items[11]")
 
 
 def test_keeper_values():
@@ -480,15 +483,16 @@ def test_keeper_values():
     # listed (the backward-header rule of 12 October 2026).
     want = Block(
         header("cntn_to_dcsn", sig(
-            [coord("V", At(Continuation()), value()), coord("c")],
-            [],
-            [coord("V", None, value())],
+            [coord("V", At(Continuation()), value()),
+             coord("age", None, CONSTANT_AGE), coord("c")],
+            [Infoset(Continuation())],
+            [coord("V", None, value()), coord("age")],
             [Infoset(Decision())])),
         [Statement(Equation(sym("V"),
                             Add(Call("𝑢", [sym("c"), sym("h_d")]),
                                 Mul(sym("β"), cntn("V")))),
                    ident("value"))])
-    check(KEEPER.items[12], want, "items[12]")
+    check(KEEPER.items[13], want, "items[12]")
     # The addition's block of the same id: the derivative of the decision
     # value in cash, the marginal utility of consumption; and its derivative
     # in housing, the housing services of the period plus the discounted
@@ -535,7 +539,7 @@ def test_keeper_policy():
                                      [In("c", Call("Γ", [sym("w_d")]))],
                                      [objective])),
                    ident("optimality"))])
-    check(KEEPER.items[13], want, "items[13]")
+    check(KEEPER.items[14], want, "items[13]")
     method = block(addition("keeper_cons"), "policy")
     want = Block(
         Annotation([
@@ -569,14 +573,15 @@ def test_adjuster_file_shape():
     # correspondence definitions, then the three blocks: the decision perch is
     # the stage's entry perch, and no arrival block stands before it.
     kinds = [type(item).__name__ for item in ADJUSTER.items]
-    assert kinds == (["Metadata"] + ["Declare"] * 6 + ["Statement"] * 6
+    assert kinds == (["Metadata", "Statement"] + ["Declare"] * 6 + ["Statement"] * 6
                      + ["Block"] * 3), kinds
     assert stage_ast.unlowered_parse_nodes(ADJUSTER) == []
     check(ADJUSTER.items[0], Metadata("stage", "adjuster_cons"), "items[0]")
 
 
 def test_adjuster_declarations_and_functions():
-    scalar_declarations(ADJUSTER.items, 1, [
+    check(ADJUSTER.items[1], AGE, "items[1]")
+    scalar_declarations(ADJUSTER.items, 2, [
         ("β", Interval(Range(Open(), Number(0), Number(1), Open())),
          "discount factor"),
         ("α", Interval(Range(Open(), Number(0), Number(1), Open())),
@@ -593,20 +598,20 @@ def test_adjuster_declarations_and_functions():
     ])
     # The same four closed forms as the keeper's stage: one household, one
     # period, one utility function.
-    preference_functions(ADJUSTER.items, 7)
+    preference_functions(ADJUSTER.items, 8)
 
 
 def test_adjuster_feasible_sets():
     # Two correspondences, read in the order the maximisation binds them:
     # consumption up to total wealth, then housing up to what is left, divided
     # by the unit price of housing.
-    check(ADJUSTER.items[11],
+    check(ADJUSTER.items[12],
           Statement(CorrDef("Γ_c", [coord("x", None, [dom("ℝ₊₊")])],
                             Interval(Range(Open(), Number(0), sym("x"),
                                            Closed()))),
                     ident("feasible_consumption")),
           "items[11]")
-    check(ADJUSTER.items[12],
+    check(ADJUSTER.items[13],
           Statement(CorrDef("Γ_h", [coord("x", None, [dom("ℝ₊")])],
                             Interval(Range(Open(), Number(0),
                                            Div(sym("x"),
@@ -640,7 +645,7 @@ def test_adjuster_transitions():
                    ident("housing")),
          Statement(Equation(sym("z_nxt_adj"), sym("z_d")),
                    ident("income_state"))])
-    check(ADJUSTER.items[13], budget, "items[13]")
+    check(ADJUSTER.items[14], budget, "items[13]")
 
 
 def test_adjuster_values():
@@ -651,15 +656,15 @@ def test_adjuster_values():
     want = Block(
         header("cntn_to_dcsn", sig(
             [coord("V", At(Continuation()), value()),
-             coord("c"), coord("h_choice")],
+             coord("age", None, CONSTANT_AGE), coord("c"), coord("h_choice")],
             [Infoset(Continuation())],
-            [coord("V", None, value())],
+            [coord("V", None, value()), coord("age")],
             [Infoset(Decision())])),
         [Statement(Equation(sym("V"),
                             Add(Call("𝑢", [sym("c"), sym("h_choice")]),
                                 Mul(sym("β"), cntn("V")))),
                    ident("value"))])
-    check(ADJUSTER.items[14], want, "items[14]")
+    check(ADJUSTER.items[15], want, "items[14]")
     # The addition's block of the same id types the value and its stated
     # derivative at their own Evaluations, each with the handler and the grid
     # of total wealth, and appends the envelope line.
@@ -708,7 +713,7 @@ def test_adjuster_policy():
                                                           sym("c"))]))],
                                      [objective])),
                    ident("optimality"))])
-    check(ADJUSTER.items[15], want, "items[15]")
+    check(ADJUSTER.items[16], want, "items[15]")
     method = block(addition("adjuster_cons"), "policy")
     want = Block(
         Annotation([

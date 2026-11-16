@@ -1,0 +1,668 @@
+BELLMAN-SYM / STAGE adjuster_saving                       [VERSION = SYMBOLIC]
+a stage occurrence of applications/housing-frictions/declaration/stages/
+adjuster_saving/adjuster_saving.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        none
+  ∼ decision       m state, c control, h_choice control, V value
+  ≻ continuation   y_f_adj≻ state, y_h_adj≻ state, V≻ value
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           m at decision, y_f_adj≻ at continuation, y_h_adj≻ at
+                   continuation
+  controls         c at decision, h_choice at decision
+  values           V at the decision, continuation perches
+  shocks           none
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → dcsn_to_cntn   (m) : !dcsn, at c, at h_choice -> (y_f_adj≻, y_h_adj≻) :
+                   !cntn
+  ← cntn_to_dcsn   (V≻) : !cntn, at c, at h_choice -> (V) : !dcsn
+  ← policy         (V≻) : !cntn -> (c, h_choice) : !dcsn
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  parameters               4   β : (0, 1); ρ : (1, inf); α : (0, 1); τ : ℝ₊₊
+  functions                3   𝑢 on ℝ₊₊ × ℝ₊₊, 𝑢_c, 𝑢_h on ℝ₊₊
+  correspondences          2   Γ_c : ℝ₊₊ ⇉ ℝ₊₊, Γ_h : ℝ₊ ⇉ ℝ₊₊
+  laws of motion           1   y_f_adj = m - c - (1 + τ)*h_choice; y_h_adj =
+                               h_choice
+  value aggregators        1   V = 𝑢(c, h_choice) + β*V[>]
+  block lines              6   dcsn_to_cntn.financial_post_state,
+                               dcsn_to_cntn.housing_post_state,
+                               cntn_to_dcsn.value, policy.optimality,
+                               policy.euler_financial, policy.euler_housing
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   𝑉≻ ↦ (𝑐(m), ℎ_choice(m)), 𝑉
+                    forward    μ ↦ μ≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ∼ m  →  ≻ y_f_adj≻, y_h_adj≻
+  backward   ∼ V  ←  ≻ V≻
+  policy     ∼ c, h_choice  ←  ≻ V≻
+
+==== stage ====
+STAGE adjuster_saving
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑉≻             : ℝ₊ × ℝ₊₊ → ℝ
+         ─────────────────────────────────────────────────
+    out  (𝑐, ℎ_choice)  : ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
+                          𝑐(m) ∈ Γ_c(m),
+                          ℎ_choice(m) ∈ Γ_h(m − 𝑐(m))
+         𝑉              : ℝ₊₊ → ℝ
+  forward
+    in   μ              : finite measure on ℝ₊₊
+         ─────────────────────────────────────────────────
+    out  μ≻             : finite measure on ℝ₊ × ℝ₊₊
+
+Declared
+  (𝑐(m), ℎ_choice(m))
+    ∈ argmax_{c ∈ Γ_c(m), h_choice ∈ Γ_h(m − c)}
+        [𝑢(c, h_choice) + β · 𝑉≻(𝑔≻(m, c, h_choice))]
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉≻                           out: 𝑉
+
+    2  policy
+       in: 𝑉≻                           out: (𝑐, ℎ_choice)
+
+  forward
+    1  dcsn_to_cntn
+       in: μ                            out: μ≻
+
+Conditions
+  cntn_to_dcsn:Aggregation  𝑉(m) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_saving.bl
+  15  y_f_adj = m - c - (1 + τ)*h_choice
+        :: [id=financial_post_state]
+  16  y_h_adj = h_choice
+        :: [id=housing_post_state]
+  20  V = 𝑢(c, h_choice) + β*V[>]
+        :: [id=value]
+  24  (c, h_choice)  = argmax_{c : Γ_c(m), h_choice :
+        Γ_h(m - c)}(𝑢(c, h_choice) + β*V[>])
+        :: [id=optimality, !doc]
+  25  𝑢_c(c)         = β*D_{y_f_adj}V[>] ⟂ m - c - (1 + τ)*h_choice >= 0
+        :: [id=euler_financial]
+  26  (1 + τ)*𝑢_c(c) = 𝑢_h(h_choice) + β*D_{y_h_adj}V[>]
+        :: [id=euler_housing]
+
+Definitions referenced
+  β     adjuster_saving:parameter:β
+  𝑢     adjuster_saving:function:𝑢
+  Γ_c   adjuster_saving:correspondence:Γ_c
+  Γ_h   adjuster_saving:correspondence:Γ_h
+  𝑔≻    adjuster_saving:g:dcsn_to_cntn
+
+File
+  applications/housing-frictions/declaration/stages/adjuster_saving/
+  adjuster_saving.bl
+
+Perches
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE adjuster_saving / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻}
+       ──────────
+  out  V   : {V}
+
+Conditions
+  𝑉(m) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_saving.bl
+  20  V = 𝑢(c, h_choice) + β*V[>]  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward policy ====
+STAGE adjuster_saving / POLICY BLOCK policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻        : {V≻}
+       ─────────────────────────
+  out  c         : {c, h_choice}
+       h_choice  : {c, h_choice}
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_saving.bl
+  24  (c, h_choice)  = argmax_{c : Γ_c(m), h_choice :
+        Γ_h(m - c)}(𝑢(c, h_choice) + β*V[>])
+        :: [id=optimality, !doc]
+  25  𝑢_c(c)         = β*D_{y_f_adj}V[>] ⟂ m - c - (1 + τ)*h_choice >= 0
+        :: [id=euler_financial]
+  26  (1 + τ)*𝑢_c(c) = 𝑢_h(h_choice) + β*D_{y_h_adj}V[>]
+        :: [id=euler_housing]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE adjuster_saving / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   m         : {m}
+       ────────────────────────────────
+  out  y_f_adj≻  : {y_f_adj≻, y_h_adj≻}
+       y_h_adj≻  : {y_h_adj≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_saving.bl
+  15  y_f_adj = m - c - (1 + τ)*h_choice  :: [id=financial_post_state]
+  16  y_h_adj = h_choice                  :: [id=housing_post_state]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE adjuster_saving / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊ × ℝ₊₊ → ℝ
+       ─────────────────────────────────────────────────────────────
+  out  𝑉   : ℝ₊₊ → ℝ
+
+At
+  (𝑐, ℎ_choice)  : ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
+                   𝑐(m) ∈ Γ_c(m),
+                   ℎ_choice(m) ∈ Γ_h(m − 𝑐(m))
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻(·, 𝑐, ℎ_choice)
+     ───────────────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻(·, 𝑐, ℎ_choice))(m) = 𝑉≻(𝑔≻(m, 𝑐(m), ℎ_choice(m)))
+
+  2  Aggregation
+     in: (1)                            out: 𝑉
+     ───────────────────────────────────────────────────────────────
+     rule: 𝑉(m) = 𝑢(𝑐(m), ℎ_choice(m)) + β · 𝑉≻(𝑔≻(m, 𝑐(m), ℎ_choice(m)))
+
+  3  Evaluation
+     in: 𝑉                              out: 𝑉
+     ───────────────────────────────────────────────────────────────
+     rule: 𝑉 : ℝ₊₊ → ℝ
+
+Conditions
+  Aggregation  𝑉(m) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_saving.bl
+  20  V = 𝑢(c, h_choice) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  β     adjuster_saving:parameter:β
+  𝑢     adjuster_saving:function:𝑢
+  Γ_c   adjuster_saving:correspondence:Γ_c
+  Γ_h   adjuster_saving:correspondence:Γ_h
+  𝑔≻    adjuster_saving:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback ====
+STAGE adjuster_saving / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊ × ℝ₊₊ → ℝ
+       ───────────────────────
+  out  𝑉≻ ∘ 𝑔≻(·, 𝑐, ℎ_choice)
+           : ℝ₊₊ → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻(·, 𝑐, ℎ_choice))(m) = 𝑉≻(𝑔≻(m, 𝑐(m), ℎ_choice(m)))
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_saving.bl
+  15  y_f_adj = m - c - (1 + τ)*h_choice  :: [id=financial_post_state]
+  16  y_h_adj = h_choice                  :: [id=housing_post_state]
+
+Definitions referenced
+  𝑔≻    adjuster_saving:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE adjuster_saving / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻(·, 𝑐, ℎ_choice)
+          : ℝ₊₊ → ℝ
+       ───────────────────────
+  out  𝑉  : ℝ₊₊ → ℝ
+
+Rule
+  𝑉(m) = 𝑢(𝑐(m), ℎ_choice(m)) + β · 𝑉≻(𝑔≻(m, 𝑐(m), ℎ_choice(m)))
+
+Conditions
+  𝑉(m) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_saving.bl
+  20  V = 𝑢(c, h_choice) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  β     adjuster_saving:parameter:β
+  𝑢     adjuster_saving:function:𝑢
+  𝑔≻    adjuster_saving:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE adjuster_saving / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : ℝ₊₊ → ℝ
+       ────────────
+  out  𝑉  : ℝ₊₊ → ℝ
+
+Rule
+  𝑉(m) = 𝑢(𝑐(m), ℎ_choice(m)) + β · 𝑉≻(𝑔≻(m, 𝑐(m), ℎ_choice(m)))
+  𝑉 : ℝ₊₊ → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  β     adjuster_saving:parameter:β
+  𝑢     adjuster_saving:function:𝑢
+  𝑔≻    adjuster_saving:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy ====
+STAGE adjuster_saving / POLICY BUILDER policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻             : ℝ₊ × ℝ₊₊ → ℝ
+       ───────────────────────────────────────────────────
+  out  (𝑐, ℎ_choice)  : ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
+                        𝑐(m) ∈ Γ_c(m),
+                        ℎ_choice(m) ∈ Γ_h(m − 𝑐(m))
+
+Where
+  (y_f_adj, y_h_adj) = 𝑔≻(m, 𝑐(m), ℎ_choice(m))
+
+Declared
+  (𝑐(m), ℎ_choice(m))
+    ∈ argmax_{c ∈ Γ_c(m), h_choice ∈ Γ_h(m − c)}
+        [𝑢(c, h_choice) + β · 𝑉≻(𝑔≻(m, c, h_choice))]
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻
+     ─────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻)(m, c, h_choice) = 𝑉≻(𝑔≻(m, c, h_choice))
+
+  2  euler_financial:Aggregation
+     in: (1)                            out: (𝑐, ℎ_choice)
+     ─────────────────────────────────────────────────────
+     rule: 𝑢_c(𝑐(m)) = β · D_{y_f_adj}𝑉≻(y_f_adj, y_h_adj)
+             ⟂ m − 𝑐(m) − (1 + τ) · ℎ_choice(m) ≥ 0
+           ∧ (1 + τ) · 𝑢_c(𝑐(m))
+             = 𝑢_h(ℎ_choice(m)) + β · D_{y_h_adj}𝑉≻(y_f_adj, y_h_adj)   on ℝ₊₊
+
+  3  Evaluation
+     in: (𝑐, ℎ_choice)                  out: (𝑐, ℎ_choice)
+     ─────────────────────────────────────────────────────
+     rule: (𝑐, ℎ_choice) : ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
+           𝑐(m) ∈ Γ_c(m),  ℎ_choice(m) ∈ Γ_h(m − 𝑐(m))
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_saving.bl
+  24  (c, h_choice)  = argmax_{c : Γ_c(m), h_choice :
+        Γ_h(m - c)}(𝑢(c, h_choice) + β*V[>])
+        :: [id=optimality, !doc]
+  25  𝑢_c(c)         = β*D_{y_f_adj}V[>] ⟂ m - c - (1 + τ)*h_choice >= 0
+        :: [id=euler_financial]
+  26  (1 + τ)*𝑢_c(c) = 𝑢_h(h_choice) + β*D_{y_h_adj}V[>]
+        :: [id=euler_housing]
+
+Definitions referenced
+  β     adjuster_saving:parameter:β
+  τ     adjuster_saving:parameter:τ
+  𝑢     adjuster_saving:function:𝑢
+  𝑢_c   adjuster_saving:function:𝑢_c
+  𝑢_h   adjuster_saving:function:𝑢_h
+  Γ_c   adjuster_saving:correspondence:Γ_c
+  Γ_h   adjuster_saving:correspondence:Γ_h
+  𝑔≻    adjuster_saving:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback ====
+STAGE adjuster_saving / POLICY BUILDER policy / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊ × ℝ₊₊ → ℝ
+       ───────────────────────────────────────────────
+  out  𝑉≻ ∘ 𝑔≻
+           : {m, c, h_choice ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ |
+               c ∈ Γ_c(m) ∧ h_choice ∈ Γ_h(m − c)} → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻)(m, c, h_choice) = 𝑉≻(𝑔≻(m, c, h_choice))
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_saving.bl
+  15  y_f_adj = m - c - (1 + τ)*h_choice  :: [id=financial_post_state]
+  16  y_h_adj = h_choice                  :: [id=housing_post_state]
+
+Definitions referenced
+  Γ_c   adjuster_saving:correspondence:Γ_c
+  Γ_h   adjuster_saving:correspondence:Γ_h
+  𝑔≻    adjuster_saving:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / euler_financial:Aggregation ====
+STAGE adjuster_saving / POLICY BUILDER policy / euler_financial:Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻
+                      : {m, c, h_choice ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ |
+                          c ∈ Γ_c(m) ∧ h_choice ∈ Γ_h(m − c)} → ℝ
+       ──────────────────────────────────────────────────────────
+  out  (𝑐, ℎ_choice)  : ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
+                        𝑐(m) ∈ Γ_c(m),
+                        ℎ_choice(m) ∈ Γ_h(m − 𝑐(m))
+
+Where
+  (y_f_adj, y_h_adj) = 𝑔≻(m, 𝑐(m), ℎ_choice(m))
+
+Rule
+  𝑢_c(𝑐(m)) = β · D_{y_f_adj}𝑉≻(y_f_adj, y_h_adj)
+    ⟂ m − 𝑐(m) − (1 + τ) · ℎ_choice(m) ≥ 0
+  ∧ (1 + τ) · 𝑢_c(𝑐(m))
+    = 𝑢_h(ℎ_choice(m)) + β · D_{y_h_adj}𝑉≻(y_f_adj, y_h_adj)            on ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_saving.bl
+  25  𝑢_c(c)         = β*D_{y_f_adj}V[>] ⟂ m - c - (1 + τ)*h_choice >= 0
+        :: [id=euler_financial]
+  26  (1 + τ)*𝑢_c(c) = 𝑢_h(h_choice) + β*D_{y_h_adj}V[>]
+        :: [id=euler_housing]
+
+Definitions referenced
+  β     adjuster_saving:parameter:β
+  τ     adjuster_saving:parameter:τ
+  𝑢_c   adjuster_saving:function:𝑢_c
+  𝑢_h   adjuster_saving:function:𝑢_h
+  Γ_c   adjuster_saving:correspondence:Γ_c
+  Γ_h   adjuster_saving:correspondence:Γ_h
+  𝑔≻    adjuster_saving:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Evaluation ====
+STAGE adjuster_saving / POLICY BUILDER policy / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (𝑐, ℎ_choice)  : ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
+                        𝑐(m) ∈ Γ_c(m),
+                        ℎ_choice(m) ∈ Γ_h(m − 𝑐(m))
+       ────────────────────────────────────────────
+  out  (𝑐, ℎ_choice)  : ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
+                        𝑐(m) ∈ Γ_c(m),
+                        ℎ_choice(m) ∈ Γ_h(m − 𝑐(m))
+
+Where
+  (y_f_adj, y_h_adj) = 𝑔≻(m, 𝑐(m), ℎ_choice(m))
+
+Rule
+  𝑢_c(𝑐(m)) = β · D_{y_f_adj}𝑉≻(y_f_adj, y_h_adj)
+    ⟂ m − 𝑐(m) − (1 + τ) · ℎ_choice(m) ≥ 0
+  ∧ (1 + τ) · 𝑢_c(𝑐(m))
+    = 𝑢_h(ℎ_choice(m)) + β · D_{y_h_adj}𝑉≻(y_f_adj, y_h_adj)            on ℝ₊₊
+  (𝑐, ℎ_choice) : ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
+  𝑐(m) ∈ Γ_c(m),  ℎ_choice(m) ∈ Γ_h(m − 𝑐(m))
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  β     adjuster_saving:parameter:β
+  τ     adjuster_saving:parameter:τ
+  𝑢_c   adjuster_saving:function:𝑢_c
+  𝑢_h   adjuster_saving:function:𝑢_h
+  Γ_c   adjuster_saving:correspondence:Γ_c
+  Γ_h   adjuster_saving:correspondence:Γ_h
+  𝑔≻    adjuster_saving:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE adjuster_saving / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on ℝ₊₊
+       ────────────────────────────────────────
+  out  μ≻  : finite measure on ℝ₊ × ℝ₊₊
+
+At
+  (𝑐, ℎ_choice)  : ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
+                   𝑐(m) ∈ Γ_c(m),
+                   ℎ_choice(m) ∈ Γ_h(m − 𝑐(m))
+
+Operations
+  1  Pushforward
+     in: μ                              out: μ≻
+     ──────────────────────────────────────────
+     rule: μ≻(B) = μ({m ∈ ℝ₊₊ | 𝑔≻(m, 𝑐(m), ℎ_choice(m)) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_saving.bl
+  15  y_f_adj = m - c - (1 + τ)*h_choice  :: [id=financial_post_state]
+  16  y_h_adj = h_choice                  :: [id=housing_post_state]
+
+Definitions referenced
+  Γ_c   adjuster_saving:correspondence:Γ_c
+  Γ_h   adjuster_saving:correspondence:Γ_h
+  𝑔≻    adjuster_saving:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE adjuster_saving / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+  / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on ℝ₊₊
+       ────────────────────────────────
+  out  μ≻  : finite measure on ℝ₊ × ℝ₊₊
+
+Rule
+  μ≻(B) = μ({m ∈ ℝ₊₊ | 𝑔≻(m, 𝑐(m), ℎ_choice(m)) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_saving.bl
+  15  y_f_adj = m - c - (1 + τ)*h_choice  :: [id=financial_post_state]
+  16  y_h_adj = h_choice                  :: [id=housing_post_state]
+
+Definitions referenced
+  𝑔≻    adjuster_saving:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_saving:parameter:β ====
+STAGE adjuster_saving / PARAMETER β
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  β  ∈ (0, 1)
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_saving.bl
+  3  β : (0,1)  :: ["discount factor"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_saving:parameter:ρ ====
+STAGE adjuster_saving / PARAMETER ρ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  ρ  ∈ (1, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_saving.bl
+  4  ρ : (1, inf)  :: ["curvature of utility from consumption"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_saving:parameter:α ====
+STAGE adjuster_saving / PARAMETER α
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  α  ∈ (0, 1)
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_saving.bl
+  5  α : (0,1)  :: ["one less the weight of housing in utility"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_saving:parameter:τ ====
+STAGE adjuster_saving / PARAMETER τ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  τ  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_saving.bl
+  6  τ : ℝ₊₊  :: ["cost of adjusting housing, per unit of housing bought"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_saving:function:𝑢 ====
+STAGE adjuster_saving / FUNCTION 𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑢  : ℝ₊₊ × ℝ₊₊ → ℝ,  (c, h) ↦ (c^(1 − ρ) − 1)/(1 − ρ) + (1 − α) · log(h)
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_saving.bl
+  8  𝑢(c : ℝ₊₊, h : ℝ₊₊) := (c^(1-ρ) - 1)/(1-ρ) + (1-α)*log(h)  :: [id=util]
+
+Definitions referenced
+  ρ     adjuster_saving:parameter:ρ
+  α     adjuster_saving:parameter:α
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_saving:function:𝑢_c ====
+STAGE adjuster_saving / FUNCTION 𝑢_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑢_c  : ℝ₊₊ → ℝ₊₊,  c ↦ c^(−ρ)
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_saving.bl
+  9  𝑢_c(c : ℝ₊₊) := c^(-ρ)  :: [id=marg_util_cons]
+
+Definitions referenced
+  ρ     adjuster_saving:parameter:ρ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_saving:function:𝑢_h ====
+STAGE adjuster_saving / FUNCTION 𝑢_h
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑢_h  : ℝ₊₊ → ℝ₊₊,  h ↦ (1 − α)/h
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_saving.bl
+  10  𝑢_h(h : ℝ₊₊) := (1-α)/h  :: [id=marg_util_housing]
+
+Definitions referenced
+  α     adjuster_saving:parameter:α
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_saving:correspondence:Γ_c ====
+STAGE adjuster_saving / CORRESPONDENCE Γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Γ_c  : ℝ₊₊ ⇉ ℝ₊₊,  x ↦ (0, x]
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_saving.bl
+  11  Γ_c(x : ℝ₊₊) := (0, x]  :: [id=feasible_consumption]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_saving:correspondence:Γ_h ====
+STAGE adjuster_saving / CORRESPONDENCE Γ_h
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Γ_h  : ℝ₊ ⇉ ℝ₊₊,  x ↦ (0, x/(1 + τ)]
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_saving.bl
+  12  Γ_h(x : ℝ₊) := (0, x/(1 + τ)]  :: [id=feasible_housing]
+
+Definitions referenced
+  τ     adjuster_saving:parameter:τ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.financial_post_state ====
+STAGE adjuster_saving / FORWARD BLOCK dcsn_to_cntn / financial_post_state
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  adjuster_saving.bl
+  15  y_f_adj = m - c - (1 + τ)*h_choice  :: [id=financial_post_state]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.housing_post_state ====
+STAGE adjuster_saving / FORWARD BLOCK dcsn_to_cntn / housing_post_state
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  adjuster_saving.bl
+  16  y_h_adj = h_choice  :: [id=housing_post_state]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.value ====
+STAGE adjuster_saving / BACKWARD BLOCK cntn_to_dcsn / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(m) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_saving.bl
+  20  V = 𝑢(c, h_choice) + β*V[>]  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== policy.optimality ====
+STAGE adjuster_saving / POLICY BLOCK policy / optimality
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  adjuster_saving.bl
+  24  (c, h_choice)  = argmax_{c : Γ_c(m), h_choice :
+        Γ_h(m - c)}(𝑢(c, h_choice) + β*V[>])
+        :: [id=optimality, !doc]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== policy.euler_financial ====
+STAGE adjuster_saving / POLICY BLOCK policy / euler_financial
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  adjuster_saving.bl
+  25  𝑢_c(c)         = β*D_{y_f_adj}V[>] ⟂ m - c - (1 + τ)*h_choice >= 0
+        :: [id=euler_financial]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== policy.euler_housing ====
+STAGE adjuster_saving / POLICY BLOCK policy / euler_housing
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  adjuster_saving.bl
+  26  (1 + τ)*𝑢_c(c) = 𝑢_h(h_choice) + β*D_{y_h_adj}V[>]
+        :: [id=euler_housing]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_saving:g:dcsn_to_cntn ====
+STAGE adjuster_saving / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : {m, c, h_choice ∈ ℝ₊₊ × ℝ₊₊ × ℝ₊₊ |
+          c ∈ Γ_c(m) ∧ h_choice ∈ Γ_h(m − c)} → ℝ₊ × ℝ₊₊,
+        (m, c, h_choice) ↦ (m − c − (1 + τ) · h_choice, h_choice)
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_saving.bl
+  15  y_f_adj = m - c - (1 + τ)*h_choice  :: [id=financial_post_state]
+  16  y_h_adj = h_choice                  :: [id=housing_post_state]
+
+Definitions referenced
+  τ     adjuster_saving:parameter:τ
+  Γ_c   adjuster_saving:correspondence:Γ_c
+  Γ_h   adjuster_saving:correspondence:Γ_h
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== adjuster_saving:G:cntn_to_dcsn ====
+STAGE adjuster_saving / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, m, c, h_choice ∈ ℝ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ |
+          c ∈ Γ_c(m) ∧ h_choice ∈ Γ_h(m − c)} → ℝ,
+        (V≻, m, c, h_choice) ↦ 𝑢(c, h_choice) + β · V≻
+
+Conditions
+  𝑉(m) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  adjuster_saving.bl
+  20  V = 𝑢(c, h_choice) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  β     adjuster_saving:parameter:β
+  𝑢     adjuster_saving:function:𝑢
+  Γ_c   adjuster_saving:correspondence:Γ_c
+  Γ_h   adjuster_saving:correspondence:Γ_h
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

@@ -1,0 +1,802 @@
+BELLMAN-SYM / STAGE retiree_cons                          [VERSION = SYMBOLIC]
+a stage occurrence of applications/retirement-choice/declaration/stages/
+retiree_cons/retiree_cons.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        a_ret≺ state, V≺ value
+  ∼ decision       w_ret state, c control, V value
+  ≻ continuation   b_ret≻ state, V≻ value
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           a_ret≺ at arrival, w_ret at decision, b_ret≻ at
+                   continuation
+  controls         c at decision
+  values           V at every perch
+  shocks           none
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → arvl_to_dcsn   (a_ret≺) : !arvl -> (w_ret) : !dcsn
+  → dcsn_to_cntn   (w_ret) : !dcsn, at c -> (b_ret≻) : !cntn
+  ← cntn_to_dcsn   (V≻) : !cntn, at c -> (V) : !dcsn
+  ← dcsn_to_arvl   (V) : !dcsn -> (V≺) : !arvl
+  ← policy         (V≻) : !cntn -> (c) : !dcsn
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  sets                     1   Xa := ℝ₊
+  parameters               2   β : (0, 1); R : ℝ₊₊
+  functions                3   𝑢, 𝑑𝑢, 𝑑𝑢𝑖𝑛𝑣 on ℝ₊₊
+  correspondences          1   Γ : ℝ₊ ⇉ ℝ₊₊
+  laws of motion           2   w_ret = R*a_ret; b_ret = w_ret - c
+  value aggregators        3   V = 𝑢(c) + β*V[>]; V[<] = V;
+                               c = argmax_{c : Γ(w_ret)}(𝑢(c) + β*V[>])
+  block lines              5   arvl_to_dcsn.cash_on_hand,
+                               dcsn_to_cntn.savings, cntn_to_dcsn.value,
+                               dcsn_to_arvl.value, policy.optimality
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   𝑉≻ ↦ 𝑉≺, 𝑐(w_ret)
+                    forward    μ≺ ↦ μ≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ≺ a_ret≺  →  ∼ w_ret  →  ≻ b_ret≻
+  backward   ≺ V≺  ←  ∼ V  ←  ≻ V≻
+  policy     ∼ c  ←  ≻ V≻
+
+==== stage ====
+STAGE retiree_cons
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑉≻  : Xa → [−∞, ∞)
+         ──────────────────────────────────────
+    out  𝑉≺  : Xa → [−∞, ∞)
+         𝑐   : Xa → ℝ₊₊,  𝑐(w_ret) ∈ Γ(w_ret)
+  forward
+    in   μ≺  : finite measure on Xa
+         ──────────────────────────────────────
+    out  μ≻  : finite measure on Xa
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉≻                           out: 𝑉
+
+    2  dcsn_to_arvl
+       in: 𝑉                            out: 𝑉≺
+
+    3  policy
+       in: 𝑉≻                           out: 𝑐
+
+  forward
+    1  arvl_to_dcsn
+       in: μ≺                           out: μ
+
+    2  dcsn_to_cntn
+       in: μ                            out: μ≻
+
+Conditions
+  cntn_to_dcsn:Aggregation  ¬(𝑢(c) ∈ [∞, ∞] ∧ β · V[>] ∈ [−∞, −∞])
+  cntn_to_dcsn:Aggregation  𝑉(w_ret) ∈ [−∞, ∞)
+  dcsn_to_arvl:Aggregation  𝑉≺(a_ret) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  14  w_ret = R*a_ret                           :: [id=cash_on_hand]
+  18  b_ret = w_ret - c                         :: [id=savings]
+  22  V = 𝑢(c) + β*V[>]                         :: [id=value]
+  26  V[<] = V                                  :: [id=value]
+  30  c = argmax_{c : Γ(w_ret)}(𝑢(c) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xa    retiree_cons:set:Xa
+  β     retiree_cons:parameter:β
+  𝑢     retiree_cons:function:𝑢
+  Γ     retiree_cons:correspondence:Γ
+
+File
+  applications/retirement-choice/declaration/stages/retiree_cons/
+  retiree_cons.bl
+
+Perches
+  ≺  arrival, written [<]
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE retiree_cons / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻}
+       ──────────
+  out  V   : {V}
+
+Conditions
+  ¬(𝑢(c) ∈ [∞, ∞] ∧ β · V[>] ∈ [−∞, −∞])
+  𝑉(w_ret) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  22  V = 𝑢(c) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  β     retiree_cons:parameter:β
+  𝑢     retiree_cons:function:𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward dcsn_to_arvl ====
+STAGE retiree_cons / BACKWARD BLOCK dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V   : {V}
+       ──────────
+  out  V≺  : {V≺}
+
+Conditions
+  𝑉≺(a_ret) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  26  V[<] = V  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward policy ====
+STAGE retiree_cons / POLICY BLOCK policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻}
+       ──────────
+  out  c   : {c}
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  30  c = argmax_{c : Γ(w_ret)}(𝑢(c) + β*V[>])  :: [id=optimality]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward arvl_to_dcsn ====
+STAGE retiree_cons / FORWARD BLOCK arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a_ret≺  : {a_ret≺}
+       ──────────────────
+  out  w_ret   : {w_ret}
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  14  w_ret = R*a_ret  :: [id=cash_on_hand]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE retiree_cons / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   w_ret   : {w_ret}
+       ──────────────────
+  out  b_ret≻  : {b_ret≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  18  b_ret = w_ret - c  :: [id=savings]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE retiree_cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xa → [−∞, ∞)
+       ───────────────────────────────────────────────────
+  out  𝑉   : Xa → [−∞, ∞)
+
+At
+  𝑐  : Xa → ℝ₊₊,  𝑐(w_ret) ∈ Γ(w_ret)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻(·, 𝑐)
+     ─────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻(·, 𝑐))(w_ret) = 𝑉≻(𝑔≻(w_ret, 𝑐(w_ret)))
+
+  2  Aggregation
+     in: (1)                            out: 𝑉
+     ─────────────────────────────────────────────────────
+     rule: 𝑉(w_ret) = 𝑢(𝑐(w_ret)) + β · 𝑉≻(𝑔≻(w_ret, 𝑐(w_ret)))
+
+  3  Evaluation
+     in: 𝑉                              out: 𝑉
+     ─────────────────────────────────────────────────────
+     rule: 𝑉 : Xa → [−∞, ∞)
+
+Conditions
+  Aggregation  ¬(𝑢(c) ∈ [∞, ∞] ∧ β · V[>] ∈ [−∞, −∞])
+  Aggregation  𝑉(w_ret) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  22  V = 𝑢(c) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  Xa    retiree_cons:set:Xa
+  β     retiree_cons:parameter:β
+  𝑢     retiree_cons:function:𝑢
+  Γ     retiree_cons:correspondence:Γ
+  𝑔≻    retiree_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback ====
+STAGE retiree_cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xa → [−∞, ∞)
+       ──────────────────
+  out  𝑉≻ ∘ 𝑔≻(·, 𝑐)
+           : Xa → [−∞, ∞)
+
+Rule
+  (𝑉≻ ∘ 𝑔≻(·, 𝑐))(w_ret) = 𝑉≻(𝑔≻(w_ret, 𝑐(w_ret)))
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  18  b_ret = w_ret - c  :: [id=savings]
+
+Definitions referenced
+  Xa    retiree_cons:set:Xa
+  𝑔≻    retiree_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE retiree_cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻(·, 𝑐)
+          : Xa → [−∞, ∞)
+       ─────────────────
+  out  𝑉  : Xa → [−∞, ∞)
+
+Rule
+  𝑉(w_ret) = 𝑢(𝑐(w_ret)) + β · 𝑉≻(𝑔≻(w_ret, 𝑐(w_ret)))
+
+Conditions
+  ¬(𝑢(c) ∈ [∞, ∞] ∧ β · V[>] ∈ [−∞, −∞])
+  𝑉(w_ret) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  22  V = 𝑢(c) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  Xa    retiree_cons:set:Xa
+  β     retiree_cons:parameter:β
+  𝑢     retiree_cons:function:𝑢
+  𝑔≻    retiree_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE retiree_cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : Xa → [−∞, ∞)
+       ─────────────────
+  out  𝑉  : Xa → [−∞, ∞)
+
+Rule
+  𝑉(w_ret) = 𝑢(𝑐(w_ret)) + β · 𝑉≻(𝑔≻(w_ret, 𝑐(w_ret)))
+  𝑉 : Xa → [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xa    retiree_cons:set:Xa
+  β     retiree_cons:parameter:β
+  𝑢     retiree_cons:function:𝑢
+  𝑔≻    retiree_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl ====
+STAGE retiree_cons / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉   : Xa → [−∞, ∞)
+       ────────────────────────────────────────────
+  out  𝑉≺  : Xa → [−∞, ∞)
+
+Operations
+  1  Pullback
+     in: 𝑉                              out: 𝑉 ∘ 𝑔≺
+     ──────────────────────────────────────────────
+     rule: (𝑉 ∘ 𝑔≺)(a_ret) = 𝑉(𝑔≺(a_ret))
+
+  2  Aggregation
+     in: (1)                            out: 𝑉≺
+     ──────────────────────────────────────────────
+     rule: 𝑉≺(a_ret) = 𝑉(𝑔≺(a_ret))
+
+  3  Evaluation
+     in: 𝑉≺                             out: 𝑉≺
+     ──────────────────────────────────────────────
+     rule: 𝑉≺ : Xa → [−∞, ∞)
+
+Conditions
+  Aggregation  𝑉≺(a_ret) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  26  V[<] = V  :: [id=value]
+
+Definitions referenced
+  Xa    retiree_cons:set:Xa
+  𝑔≺    retiree_cons:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Pullback ====
+STAGE retiree_cons / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : Xa → [−∞, ∞)
+       ─────────────────
+  out  𝑉 ∘ 𝑔≺
+          : Xa → [−∞, ∞)
+
+Rule
+  (𝑉 ∘ 𝑔≺)(a_ret) = 𝑉(𝑔≺(a_ret))
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  14  w_ret = R*a_ret  :: [id=cash_on_hand]
+
+Definitions referenced
+  Xa    retiree_cons:set:Xa
+  𝑔≺    retiree_cons:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Aggregation ====
+STAGE retiree_cons / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉 ∘ 𝑔≺
+           : Xa → [−∞, ∞)
+       ──────────────────
+  out  𝑉≺  : Xa → [−∞, ∞)
+
+Rule
+  𝑉≺(a_ret) = 𝑉(𝑔≺(a_ret))
+
+Conditions
+  𝑉≺(a_ret) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  26  V[<] = V  :: [id=value]
+
+Definitions referenced
+  Xa    retiree_cons:set:Xa
+  𝑔≺    retiree_cons:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Evaluation ====
+STAGE retiree_cons / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≺  : Xa → [−∞, ∞)
+       ──────────────────
+  out  𝑉≺  : Xa → [−∞, ∞)
+
+Rule
+  𝑉≺(a_ret) = 𝑉(𝑔≺(a_ret))
+  𝑉≺ : Xa → [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xa    retiree_cons:set:Xa
+  𝑔≺    retiree_cons:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy ====
+STAGE retiree_cons / POLICY BUILDER policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xa → [−∞, ∞)
+       ─────────────────────────────────────────────
+  out  𝑐   : Xa → ℝ₊₊,  𝑐(w_ret) ∈ Γ(w_ret)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻
+     ───────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻)(w_ret, c) = 𝑉≻(𝑔≻(w_ret, c))
+
+  2  optimality:Aggregation
+     in: (1)
+     out: (w_ret, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(w_ret, c))
+     ───────────────────────────────────────────────
+     rule: (w_ret, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(w_ret, c))
+
+  3  optimality:Argmax
+     in: (2)                            out: 𝑐
+     ───────────────────────────────────────────────
+     rule: 𝑐(w_ret) ∈ argmax_{c ∈ Γ(w_ret)} [𝑢(c) + β · 𝑉≻(𝑔≻(w_ret, c))]
+
+  4  Evaluation
+     in: 𝑐                              out: 𝑐
+     ───────────────────────────────────────────────
+     rule: 𝑐 : Xa → ℝ₊₊,  𝑐(w_ret) ∈ Γ(w_ret)
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  30  c = argmax_{c : Γ(w_ret)}(𝑢(c) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xa    retiree_cons:set:Xa
+  β     retiree_cons:parameter:β
+  𝑢     retiree_cons:function:𝑢
+  Γ     retiree_cons:correspondence:Γ
+  𝑔≻    retiree_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback ====
+STAGE retiree_cons / POLICY BUILDER policy / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xa → [−∞, ∞)
+       ────────────────────────────────────────────────────
+  out  𝑉≻ ∘ 𝑔≻
+           : {w_ret, c ∈ Xa × ℝ₊₊ | c ∈ Γ(w_ret)} → [−∞, ∞)
+
+Rule
+  (𝑉≻ ∘ 𝑔≻)(w_ret, c) = 𝑉≻(𝑔≻(w_ret, c))
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  18  b_ret = w_ret - c  :: [id=savings]
+
+Definitions referenced
+  Xa    retiree_cons:set:Xa
+  Γ     retiree_cons:correspondence:Γ
+  𝑔≻    retiree_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / optimality:Aggregation ====
+STAGE retiree_cons / POLICY BUILDER policy / optimality:Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻
+         : {w_ret, c ∈ Xa × ℝ₊₊ | c ∈ Γ(w_ret)} → [−∞, ∞)
+       ──────────────────────────────────────────────────
+  out  (w_ret, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(w_ret, c))
+         : {w_ret, c ∈ Xa × ℝ₊₊ | c ∈ Γ(w_ret)} → [−∞, ∞)
+
+Rule
+  (w_ret, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(w_ret, c))
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  30  c = argmax_{c : Γ(w_ret)}(𝑢(c) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xa    retiree_cons:set:Xa
+  β     retiree_cons:parameter:β
+  𝑢     retiree_cons:function:𝑢
+  Γ     retiree_cons:correspondence:Γ
+  𝑔≻    retiree_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / optimality:Argmax ====
+STAGE retiree_cons / POLICY BUILDER policy / optimality:Argmax
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (w_ret, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(w_ret, c))
+          : {w_ret, c ∈ Xa × ℝ₊₊ | c ∈ Γ(w_ret)} → [−∞, ∞)
+       ───────────────────────────────────────────────────
+  out  𝑐  : Xa → ℝ₊₊,  𝑐(w_ret) ∈ Γ(w_ret)
+
+Rule
+  𝑐(w_ret) ∈ argmax_{c ∈ Γ(w_ret)} [𝑢(c) + β · 𝑉≻(𝑔≻(w_ret, c))]
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  30  c = argmax_{c : Γ(w_ret)}(𝑢(c) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xa    retiree_cons:set:Xa
+  β     retiree_cons:parameter:β
+  𝑢     retiree_cons:function:𝑢
+  Γ     retiree_cons:correspondence:Γ
+  𝑔≻    retiree_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Evaluation ====
+STAGE retiree_cons / POLICY BUILDER policy / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑐  : Xa → ℝ₊₊,  𝑐(w_ret) ∈ Γ(w_ret)
+       ───────────────────────────────────
+  out  𝑐  : Xa → ℝ₊₊,  𝑐(w_ret) ∈ Γ(w_ret)
+
+Rule
+  𝑐(w_ret) ∈ argmax_{c ∈ Γ(w_ret)} [𝑢(c) + β · 𝑉≻(𝑔≻(w_ret, c))]
+  𝑐 : Xa → ℝ₊₊,  𝑐(w_ret) ∈ Γ(w_ret)
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xa    retiree_cons:set:Xa
+  β     retiree_cons:parameter:β
+  𝑢     retiree_cons:function:𝑢
+  Γ     retiree_cons:correspondence:Γ
+  𝑔≻    retiree_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn ====
+STAGE retiree_cons / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Xa
+       ───────────────────────────────────────
+  out  μ   : finite measure on Xa
+
+Operations
+  1  Pushforward
+     in: μ≺                             out: μ
+     ─────────────────────────────────────────
+     rule: μ(B) = μ≺({a_ret≺ ∈ Xa | 𝑔≺(a_ret≺) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  14  w_ret = R*a_ret  :: [id=cash_on_hand]
+
+Definitions referenced
+  Xa    retiree_cons:set:Xa
+  𝑔≺    retiree_cons:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / Pushforward ====
+STAGE retiree_cons / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Xa
+       ──────────────────────────
+  out  μ   : finite measure on Xa
+
+Rule
+  μ(B) = μ≺({a_ret≺ ∈ Xa | 𝑔≺(a_ret≺) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  14  w_ret = R*a_ret  :: [id=cash_on_hand]
+
+Definitions referenced
+  Xa    retiree_cons:set:Xa
+  𝑔≺    retiree_cons:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE retiree_cons / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on Xa
+       ────────────────────────────────────────
+  out  μ≻  : finite measure on Xa
+
+At
+  𝑐  : Xa → ℝ₊₊,  𝑐(w_ret) ∈ Γ(w_ret)
+
+Operations
+  1  Pushforward
+     in: μ                              out: μ≻
+     ──────────────────────────────────────────
+     rule: μ≻(B) = μ({w_ret ∈ Xa | 𝑔≻(w_ret, 𝑐(w_ret)) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  18  b_ret = w_ret - c  :: [id=savings]
+
+Definitions referenced
+  Xa    retiree_cons:set:Xa
+  Γ     retiree_cons:correspondence:Γ
+  𝑔≻    retiree_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE retiree_cons / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on Xa
+       ──────────────────────────
+  out  μ≻  : finite measure on Xa
+
+Rule
+  μ≻(B) = μ({w_ret ∈ Xa | 𝑔≻(w_ret, 𝑐(w_ret)) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  18  b_ret = w_ret - c  :: [id=savings]
+
+Definitions referenced
+  Xa    retiree_cons:set:Xa
+  𝑔≻    retiree_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_cons:set:Xa ====
+STAGE retiree_cons / SET Xa
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xa  = ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  3  Xa := ℝ₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_cons:parameter:β ====
+STAGE retiree_cons / PARAMETER β
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  β  ∈ (0, 1)
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  5  β : (0,1)  :: ["discount factor"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_cons:parameter:R ====
+STAGE retiree_cons / PARAMETER R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  R  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  6  R : ℝ₊₊  :: ["gross return on assets"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_cons:function:𝑢 ====
+STAGE retiree_cons / FUNCTION 𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑢  : ℝ₊₊ → ℝ,  c ↦ log(c)
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  8  𝑢(c : ℝ₊₊) := log(c)  :: [id=util]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_cons:function:𝑑𝑢 ====
+STAGE retiree_cons / FUNCTION 𝑑𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑑𝑢  : ℝ₊₊ → ℝ₊₊,  c ↦ 1/c
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  9  𝑑𝑢(c : ℝ₊₊) := 1/c  :: [id=marg_util]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_cons:function:𝑑𝑢𝑖𝑛𝑣 ====
+STAGE retiree_cons / FUNCTION 𝑑𝑢𝑖𝑛𝑣
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑑𝑢𝑖𝑛𝑣  : ℝ₊₊ → ℝ₊₊,  x ↦ 1/x
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  10  𝑑𝑢𝑖𝑛𝑣(x : ℝ₊₊) := 1/x  :: [id=inv_marg_util]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_cons:correspondence:Γ ====
+STAGE retiree_cons / CORRESPONDENCE Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Γ  : ℝ₊ ⇉ ℝ₊₊,  x ↦ (0, x]
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  11  Γ(x : ℝ₊) := (0, x]  :: [id=feasible, "empty at zero resources"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.cash_on_hand ====
+STAGE retiree_cons / FORWARD BLOCK arvl_to_dcsn / cash_on_hand
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  retiree_cons.bl
+  14  w_ret = R*a_ret  :: [id=cash_on_hand]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.savings ====
+STAGE retiree_cons / FORWARD BLOCK dcsn_to_cntn / savings
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  retiree_cons.bl
+  18  b_ret = w_ret - c  :: [id=savings]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.value ====
+STAGE retiree_cons / BACKWARD BLOCK cntn_to_dcsn / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  ¬(𝑢(c) ∈ [∞, ∞] ∧ β · V[>] ∈ [−∞, −∞])
+  𝑉(w_ret) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  22  V = 𝑢(c) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  β     retiree_cons:parameter:β
+  𝑢     retiree_cons:function:𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.value ====
+STAGE retiree_cons / BACKWARD BLOCK dcsn_to_arvl / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉≺(a_ret) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  26  V[<] = V  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== policy.optimality ====
+STAGE retiree_cons / POLICY BLOCK policy / optimality
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  retiree_cons.bl
+  30  c = argmax_{c : Γ(w_ret)}(𝑢(c) + β*V[>])  :: [id=optimality]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_cons:g:arvl_to_dcsn ====
+STAGE retiree_cons / LAW OF MOTION arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≺  : Xa → Xa,  a_ret ↦ R · a_ret
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  14  w_ret = R*a_ret  :: [id=cash_on_hand]
+
+Definitions referenced
+  Xa    retiree_cons:set:Xa
+  R     retiree_cons:parameter:R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_cons:g:dcsn_to_cntn ====
+STAGE retiree_cons / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : {w_ret, c ∈ Xa × ℝ₊₊ | c ∈ Γ(w_ret)} → Xa,  (w_ret, c) ↦ w_ret − c
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  18  b_ret = w_ret - c  :: [id=savings]
+
+Definitions referenced
+  Xa    retiree_cons:set:Xa
+  Γ     retiree_cons:correspondence:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_cons:G:cntn_to_dcsn ====
+STAGE retiree_cons / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, w_ret, c ∈ [−∞, ∞) × Xa × ℝ₊₊ | c ∈ Γ(w_ret)} → [−∞, ∞),
+        (V≻, w_ret, c) ↦ 𝑢(c) + β · V≻
+
+Conditions
+  ¬(𝑢(c) ∈ [∞, ∞] ∧ β · V[>] ∈ [−∞, −∞])
+  𝑉(w_ret) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  22  V = 𝑢(c) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  Xa    retiree_cons:set:Xa
+  β     retiree_cons:parameter:β
+  𝑢     retiree_cons:function:𝑢
+  Γ     retiree_cons:correspondence:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_cons:G:dcsn_to_arvl ====
+STAGE retiree_cons / VALUE AGGREGATOR dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≺  : [−∞, ∞) × Xa → [−∞, ∞),  (V, a_ret) ↦ V
+
+Conditions
+  𝑉≺(a_ret) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  26  V[<] = V  :: [id=value]
+
+Definitions referenced
+  Xa    retiree_cons:set:Xa
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retiree_cons:G:policy ====
+STAGE retiree_cons / VALUE AGGREGATOR policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, w_ret, c ∈ [−∞, ∞) × Xa × ℝ₊₊ | c ∈ Γ(w_ret)} → [−∞, ∞),
+        (V≻, w_ret, c) ↦ 𝑢(c) + β · V≻
+──────────────────────────────────────────────────────────────────────────────
+Source  retiree_cons.bl
+  30  c = argmax_{c : Γ(w_ret)}(𝑢(c) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xa    retiree_cons:set:Xa
+  β     retiree_cons:parameter:β
+  𝑢     retiree_cons:function:𝑢
+  Γ     retiree_cons:correspondence:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

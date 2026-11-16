@@ -1,0 +1,651 @@
+==== wires ====
+Sort('tenure:cntn:age_kp', 'field', perch='cntn', role='value', domain='Age', coordinates=(), derivatives=())
+Sort('tenure:cntn:age_adj', 'field', perch='cntn', role='value', domain='Age', coordinates=(), derivatives=())
+Sort('tenure:cntn:V_kp', 'field', perch='cntn', role='value', domain='ℝ', coordinates=('tenure:cntn:w_kp', 'tenure:cntn:h_kp', 'tenure:cntn:z_kp'), derivatives=())
+Sort('tenure:cntn:V_adj', 'field', perch='cntn', role='value', domain='ℝ', coordinates=('tenure:cntn:w_adj', 'tenure:cntn:z_adj'), derivatives=())
+Sort('tenure:dcsn:V', 'field', perch='dcsn', role='value', domain='ℝ', coordinates=('tenure:dcsn:a_d', 'tenure:dcsn:h_d', 'tenure:dcsn:z_d'), derivatives=())
+Sort('tenure:dcsn:age', 'field', perch='dcsn', role='value', domain='Age', coordinates=(), derivatives=())
+Sort('tenure:arvl:V', 'field', perch='arvl', role='value', domain='ℝ', coordinates=('tenure:arvl:a', 'tenure:arvl:h', 'tenure:arvl:z'), derivatives=())
+Sort('tenure:arvl:age', 'field', perch='arvl', role='value', domain='Age', coordinates=(), derivatives=())
+Sort('tenure:dcsn:d', 'field', perch='dcsn', role='control', domain='{keep, adjust}', coordinates=(), derivatives=())
+Sort('tenure:arvl:a', 'field', perch='arvl', role='state', domain='ℝ₊', coordinates=(), derivatives=())
+Sort('tenure:arvl:h', 'field', perch='arvl', role='state', domain='ℝ₊₊', coordinates=(), derivatives=())
+Sort('tenure:arvl:z', 'field', perch='arvl', role='state', domain='ℝ₊₊', coordinates=(), derivatives=())
+Sort('tenure:shck:ε', 'field', perch='shck', role='shock', domain='ℝ', coordinates=(), derivatives=())
+Sort('tenure:dcsn:a_d', 'field', perch='dcsn', role='state', domain='ℝ₊', coordinates=(), derivatives=())
+Sort('tenure:dcsn:h_d', 'field', perch='dcsn', role='state', domain='ℝ₊₊', coordinates=(), derivatives=())
+Sort('tenure:dcsn:z_d', 'field', perch='dcsn', role='state', domain='ℝ₊₊', coordinates=(), derivatives=())
+Sort('tenure:cntn:w_kp', 'field', perch='cntn', role='state', domain='ℝ₊₊', coordinates=(), derivatives=())
+Sort('tenure:cntn:h_kp', 'field', perch='cntn', role='state', domain='ℝ₊₊', coordinates=(), derivatives=())
+Sort('tenure:cntn:z_kp', 'field', perch='cntn', role='state', domain='ℝ₊₊', coordinates=(), derivatives=())
+Sort('tenure:cntn:w_adj', 'field', perch='cntn', role='state', domain='ℝ₊₊', coordinates=(), derivatives=())
+Sort('tenure:cntn:z_adj', 'field', perch='cntn', role='state', domain='ℝ₊₊', coordinates=(), derivatives=())
+Sort('tenure:function:cntn:age_kp', 'function', perch='cntn', role='value', domain='Age', coordinates=(), derivatives=())
+Sort('tenure:function:cntn:age_adj', 'function', perch='cntn', role='value', domain='Age', coordinates=(), derivatives=())
+Sort('tenure:function:cntn:V_kp', 'function', perch='cntn', role='value', domain='ℝ', coordinates=('tenure:cntn:w_kp', 'tenure:cntn:h_kp', 'tenure:cntn:z_kp'), derivatives=())
+Sort('tenure:function:cntn:V_adj', 'function', perch='cntn', role='value', domain='ℝ', coordinates=('tenure:cntn:w_adj', 'tenure:cntn:z_adj'), derivatives=())
+Sort('tenure:function:dcsn:V', 'function', perch='dcsn', role='value', domain='ℝ', coordinates=('tenure:dcsn:a_d', 'tenure:dcsn:h_d', 'tenure:dcsn:z_d'), derivatives=())
+Sort('tenure:function:dcsn:age', 'function', perch='dcsn', role='value', domain='Age', coordinates=(), derivatives=())
+Sort('tenure:function:arvl:V', 'function', perch='arvl', role='value', domain='ℝ', coordinates=('tenure:arvl:a', 'tenure:arvl:h', 'tenure:arvl:z'), derivatives=())
+Sort('tenure:function:arvl:age', 'function', perch='arvl', role='value', domain='Age', coordinates=(), derivatives=())
+Sort('policy:Evaluation:d:result', 'function', perch='dcsn', role='control', domain='{keep, adjust}', coordinates=('tenure:dcsn:a_d', 'tenure:dcsn:h_d', 'tenure:dcsn:z_d'), derivatives=())
+Sort('tenure:function:cntn:V_kp:g', 'function', perch='cntn', role='value', domain='ℝ', coordinates=('tenure:dcsn:a_d', 'tenure:dcsn:h_d', 'tenure:dcsn:z_d'), derivatives=())
+Sort('tenure:function:cntn:V_adj:g', 'function', perch='cntn', role='value', domain='ℝ', coordinates=('tenure:dcsn:a_d', 'tenure:dcsn:h_d', 'tenure:dcsn:z_d'), derivatives=())
+Sort('cntn_to_dcsn:Aggregation:V:result', 'function', perch=None, role='value', domain=None, coordinates=('tenure:dcsn:a_d', 'tenure:dcsn:h_d', 'tenure:dcsn:z_d'), derivatives=())
+Sort('cntn_to_dcsn:Aggregation:age:result', 'function', perch=None, role='value', domain=None, coordinates=('tenure:dcsn:a_d', 'tenure:dcsn:h_d', 'tenure:dcsn:z_d'), derivatives=())
+Sort('tenure:function:dcsn:V:g', 'function', perch='dcsn', role='value', domain='ℝ', coordinates=('tenure:arvl:a', 'tenure:arvl:h', 'tenure:arvl:z', 'tenure:shck:ε'), derivatives=())
+Sort('dcsn_to_arvl.value:Expectation:1:result', 'function', perch=None, role='value', domain=None, coordinates=('tenure:arvl:a', 'tenure:arvl:h', 'tenure:arvl:z'), derivatives=())
+Sort('dcsn_to_arvl:Aggregation:V:result', 'function', perch=None, role='value', domain=None, coordinates=('tenure:arvl:a', 'tenure:arvl:h', 'tenure:arvl:z'), derivatives=())
+Sort('dcsn_to_arvl:Aggregation:age:result', 'function', perch=None, role='value', domain=None, coordinates=('tenure:arvl:a', 'tenure:arvl:h', 'tenure:arvl:z'), derivatives=())
+Sort('tenure:function:cntn:V_kp:g:policy', 'function', perch='cntn', role='value', domain='ℝ', coordinates=('tenure:dcsn:a_d', 'tenure:dcsn:h_d', 'tenure:dcsn:z_d'), derivatives=())
+Sort('tenure:function:cntn:V_adj:g:policy', 'function', perch='cntn', role='value', domain='ℝ', coordinates=('tenure:dcsn:a_d', 'tenure:dcsn:h_d', 'tenure:dcsn:z_d'), derivatives=())
+Sort('policy.choice:Aggregation:result', 'function', perch=None, role='value', domain=None, coordinates=('tenure:dcsn:a_d', 'tenure:dcsn:h_d', 'tenure:dcsn:z_d', 'tenure:dcsn:d'), derivatives=())
+Sort('policy.choice:Argmax:d:result', 'function', perch='dcsn', role='control', domain='{keep, adjust}', coordinates=('tenure:dcsn:a_d', 'tenure:dcsn:h_d', 'tenure:dcsn:z_d'), derivatives=())
+Sort('tenure:measure:arvl', 'measure', perch='arvl', role='measure', domain=None, coordinates=('tenure:arvl:a', 'tenure:arvl:h', 'tenure:arvl:z'), derivatives=())
+Sort('tenure:measure:dcsn', 'measure', perch='dcsn', role='measure', domain=None, coordinates=('tenure:dcsn:a_d', 'tenure:dcsn:h_d', 'tenure:dcsn:z_d'), derivatives=())
+Sort('tenure:measure:cntn:keep', 'measure', perch='cntn', role='measure', domain=None, coordinates=('tenure:cntn:w_kp', 'tenure:cntn:h_kp', 'tenure:cntn:z_kp'), derivatives=())
+Sort('tenure:measure:cntn:adjust', 'measure', perch='cntn', role='measure', domain=None, coordinates=('tenure:cntn:w_adj', 'tenure:cntn:z_adj'), derivatives=())
+Sort('tenure:measure:arvl:with-distribution:ε', 'measure', perch='arvl', role='measure', domain=None, coordinates=('tenure:arvl:a', 'tenure:arvl:h', 'tenure:arvl:z', 'tenure:shck:ε'), derivatives=())
+
+==== conditions of the stage ====
+external-callable-signature-and-provider (required): external:exp; arvl_to_dcsn.income_state
+    The callable exp used at arvl_to_dcsn.income_state needs a declared signature and provider.
+joint-distribution-factorization (required): tenure:distribution:ε; arvl_to_dcsn
+    The joint distribution for arvl_to_dcsn is assumed to be the product of the declared conditional distributions given their named parents and the source coordinates: ε given (a, h, z) by tenure:distribution:ε.
+mass-conservation (required): dcsn_to_cntn:Pushforward; dcsn_to_cntn.keep.cash_on_hand; dcsn_to_cntn.keep.housing_kept; dcsn_to_cntn.keep.3; dcsn_to_cntn.adjust.total_wealth; dcsn_to_cntn.adjust.2
+    The masses of μ_keep≻, μ_adjust≻ sum to the mass of μ: the policy sends every decision state to one label, and every line of a branch writes a value in the declared set of its field.
+aggregation-admissibility (required): cntn_to_dcsn:Aggregation; cntn_to_dcsn.choice_value; cntn_to_dcsn.age; cntn_to_dcsn:Aggregation:V:result; V(a_d, h_d, z_d) ∈ ℝ
+    The equations at cntn_to_dcsn.choice_value, cntn_to_dcsn.age must define cntn_to_dcsn:Aggregation on its declared inputs with values in its declared output sets.
+aggregation-admissibility (required): cntn_to_dcsn:Aggregation; cntn_to_dcsn.choice_value; cntn_to_dcsn.age; cntn_to_dcsn:Aggregation:age:result; age ∈ Age
+    The equations at cntn_to_dcsn.choice_value, cntn_to_dcsn.age must define cntn_to_dcsn:Aggregation on its declared inputs with values in its declared output sets.
+expectation-integrability (required): dcsn_to_arvl.value:Expectation:1; dcsn_to_arvl.value; V; tenure:distribution:ε
+    The integrand V at dcsn_to_arvl.value must be integrable for dcsn_to_arvl.value:Expectation:1 under tenure:distribution:ε.
+aggregation-admissibility (required): dcsn_to_arvl:Aggregation; dcsn_to_arvl.value; dcsn_to_arvl:Aggregation:V:result; V≺(a, h, z) ∈ ℝ
+    The equations at dcsn_to_arvl.value must define dcsn_to_arvl:Aggregation on its declared inputs with values in its declared output sets.
+aggregation-admissibility (required): dcsn_to_arvl:Aggregation; dcsn_to_arvl.value; dcsn_to_arvl:Aggregation:age:result; age≺ ∈ Age
+    The equations at dcsn_to_arvl.value must define dcsn_to_arvl:Aggregation on its declared inputs with values in its declared output sets.
+function-argument-domain-inclusion (required): arvl_to_dcsn.income_state; bellman:function:exp; x; undeclared; ℝ
+    The argument for x of bellman:function:exp at arvl_to_dcsn.income_state, from an undeclared set, must belong to ℝ.
+range-compatibility (required): dcsn_to_cntn.keep.cash_on_hand; ℝ₊; ℝ₊₊; R · a_d + Y[age_kp] · z_d + y_R[age_kp] ∈ ℝ₊₊
+    w_kp is declared in ℝ₊₊ while R*a_d + Y[age_kp[>]]*z_d + y_R[age_kp[>]] is declared in ℝ₊, so the construction assumes every value the line dcsn_to_cntn.keep.cash_on_hand writes lies in ℝ₊₊
+law-support (required): tenure:shck:ε
+    The distribution of ε gives probability only to values in the declared shock set.
+continuation-input (required): tenure:cntn:V_kp; ℝ; tenure:cntn:w_kp; tenure:cntn:h_kp; tenure:cntn:z_kp
+    The representing function for V_kp[>] must be measurable on its declared domain, depend only on (w_kp, h_kp, z_kp) in that order, and take values in ℝ.
+continuation-input (required): tenure:cntn:V_adj; ℝ; tenure:cntn:w_adj; tenure:cntn:z_adj
+    The representing function for V_adj[>] must be measurable on its declared domain, depend only on (w_adj, z_adj) in that order, and take values in ℝ.
+continuation-input (required): tenure:cntn:age_kp; Age
+    The whole constant value of age_kp[>] must belong to Age.
+continuation-input (required): tenure:cntn:age_adj; Age
+    The whole constant value of age_adj[>] must belong to Age.
+
+==== initial backward: conditions ====
+external-callable-signature-and-provider (required): external:exp; arvl_to_dcsn.income_state
+    The callable exp used at arvl_to_dcsn.income_state needs a declared signature and provider.
+joint-distribution-factorization (required): tenure:distribution:ε; arvl_to_dcsn
+    The joint distribution for arvl_to_dcsn is assumed to be the product of the declared conditional distributions given their named parents and the source coordinates: ε given (a, h, z) by tenure:distribution:ε.
+aggregation-admissibility (required): cntn_to_dcsn:Aggregation; cntn_to_dcsn.choice_value; cntn_to_dcsn.age; cntn_to_dcsn:Aggregation:V:result; V(a_d, h_d, z_d) ∈ ℝ
+    The equations at cntn_to_dcsn.choice_value, cntn_to_dcsn.age must define cntn_to_dcsn:Aggregation on its declared inputs with values in its declared output sets.
+aggregation-admissibility (required): cntn_to_dcsn:Aggregation; cntn_to_dcsn.choice_value; cntn_to_dcsn.age; cntn_to_dcsn:Aggregation:age:result; age ∈ Age
+    The equations at cntn_to_dcsn.choice_value, cntn_to_dcsn.age must define cntn_to_dcsn:Aggregation on its declared inputs with values in its declared output sets.
+expectation-integrability (required): dcsn_to_arvl.value:Expectation:1; dcsn_to_arvl.value; V; tenure:distribution:ε
+    The integrand V at dcsn_to_arvl.value must be integrable for dcsn_to_arvl.value:Expectation:1 under tenure:distribution:ε.
+aggregation-admissibility (required): dcsn_to_arvl:Aggregation; dcsn_to_arvl.value; dcsn_to_arvl:Aggregation:V:result; V≺(a, h, z) ∈ ℝ
+    The equations at dcsn_to_arvl.value must define dcsn_to_arvl:Aggregation on its declared inputs with values in its declared output sets.
+aggregation-admissibility (required): dcsn_to_arvl:Aggregation; dcsn_to_arvl.value; dcsn_to_arvl:Aggregation:age:result; age≺ ∈ Age
+    The equations at dcsn_to_arvl.value must define dcsn_to_arvl:Aggregation on its declared inputs with values in its declared output sets.
+law-support (required): tenure:shck:ε
+    The distribution of ε gives probability only to values in the declared shock set.
+continuation-input (required): tenure:cntn:V_kp; ℝ; tenure:cntn:w_kp; tenure:cntn:h_kp; tenure:cntn:z_kp
+    The representing function for V_kp[>] must be measurable on its declared domain, depend only on (w_kp, h_kp, z_kp) in that order, and take values in ℝ.
+continuation-input (required): tenure:cntn:V_adj; ℝ; tenure:cntn:w_adj; tenure:cntn:z_adj
+    The representing function for V_adj[>] must be measurable on its declared domain, depend only on (w_adj, z_adj) in that order, and take values in ℝ.
+continuation-input (required): tenure:cntn:age_kp; Age
+    The whole constant value of age_kp[>] must belong to Age.
+continuation-input (required): tenure:cntn:age_adj; Age
+    The whole constant value of age_adj[>] must belong to Age.
+
+==== initial backward builder: listing ====
+cntn_to_dcsn
+  cntn_to_dcsn.choice_value
+  cntn_to_dcsn.age
+dcsn_to_arvl
+  dcsn_to_arvl.value
+policy
+  policy.choice
+
+==== initial backward builder: wiring ====
+inputs: tenure:cntn:age_kp, tenure:cntn:age_adj, tenure:cntn:V_kp, tenure:cntn:V_adj
+outputs: tenure:arvl:V, tenure:arvl:age, tenure:dcsn:d
+cntn_to_dcsn
+    reads: tenure:cntn:V_kp, tenure:cntn:V_adj, tenure:cntn:age_kp, tenure:cntn:age_adj
+    writes: tenure:dcsn:V, tenure:dcsn:age
+    declares: tenure:cntn:V_kp, tenure:cntn:V_adj, tenure:cntn:age_kp, tenure:cntn:age_adj, tenure:dcsn:d
+    inside:
+        inputs: tenure:cntn:V_kp, tenure:cntn:V_adj, tenure:cntn:age_kp, tenure:cntn:age_adj
+        outputs: tenure:dcsn:V, tenure:dcsn:age
+        cntn_to_dcsn.choice_value
+            reads: tenure:cntn:V_kp, tenure:cntn:V_adj
+            writes: tenure:dcsn:V
+        cntn_to_dcsn.age
+            reads: tenure:cntn:age_kp
+            writes: tenure:dcsn:age
+dcsn_to_arvl
+    reads: tenure:dcsn:V, tenure:dcsn:age
+    writes: tenure:arvl:V, tenure:arvl:age
+    declares: tenure:dcsn:V, tenure:dcsn:age
+    inside:
+        inputs: tenure:dcsn:V, tenure:dcsn:age
+        outputs: tenure:arvl:V, tenure:arvl:age
+        dcsn_to_arvl.value
+            reads: tenure:dcsn:V
+            writes: tenure:arvl:V
+policy
+    reads: tenure:cntn:V_kp, tenure:cntn:V_adj
+    writes: tenure:dcsn:d
+    declares: tenure:cntn:V_kp, tenure:cntn:V_adj
+    inside:
+        inputs: tenure:cntn:V_kp, tenure:cntn:V_adj
+        outputs: tenure:dcsn:d
+        policy.choice
+            reads: tenure:cntn:V_kp, tenure:cntn:V_adj
+            writes: tenure:dcsn:d
+
+==== initial backward sub-builder: listing ====
+cntn_to_dcsn.choice_value
+cntn_to_dcsn.age
+dcsn_to_arvl.value
+policy.choice
+
+==== initial backward sub-builder: wiring ====
+inputs: tenure:cntn:age_kp, tenure:cntn:age_adj, tenure:cntn:V_kp, tenure:cntn:V_adj
+outputs: tenure:arvl:V, tenure:arvl:age, tenure:dcsn:d
+cntn_to_dcsn.choice_value
+    reads: tenure:cntn:V_kp, tenure:cntn:V_adj
+    writes: tenure:dcsn:V
+cntn_to_dcsn.age
+    reads: tenure:cntn:age_kp
+    writes: tenure:dcsn:age
+dcsn_to_arvl.value
+    reads: tenure:dcsn:V
+    writes: tenure:arvl:V
+policy.choice
+    reads: tenure:cntn:V_kp, tenure:cntn:V_adj
+    writes: tenure:dcsn:d
+
+==== initial backward primitive: listing ====
+the same as initial backward sub-builder: listing
+
+==== initial backward primitive: wiring ====
+the same as initial backward sub-builder: wiring
+
+==== initial backward combined: listing ====
+cntn_to_dcsn.choice_value
+dcsn_to_arvl.value
+policy.choice
+
+==== initial backward combined: wiring ====
+inputs: tenure:cntn:age_kp, tenure:cntn:age_adj, tenure:cntn:V_kp, tenure:cntn:V_adj
+outputs: tenure:arvl:V, tenure:arvl:age, tenure:dcsn:d
+cntn_to_dcsn.choice_value
+    reads: tenure:cntn:V_kp, tenure:cntn:V_adj
+    writes: tenure:dcsn:V
+dcsn_to_arvl.value
+    reads: tenure:dcsn:V
+    writes: tenure:arvl:V
+policy.choice
+    reads: tenure:cntn:V_kp, tenure:cntn:V_adj
+    writes: tenure:dcsn:d
+
+==== initial backward factored: listing ====
+the same as initial backward sub-builder: listing
+
+==== initial backward factored: wiring ====
+the same as initial backward sub-builder: wiring
+
+==== initial forward: conditions ====
+external-callable-signature-and-provider (required): external:exp; arvl_to_dcsn.income_state
+    The callable exp used at arvl_to_dcsn.income_state needs a declared signature and provider.
+joint-distribution-factorization (required): tenure:distribution:ε; arvl_to_dcsn
+    The joint distribution for arvl_to_dcsn is assumed to be the product of the declared conditional distributions given their named parents and the source coordinates: ε given (a, h, z) by tenure:distribution:ε.
+mass-conservation (required): dcsn_to_cntn:Pushforward; dcsn_to_cntn.keep.cash_on_hand; dcsn_to_cntn.keep.housing_kept; dcsn_to_cntn.keep.3; dcsn_to_cntn.adjust.total_wealth; dcsn_to_cntn.adjust.2
+    The masses of μ_keep≻, μ_adjust≻ sum to the mass of μ: the policy sends every decision state to one label, and every line of a branch writes a value in the declared set of its field.
+function-argument-domain-inclusion (required): arvl_to_dcsn.income_state; bellman:function:exp; x; undeclared; ℝ
+    The argument for x of bellman:function:exp at arvl_to_dcsn.income_state, from an undeclared set, must belong to ℝ.
+range-compatibility (required): dcsn_to_cntn.keep.cash_on_hand; ℝ₊; ℝ₊₊; R · a_d + Y[age_kp] · z_d + y_R[age_kp] ∈ ℝ₊₊
+    w_kp is declared in ℝ₊₊ while R*a_d + Y[age_kp[>]]*z_d + y_R[age_kp[>]] is declared in ℝ₊, so the construction assumes every value the line dcsn_to_cntn.keep.cash_on_hand writes lies in ℝ₊₊
+law-support (required): tenure:shck:ε
+    The distribution of ε gives probability only to values in the declared shock set.
+continuation-input (required): tenure:cntn:V_kp; ℝ; tenure:cntn:w_kp; tenure:cntn:h_kp; tenure:cntn:z_kp
+    The representing function for V_kp[>] must be measurable on its declared domain, depend only on (w_kp, h_kp, z_kp) in that order, and take values in ℝ.
+continuation-input (required): tenure:cntn:V_adj; ℝ; tenure:cntn:w_adj; tenure:cntn:z_adj
+    The representing function for V_adj[>] must be measurable on its declared domain, depend only on (w_adj, z_adj) in that order, and take values in ℝ.
+continuation-input (required): tenure:cntn:age_kp; Age
+    The whole constant value of age_kp[>] must belong to Age.
+continuation-input (required): tenure:cntn:age_adj; Age
+    The whole constant value of age_adj[>] must belong to Age.
+
+==== initial forward builder: listing ====
+arvl_to_dcsn
+  arvl_to_dcsn.1
+  arvl_to_dcsn.2
+  arvl_to_dcsn.income_state
+dcsn_to_cntn
+  dcsn_to_cntn.keep
+    dcsn_to_cntn.keep.cash_on_hand
+    dcsn_to_cntn.keep.housing_kept
+    dcsn_to_cntn.keep.3
+  dcsn_to_cntn.adjust
+    dcsn_to_cntn.adjust.total_wealth
+    dcsn_to_cntn.adjust.2
+
+==== initial forward builder: wiring ====
+inputs: tenure:arvl:a, tenure:arvl:h, tenure:arvl:z, tenure:shck:ε, tenure:cntn:age_kp, tenure:cntn:age_adj
+outputs: tenure:cntn:w_kp, tenure:cntn:h_kp, tenure:cntn:z_kp, tenure:cntn:w_adj, tenure:cntn:z_adj
+arvl_to_dcsn
+    reads: tenure:arvl:a, tenure:arvl:h, tenure:arvl:z, tenure:shck:ε
+    writes: tenure:dcsn:a_d, tenure:dcsn:h_d, tenure:dcsn:z_d
+    declares: tenure:arvl:a, tenure:arvl:h, tenure:arvl:z, tenure:shck:ε
+    inside:
+        inputs: tenure:arvl:a, tenure:arvl:h, tenure:arvl:z, tenure:shck:ε
+        outputs: tenure:dcsn:a_d, tenure:dcsn:h_d, tenure:dcsn:z_d
+        arvl_to_dcsn.1
+            reads: tenure:arvl:a
+            writes: tenure:dcsn:a_d
+        arvl_to_dcsn.2
+            reads: tenure:arvl:h
+            writes: tenure:dcsn:h_d
+        arvl_to_dcsn.income_state
+            reads: tenure:arvl:z, tenure:shck:ε
+            writes: tenure:dcsn:z_d
+dcsn_to_cntn
+    reads: tenure:dcsn:a_d, tenure:dcsn:h_d, tenure:dcsn:z_d, tenure:cntn:age_kp, tenure:cntn:age_adj
+    writes: tenure:cntn:w_kp, tenure:cntn:h_kp, tenure:cntn:z_kp, tenure:cntn:w_adj, tenure:cntn:z_adj
+    declares: tenure:dcsn:a_d, tenure:dcsn:h_d, tenure:dcsn:z_d, tenure:cntn:age_kp, tenure:cntn:age_adj, tenure:dcsn:d
+    inside:
+        inputs: tenure:dcsn:a_d, tenure:dcsn:h_d, tenure:dcsn:z_d, tenure:cntn:age_kp, tenure:cntn:age_adj
+        outputs: tenure:cntn:w_kp, tenure:cntn:h_kp, tenure:cntn:z_kp, tenure:cntn:w_adj, tenure:cntn:z_adj
+        dcsn_to_cntn.keep
+            reads: tenure:dcsn:a_d, tenure:cntn:age_kp, tenure:dcsn:z_d, tenure:dcsn:h_d
+            writes: tenure:cntn:w_kp, tenure:cntn:h_kp, tenure:cntn:z_kp
+            inside:
+                inputs: tenure:dcsn:a_d, tenure:cntn:age_kp, tenure:dcsn:z_d, tenure:dcsn:h_d
+                outputs: tenure:cntn:w_kp, tenure:cntn:h_kp, tenure:cntn:z_kp
+                dcsn_to_cntn.keep.cash_on_hand
+                    reads: tenure:dcsn:a_d, tenure:cntn:age_kp, tenure:dcsn:z_d
+                    writes: tenure:cntn:w_kp
+                dcsn_to_cntn.keep.housing_kept
+                    reads: tenure:dcsn:h_d
+                    writes: tenure:cntn:h_kp
+                dcsn_to_cntn.keep.3
+                    reads: tenure:dcsn:z_d
+                    writes: tenure:cntn:z_kp
+        dcsn_to_cntn.adjust
+            reads: tenure:dcsn:a_d, tenure:dcsn:h_d, tenure:cntn:age_adj, tenure:dcsn:z_d
+            writes: tenure:cntn:w_adj, tenure:cntn:z_adj
+            inside:
+                inputs: tenure:dcsn:a_d, tenure:dcsn:h_d, tenure:cntn:age_adj, tenure:dcsn:z_d
+                outputs: tenure:cntn:w_adj, tenure:cntn:z_adj
+                dcsn_to_cntn.adjust.total_wealth
+                    reads: tenure:dcsn:a_d, tenure:dcsn:h_d, tenure:cntn:age_adj, tenure:dcsn:z_d
+                    writes: tenure:cntn:w_adj
+                dcsn_to_cntn.adjust.2
+                    reads: tenure:dcsn:z_d
+                    writes: tenure:cntn:z_adj
+
+==== initial forward sub-builder: listing ====
+arvl_to_dcsn.1
+arvl_to_dcsn.2
+arvl_to_dcsn.income_state
+dcsn_to_cntn.keep
+  dcsn_to_cntn.keep.cash_on_hand
+  dcsn_to_cntn.keep.housing_kept
+  dcsn_to_cntn.keep.3
+dcsn_to_cntn.adjust
+  dcsn_to_cntn.adjust.total_wealth
+  dcsn_to_cntn.adjust.2
+
+==== initial forward sub-builder: wiring ====
+inputs: tenure:arvl:a, tenure:arvl:h, tenure:arvl:z, tenure:shck:ε, tenure:cntn:age_kp, tenure:cntn:age_adj
+outputs: tenure:cntn:w_kp, tenure:cntn:h_kp, tenure:cntn:z_kp, tenure:cntn:w_adj, tenure:cntn:z_adj
+arvl_to_dcsn.1
+    reads: tenure:arvl:a
+    writes: tenure:dcsn:a_d
+arvl_to_dcsn.2
+    reads: tenure:arvl:h
+    writes: tenure:dcsn:h_d
+arvl_to_dcsn.income_state
+    reads: tenure:arvl:z, tenure:shck:ε
+    writes: tenure:dcsn:z_d
+dcsn_to_cntn.keep
+    reads: tenure:dcsn:a_d, tenure:cntn:age_kp, tenure:dcsn:z_d, tenure:dcsn:h_d
+    writes: tenure:cntn:w_kp, tenure:cntn:h_kp, tenure:cntn:z_kp
+    inside:
+        inputs: tenure:dcsn:a_d, tenure:cntn:age_kp, tenure:dcsn:z_d, tenure:dcsn:h_d
+        outputs: tenure:cntn:w_kp, tenure:cntn:h_kp, tenure:cntn:z_kp
+        dcsn_to_cntn.keep.cash_on_hand
+            reads: tenure:dcsn:a_d, tenure:cntn:age_kp, tenure:dcsn:z_d
+            writes: tenure:cntn:w_kp
+        dcsn_to_cntn.keep.housing_kept
+            reads: tenure:dcsn:h_d
+            writes: tenure:cntn:h_kp
+        dcsn_to_cntn.keep.3
+            reads: tenure:dcsn:z_d
+            writes: tenure:cntn:z_kp
+dcsn_to_cntn.adjust
+    reads: tenure:dcsn:a_d, tenure:dcsn:h_d, tenure:cntn:age_adj, tenure:dcsn:z_d
+    writes: tenure:cntn:w_adj, tenure:cntn:z_adj
+    inside:
+        inputs: tenure:dcsn:a_d, tenure:dcsn:h_d, tenure:cntn:age_adj, tenure:dcsn:z_d
+        outputs: tenure:cntn:w_adj, tenure:cntn:z_adj
+        dcsn_to_cntn.adjust.total_wealth
+            reads: tenure:dcsn:a_d, tenure:dcsn:h_d, tenure:cntn:age_adj, tenure:dcsn:z_d
+            writes: tenure:cntn:w_adj
+        dcsn_to_cntn.adjust.2
+            reads: tenure:dcsn:z_d
+            writes: tenure:cntn:z_adj
+
+==== initial forward primitive: listing ====
+arvl_to_dcsn.1
+arvl_to_dcsn.2
+arvl_to_dcsn.income_state
+dcsn_to_cntn.keep.cash_on_hand
+dcsn_to_cntn.keep.housing_kept
+dcsn_to_cntn.keep.3
+dcsn_to_cntn.adjust.total_wealth
+dcsn_to_cntn.adjust.2
+
+==== initial forward primitive: wiring ====
+inputs: tenure:arvl:a, tenure:arvl:h, tenure:arvl:z, tenure:shck:ε, tenure:cntn:age_kp, tenure:cntn:age_adj
+outputs: tenure:cntn:w_kp, tenure:cntn:h_kp, tenure:cntn:z_kp, tenure:cntn:w_adj, tenure:cntn:z_adj
+arvl_to_dcsn.1
+    reads: tenure:arvl:a
+    writes: tenure:dcsn:a_d
+arvl_to_dcsn.2
+    reads: tenure:arvl:h
+    writes: tenure:dcsn:h_d
+arvl_to_dcsn.income_state
+    reads: tenure:arvl:z, tenure:shck:ε
+    writes: tenure:dcsn:z_d
+dcsn_to_cntn.keep.cash_on_hand
+    reads: tenure:dcsn:a_d, tenure:cntn:age_kp, tenure:dcsn:z_d
+    writes: tenure:cntn:w_kp
+dcsn_to_cntn.keep.housing_kept
+    reads: tenure:dcsn:h_d
+    writes: tenure:cntn:h_kp
+dcsn_to_cntn.keep.3
+    reads: tenure:dcsn:z_d
+    writes: tenure:cntn:z_kp
+dcsn_to_cntn.adjust.total_wealth
+    reads: tenure:dcsn:a_d, tenure:dcsn:h_d, tenure:cntn:age_adj, tenure:dcsn:z_d
+    writes: tenure:cntn:w_adj
+dcsn_to_cntn.adjust.2
+    reads: tenure:dcsn:z_d
+    writes: tenure:cntn:z_adj
+
+==== initial forward combined: listing ====
+the same as initial forward sub-builder: listing
+
+==== initial forward combined: wiring ====
+the same as initial forward sub-builder: wiring
+
+==== initial forward factored: listing ====
+the same as initial forward sub-builder: listing
+
+==== initial forward factored: wiring ====
+the same as initial forward sub-builder: wiring
+
+==== builders backward: conditions ====
+the same as initial backward: conditions
+
+==== builders backward builder: listing ====
+cntn_to_dcsn
+  Pullback of 𝑉_kp≻, 𝑎𝑔𝑒_kp≻ along the law of motion 𝑔
+  Pullback of 𝑉_adj≻, 𝑎𝑔𝑒_adj≻ along the law of motion 𝑔
+  Value aggregation 𝐺
+  Evaluation of 𝑉, 𝑎𝑔𝑒
+dcsn_to_arvl
+  Pullback of 𝑉 along the law of motion 𝑔
+  Expectation of the statement value under the distribution of ε
+  Value aggregation 𝐺
+  Evaluation of 𝑉≺, 𝑎𝑔𝑒≺
+policy
+  Pullback of 𝑉_kp≻, 𝑎𝑔𝑒_kp≻ along the law of motion 𝑔
+  Pullback of 𝑉_adj≻, 𝑎𝑔𝑒_adj≻ along the law of motion 𝑔
+  Apply 𝐺 of the statement choice
+  Argmax of the statement choice
+  Evaluation of 𝑑
+
+==== builders backward builder: wiring ====
+inputs: tenure:function:cntn:age_kp, tenure:function:cntn:age_adj, tenure:function:cntn:V_kp, tenure:function:cntn:V_adj
+outputs: tenure:function:arvl:V, tenure:function:arvl:age, policy:Evaluation:d:result
+cntn_to_dcsn
+    reads: tenure:function:cntn:V_kp, tenure:function:cntn:V_adj, tenure:function:cntn:age_kp, tenure:function:cntn:age_adj
+    writes: tenure:function:dcsn:V, tenure:function:dcsn:age
+    inside:
+        inputs: tenure:function:cntn:V_kp, tenure:function:cntn:V_adj, tenure:function:cntn:age_kp, tenure:function:cntn:age_adj
+        outputs: tenure:function:dcsn:V, tenure:function:dcsn:age
+        cntn_to_dcsn:Pullback:keep [Pullback]
+            reads: tenure:function:cntn:V_kp, tenure:function:cntn:age_kp
+            writes: tenure:function:cntn:V_kp:g
+            refers to: tenure:g:dcsn_to_cntn
+        cntn_to_dcsn:Pullback:adjust [Pullback]
+            reads: tenure:function:cntn:V_adj, tenure:function:cntn:age_adj
+            writes: tenure:function:cntn:V_adj:g
+            refers to: tenure:g:dcsn_to_cntn
+        cntn_to_dcsn:Aggregation [Aggregation]
+            reads: tenure:function:cntn:V_kp:g, tenure:function:cntn:V_adj:g, tenure:function:cntn:age_kp
+            writes: cntn_to_dcsn:Aggregation:V:result, cntn_to_dcsn:Aggregation:age:result
+            refers to: tenure:G:cntn_to_dcsn, tenure:function:dcsn:d
+        cntn_to_dcsn:Evaluation [Evaluation]
+            reads: cntn_to_dcsn:Aggregation:V:result, cntn_to_dcsn:Aggregation:age:result
+            writes: tenure:function:dcsn:V, tenure:function:dcsn:age
+dcsn_to_arvl
+    reads: tenure:function:dcsn:V, tenure:function:dcsn:age
+    writes: tenure:function:arvl:V, tenure:function:arvl:age
+    inside:
+        inputs: tenure:function:dcsn:V, tenure:function:dcsn:age
+        outputs: tenure:function:arvl:V, tenure:function:arvl:age
+        dcsn_to_arvl:Pullback [Pullback]
+            reads: tenure:function:dcsn:V
+            writes: tenure:function:dcsn:V:g
+            refers to: tenure:g:arvl_to_dcsn
+        dcsn_to_arvl.value:Expectation:1 [Expectation]
+            reads: tenure:function:dcsn:V:g
+            writes: dcsn_to_arvl.value:Expectation:1:result
+            refers to: tenure:distribution:ε
+        dcsn_to_arvl:Aggregation [Aggregation]
+            reads: tenure:function:dcsn:age, dcsn_to_arvl.value:Expectation:1:result
+            writes: dcsn_to_arvl:Aggregation:V:result, dcsn_to_arvl:Aggregation:age:result
+            refers to: tenure:G:dcsn_to_arvl
+        dcsn_to_arvl:Evaluation [Evaluation]
+            reads: dcsn_to_arvl:Aggregation:V:result, dcsn_to_arvl:Aggregation:age:result
+            writes: tenure:function:arvl:V, tenure:function:arvl:age
+policy
+    reads: tenure:function:cntn:V_kp, tenure:function:cntn:V_adj, tenure:function:cntn:age_kp, tenure:function:cntn:age_adj
+    writes: policy:Evaluation:d:result
+    inside:
+        inputs: tenure:function:cntn:V_kp, tenure:function:cntn:V_adj, tenure:function:cntn:age_kp, tenure:function:cntn:age_adj
+        outputs: policy:Evaluation:d:result
+        policy:Pullback:keep [Pullback]
+            reads: tenure:function:cntn:V_kp, tenure:function:cntn:age_kp
+            writes: tenure:function:cntn:V_kp:g:policy
+            refers to: tenure:g:dcsn_to_cntn
+        policy:Pullback:adjust [Pullback]
+            reads: tenure:function:cntn:V_adj, tenure:function:cntn:age_adj
+            writes: tenure:function:cntn:V_adj:g:policy
+            refers to: tenure:g:dcsn_to_cntn
+        policy.choice:Aggregation [Aggregation]
+            reads: tenure:function:cntn:V_kp:g:policy, tenure:function:cntn:V_adj:g:policy
+            writes: policy.choice:Aggregation:result
+            refers to: tenure:G:policy
+        policy.choice:Argmax [Argmax]
+            reads: policy.choice:Aggregation:result
+            writes: policy.choice:Argmax:d:result
+            refers to: policy.choice
+        policy:Evaluation [Evaluation]
+            reads: policy.choice:Argmax:d:result
+            writes: policy:Evaluation:d:result
+
+==== builders backward sub-builder: listing ====
+Pullback of 𝑉_kp≻, 𝑎𝑔𝑒_kp≻ along the law of motion 𝑔
+Pullback of 𝑉_adj≻, 𝑎𝑔𝑒_adj≻ along the law of motion 𝑔
+Value aggregation 𝐺
+Evaluation of 𝑉, 𝑎𝑔𝑒
+Pullback of 𝑉 along the law of motion 𝑔
+Expectation of the statement value under the distribution of ε
+Value aggregation 𝐺
+Evaluation of 𝑉≺, 𝑎𝑔𝑒≺
+Pullback of 𝑉_kp≻, 𝑎𝑔𝑒_kp≻ along the law of motion 𝑔
+Pullback of 𝑉_adj≻, 𝑎𝑔𝑒_adj≻ along the law of motion 𝑔
+Apply 𝐺 of the statement choice
+Argmax of the statement choice
+Evaluation of 𝑑
+
+==== builders backward sub-builder: wiring ====
+inputs: tenure:function:cntn:age_kp, tenure:function:cntn:age_adj, tenure:function:cntn:V_kp, tenure:function:cntn:V_adj
+outputs: tenure:function:arvl:V, tenure:function:arvl:age, policy:Evaluation:d:result
+cntn_to_dcsn:Pullback:keep [Pullback]
+    reads: tenure:function:cntn:V_kp, tenure:function:cntn:age_kp
+    writes: tenure:function:cntn:V_kp:g
+    refers to: tenure:g:dcsn_to_cntn
+cntn_to_dcsn:Pullback:adjust [Pullback]
+    reads: tenure:function:cntn:V_adj, tenure:function:cntn:age_adj
+    writes: tenure:function:cntn:V_adj:g
+    refers to: tenure:g:dcsn_to_cntn
+cntn_to_dcsn:Aggregation [Aggregation]
+    reads: tenure:function:cntn:V_kp:g, tenure:function:cntn:V_adj:g, tenure:function:cntn:age_kp
+    writes: cntn_to_dcsn:Aggregation:V:result, cntn_to_dcsn:Aggregation:age:result
+    refers to: tenure:G:cntn_to_dcsn, tenure:function:dcsn:d
+cntn_to_dcsn:Evaluation [Evaluation]
+    reads: cntn_to_dcsn:Aggregation:V:result, cntn_to_dcsn:Aggregation:age:result
+    writes: tenure:function:dcsn:V, tenure:function:dcsn:age
+dcsn_to_arvl:Pullback [Pullback]
+    reads: tenure:function:dcsn:V
+    writes: tenure:function:dcsn:V:g
+    refers to: tenure:g:arvl_to_dcsn
+dcsn_to_arvl.value:Expectation:1 [Expectation]
+    reads: tenure:function:dcsn:V:g
+    writes: dcsn_to_arvl.value:Expectation:1:result
+    refers to: tenure:distribution:ε
+dcsn_to_arvl:Aggregation [Aggregation]
+    reads: tenure:function:dcsn:age, dcsn_to_arvl.value:Expectation:1:result
+    writes: dcsn_to_arvl:Aggregation:V:result, dcsn_to_arvl:Aggregation:age:result
+    refers to: tenure:G:dcsn_to_arvl
+dcsn_to_arvl:Evaluation [Evaluation]
+    reads: dcsn_to_arvl:Aggregation:V:result, dcsn_to_arvl:Aggregation:age:result
+    writes: tenure:function:arvl:V, tenure:function:arvl:age
+policy:Pullback:keep [Pullback]
+    reads: tenure:function:cntn:V_kp, tenure:function:cntn:age_kp
+    writes: tenure:function:cntn:V_kp:g:policy
+    refers to: tenure:g:dcsn_to_cntn
+policy:Pullback:adjust [Pullback]
+    reads: tenure:function:cntn:V_adj, tenure:function:cntn:age_adj
+    writes: tenure:function:cntn:V_adj:g:policy
+    refers to: tenure:g:dcsn_to_cntn
+policy.choice:Aggregation [Aggregation]
+    reads: tenure:function:cntn:V_kp:g:policy, tenure:function:cntn:V_adj:g:policy
+    writes: policy.choice:Aggregation:result
+    refers to: tenure:G:policy
+policy.choice:Argmax [Argmax]
+    reads: policy.choice:Aggregation:result
+    writes: policy.choice:Argmax:d:result
+    refers to: policy.choice
+policy:Evaluation [Evaluation]
+    reads: policy.choice:Argmax:d:result
+    writes: policy:Evaluation:d:result
+
+==== builders backward primitive: listing ====
+the same as builders backward sub-builder: listing
+
+==== builders backward primitive: wiring ====
+the same as builders backward sub-builder: wiring
+
+==== builders backward combined: listing ====
+the same as builders backward sub-builder: listing
+
+==== builders backward combined: wiring ====
+the same as builders backward sub-builder: wiring
+
+==== builders backward factored: listing ====
+the same as builders backward sub-builder: listing
+
+==== builders backward factored: wiring ====
+the same as builders backward sub-builder: wiring
+
+==== builders forward: conditions ====
+the same as initial forward: conditions
+
+==== builders forward builder: listing ====
+arvl_to_dcsn
+  Extension of the measure by the distribution of ε
+  Push-forward through the law of motion 𝑔
+dcsn_to_cntn
+  Push-forward through 𝑔 at 𝑑
+
+==== builders forward builder: wiring ====
+inputs: tenure:measure:arvl
+outputs: tenure:measure:cntn:keep, tenure:measure:cntn:adjust
+arvl_to_dcsn
+    reads: tenure:measure:arvl
+    writes: tenure:measure:dcsn
+    inside:
+        inputs: tenure:measure:arvl
+        outputs: tenure:measure:dcsn
+        arvl_to_dcsn:DistributionExtension:ε [DistributionExtension]
+            reads: tenure:measure:arvl
+            writes: tenure:measure:arvl:with-distribution:ε
+            refers to: tenure:distribution:ε
+        arvl_to_dcsn:Pushforward [Pushforward]
+            reads: tenure:measure:arvl:with-distribution:ε
+            writes: tenure:measure:dcsn
+            refers to: tenure:g:arvl_to_dcsn
+dcsn_to_cntn
+    reads: tenure:measure:dcsn
+    writes: tenure:measure:cntn:keep, tenure:measure:cntn:adjust
+    inside:
+        inputs: tenure:measure:dcsn
+        outputs: tenure:measure:cntn:keep, tenure:measure:cntn:adjust
+        dcsn_to_cntn:Pushforward [Pushforward]
+            reads: tenure:measure:dcsn
+            writes: tenure:measure:cntn:keep, tenure:measure:cntn:adjust
+            refers to: tenure:g:dcsn_to_cntn, tenure:function:dcsn:d
+
+==== builders forward sub-builder: listing ====
+Extension of the measure by the distribution of ε
+Push-forward through the law of motion 𝑔
+Push-forward through 𝑔 at 𝑑
+
+==== builders forward sub-builder: wiring ====
+inputs: tenure:measure:arvl
+outputs: tenure:measure:cntn:keep, tenure:measure:cntn:adjust
+arvl_to_dcsn:DistributionExtension:ε [DistributionExtension]
+    reads: tenure:measure:arvl
+    writes: tenure:measure:arvl:with-distribution:ε
+    refers to: tenure:distribution:ε
+arvl_to_dcsn:Pushforward [Pushforward]
+    reads: tenure:measure:arvl:with-distribution:ε
+    writes: tenure:measure:dcsn
+    refers to: tenure:g:arvl_to_dcsn
+dcsn_to_cntn:Pushforward [Pushforward]
+    reads: tenure:measure:dcsn
+    writes: tenure:measure:cntn:keep, tenure:measure:cntn:adjust
+    refers to: tenure:g:dcsn_to_cntn, tenure:function:dcsn:d
+
+==== builders forward primitive: listing ====
+the same as builders forward sub-builder: listing
+
+==== builders forward primitive: wiring ====
+the same as builders forward sub-builder: wiring
+
+==== builders forward combined: listing ====
+the same as builders forward sub-builder: listing
+
+==== builders forward combined: wiring ====
+the same as builders forward sub-builder: wiring
+
+==== builders forward factored: listing ====
+the same as builders forward sub-builder: listing
+
+==== builders forward factored: wiring ====
+the same as builders forward sub-builder: wiring

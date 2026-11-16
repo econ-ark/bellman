@@ -188,14 +188,13 @@ _EXAMPLE = (
     "packages/bellman/tests/test_refusals.py::"
     "test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it"
 )
-# The two files that hold most of the tests the rows name.
+# The file of the refusal tests and the file of the tests of shocks in
+# expectations, whose tests the rows write after them.
 _REFUSALS = "packages/bellman/tests/test_refusals.py::"
-_BEHAVIOUR = "packages/bellman/tests/test_behaviour.py::"
-# The test that holds the corrections to the checks of a declared set.
-_CORRECTIONS = "packages/bellman/tests/test_amd_gram_005.py::test_item_5_the_corrections_hold"
-# The acceptance file of `min`, `max` and a definition by cases in a derived
-# parameter, whose tests the rows write after it.
-_BY_CASES = "packages/bellman/tests/test_amd_gram_006.py::"
+_SHOCK_EXPECTATIONS = "packages/bellman/tests/test_shock_expectations.py::"
+# The file of the tests of derived parameters, whose tests the rows write
+# after it.
+_DERIVED_PARAMETERS = "packages/bellman/tests/test_derived_parameters.py::"
 
 SEMANTIC_RULES = (
     # --- 2.1 Declarations ---
@@ -246,8 +245,7 @@ SEMANTIC_RULES = (
         ),
         refusals=("syntax", "readable-form"),
         test=(
-            f"{_REFUSALS}test_a_form_the_lowering_reads_no_term_from_is_refused_where_it_is_"
-            "written[two sets of one type that are no intervals]"
+            f"{_REFUSALS}test_a_form_the_parser_reads_but_the_language_does_not_is_refused_where_it_is_written[two sets of one type that are no intervals]"
         ),
     ),
     SemanticRule(
@@ -259,7 +257,10 @@ SEMANTIC_RULES = (
         ),
         checks=("bellman.syntax.lower:_several_sets_refusal",),
         refusals=("syntax",),
-        test=_CORRECTIONS,
+        test=(
+            "packages/bellman/tests/test_declared_sets.py::"
+            "test_sets_with_ratio_endpoints_are_refused_only_where_they_leave_no_number_quoting_them"
+        ),
     ),
     SemanticRule(
         section="2.1",
@@ -287,8 +288,8 @@ SEMANTIC_RULES = (
         implements=("bellman.stage.calibration_requirements:membership",),
         checks=("bellman.stage.calibration_requirements:calibration_requirements",),
         test=(
-            f"{_BEHAVIOUR}test_calibrate_refuses_a_parameter_without_a_value_and_a_value_"
-            "outside_its_declared_set"
+            "packages/bellman/tests/test_calibration_and_settings.py::"
+            "test_calibrate_refuses_a_value_outside_the_declared_set_of_its_parameter"
         ),
     ),
     SemanticRule(
@@ -350,8 +351,7 @@ SEMANTIC_RULES = (
         refusals=("name-in-scope",),
         test=(
             "packages/bellman/tests/test_category_codes.py::"
-            "test_item_3_kernels_read_through_the_denoted_map_keep_their_outcomes_under_a_"
-            "full_recoding"
+            "test_the_compiled_law_of_motion_and_value_aggregation_compute_with_the_integer_codes"
         ),
     ),
     SemanticRule(
@@ -365,8 +365,7 @@ SEMANTIC_RULES = (
         checks=("bellman.typing.declarations:Declarations.read_distribution",),
         refusals=("declared-once", "readable-form"),
         test=(
-            f"{_BEHAVIOUR}test_a_partial_expectation_uses_the_joint_normal_conditional_and_"
-            "the_outer_one_the_marginal"
+            f"{_SHOCK_EXPECTATIONS}test_an_expectation_over_both_shocks_of_a_joint_normal_law_integrates_the_joint_law"
         ),
     ),
     SemanticRule(
@@ -384,8 +383,7 @@ SEMANTIC_RULES = (
         checks=("bellman.distributions.edges:dependency_order",),
         refusals=("distribution-dependency",),
         test=(
-            f"{_BEHAVIOUR}test_separate_declarations_are_a_product_and_a_hierarchy_states_no_"
-            "independence_of_its_children"
+            f"{_SHOCK_EXPECTATIONS}test_a_factorization_states_the_independence_of_separate_laws_and_none_in_a_hierarchy"
         ),
     ),
     SemanticRule(
@@ -398,8 +396,8 @@ SEMANTIC_RULES = (
         checks=("bellman.typing.declarations:Declarations.check_identity_collisions",),
         refusals=("identity-collision",),
         test=(
-            f"{_REFUSALS}test_a_name_that_would_collide_with_the_spelling_of_an_identity_is_"
-            "refused_where_it_is_written"
+            "packages/bellman/tests/test_parsing.py::"
+            "test_a_name_that_would_collide_with_the_spelling_of_an_identity_is_refused_where_it_is_written"
         ),
     ),
     SemanticRule(
@@ -412,7 +410,10 @@ SEMANTIC_RULES = (
         implements=("bellman.typing.declarations:Declarations.field_read_in_set",),
         checks=("bellman.typing.declarations:Declarations.check_parameter_sets",),
         refusals=("readable-form",),
-        test=_CORRECTIONS,
+        test=(
+            "packages/bellman/tests/test_declared_sets_at_calibration.py::"
+            "test_the_set_of_a_parameter_is_refused_only_where_it_reads_a_field"
+        ),
     ),
     SemanticRule(
         section="2.1",
@@ -422,7 +423,10 @@ SEMANTIC_RULES = (
         ),
         implements=("bellman.stage.calibration_requirements:_bound_at",),
         checks=("bellman.stage.calibration_requirements:judged",),
-        test=_CORRECTIONS,
+        test=(
+            "packages/bellman/tests/test_declared_sets_at_calibration.py::"
+            "test_a_bound_refuses_the_calibration_only_at_values_where_it_divides_by_zero"
+        ),
     ),
     SemanticRule(
         section="2.1",
@@ -445,8 +449,8 @@ SEMANTIC_RULES = (
         ),
         refusals=("one-name-one-meaning", "readable-form", "derived-parameter"),
         test=(
-            "packages/bellman/tests/test_amd_gram_005.py::"
-            "test_item_3_a_derived_parameter_may_carry_a_declared_set"
+            "packages/bellman/tests/test_derived_parameters.py::"
+            "test_a_definition_on_a_declared_set_in_a_form_that_the_language_does_not_read_is_refused"
         ),
     ),
     SemanticRule(
@@ -468,15 +472,15 @@ SEMANTIC_RULES = (
             "bellman.typing.context:TypingContext._typed_function",
         ),
         refusals=("derived-parameter", "not-constructed", "syntax"),
-        test=f"{_BY_CASES}test_item_1_a_derived_parameter_calls_min_and_max_and_is_defined_by_cases",
+        test=f"{_DERIVED_PARAMETERS}test_a_definition_may_call_min_max_log_and_exp_and_no_other_function",
     ),
     SemanticRule(
         section="2.1",
         item=(
             "A derived parameter's definition may be written by cases, `if test then a else b`, "
-            "with or without a declared set; the conditional stands as the whole right side of "
-            "the definition or as a branch of another conditional, and inside a formula, in a "
-            "function's body, in a line of a block or as an endpoint of a set it is refused."
+            "with or without a declared set. A formula by cases may also stand on the right "
+            "side of an equation. The syntax refuses the form inside arithmetic, in a "
+            "function's body and at a declared set endpoint."
         ),
         implements=(
             "bellman.syntax.lower:ToAst.conditional",
@@ -490,8 +494,8 @@ SEMANTIC_RULES = (
         ),
         refusals=("syntax",),
         test=(
-            f"{_REFUSALS}test_a_conditional_stands_as_the_whole_right_side_of_a_definition_and_"
-            "nowhere_else"
+            "packages/bellman/tests/test_derived_parameters.py::"
+            "test_a_conditional_out_of_its_place_is_refused_with_the_advice_on_where_it_stands"
         ),
     ),
     SemanticRule(
@@ -504,7 +508,10 @@ SEMANTIC_RULES = (
         implements=("bellman.syntax.lower:ToAst.name",),
         checks=("bellman.syntax.lower:ToAst.name", "bellman.syntax.parse:syntax_refusal"),
         refusals=("syntax",),
-        test=f"{_REFUSALS}test_the_three_words_of_a_definition_by_cases_are_no_names",
+        test=(
+            "packages/bellman/tests/test_derived_parameters.py::"
+            "test_if_then_or_else_written_as_a_name_is_refused_at_the_word"
+        ),
     ),
     SemanticRule(
         section="2.1",
@@ -519,8 +526,8 @@ SEMANTIC_RULES = (
         ),
         refusals=("derived-parameter",),
         test=(
-            f"{_REFUSALS}test_a_derived_parameter_is_refused_at_its_definition"
-            "[a call of min where the stage defines min]"
+            "packages/bellman/tests/test_derived_parameters.py::"
+            "test_a_derived_parameter_is_refused_at_its_definition[a call of min where the stage defines min]"
         ),
     ),
     SemanticRule(
@@ -537,8 +544,8 @@ SEMANTIC_RULES = (
         ),
         refusals=("well-typed", "derived-parameter"),
         test=(
-            f"{_REFUSALS}test_a_label_in_the_test_of_a_definition_by_cases_is_refused_as_it_is_"
-            "in_arithmetic"
+            "packages/bellman/tests/test_derived_parameters.py::"
+            "test_a_label_in_the_test_of_a_definition_by_cases_is_refused_as_it_is_in_arithmetic"
         ),
     ),
     SemanticRule(
@@ -557,7 +564,10 @@ SEMANTIC_RULES = (
         ),
         checks=("bellman.fold.derived_parameters:derived_values",),
         refusals=("derived-parameter",),
-        test=f"{_BY_CASES}test_item_2_the_value_is_the_branch_the_test_chooses",
+        test=(
+            "packages/bellman/tests/test_derived_parameter_values.py::"
+            "test_calibration_computes_human_wealth_from_its_definition_and_keeps_no_value_of_it"
+        ),
     ),
     SemanticRule(
         section="2.1",
@@ -578,7 +588,7 @@ SEMANTIC_RULES = (
             "bellman.stage.calibration_requirements:calibration_requirements",
         ),
         refusals=("derived-parameter",),
-        test=f"{_BY_CASES}test_item_3_an_infinite_branch_needs_a_declared_set_that_holds_it",
+        test=f"{_DERIVED_PARAMETERS}test_an_infinite_branch_is_admitted_only_where_its_declared_set_can_hold_it",
     ),
     SemanticRule(
         section="2.1",
@@ -597,7 +607,10 @@ SEMANTIC_RULES = (
             "bellman.stage.calibration_requirements:membership",
             "bellman.stage.calibration_requirements:predicate_value",
         ),
-        test=f"{_BY_CASES}test_item_4_one_reading_of_an_infinite_value",
+        test=(
+            "packages/bellman/tests/test_derived_parameter_values.py::"
+            "test_an_endpoint_that_is_the_bare_name_of_a_parameter_reads_as_its_value_finite_or_infinite"
+        ),
     ),
     SemanticRule(
         section="2.1",
@@ -610,7 +623,10 @@ SEMANTIC_RULES = (
         ),
         implements=("bellman.stage.calibration_requirements:_bound_at",),
         checks=("bellman.stage.calibration_requirements:judged",),
-        test=f"{_BY_CASES}test_item_4_one_reading_of_an_infinite_value",
+        test=(
+            "packages/bellman/tests/test_derived_parameter_values.py::"
+            "test_a_bound_that_calls_min_is_decided_at_calibration"
+        ),
     ),
     SemanticRule(
         section="2.1",
@@ -618,7 +634,10 @@ SEMANTIC_RULES = (
         implements=("bellman.typing.sets:literal_faults",),
         checks=("bellman.typing.context:_refuse_literal_faults",),
         refusals=("readable-form",),
-        test=_CORRECTIONS,
+        test=(
+            "packages/bellman/tests/test_declared_sets.py::"
+            "test_an_interval_of_numbers_that_holds_no_number_is_refused_and_one_of_one_number_is_read"
+        ),
     ),
     SemanticRule(
         section="2.1",
@@ -630,7 +649,10 @@ SEMANTIC_RULES = (
         implements=("bellman.typing.sets:literal_faults", "bellman.typing.sets:within"),
         checks=("bellman.typing.context:_refuse_literal_faults",),
         refusals=("readable-form",),
-        test=_CORRECTIONS,
+        test=(
+            "packages/bellman/tests/test_declared_sets.py::"
+            "test_a_difference_is_refused_as_empty_only_where_its_left_side_lies_within_its_right"
+        ),
     ),
     SemanticRule(
         section="2.1",
@@ -764,7 +786,7 @@ SEMANTIC_RULES = (
         ),
         refusals=("syntax", "declared-once"),
         test=(
-            "packages/bellman/tests/sym/test_stage_source_spans.py::"
+            "packages/bellman/tests/test_terms.py::"
             "test_addresses_follow_authored_identifiers_and_item_positions"
         ),
     ),
@@ -809,7 +831,7 @@ SEMANTIC_RULES = (
         ),
         checks=("bellman.typing.declarations:Declarations.shock_perch",),
         refusals=("field-perch",),
-        test=f"{_BEHAVIOUR}test_a_kernel_line_names_the_edge_that_draws_the_shocks",
+        test=f"{_SHOCK_EXPECTATIONS}test_the_printed_kernel_of_an_expectation_names_the_edge_that_draws_its_shocks",
     ),
     SemanticRule(
         section="2.2",
@@ -821,8 +843,8 @@ SEMANTIC_RULES = (
         checks=("bellman.typing.declarations:Declarations.control_perch",),
         refusals=("field-perch",),
         test=(
-            f"{_REFUSALS}test_a_control_listed_at_a_perch_that_is_neither_the_decision_perch_"
-            "nor_its_side_s_is_refused"
+            "packages/bellman/tests/test_parsing.py::"
+            "test_a_control_listed_at_the_arrival_perch_on_the_continuation_side_is_refused"
         ),
     ),
     SemanticRule(
@@ -893,6 +915,8 @@ SEMANTIC_RULES = (
             "@stage: t\n"
             "[id=dcsn_to_cntn, (m : ℝ₊, c : ℝ₊₊ @ !ctrl) : !dcsn -> (a : ℝ) : !cntn] { a = m - "
             "c }\n"
+            "[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] "
+            "{ V = c + V[>] }\n"
             "[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊ @ !ctrl) : !dcsn] {\n"
             "c = m/2 :: [id=half, !doc]\n"
             "c = argmax_{cp}(cp + V[>])\n"
@@ -917,8 +941,7 @@ SEMANTIC_RULES = (
         ),
         refusals=("syntax", "declared-once", "readable-form"),
         test=(
-            f"{_REFUSALS}test_a_form_the_lowering_reads_no_term_from_is_refused_where_it_is_"
-            "written[two lines under one id]"
+            f"{_REFUSALS}test_a_form_the_parser_reads_but_the_language_does_not_is_refused_where_it_is_written[two lines under one id]"
         ),
     ),
     SemanticRule(
@@ -933,7 +956,10 @@ SEMANTIC_RULES = (
             "bellman.stage.carriers:_maximisations",
             "bellman.fold.stage_fold:_selected_controls",
         ),
-        test=f"{_BEHAVIOUR}test_the_doc_line_forms_no_piece_and_is_held_on_the_builder",
+        test=(
+            "packages/bellman/tests/test_policy.py::"
+            "test_the_doc_line_of_cons_forms_no_operation_of_its_policy_builder"
+        ),
     ),
     SemanticRule(
         section="2.3",
@@ -957,8 +983,7 @@ SEMANTIC_RULES = (
         refusals=("category-codes",),
         test=(
             "packages/bellman/tests/test_category_codes.py::"
-            "test_item_2_category_codes_refuses_each_invalid_form_and_unmarked_sets_keep_"
-            "their_meaning"
+            "test_the_marker_of_categories_is_refused_on_a_field_declaration_a_function_a_line_or_a_header"
         ),
     ),
     SemanticRule(
@@ -971,8 +996,8 @@ SEMANTIC_RULES = (
         checks=("bellman.typing.declarations:Declarations.clause_reads",),
         refusals=("readable-form",),
         test=(
-            f"{_REFUSALS}test_a_malformed_declaration_of_a_multiplier_or_clause_of_a_line_is_"
-            "refused_under_its_rule"
+            "packages/bellman/tests/test_constraints.py::"
+            "test_a_malformed_multiplier_declaration_or_clause_is_refused_under_its_rule"
         ),
     ),
     SemanticRule(
@@ -985,8 +1010,8 @@ SEMANTIC_RULES = (
         checks=("bellman.typing.declarations:Declarations.read_multiplier",),
         refusals=("multiplier-declaration", "readable-form"),
         test=(
-            f"{_REFUSALS}test_a_malformed_declaration_of_a_multiplier_or_clause_of_a_line_is_"
-            "refused_under_its_rule"
+            "packages/bellman/tests/test_constraints.py::"
+            "test_a_malformed_multiplier_declaration_or_clause_is_refused_under_its_rule"
         ),
     ),
     SemanticRule(
@@ -1037,7 +1062,10 @@ SEMANTIC_RULES = (
             "bellman.stage.construction:_field_sorts",
             "bellman.typing.sets:meet",
         ),
-        test=f"{_BEHAVIOUR}test_fields_carry_the_meet_of_the_sets_a_field_is_declared_with",
+        test=(
+            "packages/bellman/tests/test_declared_sets.py::"
+            "test_a_field_carries_the_intersection_of_the_sets_of_its_listings"
+        ),
     ),
     SemanticRule(
         section="2.4",
@@ -1190,7 +1218,10 @@ SEMANTIC_RULES = (
             "bellman.typing.context:TypingContext._typed_line",
         ),
         refusals=("not-constructed", "well-typed"),
-        test=f"{_BEHAVIOUR}test_joint_control_spellings_preserve_the_objective_and_order",
+        test=(
+            "packages/bellman/tests/test_joint_choices.py::"
+            "test_a_subscript_in_another_order_than_the_left_side_is_refused"
+        ),
     ),
     SemanticRule(
         section="2.5",
@@ -1205,8 +1236,7 @@ SEMANTIC_RULES = (
         checks=("bellman.typing.context:TypingContext._subscript",),
         refusals=("declared-once",),
         test=(
-            f"{_REFUSALS}test_a_fault_the_typing_walk_finds_is_refused_where_it_is_found"
-            "[a binder named twice]"
+            f"{_REFUSALS}test_a_fault_found_when_a_line_is_typed_is_refused_at_the_line_under_its_rule[a binder named twice]"
         ),
     ),
     SemanticRule(
@@ -1234,9 +1264,8 @@ SEMANTIC_RULES = (
             "bellman.typing.typed_expressions:renamed_bound",
         ),
         test=(
-            "packages/bellman/tests/test_continuous_distributions.py::"
-            "test_item_5_existing_families_mixtures_factorization_and_unknown_providers_keep_"
-            "their_meaning"
+            "packages/bellman/tests/test_shock_distributions.py::"
+            "test_a_bound_variable_of_a_definition_is_primed_where_an_argument_reads_its_name"
         ),
     ),
     # --- R1 Blocks and their headers ---
@@ -1254,8 +1283,8 @@ SEMANTIC_RULES = (
             "bellman.stage.builder_pairs:builder_pairs",
         ),
         test=(
-            "packages/bellman/tests/cat/test_builder_pairs.py::"
-            "test_a_builder_is_read_by_the_perches_it_joins_whatever_its_block_id"
+            "packages/bellman/tests/test_builders.py::"
+            "test_a_builder_is_read_by_the_pair_that_its_header_joins_whatever_its_block_id"
         ),
     ),
     SemanticRule(
@@ -1367,7 +1396,10 @@ SEMANTIC_RULES = (
         implements=("bellman.fold.backward:perch_domain",),
         checks=("bellman.typing.declarations:Declarations.check_multipliers_unlisted",),
         refusals=("multiplier-declaration",),
-        test=f"{_BEHAVIOUR}test_a_multiplier_is_a_coordinate_of_its_block_alone_and_no_wire",
+        test=(
+            "packages/bellman/tests/test_constraints.py::"
+            "test_a_declared_multiplier_is_no_wire_of_the_policy_builder"
+        ),
     ),
     SemanticRule(
         section="R1",
@@ -1403,7 +1435,10 @@ SEMANTIC_RULES = (
             "bellman.stage.construction:_refuse_circular_outputs",
         ),
         refusals=("name-in-scope", "output-defined"),
-        test=f"{_BEHAVIOUR}test_sequential_transition_outputs_and_target_states_compile",
+        test=(
+            "packages/bellman/tests/test_kernels.py::"
+            "test_a_law_whose_second_output_reads_the_first_compiles_to_both_outputs_in_order"
+        ),
     ),
     SemanticRule(
         section="R2",
@@ -1418,8 +1453,7 @@ SEMANTIC_RULES = (
         checks=("bellman.typing.declarations:Declarations.check_forward_reading",),
         refusals=("shock-observed",),
         test=(
-            f"{_BEHAVIOUR}test_policy_expectations_in_aliases_keep_their_integrand_and_are_"
-            "shared_by_reference"
+            f"{_SHOCK_EXPECTATIONS}test_an_expectation_in_an_alias_is_a_piece_of_its_own_reading_the_aggregation_of_its_integrand"
         ),
     ),
     SemanticRule(
@@ -1433,8 +1467,9 @@ SEMANTIC_RULES = (
             "bellman.typing.ranges:law_solved_for",
         ),
         test=(
-            f"{_REFUSALS}test_a_grid_line_is_compared_with_the_law_of_motion_solved_for_its_"
-            "decision_state"
+            "packages/bellman/tests/test_policy.py::"
+            "test_a_grid_line_is_accepted_only_where_the_solved_law_of_motion_gives_it"
+            "[refused-an-identity-of-declared-functions]"
         ),
     ),
     # --- R3 Product outputs ---
@@ -1451,7 +1486,10 @@ SEMANTIC_RULES = (
         ),
         checks=("bellman.stage.construction:_check_block_outputs",),
         refusals=("output-defined",),
-        test=f"{_BEHAVIOUR}test_sequential_transition_outputs_and_target_states_compile",
+        test=(
+            "packages/bellman/tests/test_kernels.py::"
+            "test_a_law_whose_second_output_reads_the_first_compiles_to_both_outputs_in_order"
+        ),
     ),
     SemanticRule(
         section="R3",
@@ -1462,7 +1500,10 @@ SEMANTIC_RULES = (
         implements=("bellman.typing.line_unknowns:outputs_and_unknowns",),
         checks=("bellman.typing.line_unknowns:outputs_and_unknowns",),
         refusals=("not-constructed", "declared-once"),
-        test=f"{_BEHAVIOUR}test_joint_control_spellings_preserve_the_objective_and_order",
+        test=(
+            "packages/bellman/tests/test_joint_choices.py::"
+            "test_a_joint_choice_writes_its_outputs_in_the_order_of_its_left_side"
+        ),
     ),
     SemanticRule(
         section="R3",
@@ -1477,9 +1518,8 @@ SEMANTIC_RULES = (
         checks=("bellman.typing.line_unknowns:group_coordinates",),
         refusals=("readable-form",),
         test=(
-            "packages/bellman/tests/test_finite_indexed_data.py::"
-            "test_item_5_labels_and_positions_keep_their_meaning_and_a_fractional_position_"
-            "is_refused"
+            "packages/bellman/tests/test_kernels_on_index_sets.py::"
+            "test_a_position_selects_a_factor_of_a_product_and_a_fractional_position_is_refused"
         ),
     ),
     SemanticRule(
@@ -1587,11 +1627,9 @@ SEMANTIC_RULES = (
         checked=False,
         also_concerns=("R10",),
         package_today=(
-            "The package checks the right side and the clause alone. A term on the left side that "
-            "combines a field of a later perch, or its derivative, with other quantities, as "
-            "`1*D_{a}V[>]` does in the text, is read without the expectation, forms no Pullback, "
-            "and stands in the rule uncomposed with the law of motion. With the sides exchanged, "
-            "the line of the text is refused under `shock-observed`."
+            "Both sides are checked under `shock-observed`. The left side in the example binds "
+            "`η` with an expectation. The policy relation's card prints the derivative under "
+            "that expectation and leaves its evaluation at the law of motion implicit."
         ),
         example=(
             "@stage: t\n"
@@ -1600,7 +1638,8 @@ SEMANTIC_RULES = (
             "𝑑𝑢(c : ℝ₊₊) := c^(-2)\n"
             "[id=dcsn_to_cntn, (m : ℝ₊, c : !ctrl @ ℝ₊₊, η) : !dcsn -> (a : ℝ₊) : !cntn] { a = "
             "(m - c)*η }\n"
-            "[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] { 1*D_{a}V[>] "
+            "[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] "
+            "{ E_{η}(1*D_{a}V[>]) "
             "= 𝑑𝑢(c) }\n"
         ),
     ),
@@ -1639,8 +1678,8 @@ SEMANTIC_RULES = (
             "bellman.stage.carriers:coordinate_domain",
         ),
         test=(
-            f"{_BEHAVIOUR}test_a_backward_value_builder_reads_a_decision_state_as_a_"
-            "coordinate_of_its_kernel"
+            "packages/bellman/tests/test_kernels.py::"
+            "test_a_backward_aggregation_reads_a_state_of_its_output_perch_as_an_argument_of_its_kernel"
         ),
     ),
     SemanticRule(
@@ -1656,7 +1695,10 @@ SEMANTIC_RULES = (
         ),
         checks=("bellman.typing.declarations:Declarations.block_between",),
         refusals=("forward-composite",),
-        test=f"{_BEHAVIOUR}test_policy_objective_retains_transition_integrand_and_control",
+        test=(
+            "packages/bellman/tests/test_policy.py::"
+            "test_a_policy_kernel_of_a_portfolio_choice_reads_the_share_and_gives_its_value_at_a_point"
+        ),
     ),
     SemanticRule(
         section="R5",
@@ -1685,8 +1727,7 @@ SEMANTIC_RULES = (
             "bellman.fold.backward:pullback_wire",
         ),
         test=(
-            f"{_BEHAVIOUR}test_a_shock_stays_active_through_a_sibling_input_a_constant_is_"
-            "extended_and_every_path_is_integrated"
+            f"{_SHOCK_EXPECTATIONS}test_a_shock_stays_an_argument_through_a_sibling_input_until_an_expectation_integrates_it"
         ),
     ),
     SemanticRule(
@@ -1781,7 +1822,10 @@ SEMANTIC_RULES = (
             "bellman.fold.conditions:domain_conditions",
             "bellman.fold.conditions:_call_conditions",
         ),
-        test=f"{_BEHAVIOUR}test_named_function_conditions_are_recorded_once_on_the_function",
+        test=(
+            "packages/bellman/tests/test_field_equations.py::"
+            "test_the_conditions_of_a_function_body_stand_once_on_the_definition_that_carries_the_body"
+        ),
     ),
     SemanticRule(
         section="R6",
@@ -1806,7 +1850,10 @@ SEMANTIC_RULES = (
             "bellman.stage.stage_answers:_symbolic_obligations",
         ),
         checks=("bellman.stage.binding_verbs:calibrated_obligations",),
-        test=f"{_BEHAVIOUR}test_calibration_reports_evidence_and_preserves_pending_conditions",
+        test=(
+            "packages/bellman/tests/test_calibration_judgment_and_conditions.py::"
+            "test_calibration_establishes_the_condition_of_the_utility_with_the_value_as_evidence"
+        ),
     ),
     SemanticRule(
         section="R6",
@@ -1844,9 +1891,8 @@ SEMANTIC_RULES = (
             "bellman.fold.value_bundles:primitive_grain_rows",
         ),
         test=(
-            "packages/bellman/tests/cat/test_policy_kinds.py::"
-            "test_item_1_no_output_of_a_core_application_names_a_retired_kind_and_each_"
-            "operative_argmax_line_forms_an_argmax_row"
+            "packages/bellman/tests/test_policy.py::"
+            "test_the_argmax_operations_of_a_stage_are_its_argmax_lines_not_marked_doc"
         ),
     ),
     SemanticRule(
@@ -1885,8 +1931,7 @@ SEMANTIC_RULES = (
         ),
         refusals=("definition-order", "well-typed"),
         test=(
-            f"{_REFUSALS}test_a_fault_the_typing_walk_finds_is_refused_where_it_is_found"
-            "[Inv of a number]"
+            f"{_REFUSALS}test_a_fault_found_when_a_line_is_typed_is_refused_at_the_line_under_its_rule[Inv of a number]"
         ),
     ),
     SemanticRule(
@@ -1908,8 +1953,8 @@ SEMANTIC_RULES = (
         ),
         refusals=("conditional-not-declared", "distribution-edge"),
         test=(
-            f"{_REFUSALS}test_the_reversed_order_of_the_expectations_is_refused_naming_the_"
-            "undeclared_conditional"
+            "packages/bellman/tests/test_shock_expectations.py::"
+            "test_the_reversed_order_of_the_expectations_is_refused_naming_the_undeclared_conditional"
         ),
     ),
     SemanticRule(
@@ -1931,8 +1976,7 @@ SEMANTIC_RULES = (
         checks=("bellman.fold.backward:check_output_shocks",),
         refusals=("shock-observed",),
         test=(
-            f"{_BEHAVIOUR}test_a_shock_stays_active_through_a_sibling_input_a_constant_is_"
-            "extended_and_every_path_is_integrated"
+            f"{_SHOCK_EXPECTATIONS}test_a_term_whose_path_integrates_some_shocks_may_read_a_constant_but_not_a_shock"
         ),
     ),
     SemanticRule(
@@ -1951,9 +1995,8 @@ SEMANTIC_RULES = (
         checks=("bellman.fold.policy:_chosen",),
         refusals=("not-constructed",),
         test=(
-            "packages/bellman/tests/cat/test_policy_kinds.py::"
-            "test_item_2_cons_argmax_prints_its_property_under_the_argmax_row_as_no_row_no_"
-            "address_and_no_method_place"
+            "packages/bellman/tests/test_policy.py::"
+            "test_the_policy_builder_of_a_maximization_with_a_property_lists_four_operations"
         ),
     ),
     SemanticRule(
@@ -1968,8 +2011,8 @@ SEMANTIC_RULES = (
             "bellman.stage.carriers:_feasible_domain",
         ),
         test=(
-            "packages/bellman/tests/test_simple_set_expressions.py::"
-            "test_item_2_joint_feasibility_retains_all_coordinates_and_conditions"
+            "packages/bellman/tests/test_constraints.py::"
+            "test_the_maximization_of_a_joint_choice_binds_the_correspondence_at_its_state"
         ),
     ),
     SemanticRule(
@@ -1985,8 +2028,8 @@ SEMANTIC_RULES = (
         checks=("bellman.fold.policy:_chosen",),
         refusals=("not-constructed",),
         test=(
-            f"{_BEHAVIOUR}test_a_law_with_several_outputs_names_them_and_a_joint_solve_is_"
-            "headed_by_its_unknowns"
+            "packages/bellman/tests/test_field_equations.py::"
+            "test_a_joint_solve_is_one_aggregation_headed_by_its_unknowns_after_its_residual_lines"
         ),
     ),
     SemanticRule(
@@ -2003,8 +2046,8 @@ SEMANTIC_RULES = (
         checks=("bellman.stage.representation_checks:check_sources",),
         refusals=("representation-source",),
         test=(
-            f"{_BEHAVIOUR}test_a_node_reads_an_authored_table_as_its_data_only_where_the_"
-            "table_is_its_function"
+            "packages/bellman/tests/test_representations.py::"
+            "test_only_the_places_of_a_node_that_a_table_alone_defines_read_the_table_as_their_data"
         ),
     ),
     SemanticRule(
@@ -2019,7 +2062,10 @@ SEMANTIC_RULES = (
         ),
         checks=("bellman.stage.places:_check_admission",),
         refusals=("method-admission",),
-        test=f"{_BEHAVIOUR}test_method_choices_leave_graphs_types_and_equations_unchanged",
+        test=(
+            "packages/bellman/tests/test_two_levels_and_several_methods_files.py::"
+            "test_a_method_choice_leaves_the_graphs_of_the_stage_unchanged"
+        ),
     ),
     SemanticRule(
         section="R7",
@@ -2086,6 +2132,8 @@ SEMANTIC_RULES = (
             "ρ : ℝ₊₊\n"
             "[id=dcsn_to_cntn, (m : ℝ₊, c : !ctrl @ ℝ₊₊) : !dcsn -> (a : ℝ₊) : !cntn] { a = m - "
             "c }\n"
+            "[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] "
+            "{ V = c + V[>] }\n"
             "[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] { c = "
             "argmax_{cp : ρ}(cp + V[>]) }\n"
         ),
@@ -2111,20 +2159,9 @@ SEMANTIC_RULES = (
             "The policy card prints the set that a binder names in the statement of the "
             "maximization, also where the binder names a named set."
         ),
-        checked=False,
-        see_also=(("Bellman-Sym/10-constraints.md", "1"),),
-        package_today=(
-            "For a binder over a named set the card prints `𝑐(m) ∈ Xm` beside the type of the "
-            "policy, and `UNRESOLVED[Xm; free mathematical reference]` in place of the set in the "
-            "statement."
-        ),
-        example=(
-            "@stage: t\n"
-            "Xm := ℝ₊₊\n"
-            "[id=dcsn_to_cntn, (m : ℝ₊, c : !ctrl @ ℝ₊₊) : !dcsn -> (a : ℝ₊) : !cntn] { a = m - "
-            "c }\n"
-            "[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] { c = "
-            "argmax_{cp : Xm}(cp + V[>]) }\n"
+        implements=(
+            "bellman.stage.defining_expressions:_resolved_declared_operator",
+            "bellman.stage.defining_expressions:_resolved_symbol",
         ),
     ),
     SemanticRule(
@@ -2187,8 +2224,8 @@ SEMANTIC_RULES = (
             "bellman.stage.denotations:_policy_denoted",
         ),
         test=(
-            f"{_BEHAVIOUR}test_the_law_at_the_policy_is_written_out_and_the_builder_is_at_"
-            "the_policy"
+            "packages/bellman/tests/test_policy.py::"
+            "test_the_decision_builder_is_at_the_policy"
         ),
     ),
     SemanticRule(
@@ -2237,9 +2274,8 @@ SEMANTIC_RULES = (
             "bellman.stage.stage_answers:_symbolic_obligations",
         ),
         test=(
-            "packages/bellman/tests/test_amd_mb_001.py::"
-            "test_item_1a_the_oracle_stage_file_elaborates_with_values_alone_and_the_policy_"
-            "reads_the_value"
+            "packages/bellman/tests/test_backward_blocks.py::"
+            "test_the_evaluation_of_a_builder_records_its_derivative_line_as_a_stated_derivative"
         ),
     ),
     SemanticRule(
@@ -2257,7 +2293,8 @@ SEMANTIC_RULES = (
         checks=("bellman.stage.levels:_refuse_formula_only",),
         refusals=("explicit-solution",),
         test=(
-            f"{_BEHAVIOUR}test_a_quadrature_adds_no_condition_and_a_solution_method_adds_its_own"
+            "packages/bellman/tests/test_two_levels_and_several_methods_files.py::"
+            "test_egm_on_the_policy_builder_adds_the_condition_egm_eligibility_and_no_other"
         ),
     ),
     SemanticRule(
@@ -2332,6 +2369,8 @@ SEMANTIC_RULES = (
             "@stage: t\n"
             "[id=dcsn_to_cntn, (m : ℝ₊, c : !ctrl @ ℝ₊₊) : !dcsn -> (a : ℝ₊) : !cntn] { a = m - "
             "c }\n"
+            "[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] "
+            "{ V = c + V[>] }\n"
             "[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] { c = "
             "argmax_{c}(c + V[>]) }\n"
             "@methods: t\n"
@@ -2353,7 +2392,10 @@ SEMANTIC_RULES = (
             "bellman.stage.denotations:_policy_denoted",
             "bellman.graphs.builders_graphs:_forward_inputs_outputs",
         ),
-        test=f"{_BEHAVIOUR}test_forward_measure_expressions_reference_the_supplied_policy",
+        test=(
+            "packages/bellman/tests/test_policy.py::"
+            "test_the_forward_push_forward_reads_the_policy_and_the_law_of_motion_by_identity"
+        ),
     ),
     SemanticRule(
         section="R9",
@@ -2368,7 +2410,7 @@ SEMANTIC_RULES = (
             "bellman.fold.block_lines:shock_edges",
             "bellman.fold.stage_fold:block_rows_of",
         ),
-        test=f"{_BEHAVIOUR}test_a_kernel_line_names_the_edge_that_draws_the_shocks",
+        test=f"{_SHOCK_EXPECTATIONS}test_the_printed_kernel_of_an_expectation_names_the_edge_that_draws_its_shocks",
     ),
     SemanticRule(
         section="R9",
@@ -2394,8 +2436,8 @@ SEMANTIC_RULES = (
         checks=("bellman.typing.declarations:Declarations.check_forward_reading",),
         refusals=("forward-composite", "shock-observed"),
         test=(
-            f"{_BEHAVIOUR}test_decision_and_conditional_kernels_reference_the_supplied_"
-            "policy_function"
+            "packages/bellman/tests/test_kernels.py::"
+            "test_the_forward_extension_by_a_law_of_the_control_reads_the_control_through_the_policy"
         ),
     ),
     SemanticRule(
@@ -2444,7 +2486,10 @@ SEMANTIC_RULES = (
         ),
         checks=("bellman.fold.policy:_check_system",),
         refusals=("not-constructed",),
-        test=f"{_REFUSALS}test_a_system_with_fewer_statements_than_unknowns_is_refused",
+        test=(
+            "packages/bellman/tests/test_policy.py::"
+            "test_a_system_with_fewer_statements_than_unknowns_is_refused"
+        ),
     ),
     SemanticRule(
         section="R10",
@@ -2457,7 +2502,10 @@ SEMANTIC_RULES = (
             "bellman.fold.wire_terms:names_no_field",
             "bellman.fold.backward:retained_relations",
         ),
-        test=f"{_BEHAVIOUR}test_relations_types_and_definitions_keep_non_snapshot_semantics",
+        test=(
+            "packages/bellman/tests/test_graphs_and_grains.py::"
+            "test_a_relation_that_no_operator_realizes_is_retained_with_an_obligation_on_its_line"
+        ),
     ),
     SemanticRule(
         section="R10",
@@ -2473,9 +2521,8 @@ SEMANTIC_RULES = (
             "bellman.fold.policy:_value_wires",
         ),
         test=(
-            "packages/bellman/tests/cat/test_candidate_clause.py::"
-            "test_item_1_the_policy_card_of_cons_prints_as_drawn_and_the_identification_"
-            "answers_the_relation_over_the_admitted_pairs"
+            "packages/bellman/tests/test_constraints.py::"
+            "test_a_first_order_condition_with_its_clause_forms_one_aggregation_read_at_the_point"
         ),
     ),
     SemanticRule(
@@ -2491,7 +2538,10 @@ SEMANTIC_RULES = (
             "bellman.stage.term_operations:residual",
             "bellman.typing.ranges:clause_regions",
         ),
-        test=f"{_BEHAVIOUR}test_kuhn_tucker_states_the_sign_table_of_each_bound",
+        test=(
+            "packages/bellman/tests/test_constraints.py::"
+            "test_kuhn_tucker_pairs_the_residual_with_the_slack_of_each_kind_of_bound"
+        ),
     ),
     SemanticRule(
         section="R10",
@@ -2507,8 +2557,8 @@ SEMANTIC_RULES = (
             "bellman.stage.defining_expressions:_grid_rules",
         ),
         test=(
-            f"{_BEHAVIOUR}test_inverse_euler_lines_form_one_policy_kernel_on_the_saving_grid_"
-            "and_the_identification_remains_a_relation"
+            "packages/bellman/tests/test_kernels.py::"
+            "test_compile_kernel_refuses_the_identification_of_the_policy_block_as_a_relation"
         ),
     ),
     SemanticRule(
@@ -2549,24 +2599,10 @@ SEMANTIC_RULES = (
             "at the continuation coordinate on a candidate line, and at the image of the law of "
             "motion on a line of an earlier perch."
         ),
-        checked=False,
-        also_concerns=("1.5", "4.2", "4.4", "4.5"),
-        package_today=(
-            "The rule that the package records for such a line applies the derivative to a map "
-            "whose body does not read the variable that the map binds. On a line of an earlier "
-            "perch the body is the value composed with the law of motion, and the derivative is "
-            "read at a point that the rule leaves free: the rule of the text applies the "
-            "derivative to the map `(a, unit) ↦ 𝑉≻(𝑔≻(m, 𝑐(m)))` at the point `(a≻, ())`. On a "
-            "candidate line the body reads the line's own coordinate of the same name, so that "
-            "the rule prints as the intended derivative."
-        ),
-        example=(
-            "@stage: t\n"
-            "𝑑𝑢(c : ℝ₊₊) := c^(-2)\n"
-            "[id=dcsn_to_cntn, (m : ℝ₊, c : !ctrl @ ℝ₊₊) : !dcsn -> (a : ℝ₊) : !cntn] { a = m - "
-            "c }\n"
-            "[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] { 𝑑𝑢(c) = "
-            "D_{a}V[>] ⟂ m - c >= 0 }\n"
+        implements=("bellman.stage.defining_expressions:_resolved_derivative",),
+        test=(
+            "packages/bellman/tests/test_life_cycle_derivative_cards.py::"
+            "test_derivative_rules_apply_the_partial_at_the_forward_coordinates"
         ),
     ),
     SemanticRule(
@@ -2641,8 +2677,8 @@ SEMANTIC_RULES = (
         checks=("bellman.typing.line_unknowns:_references",),
         refusals=("not-constructed",),
         test=(
-            f"{_BEHAVIOUR}test_compiled_kernels_with_analytic_expectation_inputs_reproduce_"
-            "ce_amb_and_the_ces_value"
+            "packages/bellman/tests/test_kernels.py::"
+            "test_the_kernels_of_the_ambiguity_certainty_equivalent_give_its_closed_form"
         ),
     ),
     # --- R12 Envelopes ---
@@ -2662,7 +2698,10 @@ SEMANTIC_RULES = (
             "bellman.typing.declarations:Declarations.check_branches",
         ),
         refusals=("branch-form", "branch-labels", "not-constructed"),
-        test=f"{_REFUSALS}test_a_malformed_branching_block_is_refused_under_its_rule",
+        test=(
+            "packages/bellman/tests/test_branching.py::"
+            "test_a_malformed_branching_block_is_refused_under_its_rule"
+        ),
     ),
     SemanticRule(
         section="R12",
@@ -2818,6 +2857,11 @@ RULES_STATED_ELSEWHERE = MappingProxyType(
         "stage-name": "Bellman-Sym/reference/symbols-conventions.md",
         "derived-parameter": "Bellman-Sym/appendices/12-equation-parsing-rules.md",
         "distribution-domain": "Bellman-Sym/reference/laws.md",
+        "constant-dependence": "Bellman-Sym/01-stage.md",
+        "continuation-input": "Bellman-Sym/API/stage/01-the-stage.md",
+        "law-requirement": "Bellman-Sym/API/stage/04-builder.md",
+        "policy-feasibility": "Bellman-Sym/10-constraints.md",
+        "policy-objective": "Bellman-Sym/03-field-equations.md",
         "method-admission": _METHODIZATION,
         "method-setting-declared": _METHODIZATION,
         "no-method-for-derivative": _METHODIZATION,

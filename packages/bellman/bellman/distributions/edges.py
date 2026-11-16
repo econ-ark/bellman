@@ -21,12 +21,14 @@ beside the definitions table.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import NamedTuple
 
 from bellman.distributions.families import declaration_text, names_text
 from bellman.native.identity import Identity, piece_identity
+from bellman.syntax import terms as T
 from bellman.syntax.source import to_source
+from bellman.syntax.walk import nodes
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -35,7 +37,9 @@ class DistributionDeclaration:
     identity of its `distribution` record, the address of the line, the shocks
     of its subject in tuple order, the family term, the shocks among its
     arguments (its parents), and all its state, control and shock arguments,
-    each in order of first occurrence."""
+    each in order of first occurrence. A derived numerical declaration also
+    holds any supplied values its term still reads, as (name, value, declared
+    set) triples in binding order."""
 
     identity: Identity
     address: str
@@ -43,6 +47,9 @@ class DistributionDeclaration:
     term: object
     parents: tuple
     arguments: tuple
+    formals: tuple = ()
+    actuals: tuple = ()
+    bindings: tuple = field(default=(), hash=False)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -115,9 +122,77 @@ def distribution_declarations(definitions, is_shock) -> tuple:
                 term=law.law,
                 parents=tuple(name for name in arguments if is_shock(name)),
                 arguments=arguments,
+                formals=law.arguments if isinstance(law, T.ParameterizedLaw) else (),
             )
         )
     return tuple(found)
+
+
+def shock_application(term, formals):
+    """The name and arguments of one use of a parameterized shock."""
+    if isinstance(term, T.Call) and term.fun in formals:
+        return term.fun, term.args
+    if (
+        isinstance(term, T.Select)
+        and isinstance(term.family, T.Sym)
+        and isinstance(term.family.symbol, T.Constant)
+        and term.family.symbol.name in formals
+    ):
+        if isinstance(term.sel, T.Key):
+            return term.family.symbol.name, (T.Sym(T.Constant(term.sel.at)),)
+        if isinstance(term.sel, T.Term):
+            return term.family.symbol.name, (term.sel.at,)
+    return None
+
+
+def law_arguments(formals, edges, lines, resolve_constant, refuse):
+    """The ordered external constant identities supplied to each shock's law."""
+    if not formals:
+        return {}
+    actuals = {}
+    for block, address, statement in lines:
+        for term in nodes(statement):
+            use = shock_application(term, formals)
+            if use is None:
+                continue
+            shock, arguments = use
+            edge = edges.get(shock)
+            if block != edge:
+                refuse(
+                    "distribution-edge",
+                    address,
+                    f"{to_source(term)} gives arguments for {shock}, whose forward edge is "
+                    f"{edge or 'undeclared'}. Write its arguments on the edge that draws it.",
+                )
+            if len(arguments) != len(formals[shock]):
+                refuse(
+                    "distribution-domain",
+                    address,
+                    f"{to_source(term)} supplies {len(arguments)} arguments for {shock}. "
+                    f"Its law takes {len(formals[shock])}.",
+                )
+            fields = tuple(resolve_constant(argument, block, address) for argument in arguments)
+            if any(field is None for field in fields):
+                refuse(
+                    "distribution-domain",
+                    address,
+                    f"{to_source(term)} must give {shock} incoming constant fields "
+                    f"listed by {block}.",
+                )
+            written = tuple(to_source(argument) for argument in arguments)
+            if shock in actuals:
+                previous, first, first_address = actuals[shock]
+                if fields != previous:
+                    refuse(
+                        "distribution-edge",
+                        address,
+                        f"{shock} uses both ({', '.join(first)}) and ({', '.join(written)}) "
+                        f"on {block}. One draw has one ordered argument tuple.",
+                        related=(("first use", first_address),),
+                    )
+            else:
+                actuals[shock] = fields, written, address
+    return {name: fields for name, (fields, _, _) in actuals.items()}
 
 
 def dependency_order(owners, refuse) -> tuple:

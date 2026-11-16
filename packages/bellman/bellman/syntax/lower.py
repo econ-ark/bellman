@@ -73,6 +73,7 @@ from bellman.syntax.source import (
 from bellman.syntax.terms import *  # noqa: F401,F403 — generated classes
 from bellman.syntax.vocabulary import (
     ARRIVAL,
+    CONSTANCY_WORD,
     CONTINUATION,
     CONTROL,
     DECISION,
@@ -292,9 +293,13 @@ def span_at(address, spans):
 
 
 # The kind of each component a typing writes on a listed field, by the
-# class of the term the lowering makes of it: a set, a role word, a perch
-# word.
-_COMPONENT_OF = {Domain: "domain", Role: "role", Infoset: "perch"}
+# class of the term the lowering makes of it.
+_COMPONENT_OF = {
+    Domain: "domain",
+    Role: "role",
+    Infoset: "perch",
+    Constancy: "constancy",
+}
 
 
 def _component_spans(term, position_of, file):
@@ -451,13 +456,13 @@ class ToAst(Transformer):
     which answers the term of the rule's children, or a private record that
     the callback of the enclosing rule reads."""
 
-    # the `!`-marked words of the language: the three perches and the roles
-    # of a field, spelled once in `bellman.syntax.vocabulary`; the order of a
-    # value role there is the order of the `Value` it lowers to
+    # The !-marked classifiers are spelled in `bellman.syntax.vocabulary`.
+    # The order of a value role is the order of the `Value` it lowers to.
     _VOCAB = {
         ARRIVAL: lambda: Infoset(Arrival()),
         DECISION: lambda: Infoset(Decision()),
         CONTINUATION: lambda: Infoset(Continuation()),
+        CONSTANCY_WORD: Constancy,
         ROLE_WORD[CONTROL]: lambda: Role(Control()),
         ROLE_WORD[SHOCK]: lambda: Role(Shock()),
         ROLE_WORD[STATE]: lambda: Role(State()),
@@ -616,6 +621,16 @@ class ToAst(Transformer):
             )
         return Statement(Law(tuple(subjects), expr), self._trailing_annotation(children))
 
+    def law_parameters(self, children):
+        return tuple(children)
+
+    def parameterized_law(self, children):
+        name, arguments, law = children[:3]
+        return Statement(
+            ParameterizedLaw((name,), arguments, law),
+            self._trailing_annotation(children),
+        )
+
     def function_definition(self, children):
         parts = [c for c in children if not isinstance(c, Token)]
         name, params, body = parts[0], parts[1:-1], parts[-1]
@@ -766,6 +781,13 @@ class ToAst(Transformer):
         word = typing.components[0]
         name = str(word.token)[1:]
         if component == "method":
+            if any(isinstance(item, ExpressionArgument) for item in nodes(word.arguments)):
+                raise _refusal(
+                    f"the method of `{written}` uses a sum as an argument; "
+                    "a sum of a field and a setting is an argument of a grid",
+                    "Name a setting in place of the sum",
+                    word.token,
+                )
             classifier = Method(Word(name, word.arguments))
         else:
             classifier = Grid(self._grid(name, word.arguments, written, word.token))
@@ -924,11 +946,12 @@ class ToAst(Transformer):
                 shapes,
             )
         items = value.items
-        settings = items[:3] if len(items) > 2 else items[1:]
-        if not all(isinstance(item, (Name, Literal)) for item in settings):
+        arguments = items[:3] if len(items) > 2 else items[1:]
+        if not all(isinstance(item, (Name, Literal, ExpressionArgument)) for item in arguments):
             raise _refusal(
                 f"the factor `{coordinate}={to_source(value)}` of `{written}` writes a bound or "
-                f"a count that is no name of a setting and no number",
+                f"a count that is no name of a setting and no number, and is not a sum of a field "
+                f"and a setting",
                 shapes,
             )
         if len(items) == 2:
@@ -1062,8 +1085,7 @@ class ToAst(Transformer):
             )
         if word.arguments:
             raise _refusal(
-                f"the file writes `!{name}` here with arguments; a role or a perch word "
-                f"takes none",
+                f"the file writes `!{name}` here with arguments; a field classifier takes none",
                 f"write the word alone, `!{name}`",
                 token,
             )
@@ -1104,6 +1126,9 @@ class ToAst(Transformer):
     def argument_word(self, children):
         word = children[0]
         return Nested(Word(str(word.token)[1:], word.arguments))
+
+    def expression_argument(self, children):
+        return ExpressionArgument(Add(*children))
 
     # set expressions
     def open_interval_factor(self, children):
@@ -1256,9 +1281,9 @@ class ToAst(Transformer):
 
     def bracketed_name(self, children):
         """A name with its selectors: in a formula, a perch mark, a name key
-        or a position, `V[>]`, `x[work]`, `q[2]`; in the subject of a typing
-        entry also a term, `evaluate[V[<]]`, `evaluate[D_{k}V[<]]`, which
-        selects by `Term`."""
+        or a position, `V[>]`, `x[work]`, `q[2]`. A marked table key,
+        `Y_tab[age[>]]`, is a `Term`, as are `V[<]` and `D_{k}V[<]`
+        in selectors of typing entries."""
         stem, sels = children[0], children[1:]
         first = sels[0]
         if isinstance(first, Token) and first.type == "PMARK":
@@ -1275,7 +1300,7 @@ class ToAst(Transformer):
             )
         elif isinstance(first, str):  # name key
             expr = Select(Sym(Constant(stem)), Key(first))
-        else:  # a term, in the subject of a typing entry
+        else:  # a marked key or a term in a typing entry
             expr = Select(Sym(Constant(stem)), Term(first))
         for extra in sels[1:]:
             if isinstance(extra, Token) and extra.type == "PMARK":
@@ -1297,6 +1322,12 @@ class ToAst(Transformer):
                 sel = Term(extra)
             expr = Select(expr, sel)
         return expr
+
+    def marked_key(self, children):
+        key, = children
+        if isinstance(key.symbol, Constant):
+            return key.symbol.name
+        return key
 
     def operator_call(self, children):
         head = children[0].rstrip("_")
@@ -1421,6 +1452,10 @@ class _ToAstWithPositions(ToAst):
     @v_args(meta=True)
     def law(self, meta, children):
         return self._keep(super().law(children), meta)
+
+    @v_args(meta=True)
+    def parameterized_law(self, meta, children):
+        return self._keep(super().parameterized_law(children), meta)
 
     @v_args(meta=True)
     def block(self, meta, children):

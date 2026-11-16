@@ -260,8 +260,11 @@ Conditions
   grid:Aggregation  𝑚_d≻(a) ∈ Xm
   policy            egm-eligibility: the construction satisfies the declared
                       line where the continuation value 𝑉≻ is concave and
-                      continuously differentiable on (0, ∞) with a finite
-                      positive right derivative at 0   [required]
+                      continuously differentiable above the savings bound,
+                      with a positive right derivative at the bound, finite or
+                      infinite; an infinite derivative gives zero consumption
+                      as the interpolation endpoint, outside a strictly
+                      positive consumption domain   [required]
 
 Method
   !egm   !Cartesian(a=(a_min, a_max, n_a))   "cons-port:egm"            policy

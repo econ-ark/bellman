@@ -27,7 +27,7 @@ household carries one number forward, total wealth, which is cash on hand plus
 the resale value of the house. Nothing is consumed in this stage and no utility
 is charged here: the two branches hand their states to the two consumption
 stages, whose decision states the period's connector joins them to,
-`{w_kp: w_d, h_kp: h_d, z_kp: keeper_cons.z_d, w_adj: m, z_adj: adjuster_cons.z_d}`.
+`{w_kp: w_d, h_kp: h_d, z_kp: keeper_cons.z_d, w_adj: m, z_adj: adjuster_cons.z_d, age_kp: keeper_cons.age, age_adj: adjuster_cons.age}`.
 
 | Perch | What the household knows | Fields |
 |---|---|---|
@@ -50,18 +50,13 @@ R_H : ℝ₊₊       :: ["gross return on housing, received when the house is s
 δ   : [0,1)     :: ["depreciation rate of housing"]
 ρ_z : (0,1)     :: ["persistence of log income"]
 σ_z : ℝ₊        :: ["standard deviation of the innovation to log income"]
-Y   : ℝ₊        :: ["earnings per unit of the income state at the age of the period"]
-y_R : ℝ₊        :: ["income that does not depend on the income state at the age of the period"]
+Y   : Age → ℝ₊        :: ["earnings per unit of the income state at the age of the period"]
+y_R : Age → ℝ₊        :: ["income that does not depend on the income state at the age of the period"]
 ```
 
-A stage has no age index, so the age profile of earnings cannot be written
-inside it. What the stage states is the shape of income, a function of the
-income state with two parameters, and the application evaluates those two
-parameters at the age of each occurrence:
-
-```bl
-𝑦(z : ℝ₊₊) := Y*z + y_R                                 :: [id=income]
-```
+The calibration supplies the two tables on `Age := {20, …, 71}`. Each
+forward branch reads the row for the age supplied by its consumption stage.
+The row gives income one year younger, at the age of the tenure decision.
 
 While the household works, `Y` is positive and `y_R` is zero; after it retires,
 `Y` is zero and `y_R` is the retirement income. Income is strictly positive
@@ -100,14 +95,14 @@ continuation fields. The control `d` is typed by the set of labels, and the
 order of that set is the order of the branches everywhere else in the file.
 
 ```bl
-[id=dcsn_to_cntn, (a_d, h_d, z_d, d : !ctrl @ {keep, adjust}) : !dcsn -> ()] {
+[id=dcsn_to_cntn, (a_d, h_d, z_d, age_kp[>], age_adj[>], d : !ctrl @ {keep, adjust}) : !dcsn -> ()] {
     [label=keep, () -> (w_kp : ℝ₊₊, h_kp : ℝ₊₊, z_kp : ℝ₊₊) : !cntn] {
-        w_kp = R*a_d + 𝑦(z_d)                           :: [id=cash_on_hand]
+        w_kp = R*a_d + Y[age_kp[>]]*z_d + y_R[age_kp[>]] :: [id=cash_on_hand]
         h_kp = (1 - δ)*h_d                              :: [id=housing_kept]
         z_kp = z_d
     }
     [label=adjust, () -> (w_adj : ℝ₊₊, z_adj : ℝ₊₊) : !cntn] {
-        w_adj = R*a_d + R_H*(1 - δ)*h_d + 𝑦(z_d)        :: [id=total_wealth]
+        w_adj = R*a_d + R_H*(1 - δ)*h_d + Y[age_adj[>]]*z_d + y_R[age_adj[>]] :: [id=total_wealth]
         z_adj = z_d
     }
 }
@@ -122,11 +117,14 @@ shared between the branches.
 
 The backward block receives the decision value of each consumption stage, the
 value that stage exports, and selects between them by the control. The first
-entry of every tuple is the keep alternative, in the order of the label set.
+entry of every tuple is the keep alternative, in the order of the label set. The decision age is the incoming age on the keep branch minus one. The arrival block keeps it.
 
 ```bl
-[id=cntn_to_dcsn, (V_kp[>] : ℝ @ !vlu, V_adj[>] : ℝ @ !vlu, d) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+[id=cntn_to_dcsn, (V_kp[>] : ℝ @ !vlu, V_adj[>] : ℝ @ !vlu,
+    age_kp[>] : Age @ !vlu @ !cnst, age_adj[>] : Age @ !vlu @ !cnst, d) : !cntn
+    -> (V : ℝ @ !vlu, age : Age @ !vlu @ !cnst) : !dcsn] {
     V = (V_kp[>], V_adj[>])[d]                                                     :: [id=choice_value]
+    age = age_kp[>] - 1                              :: [id=age]
 }
 ```
 
@@ -165,7 +163,7 @@ the arrival value are the integrated derivatives of the decision value and the
 block writes no derivative line.
 
 ```bl
-[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+[id=dcsn_to_arvl, (V, age) : !dcsn -> (V[<] : ℝ @ !vlu, age) : !arvl] {
     V[<]    = E_{ε}(V)                                  :: [id=value]
 }
 ```

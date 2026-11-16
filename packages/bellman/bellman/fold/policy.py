@@ -959,22 +959,14 @@ def _evaluate_node(acc, address):
 def _substitute_arguments(term, arguments, stage, owner):
     """A term with a function's formal arguments replaced by the terms
     `arguments` maps them to, a name bound inside the term left alone; a
-    selection key replaced by a name, and refused where its argument is no
-    name."""
+    selection key replaced by its argument."""
     if isinstance(term, T.Sym) and isinstance(term.symbol, T.Constant):
         return arguments.get(term.symbol.name, term)
     if isinstance(term, T.Key) and isinstance(term.at, str) and term.at in arguments:
         value = arguments[term.at]
         if isinstance(value, T.Sym) and isinstance(value.symbol, T.Constant):
             return T.Key(value.symbol.name)
-        raise ConstructionError(
-            f"the function argument for selection key {term.at!r} is {to_source(value)}; "
-            f"the retained selector requires a name, so its condition needs a construction "
-            f"for a computed selection key",
-            stage=stage,
-            address=owner,
-            rule="not-constructed",
-        )
+        return T.Term(value)
     if isinstance(term, T.Operator):
         bound = {s.var if isinstance(s, T.In) else s.name for s in term.subs}
         body_arguments = {name: value for name, value in arguments.items() if name not in bound}

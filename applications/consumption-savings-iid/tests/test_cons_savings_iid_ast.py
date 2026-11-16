@@ -25,11 +25,11 @@ import pathlib
 import sys
 
 _TESTS = pathlib.Path(__file__).resolve().parent
-_TOOLS = _TESTS.parents[2] / "packages" / "bellman" / "tests" / "tools"
+_TOOLS = _TESTS.parents[2] / "applications"
 sys.path.insert(0, str(_TOOLS))
 
 from stage_ast import annotation as _ann, parsed, perched as _p, run_checks, sym as _c  # noqa: E402
-from stage_types import (             # noqa: E402
+from bellman.syntax.terms import (             # noqa: E402
     Add, Arrival, Assignment, At, Block, Call, Constant,
     Continuation, Control, Coordinate, Declaration, Declare, Decision, Div,
     Domain, Equation, Infoset, Interval, KeyValue, Marked, Metadata, Mul,

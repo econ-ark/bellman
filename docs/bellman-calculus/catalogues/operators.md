@@ -27,13 +27,13 @@ type: reference
 
 An **operator** maps objects in a specified domain, such as a space of functions or of measures, to objects in a specified codomain. Its **rank** lists its input and output sorts ([Kinds and sorts](../APPX-D-KINDS-AND-SORTS.md) §3). In a first-order signature, operators can be operation symbols without an additional carrier of operator-valued data; they nevertheless have ranks. Whether a builder is primitive or a named composite depends on the chosen signature.
 
-At perch $p$, $\mathsf X_p$ is the state space, $\mathsf V_p$ a chosen value-function space, and $\mathsf M_p$ the finite measures on $\mathsf X_p$, of which the probability measures are those of mass one. Let $\mathsf L$ be the declared set of the scalar value fields, $\Gamma(x)$ the feasible actions, $\mathsf Q_\Gamma$ the choice-value functions on $\operatorname{Gr}(\Gamma)=\{(x,a):a\in\Gamma(x)\}$, and $\Pi_\Gamma$ the feasible measurable policies. Domains below are restricted so the operations are defined, integrable when required, and closed under the stated compositions.
+At perch $p$, $\mathsf X_p$ is the state space, $\mathsf B_p$ the tuple carrier of the representing functions of all value-type fields, and $\mathsf M_p$ the finite measures on $\mathsf X_p$, of which the probability measures are those of mass one. The scalar formulas below use the one-field specialization $\mathsf V_p$. Let $\mathsf L$ be the declared set of that scalar value field, $\Gamma(x)$ the feasible actions, $\mathsf Q_\Gamma$ the choice-value functions on $\operatorname{Gr}(\Gamma)=\{(x,a):a\in\Gamma(x)\}$, and $\Pi_\Gamma$ the feasible measurable policies. Domains below are restricted so the operations are defined, integrable when required, and closed under the stated compositions.
 
 <a id="structural-morphisms-category-plumbing"></a>
 
 ## 1. Structural operations
 
-These operations describe composition of inputs and alternatives. They do not alone prove that a software graph has a categorical universal property. Here $s,t$ denote sorts, $I$ the one-point sort, $\otimes$ a product in the deterministic interpretation, and $\bigsqcup$ a labeled disjoint union.
+These operations describe composition of inputs and alternatives. The product interpretation here is for total deterministic functions; ordinary products of tuple coordinates assert no categorical-product property for arbitrary partial maps. They do not alone prove that a software graph has a categorical universal property. Here $s,t$ denote sorts, $I$ the one-point sort, $\otimes$ a product in the deterministic interpretation, and $\bigsqcup$ a labeled disjoint union.
 
 | Operation | Rank | Role |
 |---|---|---|
@@ -54,11 +54,13 @@ A nonidentity state transformation must be authored explicitly; a connector rena
 
 | Operator | Rank | Meaning |
 |---|---|---|
-| $\mathbb T_\succ$ | $\mathsf V_\succ\to\mathsf V_\sim$ | optimize the pointwise choice value over feasible actions |
-| $\mathbb T_{\succ,\pi}$ | $\mathsf V_\succ\to\mathsf V_\sim$ | evaluate that choice value under a supplied policy |
-| $\mathbb T_\prec$ | $\mathsf V_\sim\to\mathsf V_\prec$ | arrival aggregation and pre-decision shock integration |
-| $\mathbb T=\mathbb T_\prec\circ\mathbb T_\succ$ | $\mathsf V_\succ\to\mathsf V_\prec$ | optimizing stage evaluation |
-| $\mathbb T_\pi=\mathbb T_\prec\circ\mathbb T_{\succ,\pi}$ | $\mathsf V_\succ\to\mathsf V_\prec$ | fixed-policy stage evaluation |
+| $\mathbb T_\succ$ | $\mathsf B_\succ\to\mathsf B_\sim$ | evaluate all fields at the selected measurable maximizer |
+| $\mathbb T_{\succ,\pi}$ | $\mathsf B_\succ\to\mathsf B_\sim$ | evaluate every decision field under the supplied policy |
+| $\mathbb T_\prec$ | $\mathsf B_\sim\to\mathsf B_\prec$ | evaluate the arrival field equations, with their authored expectations |
+| $\mathbb T=\mathbb T_\prec\circ\mathbb T_\succ$ | $\mathsf B_\succ\to\mathsf B_\prec$ | optimizing stage evaluation |
+| $\mathbb T_\pi=\mathbb T_\prec\circ\mathbb T_{\succ,\pi}$ | $\mathsf B_\succ\to\mathsf B_\prec$ | fixed-policy stage evaluation |
+
+Each backward operator reads and returns the complete tuple of value-type fields. Its partial domain requires every coordinate and operation to be defined. A supplied constant may select a law or a forward transition. The scalar formulas in §4 describe the maximized coordinate; the other coordinates follow their own equations at the same selected policy.
 
 These are mathematical names, not prescribed block identifiers. Stage equations are `.bl`; current block and method-place forms belong to Bellman-SYM's pages on field equations and methodization.
 
@@ -94,9 +96,9 @@ $$
 \operatorname{argmax}Q=\bigl\{\pi\in\Pi_\Gamma : Q(x,\pi(x))\ge Q(x,a)\ \text{for every } x\in\mathsf X_\sim \text{ and every } a\in\Gamma(x)\bigr\},
 $$
 
-the feasible measurable policies that attain the maximum of $Q(x,\cdot)$ over $\Gamma(x)$ at every state. It is empty when that maximum is not attained at some state, and also when no measurable policy attains it at every state. A **selection** is a partial map $s:\mathsf Q_\Gamma\rightharpoonup\Pi_\Gamma$ with $s(Q)\in\operatorname{argmax}Q$ for every $Q$ in its domain $\operatorname{dom}s$, which is therefore contained in $\{Q:\operatorname{argmax}Q\neq\varnothing\}$. The maximizing set supplies no selection; a composite that needs one policy names its selection.
+the feasible measurable policies that attain the maximum of $Q(x,\cdot)$ over $\Gamma(x)$ at every state. It is empty when that maximum is not attained at some state, and also when no measurable policy attains it at every state. A **selection** is a partial map $s:\mathsf Q_\Gamma\rightharpoonup\Pi_\Gamma$ with $s(Q)\in\operatorname{argmax}Q$ for every $Q$ in its domain $\operatorname{dom}s$, which is therefore contained in $\{Q:\operatorname{argmax}Q\neq\varnothing\}$. The maximizing set supplies no selection; a composite that needs one policy names its selection. A policy builder returns the one policy defined by its rule. An implicit equation or an explicit formula can also define that rule, without claiming a maximizer.
 
-Every member $\pi$ of $\operatorname{argmax}Q$ gives $Q(x,\pi(x))=\max_{a\in\Gamma(x)}Q(x,a)$ at every state, so a composite of the form below takes the same value whichever selection it names. The optimizing decision builder, $(\mathbb T_\succ v)(x)=\sup_{a\in\Gamma(x)}(B_\succ v)(x,a)$ where that supremum lies in $\mathsf L$, is an explicit selection from the maximizing set followed by the insertion of the selected policy into the choice-value function:
+Every member $\pi$ of $\operatorname{argmax}Q$ gives $Q(x,\pi(x))=\max_{a\in\Gamma(x)}Q(x,a)$ at every state, so the scalar maximized coordinate takes the same value whichever selection it names. Other fields evaluated at the selected action need not agree across maximizing selections. The optimizing decision builder, $(\mathbb T_\succ v)(x)=\sup_{a\in\Gamma(x)}(B_\succ v)(x,a)$ where that supremum lies in $\mathsf L$, is an explicit selection from the maximizing set followed by the insertion of the selected policy into the choice-value function:
 
 $$
 \mathbb T_\succ=\iota^{*}\circ\langle B_\succ,s\circ B_\succ\rangle\ \text{on}\ \{v\in\mathsf V_\succ:B_\succ v\in\operatorname{dom}s\},

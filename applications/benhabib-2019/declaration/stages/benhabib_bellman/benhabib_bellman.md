@@ -29,14 +29,12 @@ described in `economics.md`. A walkthrough of this stage is still to be written.
 - `Tau := {q1, …, q10}` and `R_type := {r1, …, r5}` are finite sets
   with named members; a finite set's members are names, so the paper's
   integer labels are written `q1`…`q10` and `r1`…`r5`.
-- The families are declared with product sets of a fixed count,
-  `wage_fn : ℝ₊ × … × ℝ₊` (ten factors) and `R_vec : ℝ₊₊ × … × ℝ₊₊`
-  (five), so the source fixes the count and the selections `wage_fn[tau]`
-  and `R_vec[r_type]` are checked against it (AAS, 9 September 2026: a
-  family indexed by a model-content count is written with literal
-  members). The calibration supplies `tau`, `r_type`, the ten-entry wage
-  schedule of the period's age bracket (the source's `by_tau` table) and
-  the five gross returns (the source's `by_r_type` rates, as 1 + r).
+- The stage declares two families,
+  `wage_fn : Age × Tau → ℝ₊` and `R_vec : ℝ₊₊ × … × ℝ₊₊` (five factors).
+  The calibration supplies one wage table, indexed by incoming age and
+  earnings decile, and the five gross returns. Its row for `age[>]` stores
+  earnings one year younger. The forward map and its inverse both read
+  `wage_fn[age[>]][tau]`. The backward block sends back `age[>] - 1`.
 - `μ` and `A` are the parameters of the warm-glow bequest, declared here
   because the source stage carries them. No line of this stage uses them;
   the bequest stage `declaration/stages/bequest/bequest.bl`, in the terminal period, does.
@@ -47,7 +45,7 @@ described in `economics.md`. A walkthrough of this stage is still to be written.
   grid of savings `!Cartesian(a=(a_min, a_max, n_a))` and the legacy's
   handler, and writes the endogenous-grid form of the portfolio corpus, the
   inverse Euler line, the endogenous grid
-  `m[>] = c[>] + (a - wage_fn[tau]) / R_vec[r_type]`, and `c = c[>]`, which
+  `m[>] = c[>] + (a - wage_fn[age[>]][tau]) / R_vec[r_type]`, and `c = c[>]`, which
   stand in place of the maximization at the operative level while the
   declared level keeps it; the two coincide where the Euler equation
   characterizes the optimum.

@@ -190,7 +190,7 @@ print(stage.builder.bwd.methods)
 2  dcsn_to_arvl  builder  → 𝑉≺
 3  policy        builder  → 𝑐
 in         𝑉≻ : Xa → [−∞, ∞)
-out        𝑉≺ : Xm × ℝ₊ → ℝ
+out        𝑉≺ : Xm → ℝ
 out        𝑐(m_d) : 𝒫({c ∈ (Xm → ℝ₊₊) | c(m_d) ∈ Γ(m_d)})
 
 1  arvl_to_dcsn  builder  → μ
@@ -216,7 +216,7 @@ STAGE cons / BACKWARD BUILDERS
 Signature
   in   𝑉≻  : Xa → [−∞, ∞)
        ──────────────────────────────────────────────────────────────────────
-  out  𝑉≺  : Xm × ℝ₊ → ℝ
+  out  𝑉≺  : Xm → ℝ
        𝑐   : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
 
 At
@@ -247,7 +247,7 @@ Operations
       dcsn_to_arvl
       in: 𝑉                             out: 𝑉≺
       ───────────────────────────────────────────────────────────────────────
-      rule: 𝑉≺ : Xm × ℝ₊ → ℝ
+      rule: 𝑉≺ : Xm → ℝ
 
    4    Pullback
         in: 𝑉                           out: 𝑉 ∘ 𝑔≺
@@ -262,7 +262,7 @@ Operations
    6    Evaluation
         in: 𝑉≺                          out: 𝑉≺
         ─────────────────────────────────────────────────────────────────────
-        rule: 𝑉≺ : Xm × ℝ₊ → ℝ
+        rule: 𝑉≺ : Xm → ℝ
 
       policy
       in: 𝑉≻                            out: 𝑐
@@ -290,20 +290,23 @@ Operations
         rule: 𝑐 : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
 
 Conditions
-  cntn_to_dcsn:Aggregation  𝑉(m_d) ∈ [−∞, ∞)
-  dcsn_to_arvl:Aggregation  𝑉≺(m, l) ∈ ℝ
-  𝑢                         ¬(1 − ρ = 0)
-  cntn_to_dcsn.marginal     marginal-reading: the right side of each
-                              derivative line equals the derivative, in the
-                              named coordinate, of the value the builder
-                              writes, under the envelope conditions: concavity
-                              of the continuation value, interiority of the
-                              maximizer or the multiplier's term at a binding
-                              constraint, differentiability of the reward in
-                              the control, a measurable selection of the
-                              policy, and differentiability of the value at
-                              the point read; listed and not checked
-                              [required]
+  cntn_to_dcsn:Aggregation       𝑉(m_d) ∈ [−∞, ∞)
+  dcsn_to_arvl:Aggregation       𝑉≺(m) ∈ ℝ
+  dcsn_to_arvl:Aggregation       𝑉≺(m, l) ∈ ℝ
+  policy.optimality:Aggregation  ¬(𝑢(cp) ∈ [∞, ∞] ∧ V[>] ∈ [−∞, −∞])
+  𝑢                              ¬(1 − ρ = 0)
+  cntn_to_dcsn.marginal          marginal-reading: the right side of each
+                                   derivative line equals the derivative, in
+                                   the named coordinate, of the value the
+                                   builder writes, under the envelope
+                                   conditions: concavity of the continuation
+                                   value, interiority of the maximizer or the
+                                   multiplier's term at a binding constraint,
+                                   differentiability of the reward in the
+                                   control, a measurable selection of the
+                                   policy, and differentiability of the value
+                                   at the point read; listed and not checked
+                                   [required]
 ──────────────────────────────────────────────────────────────────────────────
 Source  cons.bl
   13  m_d = m
@@ -367,6 +370,7 @@ Operations
 
 Conditions
   𝑢                         ¬(1 − ρ = 0)
+  policy.optimality         ¬(𝑢(cp) ∈ [∞, ∞] ∧ V[>] ∈ [−∞, −∞])
   cntn_to_dcsn:Aggregation  𝑉(m_d) ∈ [−∞, ∞)
   cntn_to_dcsn.marginal     marginal-reading: the right side of each
                               derivative line equals the derivative, in the
@@ -379,7 +383,8 @@ Conditions
                               policy, and differentiability of the value at
                               the point read; listed and not checked
                               [required]
-  dcsn_to_arvl:Aggregation  𝑉≺(m, l) ∈ ℝ
+  dcsn_to_arvl:Aggregation  𝑉≺(m) ∈ ℝ
+  dcsn_to_arvl.value        𝑉≺(m, l) ∈ ℝ
 ──────────────────────────────────────────────────────────────────────────────
 Source  cons.bl
   13  m_d = m

@@ -24,10 +24,12 @@ Three different orders appear in a model built from [[stage|stages]]. State whic
 |---|---|
 | Within-stage information | Arrival, then decision, then continuation, subject to the stage's declared observations and choices. |
 | Forward economic time | Earlier decisions and states precede later ones. Dependencies determine this order. |
-| Trellis index $h$ | Zero is terminal; a larger index is earlier in economic time. |
+| Trellis position $h$ | An address: zero is terminal; a larger index is earlier in economic time. The position supplies no age or parameter to a stage. |
 
 A **backward calculation** starts from supplied continuation values. In a chain with stage [[operator|operators]] $T_1,\ldots,T_K$ named in forward economic order, $T_1\circ\cdots\circ T_K$ applies $T_K$ first. Function composition is read right to left.
 
 A **forward calculation** starts from a distribution and a specified policy, then follows transitions in economic order. It is not obtained by applying an inverse [[bellman_operator|Bellman operator]]. [[backward_builder|Backward builders]] and [[forward_builder|forward builders]], the two directions of [[builder]], define the two operations.
+
+If a stage reads age, the user supplies its terminal value and the stage equations compute earlier ages. A forward equation that needs the current age reads the incoming constant and its authored update, for example `age_next - 1`; it does not infer age from the trellis position or invert the backward value operator.
 
 [[perch|Perch]] marks `[<]` and `[>]` describe information within one stage; they do not mean calendar lags and leads. YAML list order does not replace [[field]] dependencies. The [[period]] and [[trellis]] entries give the respective composition and index rules.

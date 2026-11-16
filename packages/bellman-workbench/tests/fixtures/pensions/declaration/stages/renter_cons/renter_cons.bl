@@ -1,5 +1,6 @@
 @stage: renter_cons
 
+Age := {17, …, 101}
 Plan := {DB, DC}
 
 γ   : (1, inf)     :: ["curvature of utility, 1/γ the intertemporal elasticity, equation (1)"]
@@ -36,13 +37,14 @@ Plan := {DB, DC}
     plan_nxt_rt = plan_d
 }
 
-[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu, c, S) -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu, c, S, age : Age @ !vlu @ !cnst) : !cntn -> (V : [-inf, inf) @ !vlu, age) : !dcsn] {
     V        = 𝑢(c, S, α_d) + β_d*V[>]                    :: [id=value]
     D_{w_d}V = 𝑢_c(c, S, α_d)                             :: [id=marginal_cash]
 }
 
-[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl] {
+[id=dcsn_to_arvl, (V, age) : !dcsn -> (V[<] : [-inf, inf) @ !vlu, age_rt[<] : Age @ !vlu @ !cnst) : !arvl] {
     V[<] = V                                             :: [id=value]
+    age_rt[<] = age :: [id=age]
 }
 
 [id=policy, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl, S : ℝ₊₊ @ !ctrl) : !dcsn] {

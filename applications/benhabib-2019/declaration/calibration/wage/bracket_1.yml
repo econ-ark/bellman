@@ -1,7 +1,0 @@
-# Earnings in age bracket 1, ages 25 to 30: periods 31-36 of the trellis,
-# counted from the terminal period (the legacy registry's periods 1-6,
-# counted from age 25). Benhabib, Bisin and Luo (2019), Table 1, column
-# "Age 25-30", in thousands of dollars a year, one entry per earnings decile,
-# q1 to q10 in order.
-calibration:
-  wage_fn: [9.760, 19.95, 26.85, 33.05, 39.02, 45.05, 51.40, 59.16, 70.33, 100.3]

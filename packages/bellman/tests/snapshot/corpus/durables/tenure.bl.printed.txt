@@ -1,0 +1,1472 @@
+BELLMAN-SYM / STAGE tenure                                [VERSION = SYMBOLIC]
+a stage occurrence of
+applications/durables/declaration/stages/tenure/tenure.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        a≺ state, h≺ state, z≺ state, V≺ value, age≺ value
+  ∼ decision       a_d state, h_d state, z_d state, d control, V value, age
+                   value
+  ≻ continuation   age_kp≻ value, age_adj≻ value, w_kp≻ state, h_kp≻ state,
+                   z_kp≻ state, w_adj≻ state, z_adj≻ state, V_kp≻ value,
+                   V_adj≻ value
+  ≺ → ∼            ε drawn after arrival, before decision
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           a≺ at arrival, h≺ at arrival, z≺ at arrival, a_d at
+                   decision, h_d at decision, z_d at decision, w_kp≻ at
+                   continuation, h_kp≻ at continuation, z_kp≻ at continuation,
+                   w_adj≻ at continuation, z_adj≻ at continuation
+  controls         d at decision
+  values           V at the arrival, decision perches; age at the arrival,
+                   decision perches; age_kp at the continuation perch; age_adj
+                   at the continuation perch; V_kp at the continuation perch;
+                   V_adj at the continuation perch
+  shocks           ε, drawn between arrival and decision
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → arvl_to_dcsn   (a≺, h≺, z≺, ε) : !arvl -> (a_d, h_d, z_d) : !dcsn
+  → dcsn_to_cntn   (a_d : !dcsn, h_d : !dcsn, z_d : !dcsn, age_kp≻ : !cntn,
+                   age_adj≻ : !cntn), at d ->
+                   (w_kp≻, h_kp≻, z_kp≻, w_adj≻, z_adj≻) : !cntn
+  ← cntn_to_dcsn   (V_kp≻, V_adj≻, age_kp≻, age_adj≻) : !cntn, at d ->
+                   (V, age) : !dcsn
+  ← dcsn_to_arvl   (V, age) : !dcsn -> (V≺, age≺) : !arvl
+  ← policy         (V_kp≻, V_adj≻) : !cntn -> (d) : !dcsn
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  sets                     1   Age := {20, …, 71}
+  distributions            1   ε
+  parameters               7   R : ℝ₊₊; R_H : ℝ₊₊; δ : [0, 1); ρ_z : (0, 1);
+                               σ_z : ℝ₊; Y : Age → ℝ₊; y_R : Age → ℝ₊
+  laws of motion           2   a_d = a; h_d = h; z_d = z^ρ_z*exp(σ_z*ε);
+                               w_kp = R*a_d + Y[age_kp[>]]*z_d +
+                               y_R[age_kp[>]]; h_kp = (1 - δ)*h_d; z_kp = z_d;
+                               w_adj = R*a_d + R_H*(1 - δ)*h_d +
+                               Y[age_adj[>]]*z_d + y_R[age_adj[>]]; z_adj =
+                               z_d
+  value aggregators        3   V = (V_kp[>], V_adj[>])[d], age = age_kp[>] -
+                               1; V[<] = E_{ε}(V);
+                               d = argmax_{d}(V_kp[>], V_adj[>])
+  block lines             12   arvl_to_dcsn.1, arvl_to_dcsn.2,
+                               arvl_to_dcsn.income_state,
+                               dcsn_to_cntn.keep.cash_on_hand,
+                               dcsn_to_cntn.keep.housing_kept,
+                               dcsn_to_cntn.keep.3,
+                               dcsn_to_cntn.adjust.total_wealth,
+                               dcsn_to_cntn.adjust.2,
+                               cntn_to_dcsn.choice_value, cntn_to_dcsn.age,
+                               dcsn_to_arvl.value, policy.choice
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   ((𝑎𝑔𝑒_kp≻, 𝑎𝑔𝑒_adj≻), 𝑉_kp≻, 𝑉_adj≻) ↦ 𝑉≺,
+                    𝑎𝑔𝑒≺, 𝑑(a_d, h_d, z_d)
+                    forward    μ≺ ↦ μ_keep≻, μ_adjust≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ≺ a≺, h≺, z≺  → ε drawn →  ∼ a_d, h_d, z_d  →  ≻ w_kp≻, h_kp≻,
+             z_kp≻, w_adj≻, z_adj≻
+  backward   ≺ V≺, age≺  ←  ∼ V, age  ←  ≻ V_kp≻, V_adj≻, age_kp≻, age_adj≻
+  policy     ∼ d  ←  ≻ V_kp≻, V_adj≻
+
+==== stage ====
+STAGE tenure
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑎𝑔𝑒_kp≻    : {()} → Age
+         𝑎𝑔𝑒_adj≻   : {()} → Age
+         𝑉_kp≻      : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+         𝑉_adj≻     : ℝ₊₊ × ℝ₊₊ → ℝ
+         ──────────────────────────────────────────────────────
+    out  𝑉≺         : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+         𝑎𝑔𝑒≺       : {()} → Age
+         𝑑          : ℝ₊ × ℝ₊₊ × ℝ₊₊ → {keep, adjust}
+  forward
+    in   μ≺         : finite measure on ℝ₊ × ℝ₊₊ × ℝ₊₊
+         ──────────────────────────────────────────────────────
+    out  μ_keep≻    : finite measure on ℝ₊₊ × ℝ₊₊ × ℝ₊₊
+         μ_adjust≻  : finite measure on ℝ₊₊ × ℝ₊₊
+
+Where
+  (a_d, h_d, z_d) = 𝑔≺(a, h, z, ε)
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉_kp≻, 𝑉_adj≻, 𝑎𝑔𝑒_kp≻, 𝑎𝑔𝑒_adj≻
+                                        out: 𝑉, 𝑎𝑔𝑒
+
+    2  dcsn_to_arvl
+       in: 𝑉, 𝑎𝑔𝑒                       out: 𝑉≺, 𝑎𝑔𝑒≺
+
+    3  policy
+       in: 𝑉_kp≻, 𝑉_adj≻, 𝑎𝑔𝑒_kp≻, 𝑎𝑔𝑒_adj≻
+                                        out: 𝑑
+
+  forward
+    1  arvl_to_dcsn
+       in: μ≺                           out: μ
+
+    2  dcsn_to_cntn
+       in: μ                            out: μ_keep≻, μ_adjust≻
+
+Conditions
+  cntn_to_dcsn:Aggregation  𝑉(a_d, h_d, z_d) ∈ ℝ
+  cntn_to_dcsn:Aggregation  𝑎𝑔𝑒 ∈ Age
+  dcsn_to_arvl:Aggregation  𝑉≺(a, h, z) ∈ ℝ
+  dcsn_to_arvl:Aggregation  𝑎𝑔𝑒≺ ∈ Age
+  dcsn_to_cntn:Pushforward  R · a_d + Y[age_kp] · z_d + y_R[age_kp] ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  14  ε ~ N(0, 1)
+  17  a_d = a
+  18  h_d = h
+  19  z_d = z^ρ_z*exp(σ_z*ε)
+        :: [id=income_state]
+  24  w_kp = R*a_d + Y[age_kp[>]]*z_d + y_R[age_kp[>]]
+        :: [id=cash_on_hand]
+  25  h_kp = (1 - δ)*h_d
+        :: [id=housing_kept]
+  26  z_kp = z_d
+  29  w_adj = R*a_d + R_H*(1 - δ)*h_d + Y[age_adj[>]]*z_d + y_R[age_adj[>]]
+        :: [id=total_wealth]
+  30  z_adj = z_d
+  37  V = (V_kp[>], V_adj[>])[d]
+        :: [id=choice_value]
+  38  age = age_kp[>] - 1
+        :: [id=age]
+  42  V[<]    = E_{ε}(V)
+        :: [id=value]
+  46  d = argmax_{d}(V_kp[>], V_adj[>])
+        :: [id=choice]
+
+Definitions referenced
+  Age   tenure:set:Age
+  R     tenure:parameter:R
+  Y     tenure:parameter:Y
+  y_R   tenure:parameter:y_R
+  ε     tenure:distribution:ε
+  𝑔≺    tenure:g:arvl_to_dcsn
+
+File
+  applications/durables/declaration/stages/tenure/tenure.bl
+
+Perches
+  ≺  arrival, written [<]
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE tenure / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V_kp≻     : {age_kp≻, age_adj≻, V_kp≻, V_adj≻}
+       V_adj≻    : {age_kp≻, age_adj≻, V_kp≻, V_adj≻}
+       age_kp≻   : {age_kp≻, age_adj≻}
+       age_adj≻  : {age_kp≻, age_adj≻}
+       ──────────────────────────────────────────────
+  out  V         : {V, age}
+       age       : {age}
+
+Conditions
+  𝑉(a_d, h_d, z_d) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  37  V = (V_kp[>], V_adj[>])[d]  :: [id=choice_value]
+  38  age = age_kp[>] - 1         :: [id=age]
+
+Definitions referenced
+  Age   tenure:set:Age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward dcsn_to_arvl ====
+STAGE tenure / BACKWARD BLOCK dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V     : {V, age}
+       age   : {age}
+       ──────────────────
+  out  V≺    : {V≺, age≺}
+       age≺  : {age≺}
+
+Conditions
+  𝑉≺(a, h, z) ∈ ℝ
+  𝑎𝑔𝑒≺ ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  42  V[<]    = E_{ε}(V)  :: [id=value]
+
+Definitions referenced
+  Age   tenure:set:Age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward policy ====
+STAGE tenure / POLICY BLOCK policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V_kp≻   : {age_kp≻, age_adj≻, V_kp≻, V_adj≻}
+       V_adj≻  : {age_kp≻, age_adj≻, V_kp≻, V_adj≻}
+       ────────────────────────────────────────────
+  out  d       : {d}
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  46  d = argmax_{d}(V_kp[>], V_adj[>])  :: [id=choice]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward arvl_to_dcsn ====
+STAGE tenure / FORWARD BLOCK arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a≺   : {a≺, h≺, z≺}
+       h≺   : {h≺, z≺}
+       z≺   : {h≺, z≺}
+       ε    : {ε}
+       ──────────────────────
+  out  a_d  : {a_d, h_d, z_d}
+       h_d  : {h_d, z_d}
+       z_d  : {h_d, z_d}
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  17  a_d = a
+  18  h_d = h
+  19  z_d = z^ρ_z*exp(σ_z*ε)  :: [id=income_state]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE tenure / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a_d       : {a_d, h_d, z_d}
+       h_d       : {h_d, z_d}
+       z_d       : {h_d, z_d}
+       age_kp≻   : {age_kp≻, age_adj≻}
+       age_adj≻  : {age_kp≻, age_adj≻}
+       ─────────────────────────────────────────────────
+  out  w_kp≻     : {w_kp≻, h_kp≻, z_kp≻, w_adj≻, z_adj≻}
+       h_kp≻     : {w_kp≻, h_kp≻, z_kp≻, w_adj≻, z_adj≻}
+       z_kp≻     : {w_kp≻, h_kp≻, z_kp≻, w_adj≻, z_adj≻}
+       w_adj≻    : {w_kp≻, h_kp≻, z_kp≻, w_adj≻, z_adj≻}
+       z_adj≻    : {w_kp≻, h_kp≻, z_kp≻, w_adj≻, z_adj≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  24  w_kp = R*a_d + Y[age_kp[>]]*z_d + y_R[age_kp[>]]
+        :: [id=cash_on_hand]
+  25  h_kp = (1 - δ)*h_d
+        :: [id=housing_kept]
+  26  z_kp = z_d
+  29  w_adj = R*a_d + R_H*(1 - δ)*h_d + Y[age_adj[>]]*z_d + y_R[age_adj[>]]
+        :: [id=total_wealth]
+  30  z_adj = z_d
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn / keep ====
+STAGE tenure / FORWARD BLOCK dcsn_to_cntn / keep
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a_d      : {a_d, h_d, z_d}
+       age_kp≻  : {age_kp≻, age_adj≻}
+       z_d      : {h_d, z_d}
+       h_d      : {h_d, z_d}
+       ────────────────────────────────────────────────
+  out  w_kp≻    : {w_kp≻, h_kp≻, z_kp≻, w_adj≻, z_adj≻}
+       h_kp≻    : {w_kp≻, h_kp≻, z_kp≻, w_adj≻, z_adj≻}
+       z_kp≻    : {w_kp≻, h_kp≻, z_kp≻, w_adj≻, z_adj≻}
+
+Conditions
+  R · a_d + Y[age_kp] · z_d + y_R[age_kp] ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  R     tenure:parameter:R
+  Y     tenure:parameter:Y
+  y_R   tenure:parameter:y_R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn / adjust ====
+STAGE tenure / FORWARD BLOCK dcsn_to_cntn / adjust
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a_d       : {a_d, h_d, z_d}
+       h_d       : {h_d, z_d}
+       age_adj≻  : {age_kp≻, age_adj≻}
+       z_d       : {h_d, z_d}
+       ─────────────────────────────────────────────────
+  out  w_adj≻    : {w_kp≻, h_kp≻, z_kp≻, w_adj≻, z_adj≻}
+       z_adj≻    : {w_kp≻, h_kp≻, z_kp≻, w_adj≻, z_adj≻}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE tenure / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_kp≻     : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑉_adj≻    : ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒_kp≻   : {()} → Age
+       𝑎𝑔𝑒_adj≻  : {()} → Age
+       ───────────────────────────────────────────────────────────────────────
+  out  𝑉         : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒       : {()} → Age
+
+At
+  𝑑  : ℝ₊ × ℝ₊₊ × ℝ₊₊ → {keep, adjust}
+
+Where
+  𝑔_keep≻    : ℝ₊ × ℝ₊₊ × ℝ₊₊ × Age → ℝ₊₊ × ℝ₊₊ × ℝ₊₊,
+               𝑔_keep≻(a_d, h_d, z_d, age_kp) =
+                 (R · a_d + Y[age_kp] · z_d + y_R[age_kp], (1 − δ) · h_d, z_d)
+  𝑔_adjust≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ × Age → ℝ₊₊ × ℝ₊₊,
+               𝑔_adjust≻(a_d, h_d, z_d, age_adj)
+                 = (R · a_d
+                      + R_H · (1 − δ) · h_d
+                      + Y[age_adj] · z_d
+                      + y_R[age_adj],
+                    z_d)
+
+Operations
+  1  Pullback:keep
+     in: 𝑉_kp≻, 𝑎𝑔𝑒_kp≻                 out: 𝑉_kp≻ ∘ 𝑔_keep≻(·, ·, ·, 𝑎𝑔𝑒_kp≻)
+     ─────────────────────────────────────────────────────────────────────────
+     rule: (𝑉_kp≻ ∘ 𝑔_keep≻(·, ·, ·, 𝑎𝑔𝑒_kp≻))(a_d, h_d, z_d)
+             = 𝑉_kp≻(𝑔_keep≻(a_d, h_d, z_d, 𝑎𝑔𝑒_kp≻()))
+
+  2  Pullback:adjust
+     in: 𝑉_adj≻, 𝑎𝑔𝑒_adj≻
+     out: 𝑉_adj≻ ∘ 𝑔_adjust≻(·, ·, ·, 𝑎𝑔𝑒_adj≻)
+     ─────────────────────────────────────────────────────────────────────────
+     rule: (𝑉_adj≻ ∘ 𝑔_adjust≻(·, ·, ·, 𝑎𝑔𝑒_adj≻))(a_d, h_d, z_d)
+             = 𝑉_adj≻(𝑔_adjust≻(a_d, h_d, z_d, 𝑎𝑔𝑒_adj≻()))
+
+  3  Aggregation
+     in: (1), (2), 𝑎𝑔𝑒_kp≻              out: 𝑉, 𝑎𝑔𝑒
+     ─────────────────────────────────────────────────────────────────────────
+     rule: 𝑉
+             = (𝑉_kp≻(𝑔_keep≻(a_d, h_d, z_d, 𝑎𝑔𝑒_kp≻())),
+                𝑉_adj≻(𝑔_adjust≻(a_d, h_d, z_d, 𝑎𝑔𝑒_adj≻())))[𝑑]
+           on (a_d, h_d, z_d) ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊
+           𝑎𝑔𝑒 = 𝑎𝑔𝑒_kp≻ − 1               on (a_d, h_d, z_d) ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊
+
+  4  Evaluation
+     in: 𝑉, 𝑎𝑔𝑒                         out: 𝑉, 𝑎𝑔𝑒
+     ─────────────────────────────────────────────────────────────────────────
+     rule: 𝑉 : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+           𝑎𝑔𝑒 : {()} → Age
+
+Conditions
+  Aggregation  𝑉(a_d, h_d, z_d) ∈ ℝ
+  Aggregation  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  37  V = (V_kp[>], V_adj[>])[d]  :: [id=choice_value]
+  38  age = age_kp[>] - 1         :: [id=age]
+
+Definitions referenced
+  Age   tenure:set:Age
+  R     tenure:parameter:R
+  R_H   tenure:parameter:R_H
+  δ     tenure:parameter:δ
+  Y     tenure:parameter:Y
+  y_R   tenure:parameter:y_R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback:keep ====
+STAGE tenure / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Pullback:keep
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_kp≻    : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒_kp≻  : {()} → Age
+       ─────────────────────────────────
+  out  𝑉_kp≻ ∘ 𝑔_keep≻(·, ·, ·, 𝑎𝑔𝑒_kp≻)
+                : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+
+Where
+  𝑔_keep≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ × Age → ℝ₊₊ × ℝ₊₊ × ℝ₊₊,
+             𝑔_keep≻(a_d, h_d, z_d, age_kp)
+               = (R · a_d + Y[age_kp] · z_d + y_R[age_kp], (1 − δ) · h_d, z_d)
+
+Rule
+  (𝑉_kp≻ ∘ 𝑔_keep≻(·, ·, ·, 𝑎𝑔𝑒_kp≻))(a_d, h_d, z_d)
+    = 𝑉_kp≻(𝑔_keep≻(a_d, h_d, z_d, 𝑎𝑔𝑒_kp≻()))
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  24  w_kp = R*a_d + Y[age_kp[>]]*z_d + y_R[age_kp[>]]
+        :: [id=cash_on_hand]
+  25  h_kp = (1 - δ)*h_d
+        :: [id=housing_kept]
+  26  z_kp = z_d
+  29  w_adj = R*a_d + R_H*(1 - δ)*h_d + Y[age_adj[>]]*z_d + y_R[age_adj[>]]
+        :: [id=total_wealth]
+  30  z_adj = z_d
+
+Definitions referenced
+  Age   tenure:set:Age
+  R     tenure:parameter:R
+  δ     tenure:parameter:δ
+  Y     tenure:parameter:Y
+  y_R   tenure:parameter:y_R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback:adjust ====
+STAGE tenure / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Pullback:adjust
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_adj≻    : ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒_adj≻  : {()} → Age
+       ─────────────────────────────────────
+  out  𝑉_adj≻ ∘ 𝑔_adjust≻(·, ·, ·, 𝑎𝑔𝑒_adj≻)
+                 : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+
+Where
+  𝑔_adjust≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ × Age → ℝ₊₊ × ℝ₊₊,
+               𝑔_adjust≻(a_d, h_d, z_d, age_adj)
+                 = (R · a_d
+                      + R_H · (1 − δ) · h_d
+                      + Y[age_adj] · z_d
+                      + y_R[age_adj],
+                    z_d)
+
+Rule
+  (𝑉_adj≻ ∘ 𝑔_adjust≻(·, ·, ·, 𝑎𝑔𝑒_adj≻))(a_d, h_d, z_d)
+    = 𝑉_adj≻(𝑔_adjust≻(a_d, h_d, z_d, 𝑎𝑔𝑒_adj≻()))
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  24  w_kp = R*a_d + Y[age_kp[>]]*z_d + y_R[age_kp[>]]
+        :: [id=cash_on_hand]
+  25  h_kp = (1 - δ)*h_d
+        :: [id=housing_kept]
+  26  z_kp = z_d
+  29  w_adj = R*a_d + R_H*(1 - δ)*h_d + Y[age_adj[>]]*z_d + y_R[age_adj[>]]
+        :: [id=total_wealth]
+  30  z_adj = z_d
+
+Definitions referenced
+  Age   tenure:set:Age
+  R     tenure:parameter:R
+  R_H   tenure:parameter:R_H
+  δ     tenure:parameter:δ
+  Y     tenure:parameter:Y
+  y_R   tenure:parameter:y_R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE tenure / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_kp≻ ∘ 𝑔_keep≻(·, ·, ·, 𝑎𝑔𝑒_kp≻)
+                : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑉_adj≻ ∘ 𝑔_adjust≻(·, ·, ·, 𝑎𝑔𝑒_adj≻)
+                : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒_kp≻  : {()} → Age
+       ─────────────────────────────────────
+  out  𝑉        : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒      : ℝ₊ × ℝ₊₊ × ℝ₊₊ → Age
+
+Where
+  𝑔_keep≻    : ℝ₊ × ℝ₊₊ × ℝ₊₊ × Age → ℝ₊₊ × ℝ₊₊ × ℝ₊₊,
+               𝑔_keep≻(a_d, h_d, z_d, age_kp) =
+                 (R · a_d + Y[age_kp] · z_d + y_R[age_kp], (1 − δ) · h_d, z_d)
+  𝑔_adjust≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ × Age → ℝ₊₊ × ℝ₊₊,
+               𝑔_adjust≻(a_d, h_d, z_d, age_adj)
+                 = (R · a_d
+                      + R_H · (1 − δ) · h_d
+                      + Y[age_adj] · z_d
+                      + y_R[age_adj],
+                    z_d)
+
+Rule
+  𝑉
+    = (𝑉_kp≻(𝑔_keep≻(a_d, h_d, z_d, 𝑎𝑔𝑒_kp≻())),
+       𝑉_adj≻(𝑔_adjust≻(a_d, h_d, z_d, 𝑎𝑔𝑒_adj≻())))[𝑑]
+  on (a_d, h_d, z_d) ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊
+  𝑎𝑔𝑒 = 𝑎𝑔𝑒_kp≻ − 1                        on (a_d, h_d, z_d) ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊
+
+Conditions
+  𝑉(a_d, h_d, z_d) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  37  V = (V_kp[>], V_adj[>])[d]  :: [id=choice_value]
+  38  age = age_kp[>] - 1         :: [id=age]
+
+Definitions referenced
+  Age   tenure:set:Age
+  R     tenure:parameter:R
+  R_H   tenure:parameter:R_H
+  δ     tenure:parameter:δ
+  Y     tenure:parameter:Y
+  y_R   tenure:parameter:y_R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE tenure / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉    : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒  : ℝ₊ × ℝ₊₊ × ℝ₊₊ → Age
+       ───────────────────────────
+  out  𝑉    : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒  : {()} → Age
+
+Where
+  𝑔_keep≻    : ℝ₊ × ℝ₊₊ × ℝ₊₊ × Age → ℝ₊₊ × ℝ₊₊ × ℝ₊₊,
+               𝑔_keep≻(a_d, h_d, z_d, age_kp) =
+                 (R · a_d + Y[age_kp] · z_d + y_R[age_kp], (1 − δ) · h_d, z_d)
+  𝑔_adjust≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ × Age → ℝ₊₊ × ℝ₊₊,
+               𝑔_adjust≻(a_d, h_d, z_d, age_adj)
+                 = (R · a_d
+                      + R_H · (1 − δ) · h_d
+                      + Y[age_adj] · z_d
+                      + y_R[age_adj],
+                    z_d)
+
+Rule
+  𝑉
+    = (𝑉_kp≻(𝑔_keep≻(a_d, h_d, z_d, 𝑎𝑔𝑒_kp≻())),
+       𝑉_adj≻(𝑔_adjust≻(a_d, h_d, z_d, 𝑎𝑔𝑒_adj≻())))[𝑑]
+  on (a_d, h_d, z_d) ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊
+  𝑉 : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+  𝑎𝑔𝑒 = 𝑎𝑔𝑒_kp≻ − 1                        on (a_d, h_d, z_d) ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊
+  𝑎𝑔𝑒 : {()} → Age
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Age   tenure:set:Age
+  R     tenure:parameter:R
+  R_H   tenure:parameter:R_H
+  δ     tenure:parameter:δ
+  Y     tenure:parameter:Y
+  y_R   tenure:parameter:y_R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl ====
+STAGE tenure / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉     : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒   : {()} → Age
+       ──────────────────────────────────────────────
+  out  𝑉≺    : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒≺  : {()} → Age
+
+Operations
+  1  Pullback
+     in: 𝑉                              out: 𝑉 ∘ 𝑔≺
+     ────────────────────────────────────────────────
+     rule: (𝑉 ∘ 𝑔≺)(a, h, z, ε) = 𝑉(𝑔≺(a, h, z, ε))
+
+  2  value:Expectation:1
+     in: (1)
+     out: (a, h, z) ↦ E_{ε}[𝑉(𝑔≺(a, h, z, ε))]
+     ────────────────────────────────────────────────
+     rule: (2)(a, h, z) = E_{ε}[𝑉(𝑔≺(a, h, z, ε))]
+
+  3  Aggregation
+     in: 𝑎𝑔𝑒, (2)                       out: 𝑉≺, 𝑎𝑔𝑒≺
+     ────────────────────────────────────────────────
+     rule: 𝑉≺ = E_{ε}[𝑉(𝑔≺(a, h, z, ε))]         on (a, h, z) ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊
+           𝑎𝑔𝑒≺ = 𝑎𝑔𝑒()                          on (a, h, z) ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊
+
+  4  Evaluation
+     in: 𝑉≺, 𝑎𝑔𝑒≺                       out: 𝑉≺, 𝑎𝑔𝑒≺
+     ────────────────────────────────────────────────
+     rule: 𝑉≺ : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+           𝑎𝑔𝑒≺ : {()} → Age
+
+Conditions
+  Aggregation  𝑉≺(a, h, z) ∈ ℝ
+  Aggregation  𝑎𝑔𝑒≺ ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  42  V[<]    = E_{ε}(V)  :: [id=value]
+
+Definitions referenced
+  Age   tenure:set:Age
+  ε     tenure:distribution:ε
+  𝑔≺    tenure:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Pullback ====
+STAGE tenure / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       ───────────────────────────
+  out  𝑉 ∘ 𝑔≺
+          : ℝ₊ × ℝ₊₊ × ℝ₊₊ × ℝ → ℝ
+
+Rule
+  (𝑉 ∘ 𝑔≺)(a, h, z, ε) = 𝑉(𝑔≺(a, h, z, ε))
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  17  a_d = a
+  18  h_d = h
+  19  z_d = z^ρ_z*exp(σ_z*ε)  :: [id=income_state]
+
+Definitions referenced
+  ε     tenure:distribution:ε
+  𝑔≺    tenure:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / value:Expectation:1 ====
+STAGE tenure / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+  / value:Expectation:1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉 ∘ 𝑔≺
+         : ℝ₊ × ℝ₊₊ × ℝ₊₊ × ℝ → ℝ
+       ────────────────────────────────────
+  out  (a, h, z) ↦ E_{ε}[𝑉(𝑔≺(a, h, z, ε))]
+         : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+
+Rule
+  value:Expectation:1(a, h, z) = E_{ε}[𝑉(𝑔≺(a, h, z, ε))]
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  14  ε ~ N(0, 1)
+  42  V[<]    = E_{ε}(V)  :: [id=value]
+
+Definitions referenced
+  ε     tenure:distribution:ε
+  𝑔≺    tenure:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Aggregation ====
+STAGE tenure / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑎𝑔𝑒   : {()} → Age
+       (a, h, z) ↦ E_{ε}[𝑉(𝑔≺(a, h, z, ε))]
+             : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       ────────────────────────────────────
+  out  𝑉≺    : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒≺  : ℝ₊ × ℝ₊₊ × ℝ₊₊ → Age
+
+Rule
+  𝑉≺ = E_{ε}[𝑉(𝑔≺(a, h, z, ε))]                  on (a, h, z) ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊
+  𝑎𝑔𝑒≺ = 𝑎𝑔𝑒()                                   on (a, h, z) ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊
+
+Conditions
+  𝑉≺(a, h, z) ∈ ℝ
+  𝑎𝑔𝑒≺ ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  42  V[<]    = E_{ε}(V)  :: [id=value]
+
+Definitions referenced
+  Age   tenure:set:Age
+  ε     tenure:distribution:ε
+  𝑔≺    tenure:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Evaluation ====
+STAGE tenure / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≺    : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒≺  : ℝ₊ × ℝ₊₊ × ℝ₊₊ → Age
+       ────────────────────────────
+  out  𝑉≺    : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒≺  : {()} → Age
+
+Rule
+  𝑉≺ = E_{ε}[𝑉(𝑔≺(a, h, z, ε))]                  on (a, h, z) ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊
+  𝑉≺ : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+  𝑎𝑔𝑒≺ = 𝑎𝑔𝑒()                                   on (a, h, z) ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊
+  𝑎𝑔𝑒≺ : {()} → Age
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Age   tenure:set:Age
+  ε     tenure:distribution:ε
+  𝑔≺    tenure:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy ====
+STAGE tenure / POLICY BUILDER policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_kp≻     : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑉_adj≻    : ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒_kp≻   : {()} → Age
+       𝑎𝑔𝑒_adj≻  : {()} → Age
+       ───────────────────────────────────────────────────────────────────────
+  out  𝑑         : ℝ₊ × ℝ₊₊ × ℝ₊₊ → {keep, adjust}
+
+Where
+  𝑔_keep≻    : ℝ₊ × ℝ₊₊ × ℝ₊₊ × Age → ℝ₊₊ × ℝ₊₊ × ℝ₊₊,
+               𝑔_keep≻(a_d, h_d, z_d, age_kp) =
+                 (R · a_d + Y[age_kp] · z_d + y_R[age_kp], (1 − δ) · h_d, z_d)
+  𝑔_adjust≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ × Age → ℝ₊₊ × ℝ₊₊,
+               𝑔_adjust≻(a_d, h_d, z_d, age_adj)
+                 = (R · a_d
+                      + R_H · (1 − δ) · h_d
+                      + Y[age_adj] · z_d
+                      + y_R[age_adj],
+                    z_d)
+
+Operations
+  1  Pullback:keep
+     in: 𝑉_kp≻, 𝑎𝑔𝑒_kp≻                 out: 𝑉_kp≻ ∘ 𝑔_keep≻(·, ·, ·, 𝑎𝑔𝑒_kp≻)
+     ─────────────────────────────────────────────────────────────────────────
+     rule: (𝑉_kp≻ ∘ 𝑔_keep≻(·, ·, ·, 𝑎𝑔𝑒_kp≻))(a_d, h_d, z_d)
+             = 𝑉_kp≻(𝑔_keep≻(a_d, h_d, z_d, 𝑎𝑔𝑒_kp≻()))
+
+  2  Pullback:adjust
+     in: 𝑉_adj≻, 𝑎𝑔𝑒_adj≻
+     out: 𝑉_adj≻ ∘ 𝑔_adjust≻(·, ·, ·, 𝑎𝑔𝑒_adj≻)
+     ─────────────────────────────────────────────────────────────────────────
+     rule: (𝑉_adj≻ ∘ 𝑔_adjust≻(·, ·, ·, 𝑎𝑔𝑒_adj≻))(a_d, h_d, z_d)
+             = 𝑉_adj≻(𝑔_adjust≻(a_d, h_d, z_d, 𝑎𝑔𝑒_adj≻()))
+
+  3  choice:Aggregation
+     in: (1), (2)
+     out: (a_d, h_d, z_d, d)
+            ↦ (𝑉_kp≻(𝑔_keep≻(a_d, h_d, z_d, 𝑎𝑔𝑒_kp≻())),
+               𝑉_adj≻(𝑔_adjust≻(a_d, h_d, z_d, 𝑎𝑔𝑒_adj≻())))[d]
+     ─────────────────────────────────────────────────────────────────────────
+     rule: (a_d, h_d, z_d, d)
+             ↦ (𝑉_kp≻(𝑔_keep≻(a_d, h_d, z_d, 𝑎𝑔𝑒_kp≻())),
+                𝑉_adj≻(𝑔_adjust≻(a_d, h_d, z_d, 𝑎𝑔𝑒_adj≻())))[d]
+
+  4  choice:Argmax
+     in: (3)                            out: 𝑑
+     ─────────────────────────────────────────────────────────────────────────
+     rule: 𝑑(a_d, h_d, z_d)
+             ∈ argmax_{d ∈ {keep, adjust}}
+                 [(𝑉_kp≻(𝑔_keep≻(a_d, h_d, z_d, 𝑎𝑔𝑒_kp≻())),
+                   𝑉_adj≻(𝑔_adjust≻(a_d, h_d, z_d, 𝑎𝑔𝑒_adj≻())))[d]]
+
+  5  Evaluation
+     in: 𝑑                              out: 𝑑
+     ─────────────────────────────────────────────────────────────────────────
+     rule: 𝑑 : ℝ₊ × ℝ₊₊ × ℝ₊₊ → {keep, adjust}
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  46  d = argmax_{d}(V_kp[>], V_adj[>])  :: [id=choice]
+
+Definitions referenced
+  Age   tenure:set:Age
+  R     tenure:parameter:R
+  R_H   tenure:parameter:R_H
+  δ     tenure:parameter:δ
+  Y     tenure:parameter:Y
+  y_R   tenure:parameter:y_R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback:keep ====
+STAGE tenure / POLICY BUILDER policy / Pullback:keep
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_kp≻    : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒_kp≻  : {()} → Age
+       ─────────────────────────────────
+  out  𝑉_kp≻ ∘ 𝑔_keep≻(·, ·, ·, 𝑎𝑔𝑒_kp≻)
+                : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+
+Where
+  𝑔_keep≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ × Age → ℝ₊₊ × ℝ₊₊ × ℝ₊₊,
+             𝑔_keep≻(a_d, h_d, z_d, age_kp)
+               = (R · a_d + Y[age_kp] · z_d + y_R[age_kp], (1 − δ) · h_d, z_d)
+
+Rule
+  (𝑉_kp≻ ∘ 𝑔_keep≻(·, ·, ·, 𝑎𝑔𝑒_kp≻))(a_d, h_d, z_d)
+    = 𝑉_kp≻(𝑔_keep≻(a_d, h_d, z_d, 𝑎𝑔𝑒_kp≻()))
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  24  w_kp = R*a_d + Y[age_kp[>]]*z_d + y_R[age_kp[>]]
+        :: [id=cash_on_hand]
+  25  h_kp = (1 - δ)*h_d
+        :: [id=housing_kept]
+  26  z_kp = z_d
+  29  w_adj = R*a_d + R_H*(1 - δ)*h_d + Y[age_adj[>]]*z_d + y_R[age_adj[>]]
+        :: [id=total_wealth]
+  30  z_adj = z_d
+
+Definitions referenced
+  Age   tenure:set:Age
+  R     tenure:parameter:R
+  δ     tenure:parameter:δ
+  Y     tenure:parameter:Y
+  y_R   tenure:parameter:y_R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback:adjust ====
+STAGE tenure / POLICY BUILDER policy / Pullback:adjust
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_adj≻    : ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑎𝑔𝑒_adj≻  : {()} → Age
+       ─────────────────────────────────────
+  out  𝑉_adj≻ ∘ 𝑔_adjust≻(·, ·, ·, 𝑎𝑔𝑒_adj≻)
+                 : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+
+Where
+  𝑔_adjust≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ × Age → ℝ₊₊ × ℝ₊₊,
+               𝑔_adjust≻(a_d, h_d, z_d, age_adj)
+                 = (R · a_d
+                      + R_H · (1 − δ) · h_d
+                      + Y[age_adj] · z_d
+                      + y_R[age_adj],
+                    z_d)
+
+Rule
+  (𝑉_adj≻ ∘ 𝑔_adjust≻(·, ·, ·, 𝑎𝑔𝑒_adj≻))(a_d, h_d, z_d)
+    = 𝑉_adj≻(𝑔_adjust≻(a_d, h_d, z_d, 𝑎𝑔𝑒_adj≻()))
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  24  w_kp = R*a_d + Y[age_kp[>]]*z_d + y_R[age_kp[>]]
+        :: [id=cash_on_hand]
+  25  h_kp = (1 - δ)*h_d
+        :: [id=housing_kept]
+  26  z_kp = z_d
+  29  w_adj = R*a_d + R_H*(1 - δ)*h_d + Y[age_adj[>]]*z_d + y_R[age_adj[>]]
+        :: [id=total_wealth]
+  30  z_adj = z_d
+
+Definitions referenced
+  Age   tenure:set:Age
+  R     tenure:parameter:R
+  R_H   tenure:parameter:R_H
+  δ     tenure:parameter:δ
+  Y     tenure:parameter:Y
+  y_R   tenure:parameter:y_R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / choice:Aggregation ====
+STAGE tenure / POLICY BUILDER policy / choice:Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_kp≻ ∘ 𝑔_keep≻(·, ·, ·, 𝑎𝑔𝑒_kp≻)
+         : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑉_adj≻ ∘ 𝑔_adjust≻(·, ·, ·, 𝑎𝑔𝑒_adj≻)
+         : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       ─────────────────────────────────────────────────────
+  out  (a_d, h_d, z_d, d)
+         ↦ (𝑉_kp≻(𝑔_keep≻(a_d, h_d, z_d, 𝑎𝑔𝑒_kp≻())),
+            𝑉_adj≻(𝑔_adjust≻(a_d, h_d, z_d, 𝑎𝑔𝑒_adj≻())))[d]
+         : ℝ₊ × ℝ₊₊ × ℝ₊₊ × {keep, adjust} → ℝ
+
+Where
+  𝑔_keep≻    : ℝ₊ × ℝ₊₊ × ℝ₊₊ × Age → ℝ₊₊ × ℝ₊₊ × ℝ₊₊,
+               𝑔_keep≻(a_d, h_d, z_d, age_kp) =
+                 (R · a_d + Y[age_kp] · z_d + y_R[age_kp], (1 − δ) · h_d, z_d)
+  𝑔_adjust≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ × Age → ℝ₊₊ × ℝ₊₊,
+               𝑔_adjust≻(a_d, h_d, z_d, age_adj)
+                 = (R · a_d
+                      + R_H · (1 − δ) · h_d
+                      + Y[age_adj] · z_d
+                      + y_R[age_adj],
+                    z_d)
+
+Rule
+  (a_d, h_d, z_d, d)
+    ↦ (𝑉_kp≻(𝑔_keep≻(a_d, h_d, z_d, 𝑎𝑔𝑒_kp≻())),
+       𝑉_adj≻(𝑔_adjust≻(a_d, h_d, z_d, 𝑎𝑔𝑒_adj≻())))[d]
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  46  d = argmax_{d}(V_kp[>], V_adj[>])  :: [id=choice]
+
+Definitions referenced
+  Age   tenure:set:Age
+  R     tenure:parameter:R
+  R_H   tenure:parameter:R_H
+  δ     tenure:parameter:δ
+  Y     tenure:parameter:Y
+  y_R   tenure:parameter:y_R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / choice:Argmax ====
+STAGE tenure / POLICY BUILDER policy / choice:Argmax
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (a_d, h_d, z_d, d)
+         ↦ (𝑉_kp≻(𝑔_keep≻(a_d, h_d, z_d, 𝑎𝑔𝑒_kp≻())),
+            𝑉_adj≻(𝑔_adjust≻(a_d, h_d, z_d, 𝑎𝑔𝑒_adj≻())))[d]
+          : ℝ₊ × ℝ₊₊ × ℝ₊₊ × {keep, adjust} → ℝ
+       ─────────────────────────────────────────────────────
+  out  𝑑  : ℝ₊ × ℝ₊₊ × ℝ₊₊ → {keep, adjust}
+
+Where
+  𝑔_keep≻    : ℝ₊ × ℝ₊₊ × ℝ₊₊ × Age → ℝ₊₊ × ℝ₊₊ × ℝ₊₊,
+               𝑔_keep≻(a_d, h_d, z_d, age_kp) =
+                 (R · a_d + Y[age_kp] · z_d + y_R[age_kp], (1 − δ) · h_d, z_d)
+  𝑔_adjust≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ × Age → ℝ₊₊ × ℝ₊₊,
+               𝑔_adjust≻(a_d, h_d, z_d, age_adj)
+                 = (R · a_d
+                      + R_H · (1 − δ) · h_d
+                      + Y[age_adj] · z_d
+                      + y_R[age_adj],
+                    z_d)
+
+Rule
+  𝑑(a_d, h_d, z_d)
+    ∈ argmax_{d ∈ {keep, adjust}}
+        [(𝑉_kp≻(𝑔_keep≻(a_d, h_d, z_d, 𝑎𝑔𝑒_kp≻())),
+          𝑉_adj≻(𝑔_adjust≻(a_d, h_d, z_d, 𝑎𝑔𝑒_adj≻())))[d]]
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  46  d = argmax_{d}(V_kp[>], V_adj[>])  :: [id=choice]
+
+Definitions referenced
+  Age   tenure:set:Age
+  R     tenure:parameter:R
+  R_H   tenure:parameter:R_H
+  δ     tenure:parameter:δ
+  Y     tenure:parameter:Y
+  y_R   tenure:parameter:y_R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Evaluation ====
+STAGE tenure / POLICY BUILDER policy / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑑  : ℝ₊ × ℝ₊₊ × ℝ₊₊ → {keep, adjust}
+       ────────────────────────────────────
+  out  𝑑  : ℝ₊ × ℝ₊₊ × ℝ₊₊ → {keep, adjust}
+
+Where
+  𝑔_keep≻    : ℝ₊ × ℝ₊₊ × ℝ₊₊ × Age → ℝ₊₊ × ℝ₊₊ × ℝ₊₊,
+               𝑔_keep≻(a_d, h_d, z_d, age_kp) =
+                 (R · a_d + Y[age_kp] · z_d + y_R[age_kp], (1 − δ) · h_d, z_d)
+  𝑔_adjust≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ × Age → ℝ₊₊ × ℝ₊₊,
+               𝑔_adjust≻(a_d, h_d, z_d, age_adj)
+                 = (R · a_d
+                      + R_H · (1 − δ) · h_d
+                      + Y[age_adj] · z_d
+                      + y_R[age_adj],
+                    z_d)
+
+Rule
+  𝑑(a_d, h_d, z_d)
+    ∈ argmax_{d ∈ {keep, adjust}}
+        [(𝑉_kp≻(𝑔_keep≻(a_d, h_d, z_d, 𝑎𝑔𝑒_kp≻())),
+          𝑉_adj≻(𝑔_adjust≻(a_d, h_d, z_d, 𝑎𝑔𝑒_adj≻())))[d]]
+  𝑑 : ℝ₊ × ℝ₊₊ × ℝ₊₊ → {keep, adjust}
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Age   tenure:set:Age
+  R     tenure:parameter:R
+  R_H   tenure:parameter:R_H
+  δ     tenure:parameter:δ
+  Y     tenure:parameter:Y
+  y_R   tenure:parameter:y_R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn ====
+STAGE tenure / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on ℝ₊ × ℝ₊₊ × ℝ₊₊
+       ────────────────────────────────────────────
+  out  μ   : finite measure on ℝ₊ × ℝ₊₊ × ℝ₊₊
+
+Operations
+  1  DistributionExtension:ε
+     in: μ≺                             out: μ≺⊗P_ε
+     ──────────────────────────────────────────────
+     rule: μ≺⊗P_ε(B)
+             = ∫_{(a, h, z) ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊}
+                 [P_ε({ε ∈ ℝ | (a, h, z, ε) ∈ B})] μ≺(d(a, h, z))
+
+  2  Pushforward
+     in: (1)                            out: μ
+     ──────────────────────────────────────────────
+     rule: μ(B)
+             = μ≺⊗P_ε({a≺, h≺, z≺, ε ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊ × ℝ |
+                        𝑔≺(a≺, h≺, z≺, ε) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  17  a_d = a
+  18  h_d = h
+  19  z_d = z^ρ_z*exp(σ_z*ε)  :: [id=income_state]
+
+Definitions referenced
+  ε     tenure:distribution:ε
+  P_ε   tenure:distribution:ε
+  𝑔≺    tenure:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / DistributionExtension:ε ====
+STAGE tenure / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+  / DistributionExtension:ε
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on ℝ₊ × ℝ₊₊ × ℝ₊₊
+       ──────────────────────────────────────────
+  out  μ≺⊗P_ε
+           : finite measure on ℝ₊ × ℝ₊₊ × ℝ₊₊ × ℝ
+
+Rule
+  μ≺⊗P_ε(B)
+    = ∫_{(a, h, z) ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊} [P_ε({ε ∈ ℝ | (a, h, z, ε) ∈ B})]
+      μ≺(d(a, h, z))
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  14  ε ~ N(0, 1)
+
+Definitions referenced
+  ε     tenure:distribution:ε
+  P_ε   tenure:distribution:ε
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / Pushforward ====
+STAGE tenure / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺⊗P_ε
+          : finite measure on ℝ₊ × ℝ₊₊ × ℝ₊₊ × ℝ
+       ─────────────────────────────────────────
+  out  μ  : finite measure on ℝ₊ × ℝ₊₊ × ℝ₊₊
+
+Rule
+  μ(B) = μ≺⊗P_ε({a≺, h≺, z≺, ε ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊ × ℝ | 𝑔≺(a≺, h≺, z≺, ε) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  17  a_d = a
+  18  h_d = h
+  19  z_d = z^ρ_z*exp(σ_z*ε)  :: [id=income_state]
+
+Definitions referenced
+  ε     tenure:distribution:ε
+  P_ε   tenure:distribution:ε
+  𝑔≺    tenure:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE tenure / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ          : finite measure on ℝ₊ × ℝ₊₊ × ℝ₊₊
+       ────────────────────────────────────────────────────────
+  out  μ_keep≻    : finite measure on ℝ₊₊ × ℝ₊₊ × ℝ₊₊
+       μ_adjust≻  : finite measure on ℝ₊₊ × ℝ₊₊
+
+At
+  𝑑  : ℝ₊ × ℝ₊₊ × ℝ₊₊ → {keep, adjust}
+
+Where
+  𝑔_keep≻    : ℝ₊ × ℝ₊₊ × ℝ₊₊ × Age → ℝ₊₊ × ℝ₊₊ × ℝ₊₊,
+               𝑔_keep≻(a_d, h_d, z_d, age_kp) =
+                 (R · a_d + Y[age_kp] · z_d + y_R[age_kp], (1 − δ) · h_d, z_d)
+  𝑔_adjust≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ × Age → ℝ₊₊ × ℝ₊₊,
+               𝑔_adjust≻(a_d, h_d, z_d, age_adj)
+                 = (R · a_d
+                      + R_H · (1 − δ) · h_d
+                      + Y[age_adj] · z_d
+                      + y_R[age_adj],
+                    z_d)
+
+Operations
+  1  Pushforward
+     in: μ                              out: μ_keep≻, μ_adjust≻
+     ──────────────────────────────────────────────────────────
+     rule: μ_keep≻(B)
+             = μ({a_d, h_d, z_d ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊ |
+                   𝑑(a_d, h_d, z_d) = keep
+                     ∧ 𝑔_keep≻(a_d, h_d, z_d, 𝑎𝑔𝑒_kp≻()) ∈ B})
+           μ_adjust≻(B)
+             = μ({a_d, h_d, z_d ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊ |
+                   𝑑(a_d, h_d, z_d) = adjust
+                     ∧ 𝑔_adjust≻(a_d, h_d, z_d, 𝑎𝑔𝑒_adj≻()) ∈ B})
+
+Conditions
+  Pushforward  R · a_d + Y[age_kp] · z_d + y_R[age_kp] ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  24  w_kp = R*a_d + Y[age_kp[>]]*z_d + y_R[age_kp[>]]
+        :: [id=cash_on_hand]
+  25  h_kp = (1 - δ)*h_d
+        :: [id=housing_kept]
+  26  z_kp = z_d
+  29  w_adj = R*a_d + R_H*(1 - δ)*h_d + Y[age_adj[>]]*z_d + y_R[age_adj[>]]
+        :: [id=total_wealth]
+  30  z_adj = z_d
+
+Definitions referenced
+  Age   tenure:set:Age
+  R     tenure:parameter:R
+  R_H   tenure:parameter:R_H
+  δ     tenure:parameter:δ
+  Y     tenure:parameter:Y
+  y_R   tenure:parameter:y_R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE tenure / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ          : finite measure on ℝ₊ × ℝ₊₊ × ℝ₊₊
+       ──────────────────────────────────────────────
+  out  μ_keep≻    : finite measure on ℝ₊₊ × ℝ₊₊ × ℝ₊₊
+       μ_adjust≻  : finite measure on ℝ₊₊ × ℝ₊₊
+
+Where
+  𝑔_keep≻    : ℝ₊ × ℝ₊₊ × ℝ₊₊ × Age → ℝ₊₊ × ℝ₊₊ × ℝ₊₊,
+               𝑔_keep≻(a_d, h_d, z_d, age_kp) =
+                 (R · a_d + Y[age_kp] · z_d + y_R[age_kp], (1 − δ) · h_d, z_d)
+  𝑔_adjust≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ × Age → ℝ₊₊ × ℝ₊₊,
+               𝑔_adjust≻(a_d, h_d, z_d, age_adj)
+                 = (R · a_d
+                      + R_H · (1 − δ) · h_d
+                      + Y[age_adj] · z_d
+                      + y_R[age_adj],
+                    z_d)
+
+Rule
+  μ_keep≻(B)
+    = μ({a_d, h_d, z_d ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊ |
+          𝑑(a_d, h_d, z_d) = keep ∧ 𝑔_keep≻(a_d, h_d, z_d, 𝑎𝑔𝑒_kp≻()) ∈ B})
+  μ_adjust≻(B)
+    = μ({a_d, h_d, z_d ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊ |
+          𝑑(a_d, h_d, z_d) = adjust
+            ∧ 𝑔_adjust≻(a_d, h_d, z_d, 𝑎𝑔𝑒_adj≻()) ∈ B})
+
+Conditions
+  R · a_d + Y[age_kp] · z_d + y_R[age_kp] ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  24  w_kp = R*a_d + Y[age_kp[>]]*z_d + y_R[age_kp[>]]
+        :: [id=cash_on_hand]
+  25  h_kp = (1 - δ)*h_d
+        :: [id=housing_kept]
+  26  z_kp = z_d
+  29  w_adj = R*a_d + R_H*(1 - δ)*h_d + Y[age_adj[>]]*z_d + y_R[age_adj[>]]
+        :: [id=total_wealth]
+  30  z_adj = z_d
+
+Definitions referenced
+  Age   tenure:set:Age
+  R     tenure:parameter:R
+  R_H   tenure:parameter:R_H
+  δ     tenure:parameter:δ
+  Y     tenure:parameter:Y
+  y_R   tenure:parameter:y_R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== tenure:set:Age ====
+STAGE tenure / SET Age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Age  = {20, …, 71}
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  3  Age := {20, …, 71}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== tenure:parameter:R ====
+STAGE tenure / PARAMETER R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  R  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  5  R   : ℝ₊₊  :: ["gross return on financial assets"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== tenure:parameter:R_H ====
+STAGE tenure / PARAMETER R_H
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  R_H  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  6  R_H : ℝ₊₊
+       :: ["gross return on housing, received when the house is sold"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== tenure:parameter:δ ====
+STAGE tenure / PARAMETER δ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  δ  ∈ [0, 1)
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  7  δ   : [0,1)  :: ["depreciation rate of housing"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== tenure:parameter:ρ_z ====
+STAGE tenure / PARAMETER ρ_z
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  ρ_z  ∈ (0, 1)
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  8  ρ_z : (0,1)  :: ["persistence of log income"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== tenure:parameter:σ_z ====
+STAGE tenure / PARAMETER σ_z
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  σ_z  ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  9  σ_z : ℝ₊  :: ["standard deviation of the innovation to log income"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== tenure:parameter:Y ====
+STAGE tenure / PARAMETER Y
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Y  ∈ Age → ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  10  Y   : Age → ℝ₊
+        :: ["earnings per unit of the income state at the age of the period"]
+
+Definitions referenced
+  Age   tenure:set:Age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== tenure:parameter:y_R ====
+STAGE tenure / PARAMETER y_R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  y_R  ∈ Age → ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  11  y_R : Age → ℝ₊
+        :: ["income that does not depend on the income state at the age of the
+        period"]
+
+Definitions referenced
+  Age   tenure:set:Age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== tenure:distribution:ε ====
+STAGE tenure / DISTRIBUTION ε
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  ε    ~ N(0, 1)
+  P_ε  = measure on ℝ given by
+           B
+             ↦ ∫_{z ∈ {z ∈ ℝ | 0 + 1^(1/2) · z ∈ B}}
+                 [exp(−z²/2)/(2 · pi)^(1/2)] Lebesgue(dz)
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  14  ε ~ N(0, 1)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.1 ====
+STAGE tenure / FORWARD BLOCK arvl_to_dcsn / 1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  tenure.bl
+  17  a_d = a
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.2 ====
+STAGE tenure / FORWARD BLOCK arvl_to_dcsn / 2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  tenure.bl
+  18  h_d = h
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.income_state ====
+STAGE tenure / FORWARD BLOCK arvl_to_dcsn / income_state
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  tenure.bl
+  19  z_d = z^ρ_z*exp(σ_z*ε)  :: [id=income_state]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.keep.cash_on_hand ====
+STAGE tenure / FORWARD BLOCK dcsn_to_cntn / keep.cash_on_hand
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  R · a_d + Y[age_kp] · z_d + y_R[age_kp] ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  24  w_kp = R*a_d + Y[age_kp[>]]*z_d + y_R[age_kp[>]]  :: [id=cash_on_hand]
+
+Definitions referenced
+  R     tenure:parameter:R
+  Y     tenure:parameter:Y
+  y_R   tenure:parameter:y_R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.keep.housing_kept ====
+STAGE tenure / FORWARD BLOCK dcsn_to_cntn / keep.housing_kept
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  tenure.bl
+  25  h_kp = (1 - δ)*h_d  :: [id=housing_kept]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.keep.3 ====
+STAGE tenure / FORWARD BLOCK dcsn_to_cntn / keep.3
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  tenure.bl
+  26  z_kp = z_d
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.adjust.total_wealth ====
+STAGE tenure / FORWARD BLOCK dcsn_to_cntn / adjust.total_wealth
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  tenure.bl
+  29  w_adj = R*a_d + R_H*(1 - δ)*h_d + Y[age_adj[>]]*z_d + y_R[age_adj[>]]
+        :: [id=total_wealth]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.adjust.2 ====
+STAGE tenure / FORWARD BLOCK dcsn_to_cntn / adjust.2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  tenure.bl
+  30  z_adj = z_d
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.choice_value ====
+STAGE tenure / BACKWARD BLOCK cntn_to_dcsn / choice_value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(a_d, h_d, z_d) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  37  V = (V_kp[>], V_adj[>])[d]  :: [id=choice_value]
+
+Definitions referenced
+  Age   tenure:set:Age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.age ====
+STAGE tenure / BACKWARD BLOCK cntn_to_dcsn / age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(a_d, h_d, z_d) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  38  age = age_kp[>] - 1  :: [id=age]
+
+Definitions referenced
+  Age   tenure:set:Age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.value ====
+STAGE tenure / BACKWARD BLOCK dcsn_to_arvl / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉≺(a, h, z) ∈ ℝ
+  𝑎𝑔𝑒≺ ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  42  V[<]    = E_{ε}(V)  :: [id=value]
+
+Definitions referenced
+  Age   tenure:set:Age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== policy.choice ====
+STAGE tenure / POLICY BLOCK policy / choice
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  tenure.bl
+  46  d = argmax_{d}(V_kp[>], V_adj[>])  :: [id=choice]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== tenure:g:arvl_to_dcsn ====
+STAGE tenure / LAW OF MOTION arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≺  : ℝ₊ × ℝ₊₊ × ℝ₊₊ × ℝ → ℝ₊ × ℝ₊₊ × ℝ₊₊,
+        (a, h, z, ε) ↦ (a, h, z^ρ_z · exp(σ_z · ε))
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  17  a_d = a
+  18  h_d = h
+  19  z_d = z^ρ_z*exp(σ_z*ε)  :: [id=income_state]
+
+Definitions referenced
+  ρ_z   tenure:parameter:ρ_z
+  σ_z   tenure:parameter:σ_z
+  ε     tenure:distribution:ε
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== tenure:g:dcsn_to_cntn ====
+STAGE tenure / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ × Age × Age × {keep, adjust}
+          → (ℝ₊₊ × ℝ₊₊ × ℝ₊₊, ℝ₊₊ × ℝ₊₊)[d],
+        (a_d, h_d, z_d, age_kp, age_adj, d)
+          ↦ ((R · a_d + Y[age_kp] · z_d + y_R[age_kp], (1 − δ) · h_d, z_d),
+             (R · a_d + R_H · (1 − δ) · h_d + Y[age_adj] · z_d + y_R[age_adj],
+              z_d))[d]
+
+Conditions
+  R · a_d + Y[age_kp] · z_d + y_R[age_kp] ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  24  w_kp = R*a_d + Y[age_kp[>]]*z_d + y_R[age_kp[>]]
+        :: [id=cash_on_hand]
+  25  h_kp = (1 - δ)*h_d
+        :: [id=housing_kept]
+  26  z_kp = z_d
+  29  w_adj = R*a_d + R_H*(1 - δ)*h_d + Y[age_adj[>]]*z_d + y_R[age_adj[>]]
+        :: [id=total_wealth]
+  30  z_adj = z_d
+
+Definitions referenced
+  Age   tenure:set:Age
+  R     tenure:parameter:R
+  R_H   tenure:parameter:R_H
+  δ     tenure:parameter:δ
+  Y     tenure:parameter:Y
+  y_R   tenure:parameter:y_R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== tenure:G:cntn_to_dcsn ====
+STAGE tenure / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : ℝ × ℝ × Age × ℝ₊ × ℝ₊₊ × ℝ₊₊ × {keep, adjust} → ℝ × Age,
+        (V_kp≻, V_adj≻, age_kp≻, a_d, h_d, z_d, d)
+          ↦ ((V_kp≻, V_adj≻)[d], age_kp≻ − 1)
+
+Conditions
+  𝑉(a_d, h_d, z_d) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  37  V = (V_kp[>], V_adj[>])[d]  :: [id=choice_value]
+  38  age = age_kp[>] - 1         :: [id=age]
+
+Definitions referenced
+  Age   tenure:set:Age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== tenure:G:dcsn_to_arvl ====
+STAGE tenure / VALUE AGGREGATOR dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≺  : Age × ℝ × ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ × Age,  (age, w, a, h, z) ↦ (w, age)
+
+Conditions
+  𝑉≺(a, h, z) ∈ ℝ
+  𝑎𝑔𝑒≺ ∈ Age
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  42  V[<]    = E_{ε}(V)  :: [id=value]
+
+Definitions referenced
+  Age   tenure:set:Age
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== tenure:G:policy ====
+STAGE tenure / VALUE AGGREGATOR policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : ℝ × ℝ × ℝ₊ × ℝ₊₊ × ℝ₊₊ × {keep, adjust} → ℝ,
+        (V_kp≻, V_adj≻, a_d, h_d, z_d, d) ↦ (V_kp≻, V_adj≻)[d]
+──────────────────────────────────────────────────────────────────────────────
+Source  tenure.bl
+  46  d = argmax_{d}(V_kp[>], V_adj[>])  :: [id=choice]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

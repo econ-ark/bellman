@@ -77,7 +77,13 @@ def share_ties(port, continuation, computed, reference):
     apart = np.flatnonzero(np.isclose(np.abs(computed - reference), step, rtol=0, atol=1e-12))
     if len(apart) == 0:
         return apart
-    objective, capital = tool.share_objective(port), tool.evaluation_grid(port)
+    inputs = {"V[>]": continuation}
+    port.check_inputs(inputs)
+    record = port.dcsn.builder.bwd.kernels(inputs=inputs)
+    method = tool.method_at(port, tool.expectation_place(port))
+    counts = {name: int(tool.setting(port, value)) for name, value in tool.keyword_arguments(method).items()}
+    nodes, weights = tool.expectation_rule(record, method.handler, counts)
+    objective, capital = tool.share_objective(record, nodes, weights, historical=True), tool.evaluation_grid(record)
     tied = []
     for i in apart:
         at_reference, at_computed = objective(continuation, capital[i], np.array([reference[i], computed[i]]))
@@ -102,7 +108,7 @@ def test_the_demonstration_reproduces_the_reference_to_1e_12(configuration, arch
     cons = model["periods"][0]["stages"]["cons"]
     assert "!egm" in str(cons.methods)
     terminal = tool.terminal_value(cons, TERMINAL[grid])
-    solutions = tool.solve_trellis(model, terminal)
+    solutions = tool.solve_trellis(model, {"V[>]": terminal})
     actual = tool.reference_arrays(configuration, solutions)
     expected = {key: value for key, value in archive.items() if key.startswith(configuration + "/")}
     assert sorted(actual) == sorted(expected)

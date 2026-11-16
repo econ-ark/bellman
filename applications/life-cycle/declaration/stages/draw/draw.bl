@@ -1,0 +1,33 @@
+@stage: draw
+# The current age selects a transition matrix. The previous productivity selects its row.
+
+Xa := ℝ₊                  :: ["assets"]
+J : ℤ @ [1, inf)          :: ["number of ages"]
+Ages := {0, …, J - 1}
+Z := {1, 2, 3}
+
+Transition := Z × Z → [0,1]
+Π : Ages → Transition  :: ["transition probabilities of productivity, one matrix for each age"]
+
+z : Z
+z(_age) ~ MarkovChain(Π[_age], Z, z_2)
+
+[id=arvl_to_dcsn, (z_2 : Z, a_2 : Xa, z, age) : !arvl -> (z_d : Z, a_d : Xa) : !dcsn] {
+    z_d = z(age)
+    a_d = a_2
+}
+
+[id=dcsn_to_cntn, (z_d, a_d) : !dcsn -> (z_3 : Z, a_3 : Xa) : !cntn] {
+    z_3 = z_d
+    a_3 = a_d
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, age : Ages @ !vlu @ !cnst) : !cntn -> (V : ℝ @ !vlu, age) : !dcsn] {
+    V = V[>]                       :: [id=value]
+    D_{a_d}V = D_{a_3}V[>]  :: [id=marginal_decision]
+}
+
+[id=dcsn_to_arvl, (V, age) : !dcsn -> (V[<] : ℝ @ !vlu, age) : !arvl] {
+    V[<] = E_{z}(V)                :: [id=value]
+    D_{a_2}V[<] = E_{z}(D_{a_d}V)  :: [id=marginal_arrival]
+}

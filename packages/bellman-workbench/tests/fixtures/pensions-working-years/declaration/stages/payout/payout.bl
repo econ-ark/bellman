@@ -1,5 +1,6 @@
 @stage: payout
 
+Age := {17, …, 101}
 Plan := {DB, DC}
 
 f_ACF : ℝ₊       :: ["average contribution factor, equation (5)"]
@@ -36,13 +37,13 @@ Y_63  : ℝ₊       :: ["deterministic earnings level at 63"]
     plan_a = plan_d
 }
 
-[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu, age_sv : Age @ !vlu @ !cnst) : !cntn -> (V : [-inf, inf) @ !vlu, age_sv) : !dcsn] {
     V        = V[>]                              :: [id=value]
     D_{a_d}V = D_{w_a}V[>]                       :: [id=marginal_liquid]
     D_{h_d}V = D_{h_a}V[>]                       :: [id=marginal_housing]
     D_{m_d}V = D_{m_a}V[>]                       :: [id=marginal_mortgage]
 }
 
-[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl] {
+[id=dcsn_to_arvl, (V, age_sv) : !dcsn -> (V[<] : [-inf, inf) @ !vlu, age_sv) : !arvl] {
     V[<] = V                                     :: [id=value]
 }

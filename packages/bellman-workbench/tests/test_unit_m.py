@@ -2010,9 +2010,8 @@ def test_task_10_the_recipe_is_a_tab_of_the_panel_under_the_editor_whose_changes
             for address, value in found["values"].items()
         }
         assert values["trellis"] == "trellis.yml"
-        assert (values[TENURE_CALIBRATION], values["stages.tenure.calibration.all[1]"]) == (
-            "durables",
-            "$fill",
+        assert tuple(values[f"stages.tenure.calibration.all[{i}]"] for i in range(3)) == (
+            "durables", "wage_schedule", "$fill",
         )
         assert values["stages.tenure.stage"] == "tenure.bl"
         assert values["stages.tenure.methods.all[0]"] == "methods.bl"

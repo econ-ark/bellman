@@ -60,7 +60,7 @@ import sys
 from dataclasses import fields, is_dataclass
 
 _TESTS = pathlib.Path(__file__).resolve().parent
-_TOOLS = _TESTS.parents[2] / "packages" / "bellman" / "tests" / "tools"
+_TOOLS = _TESTS.parents[2] / "applications"
 sys.path.insert(0, str(_TOOLS))
 
 import pytest                         # noqa: E402
@@ -69,7 +69,7 @@ import stage_ast                      # noqa: E402
 from stage_ast import (               # noqa: E402
     annotation as _ann, block, one_minus as _one_minus, parsed, perched as _p, run_checks,
     sym as _c)
-from stage_types import (             # noqa: E402
+from bellman.syntax.terms import (             # noqa: E402
     Add, Annotation, Arrival, Assignment, At, Block, Call, Cartesian, Closed,
     Constant, Continuation, Control, Coordinate, CorrDef, Declaration,
     Declare, Decision, Div, Domain, Equation, Grid, In, Infoset, Interval,

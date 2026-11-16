@@ -1,4 +1,7 @@
-"""The operations over a trellis dictionary, each a loop over its positions.
+"""The operations over the author's trellis diagram, held as a dictionary.
+
+Positions identify occurrences and select recipe bindings. They are not
+implicit inputs to the stage operators.
 
 `specify_trellis` answers the trellis that `elaborate_trellis` and the three
 trellis verbs make, and copies each stage occurrence once: it constructs each
@@ -375,7 +378,8 @@ def _check_kept_kinds(kept, found, renewed, order):
 def _at_position(stage, h, key):
     """`stage` with `position` in its provenance set to `{"h": h, "key":
     key}`, the place of the other entries kept, as `accrete` records the
-    position of each stage occurrence it appends."""
+    position of each stage occurrence it appends. This position is the
+    occurrence's address, not an economic input."""
     position = {"h": h, "key": key}
     return replace_stage(stage, provenance=freeze({**stage.provenance, "position": position}))
 
@@ -385,7 +389,7 @@ def elaborate_trellis(syntactic, previous=None):
     settings bound. Each distinct stage text, with the additions its record
     names unioned into it, is constructed once for each origin and each
     selection of additions (specification 0.7, D3), and a full copy of its
-    stage is placed at each of its positions, its position in its provenance,
+    stage is placed at each of its positions, its address in its provenance,
     so that no two positions share an object; the connectors therefore read
     the unioned stage, so that an addition which adds a coordinate or an
     arrival builder changes what a connector joins (F42, F43). A position
@@ -632,7 +636,9 @@ def accrete(trellis, period, inter_connector=None, *, file=None):
     fields to the arrival fields of the period appended before it, written at
     `inter_connectors[len(periods) - 2]`, the entry that joins the appended
     period to the one before it, `{}` when none is given. The terminal period,
-    appended first, takes no mapping. The result is a new dictionary: the
+    appended first, takes no mapping. In backward evaluation the appended
+    period reads fields returned by the period already present.
+    The result is a new dictionary: the
     earlier periods' stage objects are the same objects under copied period
     dictionaries, and the appended period is copied, its stages by
     `copy_native`, so that no object of the caller's stands inside the

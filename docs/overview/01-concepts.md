@@ -13,7 +13,7 @@ date: 2026-09-22
 audience: user
 type: overview
 ---
-# How Bellman-SYM works
+# Bellman-SYM concepts
 
 
 > [!summary]
@@ -21,7 +21,7 @@ type: overview
 
 Bellman-SYM is a highly expressive declarative functional programming system for dynamic recursive problems.
 
-## 1 What Bellman-SYM does
+## 1 Bellman-SYM
 
 Consider a household that arrives with assets, receives income, chooses consumption, and saves what remains. In [Bellman-SYM](../wiki/sym.md), this decision problem is written as a modular **[stage](../wiki/stage.md)** in a stage file, a `.bl` file. Although an economist first describes the problem as relations between economic quantities such as consumption and income, its solution and simulation are **higher-order** operations, that is, operations on functions rather than on numbers. In the Bellman equation of such a problem, for instance, the expected continuation value function is combined with current utility and maximized over the feasible choices to obtain the decision value function. These operations define the stage's **Bellman operator**, but how they compose, and the numerical assumptions under which they are approximated, are usually left implicit or embedded in numerical procedures.
 
@@ -44,7 +44,9 @@ Bellman-SYM can express [recursive decision processes](../wiki/recursive_decisio
 
 A stage represents a single decision problem as a **Bellman operator**, that is, as one recursive program. In the household's consumption and saving problem, the stage states what the household knows before its income is drawn, what it learns when the income is realized, what it chooses, and how its **continuation value** is formed. The three points at which its information is fixed, arrival, decision and continuation, are the stage's [perches](../wiki/perch.md).
 
-The internal structure of a stage follows the information available within its decision problem, not the model around it: *a stage is a self-contained program that refers neither to the rest of the model nor to its position in time.* Modularity means that stages can be joined into a [period](../wiki/period.md), the stages that together make up one step of the horizon, such as one year of a life cycle, and periods can be joined in turn into a [trellis](../wiki/trellis.md), the sequence of periods across the horizon. Provided that their inputs and outputs agree in type, stages can be rearranged or replaced within a period and reused across models, so a richer model is built by adding stages to an existing one rather than by rewriting it.
+The internal structure of a stage follows the information available within its decision problem, not the model around it: *a stage is a self-contained program that refers neither to the rest of the model nor to its position in time.* [Modularity](../wiki/modularity.md) requires repeated declarations to retain their operators and calibration sources. Stages join into a [period](../wiki/period.md), one step of the horizon, such as one year of a life cycle, and a [trellis](../wiki/trellis.md) is a diagram of periods joined by connections. With compatible inputs and outputs, stages can be rearranged, replaced or reused to form different models, so a richer model is built by adding stages to an existing one rather than by rewriting it.
+A stage receives what differs between periods as a [field](../wiki/field.md). Age, for example, can be a constant value-type field, typed `!vlu @ !cnst`, computed from the next period's age. The user supplies its terminal value when realizing the model. A fixed table or function gives income at that age. A trellis position is only an address: no stage or period file takes it as an argument that adjusts a parameter. Recipes nevertheless permit calibration, methods and settings to be selected by position; the package does not enforce [modularity](../bellman-calculus/APPX-H-MODULARITY.md). Methods and settings lie outside that condition.
+
 <figure markdown="span">
   --8<-- "overview/img/modularity.svg"
   <figcaption id="fig-modularity">Figure 2. The housing tenure model assembled from its stages, with a period drawn as a plate: the <em>tenure choice</em> stage forks into an owner's lane and a renter's lane, a portfolio stage from another model is added where the lanes rejoin, and six of the twenty periods of the life cycle are stacked into the trellis.</figcaption>
@@ -60,11 +62,11 @@ The semantic graph denotes the mathematical operations required to solve and sim
 
 Each method is declared in a methods file and attached to a place in the stage: to a whole block, as the endogenous grid method is attached to the policy block; to an operation inside a block, as a quadrature rule is attached to an expectation; or to a named function that is to be stored, as linear interpolation is. The numerical options of a method, such as the size of a grid, are its **settings**, whose values are supplied separately.
 
-Settings are distinct from the model's **parameters**, the exogenous economic quantities that enter its theoretical description rather than its numerical methods. Parameter values are also supplied separately from the symbolic model, so that the theoretical model, its calibration and its numerical approximation remain distinct. Even without parameter values, methods or settings, elaboration produces a **symbolic stage**, whose semantic graph represents the theory with the parameters left symbolic. The stage is then **specified** by supplying parameter values through **calibration**, attaching methods through **methodization**, and supplying their settings through **configuration**, in that order (Figure 3).
+Settings are distinct from the model's **parameters**, the exogenous economic quantities that enter its theoretical description rather than its numerical methods. Parameter values are also supplied separately from the symbolic model, so that the theoretical model, its calibration and its numerical approximation remain distinct. Even without parameter values, methods or settings, elaboration produces a **symbolic stage**, whose semantic graph represents the theory with the parameters left symbolic. The stage is then **specified** by attaching methods through **methodization**, supplying parameter values through **calibration**, and supplying their settings through **configuration**. The stage API also permits calibration before methodization, the order retained by the trellis factory (Figure 3).
 
 <figure markdown="span">
   --8<-- "overview/img/specification.svg"
-  <figcaption id="fig-specification">Figure 3. Calibration, methodization and configuration produce successive versions of a stage, each leaving the preceding version unchanged; parameter values enter the stage itself because they determine the economic problem, whereas methods and settings can be changed without altering it.</figcaption>
+  <figcaption id="fig-specification">Figure 3. Calibration, methodization and configuration supply the three bindings, in the order retained by the trellis factory. Stage binding verbs change the stage in place; trellis binding verbs return separate occurrences and preserve the earlier trellis. Parameter values define the economic problem; methods and settings define its numerical treatment.</figcaption>
 </figure>
 
 ### 3.2 From semantics to code
@@ -87,7 +89,7 @@ The workflow separates the description of the economic problem from the choices 
 
 1. **Write the stages.** Describe each decision problem in a stage file, stating its timing, information, choices and equations, and state how the stages join into periods and how the periods form the model's trellis.
 2. **Elaborate and inspect the model.** Bellman-SYM produces a semantic graph that makes the functional operations and their composition explicit. The resulting **symbolic stage** lets you check the mathematical problem before supplying parameter values, numerical methods or settings.
-3. **Specify the stages.** Supply parameter values through **calibration**, attach numerical methods through **methodization**, and supply their settings through **configuration**, in that order. Each step adds its binding to the stage; the **specified stage**, the stage after the three, records the choices needed for implementation but is not yet solver code.
+3. **Specify the stages.** For one stage, attach numerical methods through **methodization**, supply parameter values through **calibration**, and supply their settings through **configuration**. The trellis factory retains calibration before methodization. Each step adds its binding to the stage; the **specified stage**, the stage after the three, records the choices needed for implementation but is not yet solver code.
 4. **Realize and check the model.** Implement the graph's operations with routines from the chosen toolkit or with your own code, and compose them to solve and simulate the model. Then check the numerical approximation against the mathematical description that the graph retains.
 
 [^carroll]: Carroll, C. D. (2006). The method of endogenous gridpoints for solving dynamic stochastic optimization problems. *Economics Letters*, 91(3), 312–320. The end-of-period value function is equation (11), p. 314.

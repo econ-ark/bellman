@@ -135,7 +135,7 @@ The formulation above is the standard one: one Bellman equation with a discrete 
 > - **Decision** (unmarked): perch on which the agent makes a decision.
 > - **Continuation** ($\succ$): perch after the choice and transition.
 >
-> Within a stage we use only perch indices; time subscripts are reserved for the inter-period connector that wires period $t$'s continuation to period $t{+}1$'s arrival. Greek letters denote arrival quantities (e.g. $\xi$ for the persistent income state at arrival); Roman letters denote quantities realized or chosen inside the period (e.g. $z$ once the income innovation resolves, $\nu$ for housing at the continuation perch). Housing at arrival is $h$; the carried or chosen housing at the continuation perch is $\nu$.
+> Within a stage we use perch indices. The paper's time subscripts label periods in the mathematical exposition; a trellis position is only an address. The application sends age backward as a constant field and reads fixed income tables at that age. Greek letters denote arrival quantities (e.g. $\xi$ for the persistent income state at arrival); Roman letters denote quantities realized or chosen inside the period (e.g. $z$ once the income innovation resolves, $\nu$ for housing at the continuation perch). Housing at arrival is $h$; the carried or chosen housing at the continuation perch is $\nu$.
 >
 
 
@@ -158,6 +158,8 @@ Each period decomposes into stages, solved in reverse. The decision-to-continuat
 `keeper_cons` and `adjuster_cons` are the two alternatives of the same decision-to-continuation branching; neither precedes the other. The Bellman equations below are written conditional on the realized income state $z$. Economically this is a one-dimensional EGM problem for each $(z, \nu)$ slice of the keeper problem and a one-dimensional wealth problem for each $z$ slice of the adjuster problem.
 
 ### Stage `tenure` — branching and the income shock
+
+The bequest takes in age 71. Each consumption stage keeps the age it takes in. The tenure stage sends back the keep branch's incoming age minus one. Each branch reads the wage and retirement tables at its incoming age to obtain the amounts for the age one year younger.
 
 | Perch | States | Description |
 |-------|-----------------|-------------|

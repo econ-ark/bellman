@@ -1,24 +1,111 @@
-# The income schedule and the ages of the durables model, the eight names no
-# stage declares. The recipe's `registry` block admits them, so a fill of one
-# is not refused; they are carried as data with their provenance and reach no
-# stage. The values are those of the replication code of Dobrescu and Shanker
-# (2026), Application 2.
-
+# Income at each incoming age minus one. The values follow the age profile
+# of Dobrescu and Shanker (2026), Application 2. Key 20 only completes
+# the table's declared age domain. The modeled periods use keys 21–71.
+# The zero earnings and retirement income 0.1 begin at current age 61.
 calibration:
-  # The income schedule. While the household works,
-  # Y = earnings_scale * exp(λ0 + λ1 t + λ2 t^2 + λ3 t^3 + λ4 t^4 + λ5 s + λ6 s^2)
-  # with s = min(tenure_cap, t - tenure_origin) and y_R = 0; from the year after
-  # retirement_age, Y = 0 and y_R = retirement_income. The coefficients are the
-  # female wage function of Dobrescu, Shanker, Bateman, Newell and Thorp (2025).
-  wage_coefficients: [4.329982, 0.610214, -0.0209832, 0.0003132, -0.00000172, 0.0199949, 0.0000476]
-  tenure_cap: 30
-  tenure_origin: 20
-  earnings_scale: 1.0e-05
-  retirement_income: 0.1
-
-  # Ages: the household works from first_age, retires after retirement_age and
-  # lives to last_age. The trellis has last_age minus first_age plus one
-  # periods, and periods[h] is age last_age - h.
-  first_age: 20
-  retirement_age: 60
-  last_age: 70
+  Y:
+    - 0.0
+    - 0.3193257731132868
+    - 0.35488542610341706
+    - 0.3898899399390923
+    - 0.4238637223478638
+    - 0.4564083412535708
+    - 0.48721295853095614
+    - 0.5160584808353706
+    - 0.542816211534675
+    - 0.5674420865477191
+    - 0.5899677025802004
+    - 0.6104893288347982
+    - 0.6291559719037418
+    - 0.6461573784552829
+    - 0.6617126471889255
+    - 0.6760599084014481
+    - 0.6894473357801711
+    - 0.7021255920034827
+    - 0.7143416819432543
+    - 0.7263340943388776
+    - 0.7383290511606643
+    - 0.7505376482295287
+    - 0.763153655230744
+    - 0.7763517425853104
+    - 0.7902859120804835
+    - 0.8050879241589475
+    - 0.8208655349560192
+    - 0.8377003793543313
+    - 0.8556453623796897
+    - 0.8747214510437913
+    - 0.8949137939366003
+    - 0.9161671388401348
+    - 0.9171372134145425
+    - 0.9182779237754403
+    - 0.9193630506447101
+    - 0.9201273588658764
+    - 0.9202669711794874
+    - 0.9194408320489058
+    - 0.9172736935857729
+    - 0.913361083833661
+    - 0.9072767170176537
+    - 0.89858276265928
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+  y_R:
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1

@@ -14,7 +14,6 @@ that no node name is written in the spelling of an identity.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import NamedTuple
 
 from bellman.display.drawing import Drawing, dot_attributes, dot_head, dot_quoted
@@ -22,7 +21,7 @@ from bellman.factory.connections import trellis_selection
 from bellman.factory.joins import forward_order, inter_period_joins, period_joins
 from bellman.refusals import FactoryError
 
-__all__ = ["chosen_periods", "diagram_period", "diagram_trellis", "join_label", "period_age"]
+__all__ = ["chosen_periods", "diagram_period", "diagram_trellis", "join_label"]
 
 
 def join_label(join):
@@ -34,22 +33,12 @@ def join_label(join):
     return field if field == arrival else f"{field} → {arrival}"
 
 
-def period_age(trellis, h):
-    """The age of `periods[h]`, `last_age − h`, where the calibration of the
-    trellis's `registry` holds an integer `last_age`; None otherwise. The
-    drawing of a trellis labels the period's cluster with it, and the
-    interactive view the period's layer (`model_explorer`)."""
-    last_age = _age_label(trellis)
-    return last_age - h if isinstance(last_age, int) else None
-
-
 def diagram_trellis(trellis, periods=None, selection=None):
     """A `Drawing` of the periods of an elaborated trellis, every one or those
     whose indices `periods` lists, in the format of a graph's `diagram()`.
     Each period is drawn as `diagram_period` draws it, its stages as the
     nodes `periods[h] <key>`, inside a cluster labeled
-    `periods[h]` with `h` and, where the trellis's `registry` holds
-    `last_age`, the age `last_age − h`; the terminal period `h = 0` stands at
+    `periods[h]` with its position `h`; the terminal period `h = 0` stands at
     the right and the earlier periods to its left, so that economic time runs
     left to right and the backward computation right to left, the two
     directions written in the title; every inter-period mapping
@@ -82,7 +71,7 @@ def diagram_trellis(trellis, periods=None, selection=None):
             wired={position for at, position in read if at == h},
             selection=selection,
         )
-        lines += _period_cluster(h, statements[h], period_age(trellis, h))
+        lines += _period_cluster(h, statements[h])
     labels = [f"periods[{h}] {name}" for h in sorted(statements) for name in statements[h].labels]
     lines += _inter_period_edges(wires) + _order_edges(drawn, wires, statements) + ["}"]
     return Drawing("\n".join(lines) + "\n", labels)
@@ -105,16 +94,6 @@ def chosen_periods(held, periods):
     return sorted(set(chosen), reverse=True)
 
 
-def _age_label(trellis):
-    """The value `last_age` of the calibration of the trellis's `registry`,
-    or None where it holds none."""
-    registry = trellis.get("registry") if isinstance(trellis.get("registry"), Mapping) else {}
-    calibration = (
-        registry.get("calibration") if isinstance(registry.get("calibration"), Mapping) else {}
-    )
-    return calibration.get("last_age")
-
-
 def _inter_period_wires(trellis, drawn, selection):
     """The joins of each inter-period mapping between two drawn neighbors,
     keyed by the index of the mapping, read from `selection`."""
@@ -133,11 +112,10 @@ def _inter_period_wires(trellis, drawn, selection):
     }
 
 
-def _period_cluster(h, statements, age):
+def _period_cluster(h, statements):
     """The DOT lines of the cluster of period `h`, labeled with its index
-    and, where `age` is not None, its age (`period_age`), holding the
-    statements of the period."""
-    label = f"periods[{h}]: h = {h}" + (f", age {age}" if age is not None else "")
+    and holding the statements of the period."""
+    label = f"periods[{h}]: h = {h}"
     return [
         f"  subgraph {dot_quoted(f'cluster_{h}')} {{",
         f'    graph [label={dot_quoted(label)}, labelloc="t", labeljust="l"];',

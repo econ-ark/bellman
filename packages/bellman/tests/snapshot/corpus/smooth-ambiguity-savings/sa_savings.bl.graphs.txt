@@ -1,0 +1,656 @@
+==== wires ====
+Sort('sa_savings:cntn:V', 'field', perch='cntn', role='value', domain='ℝ₊₊', coordinates=('sa_savings:cntn:a',), derivatives=())
+Sort('sa_savings:dcsn:V', 'field', perch='dcsn', role='value', domain='ℝ₊₊', coordinates=('sa_savings:dcsn:m_d',), derivatives=())
+Sort('sa_savings:dcsn:c', 'field', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=(), derivatives=())
+Sort('sa_savings:alias:cntn_to_dcsn.risk_ce:CE', 'field', perch=None, role='alias', domain=None, coordinates=(), derivatives=())
+Sort('sa_savings:alias:cntn_to_dcsn.ambiguity_ce:AMB', 'field', perch=None, role='alias', domain=None, coordinates=(), derivatives=())
+Sort('sa_savings:dcsn:m_d', 'field', perch='dcsn', role='state', domain='ℝ₊₊', coordinates=(), derivatives=())
+Sort('sa_savings:shck:Ψ', 'field', perch='shck', role='shock', domain='ℝ₊₊', coordinates=(), derivatives=())
+Sort('sa_savings:cntn:a', 'field', perch='cntn', role='state', domain='ℝ₊₊', coordinates=(), derivatives=())
+Sort('sa_savings:function:cntn:V', 'function', perch='cntn', role='value', domain='ℝ₊₊', coordinates=('sa_savings:cntn:a',), derivatives=())
+Sort('sa_savings:function:dcsn:V', 'function', perch='dcsn', role='value', domain='ℝ₊₊', coordinates=('sa_savings:dcsn:m_d',), derivatives=())
+Sort('policy:Evaluation:c:result', 'function', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=('sa_savings:dcsn:m_d',), derivatives=())
+Sort('sa_savings:function:dcsn:CE', 'function', perch='dcsn', role='value', domain=None, coordinates=('sa_savings:dcsn:m_d', 'sa_savings:shck:ν'), derivatives=())
+Sort('sa_savings:function:dcsn:AMB', 'function', perch='dcsn', role='value', domain=None, coordinates=('sa_savings:dcsn:m_d',), derivatives=())
+Sort('cntn_to_dcsn:Aggregation:V:result', 'function', perch=None, role='value', domain=None, coordinates=('sa_savings:dcsn:m_d',), derivatives=())
+Sort('sa_savings:function:cntn:V:g:cntn_to_dcsn.risk_ce', 'function', perch='cntn', role='value', domain='ℝ₊₊', coordinates=('sa_savings:dcsn:m_d', 'sa_savings:shck:Ψ'), derivatives=())
+Sort('cntn_to_dcsn.risk_ce:Aggregation:1:result', 'function', perch=None, role='value', domain=None, coordinates=('sa_savings:dcsn:m_d', 'sa_savings:shck:Ψ'), derivatives=())
+Sort('cntn_to_dcsn.risk_ce:Expectation:1:result', 'function', perch=None, role='value', domain=None, coordinates=('sa_savings:dcsn:m_d', 'sa_savings:shck:ν'), derivatives=())
+Sort('cntn_to_dcsn.risk_ce:Aggregation:result', 'function', perch=None, role='value', domain=None, coordinates=('sa_savings:dcsn:m_d', 'sa_savings:shck:ν'), derivatives=())
+Sort('cntn_to_dcsn.ambiguity_ce:Aggregation:1:result', 'function', perch=None, role='value', domain=None, coordinates=('sa_savings:dcsn:m_d', 'sa_savings:shck:ν'), derivatives=())
+Sort('cntn_to_dcsn.ambiguity_ce:Expectation:1:result', 'function', perch=None, role='value', domain=None, coordinates=('sa_savings:dcsn:m_d',), derivatives=())
+Sort('cntn_to_dcsn.ambiguity_ce:Aggregation:result', 'function', perch=None, role='value', domain=None, coordinates=('sa_savings:dcsn:m_d',), derivatives=())
+Sort('sa_savings:function:cntn:V:g:policy', 'function', perch='cntn', role='value', domain='ℝ₊₊', coordinates=('sa_savings:dcsn:m_d', 'sa_savings:dcsn:c', 'sa_savings:shck:Ψ'), derivatives=())
+Sort('policy.objective:Aggregation:2:result', 'function', perch=None, role='value', domain=None, coordinates=('sa_savings:dcsn:m_d', 'sa_savings:dcsn:c', 'sa_savings:shck:Ψ'), derivatives=())
+Sort('policy.objective:Expectation:2:result', 'function', perch=None, role='value', domain=None, coordinates=('sa_savings:dcsn:m_d', 'sa_savings:dcsn:c', 'sa_savings:shck:ν'), derivatives=())
+Sort('policy.objective:Aggregation:1:result', 'function', perch=None, role='value', domain=None, coordinates=('sa_savings:dcsn:m_d', 'sa_savings:dcsn:c', 'sa_savings:shck:ν'), derivatives=())
+Sort('policy.objective:Expectation:1:result', 'function', perch=None, role='value', domain=None, coordinates=('sa_savings:dcsn:m_d', 'sa_savings:dcsn:c'), derivatives=())
+Sort('policy.objective:Aggregation:result', 'function', perch=None, role='value', domain=None, coordinates=('sa_savings:dcsn:m_d', 'sa_savings:dcsn:c'), derivatives=())
+Sort('policy.objective:Argmax:c:result', 'function', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=('sa_savings:dcsn:m_d',), derivatives=())
+Sort('sa_savings:measure:dcsn', 'measure', perch='dcsn', role='measure', domain=None, coordinates=('sa_savings:dcsn:m_d',), derivatives=())
+Sort('sa_savings:measure:cntn', 'measure', perch='cntn', role='measure', domain=None, coordinates=('sa_savings:cntn:a',), derivatives=())
+Sort('sa_savings:measure:dcsn:with-distribution:ν', 'measure', perch='dcsn', role='measure', domain=None, coordinates=('sa_savings:dcsn:m_d', 'sa_savings:shck:ν'), derivatives=())
+Sort('sa_savings:measure:dcsn:with-distribution:Ψ', 'measure', perch='dcsn', role='measure', domain=None, coordinates=('sa_savings:dcsn:m_d', 'sa_savings:shck:ν', 'sa_savings:shck:Ψ'), derivatives=())
+
+==== conditions of the stage ====
+arithmetic-definedness (required): policy.objective:Aggregation; (1 − β) · c^(1 − ρ) + β · (policy.objective:Expectation:1(m_d, c)^(1/(1 − η)))^(1 − ρ) ∈ (0, inf]
+    The negative power ((1 - β)*c^(1 - ρ) + β*(E_{ν}((E_{Ψ}(V[>]^(1 - γ))^(1/(1 - γ)))^(1 - η))^(1/(1 - η)))^(1 - ρ))^(1/(1 - ρ)) at policy requires a positive base (which may be infinite), or a negative real base with integer exponent.
+arithmetic-definedness (required): policy.objective:Aggregation; c ∈ (0, inf]
+    The negative power c^(1 - ρ) at policy requires a positive base (which may be infinite), or a negative real base with integer exponent.
+joint-distribution-factorization (required): sa_savings:distribution:ν; sa_savings:distribution:Ψ; dcsn_to_cntn
+    The joint distribution for dcsn_to_cntn is assumed to be the product of the declared conditional distributions given their named parents and the source coordinates: ν given (m_d, c) by sa_savings:distribution:ν; Ψ given ν and (m_d, c) by sa_savings:distribution:Ψ.
+expectation-integrability (required): cntn_to_dcsn.risk_ce:Expectation:1; cntn_to_dcsn.risk_ce; V[>]^(1 - γ); sa_savings:distribution:Ψ
+    The integrand V[>]^(1 - γ) at cntn_to_dcsn.risk_ce must be integrable for cntn_to_dcsn.risk_ce:Expectation:1 under sa_savings:distribution:Ψ.
+expectation-integrability (required): cntn_to_dcsn.ambiguity_ce:Expectation:1; cntn_to_dcsn.ambiguity_ce; CE^(1 - η); sa_savings:distribution:ν
+    The integrand CE^(1 - η) at cntn_to_dcsn.ambiguity_ce must be integrable for cntn_to_dcsn.ambiguity_ce:Expectation:1 under sa_savings:distribution:ν.
+aggregation-admissibility (required): cntn_to_dcsn:Aggregation; cntn_to_dcsn.value; cntn_to_dcsn:Aggregation:V:result; V(m_d) ∈ ℝ₊₊
+    The equations at cntn_to_dcsn.value must define cntn_to_dcsn:Aggregation on its declared inputs with values in its declared output sets.
+expectation-integrability (required): policy.objective:Expectation:2; policy.objective; V[>]^(1 - γ); sa_savings:distribution:Ψ
+    The integrand V[>]^(1 - γ) at policy.objective must be integrable for policy.objective:Expectation:2 under sa_savings:distribution:Ψ.
+expectation-integrability (required): policy.objective:Expectation:1; policy.objective; (E_{Ψ}(V[>]^(1 - γ))^(1/(1 - γ)))^(1 - η); sa_savings:distribution:ν
+    The integrand (E_{Ψ}(V[>]^(1 - γ))^(1/(1 - γ)))^(1 - η) at policy.objective must be integrable for policy.objective:Expectation:1 under sa_savings:distribution:ν.
+law-support (required): sa_savings:shck:ν
+    The distribution of ν gives probability only to values in the declared shock set.
+law-support (required): sa_savings:shck:Ψ
+    The distribution of Ψ gives probability only to values in the declared shock set.
+continuation-input (required): sa_savings:cntn:V; ℝ₊₊; sa_savings:cntn:a
+    The representing function for V[>] must be measurable on its declared domain, depend only on (a) in that order, and take values in ℝ₊₊.
+
+==== initial backward: conditions ====
+the same as conditions of the stage
+
+==== initial backward builder: listing ====
+cntn_to_dcsn
+  risk_ce → CE
+    cntn_to_dcsn.risk_ce
+  ambiguity_ce → AMB
+    cntn_to_dcsn.ambiguity_ce
+  cntn_to_dcsn.value
+policy
+  policy.objective
+
+==== initial backward builder: wiring ====
+inputs: sa_savings:cntn:V
+outputs: sa_savings:dcsn:c, sa_savings:dcsn:V
+cntn_to_dcsn
+    reads: sa_savings:cntn:V
+    writes: sa_savings:dcsn:V
+    declares: sa_savings:cntn:V, sa_savings:dcsn:c
+    inside:
+        inputs: sa_savings:cntn:V
+        outputs: sa_savings:dcsn:V
+        cntn_to_dcsn.risk_ce
+            reads: sa_savings:cntn:V
+            writes: sa_savings:alias:cntn_to_dcsn.risk_ce:CE
+            inside:
+                inputs: sa_savings:cntn:V
+                outputs: sa_savings:alias:cntn_to_dcsn.risk_ce:CE
+                cntn_to_dcsn.risk_ce
+                    reads: sa_savings:cntn:V
+                    writes: sa_savings:alias:cntn_to_dcsn.risk_ce:CE
+        cntn_to_dcsn.ambiguity_ce
+            reads: sa_savings:alias:cntn_to_dcsn.risk_ce:CE
+            writes: sa_savings:alias:cntn_to_dcsn.ambiguity_ce:AMB
+            inside:
+                inputs: sa_savings:alias:cntn_to_dcsn.risk_ce:CE
+                outputs: sa_savings:alias:cntn_to_dcsn.ambiguity_ce:AMB
+                cntn_to_dcsn.ambiguity_ce
+                    reads: sa_savings:alias:cntn_to_dcsn.risk_ce:CE
+                    writes: sa_savings:alias:cntn_to_dcsn.ambiguity_ce:AMB
+        cntn_to_dcsn.value
+            reads: sa_savings:alias:cntn_to_dcsn.ambiguity_ce:AMB
+            writes: sa_savings:dcsn:V
+policy
+    reads: sa_savings:cntn:V
+    writes: sa_savings:dcsn:c
+    declares: sa_savings:cntn:V
+    inside:
+        inputs: sa_savings:cntn:V
+        outputs: sa_savings:dcsn:c
+        policy.objective
+            reads: sa_savings:cntn:V, sa_savings:dcsn:m_d
+            writes: sa_savings:dcsn:c
+
+==== initial backward sub-builder: listing ====
+risk_ce → CE
+  cntn_to_dcsn.risk_ce
+ambiguity_ce → AMB
+  cntn_to_dcsn.ambiguity_ce
+cntn_to_dcsn.value
+policy.objective
+
+==== initial backward sub-builder: wiring ====
+inputs: sa_savings:cntn:V
+outputs: sa_savings:dcsn:c, sa_savings:dcsn:V
+cntn_to_dcsn.risk_ce
+    reads: sa_savings:cntn:V
+    writes: sa_savings:alias:cntn_to_dcsn.risk_ce:CE
+    inside:
+        inputs: sa_savings:cntn:V
+        outputs: sa_savings:alias:cntn_to_dcsn.risk_ce:CE
+        cntn_to_dcsn.risk_ce
+            reads: sa_savings:cntn:V
+            writes: sa_savings:alias:cntn_to_dcsn.risk_ce:CE
+cntn_to_dcsn.ambiguity_ce
+    reads: sa_savings:alias:cntn_to_dcsn.risk_ce:CE
+    writes: sa_savings:alias:cntn_to_dcsn.ambiguity_ce:AMB
+    inside:
+        inputs: sa_savings:alias:cntn_to_dcsn.risk_ce:CE
+        outputs: sa_savings:alias:cntn_to_dcsn.ambiguity_ce:AMB
+        cntn_to_dcsn.ambiguity_ce
+            reads: sa_savings:alias:cntn_to_dcsn.risk_ce:CE
+            writes: sa_savings:alias:cntn_to_dcsn.ambiguity_ce:AMB
+cntn_to_dcsn.value
+    reads: sa_savings:alias:cntn_to_dcsn.ambiguity_ce:AMB
+    writes: sa_savings:dcsn:V
+policy.objective
+    reads: sa_savings:cntn:V, sa_savings:dcsn:m_d
+    writes: sa_savings:dcsn:c
+
+==== initial backward primitive: listing ====
+cntn_to_dcsn.risk_ce
+cntn_to_dcsn.ambiguity_ce
+cntn_to_dcsn.value
+policy.objective
+
+==== initial backward primitive: wiring ====
+inputs: sa_savings:cntn:V
+outputs: sa_savings:dcsn:c, sa_savings:dcsn:V
+cntn_to_dcsn.risk_ce
+    reads: sa_savings:cntn:V
+    writes: sa_savings:alias:cntn_to_dcsn.risk_ce:CE
+cntn_to_dcsn.ambiguity_ce
+    reads: sa_savings:alias:cntn_to_dcsn.risk_ce:CE
+    writes: sa_savings:alias:cntn_to_dcsn.ambiguity_ce:AMB
+cntn_to_dcsn.value
+    reads: sa_savings:alias:cntn_to_dcsn.ambiguity_ce:AMB
+    writes: sa_savings:dcsn:V
+policy.objective
+    reads: sa_savings:cntn:V, sa_savings:dcsn:m_d
+    writes: sa_savings:dcsn:c
+
+==== initial backward combined: listing ====
+the same as initial backward sub-builder: listing
+
+==== initial backward combined: wiring ====
+the same as initial backward sub-builder: wiring
+
+==== initial backward factored: listing ====
+the same as initial backward primitive: listing
+
+==== initial backward factored: wiring ====
+the same as initial backward primitive: wiring
+
+==== initial forward: conditions ====
+joint-distribution-factorization (required): sa_savings:distribution:ν; sa_savings:distribution:Ψ; dcsn_to_cntn
+    The joint distribution for dcsn_to_cntn is assumed to be the product of the declared conditional distributions given their named parents and the source coordinates: ν given (m_d, c) by sa_savings:distribution:ν; Ψ given ν and (m_d, c) by sa_savings:distribution:Ψ.
+law-support (required): sa_savings:shck:ν
+    The distribution of ν gives probability only to values in the declared shock set.
+law-support (required): sa_savings:shck:Ψ
+    The distribution of Ψ gives probability only to values in the declared shock set.
+continuation-input (required): sa_savings:cntn:V; ℝ₊₊; sa_savings:cntn:a
+    The representing function for V[>] must be measurable on its declared domain, depend only on (a) in that order, and take values in ℝ₊₊.
+
+==== initial forward builder: listing ====
+dcsn_to_cntn
+  dcsn_to_cntn.savings
+
+==== initial forward builder: wiring ====
+inputs: sa_savings:dcsn:m_d, sa_savings:shck:Ψ
+outputs: sa_savings:cntn:a
+dcsn_to_cntn
+    reads: sa_savings:dcsn:m_d, sa_savings:shck:Ψ
+    writes: sa_savings:cntn:a
+    declares: sa_savings:dcsn:m_d, sa_savings:dcsn:c, sa_savings:shck:Ψ
+    inside:
+        inputs: sa_savings:dcsn:m_d, sa_savings:shck:Ψ
+        outputs: sa_savings:cntn:a
+        dcsn_to_cntn.savings
+            reads: sa_savings:dcsn:m_d, sa_savings:shck:Ψ
+            writes: sa_savings:cntn:a
+
+==== initial forward sub-builder: listing ====
+dcsn_to_cntn.savings
+
+==== initial forward sub-builder: wiring ====
+inputs: sa_savings:dcsn:m_d, sa_savings:shck:Ψ
+outputs: sa_savings:cntn:a
+dcsn_to_cntn.savings
+    reads: sa_savings:dcsn:m_d, sa_savings:shck:Ψ
+    writes: sa_savings:cntn:a
+
+==== initial forward primitive: listing ====
+the same as initial forward sub-builder: listing
+
+==== initial forward primitive: wiring ====
+the same as initial forward sub-builder: wiring
+
+==== initial forward combined: listing ====
+the same as initial forward sub-builder: listing
+
+==== initial forward combined: wiring ====
+the same as initial forward sub-builder: wiring
+
+==== initial forward factored: listing ====
+the same as initial forward sub-builder: listing
+
+==== initial forward factored: wiring ====
+the same as initial forward sub-builder: wiring
+
+==== builders backward: conditions ====
+the same as conditions of the stage
+
+==== builders backward builder: listing ====
+cntn_to_dcsn
+  risk_ce → 𝐶𝐸(m_d, ν)
+    Pullback of 𝑉≻ along 𝑔 at 𝑐
+    Apply 𝐺 of the statement risk_ce, occurrence 1
+    Expectation of the statement risk_ce under the distribution of Ψ
+    Value aggregation 𝐺 of the statement risk_ce
+    Evaluation of 𝐶𝐸
+  ambiguity_ce → 𝐴𝑀𝐵(m_d)
+    Apply 𝐺 of the statement ambiguity_ce, occurrence 1
+    Expectation of the statement ambiguity_ce under the distribution of ν
+    Value aggregation 𝐺 of the statement ambiguity_ce
+    Evaluation of 𝐴𝑀𝐵
+  Value aggregation 𝐺
+  Evaluation of 𝑉
+policy
+  Pullback of 𝑉≻ along the law of motion 𝑔
+  Apply 𝐺 of the statement objective, occurrence 2
+  Expectation of the statement objective under the distribution of Ψ
+  Apply 𝐺 of the statement objective, occurrence 1
+  Expectation of the statement objective under the distribution of ν
+  Apply 𝐺 of the statement objective
+  Argmax of the statement objective
+  Evaluation of 𝑐
+
+==== builders backward builder: wiring ====
+inputs: sa_savings:function:cntn:V
+outputs: policy:Evaluation:c:result, sa_savings:function:dcsn:V
+cntn_to_dcsn
+    reads: sa_savings:function:cntn:V
+    writes: sa_savings:function:dcsn:V
+    inside:
+        inputs: sa_savings:function:cntn:V
+        outputs: sa_savings:function:dcsn:V
+        cntn_to_dcsn.risk_ce
+            reads: sa_savings:function:cntn:V
+            writes: sa_savings:function:dcsn:CE
+            inside:
+                inputs: sa_savings:function:cntn:V
+                outputs: sa_savings:function:dcsn:CE
+                cntn_to_dcsn.risk_ce:Pullback [Pullback]
+                    reads: sa_savings:function:cntn:V
+                    writes: sa_savings:function:cntn:V:g:cntn_to_dcsn.risk_ce
+                    refers to: sa_savings:g:dcsn_to_cntn, sa_savings:function:dcsn:c
+                cntn_to_dcsn.risk_ce:Aggregation:1 [Aggregation]
+                    reads: sa_savings:function:cntn:V:g:cntn_to_dcsn.risk_ce
+                    writes: cntn_to_dcsn.risk_ce:Aggregation:1:result
+                    refers to: sa_savings:G:cntn_to_dcsn, sa_savings:function:dcsn:c
+                cntn_to_dcsn.risk_ce:Expectation:1 [Expectation]
+                    reads: cntn_to_dcsn.risk_ce:Aggregation:1:result
+                    writes: cntn_to_dcsn.risk_ce:Expectation:1:result
+                    refers to: sa_savings:distribution:Ψ, sa_savings:function:dcsn:c
+                cntn_to_dcsn.risk_ce:Aggregation [Aggregation]
+                    reads: cntn_to_dcsn.risk_ce:Expectation:1:result
+                    writes: cntn_to_dcsn.risk_ce:Aggregation:result
+                    refers to: sa_savings:G:cntn_to_dcsn, sa_savings:function:dcsn:c
+                cntn_to_dcsn.risk_ce:Evaluation [Evaluation]
+                    reads: cntn_to_dcsn.risk_ce:Aggregation:result
+                    writes: sa_savings:function:dcsn:CE
+        cntn_to_dcsn.ambiguity_ce
+            reads: sa_savings:function:dcsn:CE
+            writes: sa_savings:function:dcsn:AMB
+            inside:
+                inputs: sa_savings:function:dcsn:CE
+                outputs: sa_savings:function:dcsn:AMB
+                cntn_to_dcsn.ambiguity_ce:Aggregation:1 [Aggregation]
+                    reads: sa_savings:function:dcsn:CE
+                    writes: cntn_to_dcsn.ambiguity_ce:Aggregation:1:result
+                    refers to: sa_savings:G:cntn_to_dcsn, sa_savings:function:dcsn:c
+                cntn_to_dcsn.ambiguity_ce:Expectation:1 [Expectation]
+                    reads: cntn_to_dcsn.ambiguity_ce:Aggregation:1:result
+                    writes: cntn_to_dcsn.ambiguity_ce:Expectation:1:result
+                    refers to: sa_savings:distribution:ν, sa_savings:function:dcsn:c
+                cntn_to_dcsn.ambiguity_ce:Aggregation [Aggregation]
+                    reads: cntn_to_dcsn.ambiguity_ce:Expectation:1:result
+                    writes: cntn_to_dcsn.ambiguity_ce:Aggregation:result
+                    refers to: sa_savings:G:cntn_to_dcsn, sa_savings:function:dcsn:c
+                cntn_to_dcsn.ambiguity_ce:Evaluation [Evaluation]
+                    reads: cntn_to_dcsn.ambiguity_ce:Aggregation:result
+                    writes: sa_savings:function:dcsn:AMB
+        cntn_to_dcsn:Aggregation [Aggregation]
+            reads: sa_savings:function:dcsn:AMB
+            writes: cntn_to_dcsn:Aggregation:V:result
+            refers to: sa_savings:G:cntn_to_dcsn, sa_savings:function:dcsn:c
+        cntn_to_dcsn:Evaluation [Evaluation]
+            reads: cntn_to_dcsn:Aggregation:V:result
+            writes: sa_savings:function:dcsn:V
+policy
+    reads: sa_savings:function:cntn:V
+    writes: policy:Evaluation:c:result
+    inside:
+        inputs: sa_savings:function:cntn:V
+        outputs: policy:Evaluation:c:result
+        policy:Pullback [Pullback]
+            reads: sa_savings:function:cntn:V
+            writes: sa_savings:function:cntn:V:g:policy
+            refers to: sa_savings:g:dcsn_to_cntn
+        policy.objective:Aggregation:2 [Aggregation]
+            reads: sa_savings:function:cntn:V:g:policy
+            writes: policy.objective:Aggregation:2:result
+            refers to: sa_savings:G:policy
+        policy.objective:Expectation:2 [Expectation]
+            reads: policy.objective:Aggregation:2:result
+            writes: policy.objective:Expectation:2:result
+            refers to: sa_savings:distribution:Ψ
+        policy.objective:Aggregation:1 [Aggregation]
+            reads: policy.objective:Expectation:2:result
+            writes: policy.objective:Aggregation:1:result
+            refers to: sa_savings:G:policy
+        policy.objective:Expectation:1 [Expectation]
+            reads: policy.objective:Aggregation:1:result
+            writes: policy.objective:Expectation:1:result
+            refers to: sa_savings:distribution:ν
+        policy.objective:Aggregation [Aggregation]
+            reads: policy.objective:Expectation:1:result
+            writes: policy.objective:Aggregation:result
+            refers to: sa_savings:G:policy
+        policy.objective:Argmax [Argmax]
+            reads: policy.objective:Aggregation:result
+            writes: policy.objective:Argmax:c:result
+            refers to: policy.objective
+        policy:Evaluation [Evaluation]
+            reads: policy.objective:Argmax:c:result
+            writes: policy:Evaluation:c:result
+
+==== builders backward sub-builder: listing ====
+risk_ce → 𝐶𝐸(m_d, ν)
+  Pullback of 𝑉≻ along 𝑔 at 𝑐
+  Apply 𝐺 of the statement risk_ce, occurrence 1
+  Expectation of the statement risk_ce under the distribution of Ψ
+  Value aggregation 𝐺 of the statement risk_ce
+  Evaluation of 𝐶𝐸
+ambiguity_ce → 𝐴𝑀𝐵(m_d)
+  Apply 𝐺 of the statement ambiguity_ce, occurrence 1
+  Expectation of the statement ambiguity_ce under the distribution of ν
+  Value aggregation 𝐺 of the statement ambiguity_ce
+  Evaluation of 𝐴𝑀𝐵
+Value aggregation 𝐺
+Evaluation of 𝑉
+Pullback of 𝑉≻ along the law of motion 𝑔
+Apply 𝐺 of the statement objective, occurrence 2
+Expectation of the statement objective under the distribution of Ψ
+Apply 𝐺 of the statement objective, occurrence 1
+Expectation of the statement objective under the distribution of ν
+Apply 𝐺 of the statement objective
+Argmax of the statement objective
+Evaluation of 𝑐
+
+==== builders backward sub-builder: wiring ====
+inputs: sa_savings:function:cntn:V
+outputs: policy:Evaluation:c:result, sa_savings:function:dcsn:V
+cntn_to_dcsn.risk_ce
+    reads: sa_savings:function:cntn:V
+    writes: sa_savings:function:dcsn:CE
+    inside:
+        inputs: sa_savings:function:cntn:V
+        outputs: sa_savings:function:dcsn:CE
+        cntn_to_dcsn.risk_ce:Pullback [Pullback]
+            reads: sa_savings:function:cntn:V
+            writes: sa_savings:function:cntn:V:g:cntn_to_dcsn.risk_ce
+            refers to: sa_savings:g:dcsn_to_cntn, sa_savings:function:dcsn:c
+        cntn_to_dcsn.risk_ce:Aggregation:1 [Aggregation]
+            reads: sa_savings:function:cntn:V:g:cntn_to_dcsn.risk_ce
+            writes: cntn_to_dcsn.risk_ce:Aggregation:1:result
+            refers to: sa_savings:G:cntn_to_dcsn, sa_savings:function:dcsn:c
+        cntn_to_dcsn.risk_ce:Expectation:1 [Expectation]
+            reads: cntn_to_dcsn.risk_ce:Aggregation:1:result
+            writes: cntn_to_dcsn.risk_ce:Expectation:1:result
+            refers to: sa_savings:distribution:Ψ, sa_savings:function:dcsn:c
+        cntn_to_dcsn.risk_ce:Aggregation [Aggregation]
+            reads: cntn_to_dcsn.risk_ce:Expectation:1:result
+            writes: cntn_to_dcsn.risk_ce:Aggregation:result
+            refers to: sa_savings:G:cntn_to_dcsn, sa_savings:function:dcsn:c
+        cntn_to_dcsn.risk_ce:Evaluation [Evaluation]
+            reads: cntn_to_dcsn.risk_ce:Aggregation:result
+            writes: sa_savings:function:dcsn:CE
+cntn_to_dcsn.ambiguity_ce
+    reads: sa_savings:function:dcsn:CE
+    writes: sa_savings:function:dcsn:AMB
+    inside:
+        inputs: sa_savings:function:dcsn:CE
+        outputs: sa_savings:function:dcsn:AMB
+        cntn_to_dcsn.ambiguity_ce:Aggregation:1 [Aggregation]
+            reads: sa_savings:function:dcsn:CE
+            writes: cntn_to_dcsn.ambiguity_ce:Aggregation:1:result
+            refers to: sa_savings:G:cntn_to_dcsn, sa_savings:function:dcsn:c
+        cntn_to_dcsn.ambiguity_ce:Expectation:1 [Expectation]
+            reads: cntn_to_dcsn.ambiguity_ce:Aggregation:1:result
+            writes: cntn_to_dcsn.ambiguity_ce:Expectation:1:result
+            refers to: sa_savings:distribution:ν, sa_savings:function:dcsn:c
+        cntn_to_dcsn.ambiguity_ce:Aggregation [Aggregation]
+            reads: cntn_to_dcsn.ambiguity_ce:Expectation:1:result
+            writes: cntn_to_dcsn.ambiguity_ce:Aggregation:result
+            refers to: sa_savings:G:cntn_to_dcsn, sa_savings:function:dcsn:c
+        cntn_to_dcsn.ambiguity_ce:Evaluation [Evaluation]
+            reads: cntn_to_dcsn.ambiguity_ce:Aggregation:result
+            writes: sa_savings:function:dcsn:AMB
+cntn_to_dcsn:Aggregation [Aggregation]
+    reads: sa_savings:function:dcsn:AMB
+    writes: cntn_to_dcsn:Aggregation:V:result
+    refers to: sa_savings:G:cntn_to_dcsn, sa_savings:function:dcsn:c
+cntn_to_dcsn:Evaluation [Evaluation]
+    reads: cntn_to_dcsn:Aggregation:V:result
+    writes: sa_savings:function:dcsn:V
+policy:Pullback [Pullback]
+    reads: sa_savings:function:cntn:V
+    writes: sa_savings:function:cntn:V:g:policy
+    refers to: sa_savings:g:dcsn_to_cntn
+policy.objective:Aggregation:2 [Aggregation]
+    reads: sa_savings:function:cntn:V:g:policy
+    writes: policy.objective:Aggregation:2:result
+    refers to: sa_savings:G:policy
+policy.objective:Expectation:2 [Expectation]
+    reads: policy.objective:Aggregation:2:result
+    writes: policy.objective:Expectation:2:result
+    refers to: sa_savings:distribution:Ψ
+policy.objective:Aggregation:1 [Aggregation]
+    reads: policy.objective:Expectation:2:result
+    writes: policy.objective:Aggregation:1:result
+    refers to: sa_savings:G:policy
+policy.objective:Expectation:1 [Expectation]
+    reads: policy.objective:Aggregation:1:result
+    writes: policy.objective:Expectation:1:result
+    refers to: sa_savings:distribution:ν
+policy.objective:Aggregation [Aggregation]
+    reads: policy.objective:Expectation:1:result
+    writes: policy.objective:Aggregation:result
+    refers to: sa_savings:G:policy
+policy.objective:Argmax [Argmax]
+    reads: policy.objective:Aggregation:result
+    writes: policy.objective:Argmax:c:result
+    refers to: policy.objective
+policy:Evaluation [Evaluation]
+    reads: policy.objective:Argmax:c:result
+    writes: policy:Evaluation:c:result
+
+==== builders backward primitive: listing ====
+Pullback of 𝑉≻ along 𝑔 at 𝑐
+Apply 𝐺 of the statement risk_ce, occurrence 1
+Expectation of the statement risk_ce under the distribution of Ψ
+Value aggregation 𝐺 of the statement risk_ce
+Evaluation of 𝐶𝐸
+Apply 𝐺 of the statement ambiguity_ce, occurrence 1
+Expectation of the statement ambiguity_ce under the distribution of ν
+Value aggregation 𝐺 of the statement ambiguity_ce
+Evaluation of 𝐴𝑀𝐵
+Value aggregation 𝐺
+Evaluation of 𝑉
+Pullback of 𝑉≻ along the law of motion 𝑔
+Apply 𝐺 of the statement objective, occurrence 2
+Expectation of the statement objective under the distribution of Ψ
+Apply 𝐺 of the statement objective, occurrence 1
+Expectation of the statement objective under the distribution of ν
+Apply 𝐺 of the statement objective
+Argmax of the statement objective
+Evaluation of 𝑐
+
+==== builders backward primitive: wiring ====
+inputs: sa_savings:function:cntn:V
+outputs: policy:Evaluation:c:result, sa_savings:function:dcsn:V
+cntn_to_dcsn.risk_ce:Pullback [Pullback]
+    reads: sa_savings:function:cntn:V
+    writes: sa_savings:function:cntn:V:g:cntn_to_dcsn.risk_ce
+    refers to: sa_savings:g:dcsn_to_cntn, sa_savings:function:dcsn:c
+cntn_to_dcsn.risk_ce:Aggregation:1 [Aggregation]
+    reads: sa_savings:function:cntn:V:g:cntn_to_dcsn.risk_ce
+    writes: cntn_to_dcsn.risk_ce:Aggregation:1:result
+    refers to: sa_savings:G:cntn_to_dcsn, sa_savings:function:dcsn:c
+cntn_to_dcsn.risk_ce:Expectation:1 [Expectation]
+    reads: cntn_to_dcsn.risk_ce:Aggregation:1:result
+    writes: cntn_to_dcsn.risk_ce:Expectation:1:result
+    refers to: sa_savings:distribution:Ψ, sa_savings:function:dcsn:c
+cntn_to_dcsn.risk_ce:Aggregation [Aggregation]
+    reads: cntn_to_dcsn.risk_ce:Expectation:1:result
+    writes: cntn_to_dcsn.risk_ce:Aggregation:result
+    refers to: sa_savings:G:cntn_to_dcsn, sa_savings:function:dcsn:c
+cntn_to_dcsn.risk_ce:Evaluation [Evaluation]
+    reads: cntn_to_dcsn.risk_ce:Aggregation:result
+    writes: sa_savings:function:dcsn:CE
+cntn_to_dcsn.ambiguity_ce:Aggregation:1 [Aggregation]
+    reads: sa_savings:function:dcsn:CE
+    writes: cntn_to_dcsn.ambiguity_ce:Aggregation:1:result
+    refers to: sa_savings:G:cntn_to_dcsn, sa_savings:function:dcsn:c
+cntn_to_dcsn.ambiguity_ce:Expectation:1 [Expectation]
+    reads: cntn_to_dcsn.ambiguity_ce:Aggregation:1:result
+    writes: cntn_to_dcsn.ambiguity_ce:Expectation:1:result
+    refers to: sa_savings:distribution:ν, sa_savings:function:dcsn:c
+cntn_to_dcsn.ambiguity_ce:Aggregation [Aggregation]
+    reads: cntn_to_dcsn.ambiguity_ce:Expectation:1:result
+    writes: cntn_to_dcsn.ambiguity_ce:Aggregation:result
+    refers to: sa_savings:G:cntn_to_dcsn, sa_savings:function:dcsn:c
+cntn_to_dcsn.ambiguity_ce:Evaluation [Evaluation]
+    reads: cntn_to_dcsn.ambiguity_ce:Aggregation:result
+    writes: sa_savings:function:dcsn:AMB
+cntn_to_dcsn:Aggregation [Aggregation]
+    reads: sa_savings:function:dcsn:AMB
+    writes: cntn_to_dcsn:Aggregation:V:result
+    refers to: sa_savings:G:cntn_to_dcsn, sa_savings:function:dcsn:c
+cntn_to_dcsn:Evaluation [Evaluation]
+    reads: cntn_to_dcsn:Aggregation:V:result
+    writes: sa_savings:function:dcsn:V
+policy:Pullback [Pullback]
+    reads: sa_savings:function:cntn:V
+    writes: sa_savings:function:cntn:V:g:policy
+    refers to: sa_savings:g:dcsn_to_cntn
+policy.objective:Aggregation:2 [Aggregation]
+    reads: sa_savings:function:cntn:V:g:policy
+    writes: policy.objective:Aggregation:2:result
+    refers to: sa_savings:G:policy
+policy.objective:Expectation:2 [Expectation]
+    reads: policy.objective:Aggregation:2:result
+    writes: policy.objective:Expectation:2:result
+    refers to: sa_savings:distribution:Ψ
+policy.objective:Aggregation:1 [Aggregation]
+    reads: policy.objective:Expectation:2:result
+    writes: policy.objective:Aggregation:1:result
+    refers to: sa_savings:G:policy
+policy.objective:Expectation:1 [Expectation]
+    reads: policy.objective:Aggregation:1:result
+    writes: policy.objective:Expectation:1:result
+    refers to: sa_savings:distribution:ν
+policy.objective:Aggregation [Aggregation]
+    reads: policy.objective:Expectation:1:result
+    writes: policy.objective:Aggregation:result
+    refers to: sa_savings:G:policy
+policy.objective:Argmax [Argmax]
+    reads: policy.objective:Aggregation:result
+    writes: policy.objective:Argmax:c:result
+    refers to: policy.objective
+policy:Evaluation [Evaluation]
+    reads: policy.objective:Argmax:c:result
+    writes: policy:Evaluation:c:result
+
+==== builders backward combined: listing ====
+the same as builders backward sub-builder: listing
+
+==== builders backward combined: wiring ====
+the same as builders backward sub-builder: wiring
+
+==== builders backward factored: listing ====
+the same as builders backward primitive: listing
+
+==== builders backward factored: wiring ====
+the same as builders backward primitive: wiring
+
+==== builders forward: conditions ====
+the same as initial forward: conditions
+
+==== builders forward builder: listing ====
+dcsn_to_cntn
+  Extension of the measure by the distribution of ν
+  Extension of the measure by the distribution of Ψ
+  Push-forward through 𝑔 at 𝑐
+
+==== builders forward builder: wiring ====
+inputs: sa_savings:measure:dcsn
+outputs: sa_savings:measure:cntn
+dcsn_to_cntn
+    reads: sa_savings:measure:dcsn
+    writes: sa_savings:measure:cntn
+    inside:
+        inputs: sa_savings:measure:dcsn
+        outputs: sa_savings:measure:cntn
+        dcsn_to_cntn:DistributionExtension:ν [DistributionExtension]
+            reads: sa_savings:measure:dcsn
+            writes: sa_savings:measure:dcsn:with-distribution:ν
+            refers to: sa_savings:distribution:ν, sa_savings:function:dcsn:c
+        dcsn_to_cntn:DistributionExtension:Ψ [DistributionExtension]
+            reads: sa_savings:measure:dcsn:with-distribution:ν
+            writes: sa_savings:measure:dcsn:with-distribution:Ψ
+            refers to: sa_savings:distribution:Ψ, sa_savings:function:dcsn:c
+        dcsn_to_cntn:Pushforward [Pushforward]
+            reads: sa_savings:measure:dcsn:with-distribution:Ψ
+            writes: sa_savings:measure:cntn
+            refers to: sa_savings:g:dcsn_to_cntn, sa_savings:function:dcsn:c
+
+==== builders forward sub-builder: listing ====
+Extension of the measure by the distribution of ν
+Extension of the measure by the distribution of Ψ
+Push-forward through 𝑔 at 𝑐
+
+==== builders forward sub-builder: wiring ====
+inputs: sa_savings:measure:dcsn
+outputs: sa_savings:measure:cntn
+dcsn_to_cntn:DistributionExtension:ν [DistributionExtension]
+    reads: sa_savings:measure:dcsn
+    writes: sa_savings:measure:dcsn:with-distribution:ν
+    refers to: sa_savings:distribution:ν, sa_savings:function:dcsn:c
+dcsn_to_cntn:DistributionExtension:Ψ [DistributionExtension]
+    reads: sa_savings:measure:dcsn:with-distribution:ν
+    writes: sa_savings:measure:dcsn:with-distribution:Ψ
+    refers to: sa_savings:distribution:Ψ, sa_savings:function:dcsn:c
+dcsn_to_cntn:Pushforward [Pushforward]
+    reads: sa_savings:measure:dcsn:with-distribution:Ψ
+    writes: sa_savings:measure:cntn
+    refers to: sa_savings:g:dcsn_to_cntn, sa_savings:function:dcsn:c
+
+==== builders forward primitive: listing ====
+the same as builders forward sub-builder: listing
+
+==== builders forward primitive: wiring ====
+the same as builders forward sub-builder: wiring
+
+==== builders forward combined: listing ====
+the same as builders forward sub-builder: listing
+
+==== builders forward combined: wiring ====
+the same as builders forward sub-builder: wiring
+
+==== builders forward factored: listing ====
+the same as builders forward sub-builder: listing
+
+==== builders forward factored: wiring ====
+the same as builders forward sub-builder: wiring

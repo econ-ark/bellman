@@ -1,0 +1,1148 @@
+BELLMAN-SYM / STAGE worker_saving                         [VERSION = SYMBOLIC]
+a stage occurrence of applications/pension-retirement/declaration/stages/
+worker_saving/worker_saving.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        y_f_w≺ state, y_p_w≺ state, V≺ value
+  ∼ decision       m_f state, m_p state, w_d state, c control, c_p control, V
+                   value
+  ≻ continuation   y_f≻ state, y_p≻ state, V≻ value
+  ≺ → ∼            w drawn after arrival, before decision
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           y_f_w≺ at arrival, y_p_w≺ at arrival, m_f at decision, m_p
+                   at decision, w_d at decision, y_f≻ at continuation, y_p≻ at
+                   continuation
+  controls         c at decision, c_p at decision
+  values           V at every perch
+  shocks           w, drawn between arrival and decision
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → arvl_to_dcsn   (y_f_w≺, y_p_w≺, w) : !arvl -> (m_f, m_p, w_d) : !dcsn
+  → dcsn_to_cntn   (m_f, m_p, w_d) : !dcsn, at c, at c_p -> (y_f≻, y_p≻) :
+                   !cntn
+  ← cntn_to_dcsn   (V≻) : !cntn, at c, at c_p -> (V) : !dcsn
+  ← dcsn_to_arvl   (V) : !dcsn -> (V≺) : !arvl
+  ← policy         (V≻) : !cntn -> (c, c_p) : !dcsn
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  sets                     2   Xf := ℝ₊, Xp := ℝ₊
+  distributions            1   w
+  parameters               7   β : (0, 1); ρ : (1, inf); r_f : ℝ₊; r_p : ℝ₊;
+                               χ_s : ℝ₊; μ_w : ℝ; σ_w : ℝ₊
+  functions                4   𝑢, 𝑑𝑢 on ℝ₊₊, 𝜒, 𝑑𝜒 on ℝ₊
+  correspondences          2   Γ_c : ℝ₊₊ ⇉ ℝ₊₊, Γ_p : ℝ₊₊ ⇉ ℝ₊₊
+  laws of motion           2   m_f = (1 + r_f)*y_f_w + w; m_p =
+                               (1 + r_p)*y_p_w; w_d = w;
+                               y_f = m_f - c - c_p; y_p = m_p + c_p + 𝜒(c_p)
+  value aggregators        3   V = 𝑢(c) + β*V[>]; V[<] = E_{w}(V);
+                               (c, c_p) = argmax_{c : Γ_c(m_f),
+                               c_p : Γ_p(w_d)}(𝑢(c) + β*V[>])
+  block lines              8   arvl_to_dcsn.financial_assets,
+                               arvl_to_dcsn.pension_assets,
+                               arvl_to_dcsn.earnings,
+                               dcsn_to_cntn.financial_post_state,
+                               dcsn_to_cntn.pension_post_state,
+                               cntn_to_dcsn.value, dcsn_to_arvl.value,
+                               policy.optimality
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   𝑉≻ ↦ 𝑉≺, (𝑐(m_f, m_p, w_d), 𝑐_p(m_f, m_p, w_d))
+                    forward    μ≺ ↦ μ≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ≺ y_f_w≺, y_p_w≺  → w drawn →  ∼ m_f, m_p, w_d  →  ≻ y_f≻, y_p≻
+  backward   ≺ V≺  ←  ∼ V  ←  ≻ V≻
+  policy     ∼ c, c_p  ←  ≻ V≻
+
+==== stage ====
+STAGE worker_saving
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑉≻        : Xf × Xp → ℝ
+         ────────────────────────────────────────────
+    out  𝑉≺        : Xf × Xp → ℝ
+         (𝑐, 𝑐_p)  : ℝ₊₊ × Xp × ℝ₊₊ → ℝ₊₊ × ℝ₊,
+                     𝑐(m_f, m_p, w_d) ∈ Γ_c(m_f),
+                     𝑐_p(m_f, m_p, w_d) ∈ Γ_p(w_d)
+  forward
+    in   μ≺        : finite measure on Xf × Xp
+         ────────────────────────────────────────────
+    out  μ≻        : finite measure on Xf × Xp
+
+Where
+  (m_f, m_p, w_d) = 𝑔≺(y_f_w, y_p_w, w)
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉≻                           out: 𝑉
+
+    2  dcsn_to_arvl
+       in: 𝑉                            out: 𝑉≺
+
+    3  policy
+       in: 𝑉≻                           out: (𝑐, 𝑐_p)
+
+  forward
+    1  arvl_to_dcsn
+       in: μ≺                           out: μ
+
+    2  dcsn_to_cntn
+       in: μ                            out: μ≻
+
+Conditions
+  cntn_to_dcsn:Aggregation  𝑉(m_f, m_p, w_d) ∈ ℝ
+  dcsn_to_arvl:Aggregation  𝑉≺(y_f_w, y_p_w) ∈ ℝ
+  dcsn_to_cntn:Pushforward  m_f − 𝑐(m_f, m_p, w_d) − 𝑐_p(m_f, m_p, w_d) ∈ Xf
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  15  w ~ LogNormal(μ_w, σ_w)
+  25  m_f = (1 + r_f)*y_f_w + w
+        :: [id=financial_assets]
+  26  m_p = (1 + r_p)*y_p_w
+        :: [id=pension_assets]
+  27  w_d = w
+        :: [id=earnings]
+  31  y_f = m_f - c - c_p
+        :: [id=financial_post_state]
+  32  y_p = m_p + c_p + 𝜒(c_p)
+        :: [id=pension_post_state]
+  36  V = 𝑢(c) + β*V[>]
+        :: [id=value]
+  40  V[<] = E_{w}(V)
+        :: [id=value]
+  44  (c, c_p) = argmax_{c : Γ_c(m_f), c_p : Γ_p(w_d)}(𝑢(c) + β*V[>])
+        :: [id=optimality]
+
+Definitions referenced
+  Xf    worker_saving:set:Xf
+  Xp    worker_saving:set:Xp
+  w     worker_saving:distribution:w
+  Γ_c   worker_saving:correspondence:Γ_c
+  Γ_p   worker_saving:correspondence:Γ_p
+  𝑔≺    worker_saving:g:arvl_to_dcsn
+
+File
+  applications/pension-retirement/declaration/stages/worker_saving/
+  worker_saving.bl
+
+Perches
+  ≺  arrival, written [<]
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE worker_saving / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻}
+       ──────────
+  out  V   : {V}
+
+Conditions
+  𝑉(m_f, m_p, w_d) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  36  V = 𝑢(c) + β*V[>]  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward dcsn_to_arvl ====
+STAGE worker_saving / BACKWARD BLOCK dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V   : {V}
+       ──────────
+  out  V≺  : {V≺}
+
+Conditions
+  𝑉≺(y_f_w, y_p_w) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  40  V[<] = E_{w}(V)  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward policy ====
+STAGE worker_saving / POLICY BLOCK policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻   : {V≻}
+       ───────────────
+  out  c    : {c}
+       c_p  : {c, c_p}
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  44  (c, c_p) = argmax_{c : Γ_c(m_f), c_p : Γ_p(w_d)}(𝑢(c) + β*V[>])
+        :: [id=optimality]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward arvl_to_dcsn ====
+STAGE worker_saving / FORWARD BLOCK arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   y_f_w≺  : {y_f_w≺, y_p_w≺}
+       y_p_w≺  : {y_f_w≺, y_p_w≺}
+       w       : {w}
+       ──────────────────────────
+  out  m_f     : {m_f, w_d}
+       m_p     : {m_f, m_p, w_d}
+       w_d     : {m_f, w_d}
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  25  m_f = (1 + r_f)*y_f_w + w  :: [id=financial_assets]
+  26  m_p = (1 + r_p)*y_p_w      :: [id=pension_assets]
+  27  w_d = w                    :: [id=earnings]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE worker_saving / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   m_f   : {m_f, w_d}
+       m_p   : {m_f, m_p, w_d}
+       w_d   : {m_f, w_d}
+       ───────────────────────
+  out  y_f≻  : {y_f≻, y_p≻}
+       y_p≻  : {y_f≻, y_p≻}
+
+Conditions
+  m_f − 𝑐(m_f, m_p, w_d) − 𝑐_p(m_f, m_p, w_d) ∈ Xf
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  31  y_f = m_f - c - c_p       :: [id=financial_post_state]
+  32  y_p = m_p + c_p + 𝜒(c_p)  :: [id=pension_post_state]
+
+Definitions referenced
+  Xf    worker_saving:set:Xf
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE worker_saving / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xf × Xp → ℝ
+       ──────────────────────────────────────────────────────────────
+  out  𝑉   : ℝ₊₊ × Xp × ℝ₊₊ → ℝ
+
+At
+  (𝑐, 𝑐_p)  : ℝ₊₊ × Xp × ℝ₊₊ → ℝ₊₊ × ℝ₊,
+              𝑐(m_f, m_p, w_d) ∈ Γ_c(m_f),
+              𝑐_p(m_f, m_p, w_d) ∈ Γ_p(w_d)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻(·, ·, ·, 𝑐, 𝑐_p)
+     ────────────────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻(·, ·, ·, 𝑐, 𝑐_p))(m_f, m_p, w_d)
+             = 𝑉≻(𝑔≻(m_f, m_p, w_d, 𝑐(m_f, m_p, w_d), 𝑐_p(m_f, m_p, w_d)))
+
+  2  Aggregation
+     in: (1)                            out: 𝑉
+     ────────────────────────────────────────────────────────────────
+     rule: 𝑉 = 𝑢(𝑐) + β · 𝑉≻(𝑔≻(m_f, m_p, w_d, 𝑐, 𝑐_p))
+           on (m_f, m_p, w_d) ∈ ℝ₊₊ × Xp × ℝ₊₊
+
+  3  Evaluation
+     in: 𝑉                              out: 𝑉
+     ────────────────────────────────────────────────────────────────
+     rule: 𝑉 : ℝ₊₊ × Xp × ℝ₊₊ → ℝ
+
+Conditions
+  Aggregation  𝑉(m_f, m_p, w_d) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  36  V = 𝑢(c) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  Xf    worker_saving:set:Xf
+  Xp    worker_saving:set:Xp
+  β     worker_saving:parameter:β
+  𝑢     worker_saving:function:𝑢
+  Γ_c   worker_saving:correspondence:Γ_c
+  Γ_p   worker_saving:correspondence:Γ_p
+  𝑔≻    worker_saving:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback ====
+STAGE worker_saving / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xf × Xp → ℝ
+       ────────────────────────
+  out  𝑉≻ ∘ 𝑔≻(·, ·, ·, 𝑐, 𝑐_p)
+           : ℝ₊₊ × Xp × ℝ₊₊ → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻(·, ·, ·, 𝑐, 𝑐_p))(m_f, m_p, w_d)
+    = 𝑉≻(𝑔≻(m_f, m_p, w_d, 𝑐(m_f, m_p, w_d), 𝑐_p(m_f, m_p, w_d)))
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  31  y_f = m_f - c - c_p       :: [id=financial_post_state]
+  32  y_p = m_p + c_p + 𝜒(c_p)  :: [id=pension_post_state]
+
+Definitions referenced
+  Xf    worker_saving:set:Xf
+  Xp    worker_saving:set:Xp
+  𝑔≻    worker_saving:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE worker_saving / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻(·, ·, ·, 𝑐, 𝑐_p)
+          : ℝ₊₊ × Xp × ℝ₊₊ → ℝ
+       ────────────────────────
+  out  𝑉  : ℝ₊₊ × Xp × ℝ₊₊ → ℝ
+
+Rule
+  𝑉 = 𝑢(𝑐) + β · 𝑉≻(𝑔≻(m_f, m_p, w_d, 𝑐, 𝑐_p))
+  on (m_f, m_p, w_d) ∈ ℝ₊₊ × Xp × ℝ₊₊
+
+Conditions
+  𝑉(m_f, m_p, w_d) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  36  V = 𝑢(c) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  Xp    worker_saving:set:Xp
+  β     worker_saving:parameter:β
+  𝑢     worker_saving:function:𝑢
+  𝑔≻    worker_saving:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE worker_saving / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : ℝ₊₊ × Xp × ℝ₊₊ → ℝ
+       ───────────────────────
+  out  𝑉  : ℝ₊₊ × Xp × ℝ₊₊ → ℝ
+
+Rule
+  𝑉 = 𝑢(𝑐) + β · 𝑉≻(𝑔≻(m_f, m_p, w_d, 𝑐, 𝑐_p))
+  on (m_f, m_p, w_d) ∈ ℝ₊₊ × Xp × ℝ₊₊
+  𝑉 : ℝ₊₊ × Xp × ℝ₊₊ → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xp    worker_saving:set:Xp
+  β     worker_saving:parameter:β
+  𝑢     worker_saving:function:𝑢
+  𝑔≻    worker_saving:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl ====
+STAGE worker_saving / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉   : ℝ₊₊ × Xp × ℝ₊₊ → ℝ
+       ─────────────────────────────────────────────────
+  out  𝑉≺  : Xf × Xp → ℝ
+
+Operations
+  1  Pullback
+     in: 𝑉                              out: 𝑉 ∘ 𝑔≺
+     ───────────────────────────────────────────────────
+     rule: (𝑉 ∘ 𝑔≺)(y_f_w, y_p_w, w) = 𝑉(𝑔≺(y_f_w, y_p_w, w))
+
+  2  value:Expectation:1
+     in: (1)
+     out: (y_f_w, y_p_w) ↦ E_{w}[𝑉(𝑔≺(y_f_w, y_p_w, w))]
+     ───────────────────────────────────────────────────
+     rule: (2)(y_f_w, y_p_w) = E_{w}[𝑉(𝑔≺(y_f_w, y_p_w, w))]
+
+  3  Aggregation
+     in: (2)                            out: 𝑉≺
+     ───────────────────────────────────────────────────
+     rule: 𝑉≺ = E_{w}[𝑉(𝑔≺(y_f_w, y_p_w, w))]      on (y_f_w, y_p_w) ∈ Xf × Xp
+
+  4  Evaluation
+     in: 𝑉≺                             out: 𝑉≺
+     ───────────────────────────────────────────────────
+     rule: 𝑉≺ : Xf × Xp → ℝ
+
+Conditions
+  Aggregation  𝑉≺(y_f_w, y_p_w) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  40  V[<] = E_{w}(V)  :: [id=value]
+
+Definitions referenced
+  Xf    worker_saving:set:Xf
+  Xp    worker_saving:set:Xp
+  w     worker_saving:distribution:w
+  𝑔≺    worker_saving:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Pullback ====
+STAGE worker_saving / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : ℝ₊₊ × Xp × ℝ₊₊ → ℝ
+       ───────────────────────
+  out  𝑉 ∘ 𝑔≺
+          : Xf × Xp × ℝ₊₊ → ℝ
+
+Rule
+  (𝑉 ∘ 𝑔≺)(y_f_w, y_p_w, w) = 𝑉(𝑔≺(y_f_w, y_p_w, w))
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  25  m_f = (1 + r_f)*y_f_w + w  :: [id=financial_assets]
+  26  m_p = (1 + r_p)*y_p_w      :: [id=pension_assets]
+  27  w_d = w                    :: [id=earnings]
+
+Definitions referenced
+  Xf    worker_saving:set:Xf
+  Xp    worker_saving:set:Xp
+  w     worker_saving:distribution:w
+  𝑔≺    worker_saving:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / value:Expectation:1 ====
+STAGE worker_saving / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+  / value:Expectation:1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉 ∘ 𝑔≺
+         : Xf × Xp × ℝ₊₊ → ℝ
+       ──────────────────────────────────────────────
+  out  (y_f_w, y_p_w) ↦ E_{w}[𝑉(𝑔≺(y_f_w, y_p_w, w))]
+         : Xf × Xp → ℝ
+
+Rule
+  value:Expectation:1(y_f_w, y_p_w) = E_{w}[𝑉(𝑔≺(y_f_w, y_p_w, w))]
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  15  w ~ LogNormal(μ_w, σ_w)
+  40  V[<] = E_{w}(V)  :: [id=value]
+
+Definitions referenced
+  Xf    worker_saving:set:Xf
+  Xp    worker_saving:set:Xp
+  w     worker_saving:distribution:w
+  𝑔≺    worker_saving:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Aggregation ====
+STAGE worker_saving / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+  / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (y_f_w, y_p_w) ↦ E_{w}[𝑉(𝑔≺(y_f_w, y_p_w, w))]
+           : Xf × Xp → ℝ
+       ──────────────────────────────────────────────
+  out  𝑉≺  : Xf × Xp → ℝ
+
+Rule
+  𝑉≺ = E_{w}[𝑉(𝑔≺(y_f_w, y_p_w, w))]               on (y_f_w, y_p_w) ∈ Xf × Xp
+
+Conditions
+  𝑉≺(y_f_w, y_p_w) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  40  V[<] = E_{w}(V)  :: [id=value]
+
+Definitions referenced
+  Xf    worker_saving:set:Xf
+  Xp    worker_saving:set:Xp
+  w     worker_saving:distribution:w
+  𝑔≺    worker_saving:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Evaluation ====
+STAGE worker_saving / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≺  : Xf × Xp → ℝ
+       ─────────────────
+  out  𝑉≺  : Xf × Xp → ℝ
+
+Rule
+  𝑉≺ = E_{w}[𝑉(𝑔≺(y_f_w, y_p_w, w))]               on (y_f_w, y_p_w) ∈ Xf × Xp
+  𝑉≺ : Xf × Xp → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xf    worker_saving:set:Xf
+  Xp    worker_saving:set:Xp
+  w     worker_saving:distribution:w
+  𝑔≺    worker_saving:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy ====
+STAGE worker_saving / POLICY BUILDER policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻        : Xf × Xp → ℝ
+       ─────────────────────────────────────────────────────────────────────
+  out  (𝑐, 𝑐_p)  : ℝ₊₊ × Xp × ℝ₊₊ → ℝ₊₊ × ℝ₊,
+                   𝑐(m_f, m_p, w_d) ∈ Γ_c(m_f),
+                   𝑐_p(m_f, m_p, w_d) ∈ Γ_p(w_d)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻
+     ───────────────────────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻)(m_f, m_p, w_d, c, c_p) = 𝑉≻(𝑔≻(m_f, m_p, w_d, c, c_p))
+
+  2  optimality:Aggregation
+     in: (1)
+     out: (m_f, m_p, w_d, c, c_p) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(m_f, m_p, w_d, c, c_p))
+     ───────────────────────────────────────────────────────────────────────
+     rule: (m_f, m_p, w_d, c, c_p) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(m_f, m_p, w_d, c, c_p))
+
+  3  optimality:Argmax
+     in: (2)                            out: (𝑐, 𝑐_p)
+     ───────────────────────────────────────────────────────────────────────
+     rule: (𝑐(m_f, m_p, w_d), 𝑐_p(m_f, m_p, w_d))
+             ∈ argmax_{c ∈ Γ_c(m_f), c_p ∈ Γ_p(w_d)}
+                 [𝑢(c) + β · 𝑉≻(𝑔≻(m_f, m_p, w_d, c, c_p))]
+
+  4  Evaluation
+     in: (𝑐, 𝑐_p)                       out: (𝑐, 𝑐_p)
+     ───────────────────────────────────────────────────────────────────────
+     rule: (𝑐, 𝑐_p) : ℝ₊₊ × Xp × ℝ₊₊ → ℝ₊₊ × ℝ₊,
+           𝑐(m_f, m_p, w_d) ∈ Γ_c(m_f),  𝑐_p(m_f, m_p, w_d) ∈ Γ_p(w_d)
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  44  (c, c_p) = argmax_{c : Γ_c(m_f), c_p : Γ_p(w_d)}(𝑢(c) + β*V[>])
+        :: [id=optimality]
+
+Definitions referenced
+  Xf    worker_saving:set:Xf
+  Xp    worker_saving:set:Xp
+  β     worker_saving:parameter:β
+  𝑢     worker_saving:function:𝑢
+  Γ_c   worker_saving:correspondence:Γ_c
+  Γ_p   worker_saving:correspondence:Γ_p
+  𝑔≻    worker_saving:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback ====
+STAGE worker_saving / POLICY BUILDER policy / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xf × Xp → ℝ
+       ──────────────────────────────────────────────────────────
+  out  𝑉≻ ∘ 𝑔≻
+           : {m_f, m_p, w_d, c, c_p ∈ ℝ₊₊ × Xp × ℝ₊₊ × ℝ₊₊ × ℝ₊ |
+               c ∈ Γ_c(m_f) ∧ c_p ∈ Γ_p(w_d)} → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻)(m_f, m_p, w_d, c, c_p) = 𝑉≻(𝑔≻(m_f, m_p, w_d, c, c_p))
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  31  y_f = m_f - c - c_p       :: [id=financial_post_state]
+  32  y_p = m_p + c_p + 𝜒(c_p)  :: [id=pension_post_state]
+
+Definitions referenced
+  Xf    worker_saving:set:Xf
+  Xp    worker_saving:set:Xp
+  Γ_c   worker_saving:correspondence:Γ_c
+  Γ_p   worker_saving:correspondence:Γ_p
+  𝑔≻    worker_saving:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / optimality:Aggregation ====
+STAGE worker_saving / POLICY BUILDER policy / optimality:Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻
+         : {m_f, m_p, w_d, c, c_p ∈ ℝ₊₊ × Xp × ℝ₊₊ × ℝ₊₊ × ℝ₊ |
+             c ∈ Γ_c(m_f) ∧ c_p ∈ Γ_p(w_d)} → ℝ
+       ──────────────────────────────────────────────────────────────────
+  out  (m_f, m_p, w_d, c, c_p) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(m_f, m_p, w_d, c, c_p))
+         : {m_f, m_p, w_d, c, c_p ∈ ℝ₊₊ × Xp × ℝ₊₊ × ℝ₊₊ × ℝ₊ |
+             c ∈ Γ_c(m_f) ∧ c_p ∈ Γ_p(w_d)} → ℝ
+
+Rule
+  (m_f, m_p, w_d, c, c_p) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(m_f, m_p, w_d, c, c_p))
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  44  (c, c_p) = argmax_{c : Γ_c(m_f), c_p : Γ_p(w_d)}(𝑢(c) + β*V[>])
+        :: [id=optimality]
+
+Definitions referenced
+  Xp    worker_saving:set:Xp
+  β     worker_saving:parameter:β
+  𝑢     worker_saving:function:𝑢
+  Γ_c   worker_saving:correspondence:Γ_c
+  Γ_p   worker_saving:correspondence:Γ_p
+  𝑔≻    worker_saving:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / optimality:Argmax ====
+STAGE worker_saving / POLICY BUILDER policy / optimality:Argmax
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (m_f, m_p, w_d, c, c_p) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(m_f, m_p, w_d, c, c_p))
+                 : {m_f, m_p, w_d, c, c_p ∈ ℝ₊₊ × Xp × ℝ₊₊ × ℝ₊₊ × ℝ₊ |
+                     c ∈ Γ_c(m_f) ∧ c_p ∈ Γ_p(w_d)} → ℝ
+       ──────────────────────────────────────────────────────────────────
+  out  (𝑐, 𝑐_p)  : ℝ₊₊ × Xp × ℝ₊₊ → ℝ₊₊ × ℝ₊,
+                   𝑐(m_f, m_p, w_d) ∈ Γ_c(m_f),
+                   𝑐_p(m_f, m_p, w_d) ∈ Γ_p(w_d)
+
+Rule
+  (𝑐(m_f, m_p, w_d), 𝑐_p(m_f, m_p, w_d))
+    ∈ argmax_{c ∈ Γ_c(m_f), c_p ∈ Γ_p(w_d)}
+        [𝑢(c) + β · 𝑉≻(𝑔≻(m_f, m_p, w_d, c, c_p))]
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  44  (c, c_p) = argmax_{c : Γ_c(m_f), c_p : Γ_p(w_d)}(𝑢(c) + β*V[>])
+        :: [id=optimality]
+
+Definitions referenced
+  Xp    worker_saving:set:Xp
+  β     worker_saving:parameter:β
+  𝑢     worker_saving:function:𝑢
+  Γ_c   worker_saving:correspondence:Γ_c
+  Γ_p   worker_saving:correspondence:Γ_p
+  𝑔≻    worker_saving:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Evaluation ====
+STAGE worker_saving / POLICY BUILDER policy / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (𝑐, 𝑐_p)  : ℝ₊₊ × Xp × ℝ₊₊ → ℝ₊₊ × ℝ₊,
+                   𝑐(m_f, m_p, w_d) ∈ Γ_c(m_f),
+                   𝑐_p(m_f, m_p, w_d) ∈ Γ_p(w_d)
+       ─────────────────────────────────────────
+  out  (𝑐, 𝑐_p)  : ℝ₊₊ × Xp × ℝ₊₊ → ℝ₊₊ × ℝ₊,
+                   𝑐(m_f, m_p, w_d) ∈ Γ_c(m_f),
+                   𝑐_p(m_f, m_p, w_d) ∈ Γ_p(w_d)
+
+Rule
+  (𝑐(m_f, m_p, w_d), 𝑐_p(m_f, m_p, w_d))
+    ∈ argmax_{c ∈ Γ_c(m_f), c_p ∈ Γ_p(w_d)}
+        [𝑢(c) + β · 𝑉≻(𝑔≻(m_f, m_p, w_d, c, c_p))]
+  (𝑐, 𝑐_p) : ℝ₊₊ × Xp × ℝ₊₊ → ℝ₊₊ × ℝ₊,
+  𝑐(m_f, m_p, w_d) ∈ Γ_c(m_f),  𝑐_p(m_f, m_p, w_d) ∈ Γ_p(w_d)
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xp    worker_saving:set:Xp
+  β     worker_saving:parameter:β
+  𝑢     worker_saving:function:𝑢
+  Γ_c   worker_saving:correspondence:Γ_c
+  Γ_p   worker_saving:correspondence:Γ_p
+  𝑔≻    worker_saving:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn ====
+STAGE worker_saving / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Xf × Xp
+       ────────────────────────────────────────────
+  out  μ   : finite measure on ℝ₊₊ × Xp × ℝ₊₊
+
+Operations
+  1  DistributionExtension:w
+     in: μ≺                             out: μ≺⊗P_w
+     ──────────────────────────────────────────────
+     rule: μ≺⊗P_w(B)
+             = ∫_{(y_f_w, y_p_w) ∈ Xf × Xp}
+                 [P_w({w ∈ ℝ₊₊ | (y_f_w, y_p_w, w) ∈ B})] μ≺(d(y_f_w, y_p_w))
+
+  2  Pushforward
+     in: (1)                            out: μ
+     ──────────────────────────────────────────────
+     rule: μ(B)
+             = μ≺⊗P_w({y_f_w≺, y_p_w≺, w ∈ Xf × Xp × ℝ₊₊ |
+                        𝑔≺(y_f_w≺, y_p_w≺, w) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  25  m_f = (1 + r_f)*y_f_w + w  :: [id=financial_assets]
+  26  m_p = (1 + r_p)*y_p_w      :: [id=pension_assets]
+  27  w_d = w                    :: [id=earnings]
+
+Definitions referenced
+  Xf    worker_saving:set:Xf
+  Xp    worker_saving:set:Xp
+  w     worker_saving:distribution:w
+  P_w   worker_saving:distribution:w
+  𝑔≺    worker_saving:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / DistributionExtension:w ====
+STAGE worker_saving / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+  / DistributionExtension:w
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Xf × Xp
+       ─────────────────────────────────────
+  out  μ≺⊗P_w
+           : finite measure on Xf × Xp × ℝ₊₊
+
+Rule
+  μ≺⊗P_w(B)
+    = ∫_{(y_f_w, y_p_w) ∈ Xf × Xp} [P_w({w ∈ ℝ₊₊ | (y_f_w, y_p_w, w) ∈ B})]
+      μ≺(d(y_f_w, y_p_w))
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  15  w ~ LogNormal(μ_w, σ_w)
+
+Definitions referenced
+  Xf    worker_saving:set:Xf
+  Xp    worker_saving:set:Xp
+  w     worker_saving:distribution:w
+  P_w   worker_saving:distribution:w
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / Pushforward ====
+STAGE worker_saving / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺⊗P_w
+          : finite measure on Xf × Xp × ℝ₊₊
+       ─────────────────────────────────────
+  out  μ  : finite measure on ℝ₊₊ × Xp × ℝ₊₊
+
+Rule
+  μ(B)
+    = μ≺⊗P_w({y_f_w≺, y_p_w≺, w ∈ Xf × Xp × ℝ₊₊ | 𝑔≺(y_f_w≺, y_p_w≺, w) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  25  m_f = (1 + r_f)*y_f_w + w  :: [id=financial_assets]
+  26  m_p = (1 + r_p)*y_p_w      :: [id=pension_assets]
+  27  w_d = w                    :: [id=earnings]
+
+Definitions referenced
+  Xf    worker_saving:set:Xf
+  Xp    worker_saving:set:Xp
+  w     worker_saving:distribution:w
+  P_w   worker_saving:distribution:w
+  𝑔≺    worker_saving:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE worker_saving / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on ℝ₊₊ × Xp × ℝ₊₊
+       ────────────────────────────────────────
+  out  μ≻  : finite measure on Xf × Xp
+
+At
+  (𝑐, 𝑐_p)  : ℝ₊₊ × Xp × ℝ₊₊ → ℝ₊₊ × ℝ₊,
+              𝑐(m_f, m_p, w_d) ∈ Γ_c(m_f),
+              𝑐_p(m_f, m_p, w_d) ∈ Γ_p(w_d)
+
+Operations
+  1  Pushforward
+     in: μ                              out: μ≻
+     ──────────────────────────────────────────
+     rule: μ≻(B)
+             = μ({m_f, m_p, w_d ∈ ℝ₊₊ × Xp × ℝ₊₊ |
+                   𝑔≻(m_f, m_p, w_d, 𝑐(m_f, m_p, w_d), 𝑐_p(m_f, m_p, w_d))
+                     ∈ B})
+
+Conditions
+  Pushforward  m_f − 𝑐(m_f, m_p, w_d) − 𝑐_p(m_f, m_p, w_d) ∈ Xf
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  31  y_f = m_f - c - c_p       :: [id=financial_post_state]
+  32  y_p = m_p + c_p + 𝜒(c_p)  :: [id=pension_post_state]
+
+Definitions referenced
+  Xf    worker_saving:set:Xf
+  Xp    worker_saving:set:Xp
+  Γ_c   worker_saving:correspondence:Γ_c
+  Γ_p   worker_saving:correspondence:Γ_p
+  𝑔≻    worker_saving:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE worker_saving / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on ℝ₊₊ × Xp × ℝ₊₊
+       ──────────────────────────────────────
+  out  μ≻  : finite measure on Xf × Xp
+
+Rule
+  μ≻(B)
+    = μ({m_f, m_p, w_d ∈ ℝ₊₊ × Xp × ℝ₊₊ |
+          𝑔≻(m_f, m_p, w_d, 𝑐(m_f, m_p, w_d), 𝑐_p(m_f, m_p, w_d)) ∈ B})
+
+Conditions
+  m_f − 𝑐(m_f, m_p, w_d) − 𝑐_p(m_f, m_p, w_d) ∈ Xf
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  31  y_f = m_f - c - c_p       :: [id=financial_post_state]
+  32  y_p = m_p + c_p + 𝜒(c_p)  :: [id=pension_post_state]
+
+Definitions referenced
+  Xf    worker_saving:set:Xf
+  Xp    worker_saving:set:Xp
+  𝑔≻    worker_saving:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker_saving:set:Xf ====
+STAGE worker_saving / SET Xf
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xf  = ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  3  Xf := ℝ₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker_saving:set:Xp ====
+STAGE worker_saving / SET Xp
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xp  = ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  4  Xp := ℝ₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker_saving:parameter:β ====
+STAGE worker_saving / PARAMETER β
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  β  ∈ (0, 1)
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  6  β   : (0,1)  :: ["discount factor"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker_saving:parameter:ρ ====
+STAGE worker_saving / PARAMETER ρ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  ρ  ∈ (1, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  7  ρ   : (1, inf)  :: ["coefficient of relative risk aversion"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker_saving:parameter:r_f ====
+STAGE worker_saving / PARAMETER r_f
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  r_f  ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  8  r_f : ℝ₊  :: ["rate of return on financial assets"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker_saving:parameter:r_p ====
+STAGE worker_saving / PARAMETER r_p
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  r_p  ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  9  r_p : ℝ₊  :: ["rate of return on pension assets"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker_saving:parameter:χ_s ====
+STAGE worker_saving / PARAMETER χ_s
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  χ_s  ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  10  χ_s : ℝ₊  :: ["scale of the incentive to contribute to the pension"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker_saving:parameter:μ_w ====
+STAGE worker_saving / PARAMETER μ_w
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  μ_w  ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  11  μ_w : ℝ  :: ["log-mean of earnings"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker_saving:parameter:σ_w ====
+STAGE worker_saving / PARAMETER σ_w
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  σ_w  ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  12  σ_w : ℝ₊  :: ["standard deviation of log earnings"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker_saving:distribution:w ====
+STAGE worker_saving / DISTRIBUTION w
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  w    ~ LogNormal(μ_w, σ_w)
+  P_w  = measure on (0, ∞) given by
+           B
+             ↦ ∫_{z ∈ {z ∈ ℝ | exp(μ_w + σ_w · z) ∈ B}}
+                 [exp(−z²/2)/(2 · pi)^(1/2)] Lebesgue(dz)
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  15  w ~ LogNormal(μ_w, σ_w)
+
+Definitions referenced
+  μ_w   worker_saving:parameter:μ_w
+  σ_w   worker_saving:parameter:σ_w
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker_saving:function:𝑢 ====
+STAGE worker_saving / FUNCTION 𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑢  : ℝ₊₊ → (−∞, 0),  c ↦ c^(1 − ρ)/(1 − ρ)
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  17  𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)  :: [id=util]
+
+Definitions referenced
+  ρ     worker_saving:parameter:ρ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker_saving:function:𝑑𝑢 ====
+STAGE worker_saving / FUNCTION 𝑑𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑑𝑢  : ℝ₊₊ → ℝ₊₊,  c ↦ c^(−ρ)
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  18  𝑑𝑢(c : ℝ₊₊) := c^(-ρ)  :: [id=marg_util]
+
+Definitions referenced
+  ρ     worker_saving:parameter:ρ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker_saving:function:𝜒 ====
+STAGE worker_saving / FUNCTION 𝜒
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝜒  : ℝ₊ → ℝ,  x ↦ χ_s · log(1 + x)
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  19  𝜒(x : ℝ₊) := χ_s*log(1 + x)  :: [id=incentive]
+
+Definitions referenced
+  χ_s   worker_saving:parameter:χ_s
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker_saving:function:𝑑𝜒 ====
+STAGE worker_saving / FUNCTION 𝑑𝜒
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑑𝜒  : ℝ₊ → ℝ₊,  x ↦ χ_s/(1 + x)
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  20  𝑑𝜒(x : ℝ₊) := χ_s/(1 + x)  :: [id=marg_incentive]
+
+Definitions referenced
+  χ_s   worker_saving:parameter:χ_s
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker_saving:correspondence:Γ_c ====
+STAGE worker_saving / CORRESPONDENCE Γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Γ_c  : ℝ₊₊ ⇉ ℝ₊₊,  x ↦ (0, x]
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  21  Γ_c(x : ℝ₊₊) := (0, x]  :: [id=feasible_consumption]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker_saving:correspondence:Γ_p ====
+STAGE worker_saving / CORRESPONDENCE Γ_p
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Γ_p  : ℝ₊₊ ⇉ ℝ₊,  x ↦ [0, x]
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  22  Γ_p(x : ℝ₊₊) := [0, x]  :: [id=feasible_contribution]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.financial_assets ====
+STAGE worker_saving / FORWARD BLOCK arvl_to_dcsn / financial_assets
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  worker_saving.bl
+  25  m_f = (1 + r_f)*y_f_w + w  :: [id=financial_assets]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.pension_assets ====
+STAGE worker_saving / FORWARD BLOCK arvl_to_dcsn / pension_assets
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  worker_saving.bl
+  26  m_p = (1 + r_p)*y_p_w  :: [id=pension_assets]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.earnings ====
+STAGE worker_saving / FORWARD BLOCK arvl_to_dcsn / earnings
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  worker_saving.bl
+  27  w_d = w  :: [id=earnings]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.financial_post_state ====
+STAGE worker_saving / FORWARD BLOCK dcsn_to_cntn / financial_post_state
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  m_f − 𝑐(m_f, m_p, w_d) − 𝑐_p(m_f, m_p, w_d) ∈ Xf
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  31  y_f = m_f - c - c_p  :: [id=financial_post_state]
+
+Definitions referenced
+  Xf    worker_saving:set:Xf
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.pension_post_state ====
+STAGE worker_saving / FORWARD BLOCK dcsn_to_cntn / pension_post_state
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  worker_saving.bl
+  32  y_p = m_p + c_p + 𝜒(c_p)  :: [id=pension_post_state]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.value ====
+STAGE worker_saving / BACKWARD BLOCK cntn_to_dcsn / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(m_f, m_p, w_d) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  36  V = 𝑢(c) + β*V[>]  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.value ====
+STAGE worker_saving / BACKWARD BLOCK dcsn_to_arvl / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉≺(y_f_w, y_p_w) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  40  V[<] = E_{w}(V)  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== policy.optimality ====
+STAGE worker_saving / POLICY BLOCK policy / optimality
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  worker_saving.bl
+  44  (c, c_p) = argmax_{c : Γ_c(m_f), c_p : Γ_p(w_d)}(𝑢(c) + β*V[>])
+        :: [id=optimality]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker_saving:g:arvl_to_dcsn ====
+STAGE worker_saving / LAW OF MOTION arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≺  : Xf × Xp × ℝ₊₊ → ℝ₊₊ × Xp × ℝ₊₊,
+        (y_f_w, y_p_w, w) ↦ ((1 + r_f) · y_f_w + w, (1 + r_p) · y_p_w, w)
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  25  m_f = (1 + r_f)*y_f_w + w  :: [id=financial_assets]
+  26  m_p = (1 + r_p)*y_p_w      :: [id=pension_assets]
+  27  w_d = w                    :: [id=earnings]
+
+Definitions referenced
+  Xf    worker_saving:set:Xf
+  Xp    worker_saving:set:Xp
+  r_f   worker_saving:parameter:r_f
+  r_p   worker_saving:parameter:r_p
+  w     worker_saving:distribution:w
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker_saving:g:dcsn_to_cntn ====
+STAGE worker_saving / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : {m_f, m_p, w_d, c, c_p ∈ ℝ₊₊ × Xp × ℝ₊₊ × ℝ₊₊ × ℝ₊ |
+          c ∈ Γ_c(m_f) ∧ c_p ∈ Γ_p(w_d)} → Xf × Xp,
+        (m_f, m_p, w_d, c, c_p) ↦ (m_f − c − c_p, m_p + c_p + 𝜒(c_p))
+
+Conditions
+  m_f − 𝑐(m_f, m_p, w_d) − 𝑐_p(m_f, m_p, w_d) ∈ Xf
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  31  y_f = m_f - c - c_p       :: [id=financial_post_state]
+  32  y_p = m_p + c_p + 𝜒(c_p)  :: [id=pension_post_state]
+
+Definitions referenced
+  Xf    worker_saving:set:Xf
+  Xp    worker_saving:set:Xp
+  𝜒     worker_saving:function:𝜒
+  Γ_c   worker_saving:correspondence:Γ_c
+  Γ_p   worker_saving:correspondence:Γ_p
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker_saving:G:cntn_to_dcsn ====
+STAGE worker_saving / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, m_f, m_p, w_d, c, c_p ∈ ℝ × ℝ₊₊ × Xp × ℝ₊₊ × ℝ₊₊ × ℝ₊ |
+          c ∈ Γ_c(m_f) ∧ c_p ∈ Γ_p(w_d)} → ℝ,
+        (V≻, m_f, m_p, w_d, c, c_p) ↦ 𝑢(c) + β · V≻
+
+Conditions
+  𝑉(m_f, m_p, w_d) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  36  V = 𝑢(c) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  Xp    worker_saving:set:Xp
+  β     worker_saving:parameter:β
+  𝑢     worker_saving:function:𝑢
+  Γ_c   worker_saving:correspondence:Γ_c
+  Γ_p   worker_saving:correspondence:Γ_p
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker_saving:G:dcsn_to_arvl ====
+STAGE worker_saving / VALUE AGGREGATOR dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≺  : ℝ × Xf × Xp → ℝ,  (w, y_f_w, y_p_w) ↦ w
+
+Conditions
+  𝑉≺(y_f_w, y_p_w) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  40  V[<] = E_{w}(V)  :: [id=value]
+
+Definitions referenced
+  Xf    worker_saving:set:Xf
+  Xp    worker_saving:set:Xp
+  w     worker_saving:distribution:w
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== worker_saving:G:policy ====
+STAGE worker_saving / VALUE AGGREGATOR policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, m_f, m_p, w_d, c, c_p ∈ ℝ × ℝ₊₊ × Xp × ℝ₊₊ × ℝ₊₊ × ℝ₊ |
+          c ∈ Γ_c(m_f) ∧ c_p ∈ Γ_p(w_d)} → ℝ,
+        (V≻, m_f, m_p, w_d, c, c_p) ↦ 𝑢(c) + β · V≻
+──────────────────────────────────────────────────────────────────────────────
+Source  worker_saving.bl
+  44  (c, c_p) = argmax_{c : Γ_c(m_f), c_p : Γ_p(w_d)}(𝑢(c) + β*V[>])
+        :: [id=optimality]
+
+Definitions referenced
+  Xp    worker_saving:set:Xp
+  β     worker_saving:parameter:β
+  𝑢     worker_saving:function:𝑢
+  Γ_c   worker_saving:correspondence:Γ_c
+  Γ_p   worker_saving:correspondence:Γ_p
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

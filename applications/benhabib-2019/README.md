@@ -5,7 +5,7 @@ type: index
 ---
 # The within-life model of Benhabib, Bisin and Luo (2019)
 
-A household with a fixed earnings type and a fixed return type chooses how much to consume and to save at each age from 25 to 60, and leaves the wealth remaining at the end of life as a bequest.
+A household with a fixed earnings type and a fixed return type chooses how much to consume and to save at each age from 25 to 60, and leaves the wealth remaining at the end of life as a bequest. Each working stage sends back the age it takes in minus one. The user supplies age 61 with the terminal continuation value.
 
 The command `bellman-workbench applications/benhabib-2019` opens the model in the Workbench.
 

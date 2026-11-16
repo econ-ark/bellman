@@ -1,11 +1,12 @@
 @stage: survival
 
+Age := {17, …, 101}
 Plan := {DB, DC}
 
-p_s : [0,1]                                      :: ["probability of surviving into the age of the period, Section 5"]
+p_s : Age → [0,1]                                :: ["probability of surviving into the age of the period, Section 5"]
 
 s : {survive, die}
-s ~ Categorical((p_s, 1 - p_s))                  :: ["surviving or dying, with probabilities in the order of the labels"]
+s(_age) ~ Categorical((p_s[_age], 1 - p_s[_age])) :: ["surviving or dying, with probabilities in the order of the labels"]
 
 [id=arvl_to_dcsn, (a_s : ℝ₊, y_s : ℝ₊, adc_s : ℝ₊, h_s : ℝ₊, m_s : ℝ₊, P_s : ℝ₊₊, ξ_s : ℝ, α_s : (0,1), β_s : (0,1), plan_s : Plan, π_s : [0,1]) : !arvl -> (a_d : ℝ₊, y_d : ℝ₊, adc_d : ℝ₊, h_d : ℝ₊, m_d : ℝ₊, P_d : ℝ₊₊, ξ_d : ℝ, α_d : (0,1), β_d : (0,1), plan_d : Plan, π_d : [0,1]) : !dcsn] {
     a_d    = a_s
@@ -21,7 +22,7 @@ s ~ Categorical((p_s, 1 - p_s))                  :: ["surviving or dying, with p
     π_d    = π_s
 }
 
-[id=dcsn_to_cntn, (a_d, y_d, adc_d, h_d, m_d, P_d, ξ_d, α_d, β_d, plan_d, π_d, s) : !dcsn -> ()] {
+[id=dcsn_to_cntn, (a_d, y_d, adc_d, h_d, m_d, P_d, ξ_d, α_d, β_d, plan_d, π_d, s, age_sv) : !dcsn -> ()] {
     [label=survive, () -> (a_sv : ℝ₊, y_sv : ℝ₊, adc_sv : ℝ₊, h_sv : ℝ₊, m_sv : ℝ₊, P_sv : ℝ₊₊, ξ_sv : ℝ, α_sv : (0,1), β_sv : (0,1), plan_sv : Plan, π_sv : [0,1]) : !cntn] {
         a_sv = a_d
         y_sv = y_d
@@ -41,16 +42,19 @@ s ~ Categorical((p_s, 1 - p_s))                  :: ["surviving or dying, with p
         h_bq = h_d
         m_bq = m_d
         P_bq = P_d
+        # The absorbing branch records the draw locally. Bequest needs only wealth states.
+        death = s(age_sv)
     }
 }
 
-[id=cntn_to_dcsn, (V_sv[>] : [-inf, inf) @ !vlu, V_bq[>] : ℝ @ !vlu) : !cntn -> (V : [-inf, inf) @ !vlu) : !dcsn] {
-    V        = E_{s}((V_sv[>], V_bq[>])[s])                   :: [id=value]
-    D_{a_d}V = E_{s}((D_{a_sv}V_sv[>], D_{a_bq}V_bq[>])[s])   :: [id=marginal_liquid]
-    D_{h_d}V = E_{s}((D_{h_sv}V_sv[>], D_{h_bq}V_bq[>])[s])   :: [id=marginal_housing]
-    D_{m_d}V = E_{s}((D_{m_sv}V_sv[>], D_{m_bq}V_bq[>])[s])   :: [id=marginal_mortgage]
+[id=cntn_to_dcsn, (V_sv[>] : [-inf, inf) @ !vlu, V[>] : ℝ @ !vlu, age_sv : Age @ !vlu @ !cnst) : !cntn -> (V : [-inf, inf) @ !vlu, age_sv) : !dcsn] {
+    V        = E_{s}((V_sv[>], V[>])[s])                   :: [id=value]
+    D_{a_d}V = E_{s}((D_{a_sv}V_sv[>], D_{a_bq}V[>])[s])   :: [id=marginal_liquid]
+    D_{h_d}V = E_{s}((D_{h_sv}V_sv[>], D_{h_bq}V[>])[s])   :: [id=marginal_housing]
+    D_{m_d}V = E_{s}((D_{m_sv}V_sv[>], D_{m_bq}V[>])[s])   :: [id=marginal_mortgage]
 }
 
-[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl] {
+[id=dcsn_to_arvl, (V, age_sv) : !dcsn -> (V[<] : [-inf, inf) @ !vlu, age[<] : Age @ !vlu @ !cnst) : !arvl] {
     V[<] = V                                     :: [id=value]
+    age[<] = age_sv :: [id=age]
 }

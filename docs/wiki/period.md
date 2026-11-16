@@ -17,7 +17,7 @@ type: concept
 
 # Period
 
-A **period** collects [[stage|stage occurrences]] and their within-period [[connector|connections]]. Its fields remain local to each stage, while a [[parameters|parameter]] name declared by more than one stage denotes one parameter of that period. It also supplies a boundary through which the period joins its successor. The outer description is YAML; individual stage equations are written in `.bl`.
+A **period** collects [[stage|stage occurrences]] and their within-period [[connector|connections]]. Its fields remain local to each stage, while a [[parameters|parameter]] name declared by more than one stage denotes one parameter of that period. Its unjoined inputs and outputs determine how it can join its successor. The outer description is YAML; individual stage equations are written in `.bl`.
 
 ## The period file
 
@@ -35,6 +35,6 @@ For a chain of stage [[operator|operators]] $T_1,\ldots,T_K$ listed in forward e
 
 $$T_{\mathrm{period}}=T_1\circ\cdots\circ T_K.$$
 
-The rightmost operator acts first on continuation value. This formula assumes compatible value domains and well-defined component operators. Branching structures require their declared routes and continuation inputs rather than an arbitrary linear ordering.
+The rightmost operator acts first on the tuple of representing functions of all continuation value-type fields, including any constants such as age or a borrowing bound. This formula assumes compatible domains and well-defined component operators. Branching structures require their declared routes and continuation inputs rather than an arbitrary linear ordering.
 
-A [[trellis]] assembles period occurrences across dates. The choice of a period boundary is part of the decomposition of the model; terminal conditions and numerical choices remain explicit.
+A [[trellis]] is the diagram of periods joined by connections. In a [modular model](../bellman-calculus/APPX-H-MODULARITY.md), repeated declarations share their operators and calibration sources. Their supplied fields may differ, and methods and settings remain separate numerical choices. A stage occurrence's position is an address in the trellis, not an input to its equations. The user supplies the terminal data for every required backward field when the model is realized.

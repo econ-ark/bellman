@@ -1,11 +1,11 @@
 @methods: worker_saving
-# Deliberate refusals (aspect A24) on the worker's saving stage, whose stage
-# file is
+# Deliberate refusals on the worker's saving stage, whose stage file is
 # applications/pension-retirement/declaration/stages/worker_saving/worker_saving.bl.
 # No item of this file belongs to the application's methods; each is written
-# as an author might write it by mistake, and each comment names the rule of
-# the union (the proposal's §4) that refuses it. The seven settings below are
-# read by the entries of the file and declared as the writer's sheet §6 asks.
+# as an author might write it by mistake. The comment above each item says why
+# the package refuses the union of that item with the stage file, and names
+# the refusal rule. The seven settings below are read by the entries of the
+# file and declared with their sets.
 
 n_a : ℕ              :: ["number of points of the grid of financial savings"]
 a_min : Xf           :: ["lower bound of the grid of financial savings"]
@@ -15,19 +15,19 @@ p_min : Xp           :: ["lower bound of the grid of pension savings"]
 p_max : Xp           :: ["upper bound of the grid of pension savings"]
 n_w_nodes : ℕ        :: ["quadrature nodes of the earnings shock"]
 
-# Refused twice. First, the same slot twice: the bracket fills the method slot
-# of the block policy with time iteration, and the first file-level line
-# below the block, routed by its path to the same slot (rule 7), fills it with
-# the endogenous grid method, as an author switching methods might leave the
-# old entry in place; rule 4 refuses two entries of one key with different
-# content, naming both, and the box of §4 admits at most one method on a
-# block's own slot. The second line gives that method its grid on the two
-# continuation states (D5, the writer's sheet §7); it fills the grid
-# component of policy once and is not refused. Second, two sets on one coordinate: the partial signature
-# appends to the codomain, which its arrow names (rule 8), the contribution
-# c_p with the set ℝ₊₊, copied from the consumption c, where the stage's
-# signature of policy gives c_p the set ℝ₊; rule 4 refuses a coordinate of
-# one name with different content. Its empty domain side () adds nothing.
+# Refused for two reasons. First, two sets on one coordinate: the signature
+# that the block writes appends to the codomain, which its arrow names, the
+# contribution c_p with the set ℝ₊₊, copied from the consumption c, where the
+# stage's signature of policy gives c_p the set ℝ₊. A coordinate keeps the
+# stage's set, so the package refuses the signature (`type-conflict`); its
+# empty domain side () adds nothing. Second, one component written twice: the
+# bracket gives the method of the block policy as time iteration, and the
+# first line at file level below the block, which the package attaches by its
+# path to the same block, gives it the endogenous grid method, as an author
+# switching methods might leave the old entry in place. The package refuses
+# the second entry and names both (`declared-twice`). The second line at file
+# level types the grid of policy on the two continuation states, y_f and y_p,
+# once.
 [id=policy, policy.method : !time_iteration, () -> (c_p : ℝ₊₊ @ !ctrl) : !dcsn] {
     𝑑𝑢(c) = β*(1 + 𝑑𝜒(c_p))*D_{y_p}V[>] ⟂ 0 <= c_p <= w_d        :: [id=euler_pension]
 }
@@ -35,13 +35,13 @@ n_w_nodes : ℕ        :: ["quadrature nodes of the earnings shock"]
 policy.method : !egm
 policy.grid : !Cartesian(y_f=(a_min, a_max, n_a), y_p=(p_min, p_max, n_p))
 
-# Refused twice. First, a line id twice: the envelope line of the decision
-# value is written under the id value, which the stage's line
-# V = 𝑢(c) + β*V[>] of this block already holds (rule 5). Second, a subject
-# naming another block: the group binds a quadrature to the expectation E_w,
-# which the YAML leaves unbound, from inside the decision value builder, but
-# E_w occurs only in the line value of the arrival value builder, and the
-# subject's first segment names that other block (rule 7).
+# Refused for two reasons. First, a path that names another block: the entry
+# types a quadrature at the expectation E_w from inside the decision builder,
+# but E_w occurs only in the line value of the arrival builder, and the first
+# segment of the path names that other block (`label-not-in-parent`). Second,
+# one line id twice: the envelope line of the decision value is written under
+# the id value, which the stage's line V = 𝑢(c) + β*V[>] of this block
+# already holds (`declared-twice`).
 [id=cntn_to_dcsn
     | dcsn_to_arvl.value.E_w.method : !gauss_hermite(n_w=n_w_nodes)] {
     D_{m_f}V = 𝑑𝑢(c)                            :: [id=value]

@@ -1,0 +1,540 @@
+BELLMAN-SYM / STAGE disc                                  [VERSION = SYMBOLIC]
+a stage occurrence of applications/cons-port/declaration/stages/disc/disc.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        a≺ state, V≺ value
+  ∼ decision       a_d state, V value
+  ≻ continuation   a≻ state, V≻ value
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           a≺ at arrival, a_d at decision, a≻ at continuation
+  controls         none
+  values           V at every perch
+  shocks           none
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → arvl_to_dcsn   (a≺) : !arvl -> (a_d) : !dcsn
+  → dcsn_to_cntn   (a_d) : !dcsn -> (a≻) : !cntn
+  ← cntn_to_dcsn   (V≻) : !cntn -> (V) : !dcsn
+  ← dcsn_to_arvl   (V) : !dcsn -> (V≺) : !arvl
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  sets                     1   Xa := ℝ₊
+  parameters               1   β : (0, 1)
+  laws of motion           2   a_d = a; a[>] = a_d
+  value aggregators        2   V = β*V[>]; V[<] = V
+  block lines              4   arvl_to_dcsn.1, dcsn_to_cntn.1,
+                               cntn_to_dcsn.value, dcsn_to_arvl.value
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   𝑉≻ ↦ 𝑉≺
+                    forward    μ≺ ↦ μ≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ≺ a≺  →  ∼ a_d  →  ≻ a≻
+  backward   ≺ V≺  ←  ∼ V  ←  ≻ V≻
+
+==== stage ====
+STAGE disc
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑉≻  : Xa → ℝ
+         ──────────────────────────────────────
+    out  𝑉≺  : Xa → ℝ
+  forward
+    in   μ≺  : finite measure on Xa
+         ──────────────────────────────────────
+    out  μ≻  : finite measure on Xa
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉≻                           out: 𝑉
+
+    2  dcsn_to_arvl
+       in: 𝑉                            out: 𝑉≺
+
+  forward
+    1  arvl_to_dcsn
+       in: μ≺                           out: μ
+
+    2  dcsn_to_cntn
+       in: μ                            out: μ≻
+
+Conditions
+  cntn_to_dcsn:Aggregation  𝑉(a_d) ∈ ℝ
+  dcsn_to_arvl:Aggregation  𝑉≺(a) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  disc.bl
+  8   a_d = a
+  12  a[>] = a_d
+  16  V  = β*V[>]  :: [id=value]
+  20  V[<]  = V    :: [id=value]
+
+Definitions referenced
+  Xa    disc:set:Xa
+
+File
+  applications/cons-port/declaration/stages/disc/disc.bl
+
+Perches
+  ≺  arrival, written [<]
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE disc / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻}
+       ──────────
+  out  V   : {V}
+
+Conditions
+  𝑉(a_d) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  disc.bl
+  16  V  = β*V[>]  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward dcsn_to_arvl ====
+STAGE disc / BACKWARD BLOCK dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V   : {V}
+       ──────────
+  out  V≺  : {V≺}
+
+Conditions
+  𝑉≺(a) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  disc.bl
+  20  V[<]  = V  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward arvl_to_dcsn ====
+STAGE disc / FORWARD BLOCK arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a≺   : {a≺}
+       ────────────
+  out  a_d  : {a_d}
+──────────────────────────────────────────────────────────────────────────────
+Source  disc.bl
+  8  a_d = a
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE disc / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a_d  : {a_d}
+       ────────────
+  out  a≻   : {a≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  disc.bl
+  12  a[>] = a_d
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE disc / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xa → ℝ
+       ─────────────────────────────────────────────
+  out  𝑉   : Xa → ℝ
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻
+     ───────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻)(a_d) = 𝑉≻(𝑔≻(a_d))
+
+  2  Aggregation
+     in: (1)                            out: 𝑉
+     ───────────────────────────────────────────────
+     rule: 𝑉(a_d) = β · 𝑉≻(𝑔≻(a_d))
+
+  3  Evaluation
+     in: 𝑉                              out: 𝑉
+     ───────────────────────────────────────────────
+     rule: 𝑉 : Xa → ℝ
+
+Conditions
+  Aggregation  𝑉(a_d) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  disc.bl
+  16  V  = β*V[>]  :: [id=value]
+
+Definitions referenced
+  Xa    disc:set:Xa
+  β     disc:parameter:β
+  𝑔≻    disc:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback ====
+STAGE disc / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Xa → ℝ
+       ────────────
+  out  𝑉≻ ∘ 𝑔≻
+           : Xa → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻)(a_d) = 𝑉≻(𝑔≻(a_d))
+──────────────────────────────────────────────────────────────────────────────
+Source  disc.bl
+  12  a[>] = a_d
+
+Definitions referenced
+  Xa    disc:set:Xa
+  𝑔≻    disc:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE disc / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻
+          : Xa → ℝ
+       ───────────
+  out  𝑉  : Xa → ℝ
+
+Rule
+  𝑉(a_d) = β · 𝑉≻(𝑔≻(a_d))
+
+Conditions
+  𝑉(a_d) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  disc.bl
+  16  V  = β*V[>]  :: [id=value]
+
+Definitions referenced
+  Xa    disc:set:Xa
+  β     disc:parameter:β
+  𝑔≻    disc:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE disc / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : Xa → ℝ
+       ───────────
+  out  𝑉  : Xa → ℝ
+
+Rule
+  𝑉(a_d) = β · 𝑉≻(𝑔≻(a_d))
+  𝑉 : Xa → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xa    disc:set:Xa
+  β     disc:parameter:β
+  𝑔≻    disc:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl ====
+STAGE disc / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉   : Xa → ℝ
+       ────────────────────────────────────────────
+  out  𝑉≺  : Xa → ℝ
+
+Operations
+  1  Pullback
+     in: 𝑉                              out: 𝑉 ∘ 𝑔≺
+     ──────────────────────────────────────────────
+     rule: (𝑉 ∘ 𝑔≺)(a) = 𝑉(𝑔≺(a))
+
+  2  Aggregation
+     in: (1)                            out: 𝑉≺
+     ──────────────────────────────────────────────
+     rule: 𝑉≺(a) = 𝑉(𝑔≺(a))
+
+  3  Evaluation
+     in: 𝑉≺                             out: 𝑉≺
+     ──────────────────────────────────────────────
+     rule: 𝑉≺ : Xa → ℝ
+
+Conditions
+  Aggregation  𝑉≺(a) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  disc.bl
+  20  V[<]  = V  :: [id=value]
+
+Definitions referenced
+  Xa    disc:set:Xa
+  𝑔≺    disc:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Pullback ====
+STAGE disc / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : Xa → ℝ
+       ───────────
+  out  𝑉 ∘ 𝑔≺
+          : Xa → ℝ
+
+Rule
+  (𝑉 ∘ 𝑔≺)(a) = 𝑉(𝑔≺(a))
+──────────────────────────────────────────────────────────────────────────────
+Source  disc.bl
+  8  a_d = a
+
+Definitions referenced
+  Xa    disc:set:Xa
+  𝑔≺    disc:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Aggregation ====
+STAGE disc / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉 ∘ 𝑔≺
+           : Xa → ℝ
+       ────────────
+  out  𝑉≺  : Xa → ℝ
+
+Rule
+  𝑉≺(a) = 𝑉(𝑔≺(a))
+
+Conditions
+  𝑉≺(a) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  disc.bl
+  20  V[<]  = V  :: [id=value]
+
+Definitions referenced
+  Xa    disc:set:Xa
+  𝑔≺    disc:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Evaluation ====
+STAGE disc / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≺  : Xa → ℝ
+       ────────────
+  out  𝑉≺  : Xa → ℝ
+
+Rule
+  𝑉≺(a) = 𝑉(𝑔≺(a))
+  𝑉≺ : Xa → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xa    disc:set:Xa
+  𝑔≺    disc:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn ====
+STAGE disc / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Xa
+       ───────────────────────────────────────
+  out  μ   : finite measure on Xa
+
+Operations
+  1  Pushforward
+     in: μ≺                             out: μ
+     ─────────────────────────────────────────
+     rule: μ(B) = μ≺({a≺ ∈ Xa | 𝑔≺(a≺) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  disc.bl
+  8  a_d = a
+
+Definitions referenced
+  Xa    disc:set:Xa
+  𝑔≺    disc:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / Pushforward ====
+STAGE disc / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Xa
+       ──────────────────────────
+  out  μ   : finite measure on Xa
+
+Rule
+  μ(B) = μ≺({a≺ ∈ Xa | 𝑔≺(a≺) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  disc.bl
+  8  a_d = a
+
+Definitions referenced
+  Xa    disc:set:Xa
+  𝑔≺    disc:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE disc / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on Xa
+       ────────────────────────────────────────
+  out  μ≻  : finite measure on Xa
+
+Operations
+  1  Pushforward
+     in: μ                              out: μ≻
+     ──────────────────────────────────────────
+     rule: μ≻(B) = μ({a_d ∈ Xa | 𝑔≻(a_d) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  disc.bl
+  12  a[>] = a_d
+
+Definitions referenced
+  Xa    disc:set:Xa
+  𝑔≻    disc:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE disc / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on Xa
+       ──────────────────────────
+  out  μ≻  : finite measure on Xa
+
+Rule
+  μ≻(B) = μ({a_d ∈ Xa | 𝑔≻(a_d) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  disc.bl
+  12  a[>] = a_d
+
+Definitions referenced
+  Xa    disc:set:Xa
+  𝑔≻    disc:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== disc:set:Xa ====
+STAGE disc / SET Xa
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xa  = ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  disc.bl
+  3  Xa := ℝ₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== disc:parameter:β ====
+STAGE disc / PARAMETER β
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  β  ∈ (0, 1)
+──────────────────────────────────────────────────────────────────────────────
+Source  disc.bl
+  5  β : (0,1)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.1 ====
+STAGE disc / FORWARD BLOCK arvl_to_dcsn / 1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  disc.bl
+  8  a_d = a
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.1 ====
+STAGE disc / FORWARD BLOCK dcsn_to_cntn / 1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  disc.bl
+  12  a[>] = a_d
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.value ====
+STAGE disc / BACKWARD BLOCK cntn_to_dcsn / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(a_d) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  disc.bl
+  16  V  = β*V[>]  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.value ====
+STAGE disc / BACKWARD BLOCK dcsn_to_arvl / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉≺(a) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  disc.bl
+  20  V[<]  = V  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== disc:g:arvl_to_dcsn ====
+STAGE disc / LAW OF MOTION arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≺  : Xa → Xa,  a ↦ a
+──────────────────────────────────────────────────────────────────────────────
+Source  disc.bl
+  8  a_d = a
+
+Definitions referenced
+  Xa    disc:set:Xa
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== disc:g:dcsn_to_cntn ====
+STAGE disc / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : Xa → Xa,  a_d ↦ a_d
+──────────────────────────────────────────────────────────────────────────────
+Source  disc.bl
+  12  a[>] = a_d
+
+Definitions referenced
+  Xa    disc:set:Xa
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== disc:G:cntn_to_dcsn ====
+STAGE disc / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : ℝ × Xa → ℝ,  (V≻, a_d) ↦ β · V≻
+
+Conditions
+  𝑉(a_d) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  disc.bl
+  16  V  = β*V[>]  :: [id=value]
+
+Definitions referenced
+  Xa    disc:set:Xa
+  β     disc:parameter:β
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== disc:G:dcsn_to_arvl ====
+STAGE disc / VALUE AGGREGATOR dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≺  : ℝ × Xa → ℝ,  (V, a) ↦ V
+
+Conditions
+  𝑉≺(a) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  disc.bl
+  20  V[<]  = V  :: [id=value]
+
+Definitions referenced
+  Xa    disc:set:Xa
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

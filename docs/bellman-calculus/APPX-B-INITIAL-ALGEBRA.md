@@ -33,7 +33,7 @@ We use the many-sorted algebra account of Goguen, Thatcher, Wagner, and Wright (
 
 A many-sorted **signature** $\Sigma = \langle S, \Omega \rangle$ declares a set $S$ of sorts and a family $\Omega$ of operator symbols, each with an arity (a string of input sorts) and an output sort, and nothing else: no carriers, no functions (ADJ 1977, §2; [signature](../wiki/signature.md)). A **$\Sigma$-algebra** $A$ supplies a carrier set $A_s$ for each sort and an actual operation per symbol of matching rank. The rank of a symbol is its arity with its output sort, in the usage of Goguen and Meseguer (1992, Definition 2.1) that [Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) §3, D1, adopts. A **homomorphism** $h : A \to A'$ is a sort-indexed family of maps commuting with every operation.
 
-The **coarse stage signature** contains perch-indexed value-function sorts $\mathsf V_p$, distribution sorts $\mathsf M_p$, and typed backward and forward builder symbols. The model supplies state spaces, feasible actions, shock laws, transitions and local payoff functions. These data determine the operations under the conditions in [Stages and perches](./03-Stages%20and%20perches.md). A diagram records a finite expression using those operations; the signature also specifies their ranks and cannot be inferred from unlabeled arrows alone.
+The **coarse stage signature** contains perch-indexed sorts of representing-function tuples with carriers $\mathsf B_p$, distribution sorts with carriers $\mathsf M_p$, and typed backward and forward builder symbols. The model supplies state spaces, feasible actions, shock laws, transitions and local payoff functions. These data determine the operations under the conditions in [Stages and perches](./03-Stages%20and%20perches.md). A diagram records a finite expression using those operations; the signature also specifies their ranks and cannot be inferred from unlabeled arrows alone.
 
 The ground terms over $\Sigma$ form the **term algebra** $T_\Sigma$, whose operations construct terms. Ground terms contain no free inputs. For a sort-indexed family of free input names $X$, use the **free algebra** $T_\Sigma(X)$. An environment $e_s:X_s\to A_s$ assigns a value to every free input of sort $s$. The environment and the target operations together determine evaluation. A finite acyclic term graph can represent such an expression with shared subterms (§6); this is mathematical notation, not a claim that the parser's abstract syntax tree is retained.
 
@@ -45,15 +45,15 @@ The ground terms over $\Sigma$ form the **term algebra** $T_\Sigma$, whose opera
 
 **Theorem (ADJ 1977, §2, Proposition 2.1, p. 71).** The term algebra $T_\Sigma$ is initial in the category of all $\Sigma$-algebras. Any two initial algebras over $\Sigma$ are canonically isomorphic (ADJ Prop. 1.1), so one may speak of *the* initial algebra.
 
-Thus a fixed target algebra determines a unique interpretation of ground terms. For terms with free inputs, ADJ Propositions 2.3 and 2.6 (pp. 72, 75) give the unique homomorphism $h_{A,e}:T_\Sigma(X)\to A$ extending the environment $e$. Neither the target operations nor the environment is chosen by initiality.
+Thus a fixed target algebra determines a unique interpretation of ground terms. For terms with free inputs, ADJ Propositions 2.3 and 2.6 (pp. 72, 75) give the unique homomorphism $h_{A,e}:T_\Sigma(X)\to A$ extending the environment $e$. Neither the target operations nor the environment is chosen by initiality. This theorem is stated for total operations. For a partial map on pairs, repeated evaluation stops where a required application has no value; it does not silently make that map total. The whole-builder partial-map interpretation is instead the free-category construction in [Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) §6.
 
 <a id="b3-the-two-target-algebras-and-the-valuation"></a>
 
 ## 3. Value and measure interpretations
 
-A target for the combined stage signature must interpret every declared sort and symbol. Its value-function part uses chosen spaces $\mathsf V_p$ on the perch state spaces; its measure part uses $\mathsf M_p$. We may discuss these parts separately by restricting to their respective subsignatures. Reversing arrows alone does not turn a value algebra into a measure algebra of the same rank signature.
+A target for the combined stage signature must interpret every declared sort and symbol. Its backward part uses the tuple carriers $\mathsf B_p$ of §1; its measure part uses $\mathsf M_p$. We may discuss these parts separately by restricting to their respective subsignatures. Reversing arrows alone does not turn a value algebra into a measure algebra of the same rank signature.
 
-Write $\mathcal V$ for the target algebra of the value-operation subsignature and $\Pi_\Gamma$ for its feasible measurable policies. For the value interpretation, let $\operatorname{Gr}(\Gamma)$ be the feasible state–action pairs and $\mathsf Q_\Gamma$ the choice-value functions on those pairs. With an integrable payoff at every required pair, the pointwise objective is
+The formulas in this section specialize to a single scalar value field. Write $\mathcal V$ for the target algebra of the value-operation subsignature and $\Pi_\Gamma$ for its feasible measurable policies. For the value interpretation, let $\operatorname{Gr}(\Gamma)$ be the feasible state–action pairs and $\mathsf Q_\Gamma$ the choice-value functions on those pairs. With an integrable payoff at every required pair, the pointwise objective is
 
 $$
 (B_\succ\mathrm v_\succ)(x,a)
@@ -67,10 +67,10 @@ On a domain admitting the specified measurable maximizing selection, the optimiz
 $$
 \mathbb T_\succ
 =\operatorname{evaluate}\circ
-\langle B_\succ,\operatorname{argmax}\circ B_\succ\rangle.
+\langle B_\succ,s\circ B_\succ\rangle.
 $$
 
-The fixed-policy builder instead satisfies $\mathbb T_{\succ,\pi}v=\operatorname{evaluate}(B_\succ v,\pi)$. Evaluation means $\operatorname{evaluate}(Q,\pi)(x)=Q(x,\pi(x))$. Arrival evaluation is the policy-free aggregator $\mathbb T_\prec=B_\prec$. Domains must be chosen so all operations are defined and closed under these compositions; initiality supplies no selection or integrability theorem.
+Here $s$ is a specified measurable maximizing selection, defined on the choice-value functions for which the rule selects a maximizer. The maximizing set alone supplies no such selection ([Operators](./catalogues/operators.md) §4). The fixed-policy builder instead satisfies $\mathbb T_{\succ,\pi}v=\operatorname{evaluate}(B_\succ v,\pi)$. Evaluation means $\operatorname{evaluate}(Q,\pi)(x)=Q(x,\pi(x))$. Arrival evaluation is the policy-free aggregator $\mathbb T_\prec=B_\prec$. With several value-type fields, one selected policy is used in every decision equation; only the designated objective is maximized. Domains must be chosen so all operations are defined and closed under these compositions; initiality supplies no selection or integrability theorem.
 
 The measure interpretation uses transition pushforwards $\mathbb M_\prec$ and $\mathbb M_{\succ,\pi}$. Write $P_\prec$ and $P_{\succ,\pi}$ for the corresponding undiscounted Markov expectations and $\langle\mu,f\rangle=\int f\,d\mu$. For bounded measurable $f$, or when both sides are absolutely integrable, their pairing is
 
@@ -91,7 +91,7 @@ The valuation $\Upsilon$ is the unique interpretation homomorphism after these t
 Let $\Sigma$ be the coarse signature with optimizing builder $\mathbb T_\succ$ and arrival builder $\mathbb T_\prec$, and $\Sigma'$ a finer signature containing the operations used to define them. A **derived signature morphism** $\delta:\Sigma\to\Sigma'$ assigns each coarse symbol a fine term of the same rank. The sorts are held fixed here, and the term's formal inputs are explicit. Composition and pairing below abbreviate substitution into ordinary many-sorted terms. For the stage builders, the assignment is
 
 $$
-\delta(\mathbb T_\succ)=\operatorname{evaluate}\circ\langle B_\succ,\operatorname{argmax}\circ B_\succ\rangle,
+\delta(\mathbb T_\succ)=\operatorname{evaluate}\circ\langle B_\succ,s\circ B_\succ\rangle,
 \qquad
 \delta(\mathbb T_\prec)=B_\prec.
 $$
@@ -104,7 +104,7 @@ $$
 \mathrm{tr}_\delta : T_\Sigma \to T_{\Sigma'}|_\delta,
 $$
 
-the **term translation**: the map that expands every occurrence of every builder symbol into its assigned sub-term. Uniqueness is the coherence claim of [Fields, functions and types](./04-fields,%20functions%20and%20types.md) §5: a homomorphism uses the same interpretation for repeated occurrences of a symbol. Occurrence-specific data must therefore be supplied as inputs or distinguished in the signature.
+the **term translation**: the map that expands every occurrence of every builder symbol into its assigned sub-term. Uniqueness is the coherence claim of [Fields, functions and types](./04-fields,%20functions%20and%20types.md) §5: a homomorphism uses the same interpretation for repeated occurrences of a symbol. Occurrence-specific data must therefore be supplied as inputs or distinguished in the signature. A modular declaration uses field arguments for quantities such as age and a borrowing bound, while retaining one family of operators. A signature distinguishing period declarations also has a term interpretation; initiality alone does not impose modularity.
 
 **Factorization theorem.** For every $\Sigma'$-algebra $A'$, the unique $\Sigma$-homomorphism $T_\Sigma \to A'|_\delta$ factors through the fine term algebra:
 

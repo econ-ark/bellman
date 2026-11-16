@@ -18,18 +18,21 @@
 # arrival value and its derivative are represented together, by linear
 # interpolation on the grid of assets k, named once at that builder's
 # Evaluation. The settings the entries read are declared first, with their
-# sets: a count in ℕ and a bound a point of Xa, the set the stage declares for
-# the savings and the assets. Their values are recorded in
+# sets: a count in ℕ, a bound a point of Xa, the set the stage declares for
+# the savings and the assets, and extra_grid in ℝ₊, the distance from the
+# bound L, the field the stage takes in, to the first savings point, so that
+# the savings grid starts at L + extra_grid. Their values are recorded in
 # declaration/settings/buffer_stock.yml and are those of the HARK solution of
 # this model in the QuantEcon community library
 # (projects/HARK/buffer-stock/tutorial.ipynb, HARK 0.17.1): seven nodes per
-# shock and 960 points from 0.001 to 20 for the savings and for the assets.
+# shock and 960 points from 0.001 to 20 for the assets and, where the bound
+# L is 0, for the savings.
 # HARK's seven values per shock are equiprobable conditional means and its
 # grid is exponentially nested; here the rule is Gauss-Hermite and each grid
 # is stated by its bounds and its count.
 
 n_a : ℕ              :: ["number of points of the savings grid"]
-a_min : Xa           :: ["lower bound of the savings grid"]
+extra_grid : ℝ₊     :: ["distance from the borrowing bound to the first savings point"]
 a_max : Xa           :: ["upper bound of the savings grid"]
 n_k : ℕ              :: ["number of points of the asset grid"]
 k_min : Xa           :: ["lower bound of the asset grid"]
@@ -37,9 +40,9 @@ k_max : Xa           :: ["upper bound of the asset grid"]
 n_ψ_nodes : ℕ        :: ["quadrature nodes of the permanent shock"]
 n_ξ_nodes : ℕ        :: ["quadrature nodes of the transitory shock"]
 
-[id=policy, policy.method : !egm | policy.grid : !Cartesian(a=(a_min, a_max, n_a))
+[id=policy, policy.method : !egm | policy.grid : !Cartesian(a=(L + extra_grid, a_max, n_a))
     | policy.evaluate.method : !Linear] {
-    c[>] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[>])       :: [id=InvEuler]
+    c[>] = (β*D_{a}V[>])^(-1/ρ)       :: [id=InvEuler]
     m[>] = a + c[>]                 :: [id=g_cntn_to_dcsn]
     c[~] = c[>]                     :: [id=cons_choice]
 }

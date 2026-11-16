@@ -61,7 +61,13 @@ The `:=` line defines utility as a function of its explicit argument. By contras
 
 An **alias** is an explicit intermediate definition that can be substituted at its uses. Substitution preserves every declared output, the domains, and every free or bound dependency. The savings equation must continue to determine the output `a` even if its right side is substituted into a value calculation. The [two-output example in Appendix D](appendices/15-appendix-d-node-tag-and-field-indexing.md#4-composition-and-substitution) shows the same rule when a block promises two outputs: substituting one into the other does not delete either output.
 
+The package checks each output after substituting the forward transition and taking account of the policy and the shocks bound by expectations. A decision field may use the control in its equation. The [representing function](01-stage.md#31-fields-sent-backward) that the backward block computes uses the control at the policy and depends on its own state coordinates. A shock still unbound at the output's perch is refused on either side of a relation.
+
+An equation may use a formula by cases, such as `B = if m > 0 then 1/m else 0`. The comparison and both branches contribute dependencies. At a particular point the package requires only the comparison and the branch it selects. For example, the line gives 0 at `m = 0`.
+
 The utility definition binds its argument `c`, a name local to the definition; [`argmax_{c}`](reference/forms.md#argmax) binds the control in its objective. A substitution must distinguish these scopes rather than identify variables solely by spelling. An implicit equation supplies a relation between unknowns and cannot be substituted as though it were an explicit alias.
+
+For a maximization, the objective must match the right side of exactly one decision field after the package aligns the bound candidate with the control. Thus `𝑢(cp) + V[>]` with candidate `cp` matches `V = 𝑢(c) + V[>]` with control `c`. An absent or ambiguous match is refused under [`policy-objective`](reference/refusals.md#policy-objective). The block `cntn_to_dcsn` evaluates every other decision field at that same policy. The policy block can also state an explicit formula or an implicit relation.
 
 A block identifier supplies an address, not a formula. The labels in §1 are descriptive conventions: typed signatures, economic roles, and equations identify what each block defines. Naming a block `policy` does not make an arbitrary equation an optimality condition.
 

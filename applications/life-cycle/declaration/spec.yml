@@ -1,0 +1,18 @@
+trellis: trellis.yml
+stages:
+  entry: {stage: stages/entry/entry.bl, calibration: {all: [calibration/life_cycle]}}
+  mortality: {stage: stages/mortality/mortality.bl, calibration: {all: [calibration/life_cycle]}}
+  draw: {stage: stages/draw/draw.bl, calibration: {all: [calibration/life_cycle]}}
+  consumption:
+    stage: stages/consumption/consumption.bl
+    methods:
+      all: [stages/consumption/methods.envelope.bl]
+      "1-7": [stages/consumption/methods.bl]
+    calibration: {all: [calibration/life_cycle]}
+    settings: {all: [settings/life_cycle]}
+  terminal:
+    stage: stages/terminal/terminal.bl
+    methods: {all: [stages/terminal/methods.bl]}
+    calibration: {all: [calibration/life_cycle]}
+    settings: {all: [settings/life_cycle]}
+    periods: [0, 0]

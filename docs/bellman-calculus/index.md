@@ -43,7 +43,7 @@ Start with [Introduction](./01-Introduction%20to%20T-calculus.md) and the [buffe
 | [Operators and builders](./05-Operators%20and%20builders.md) | Unfinished notes on transition expectation, evaluation, selection and implicit relations. |
 | [Methods](./06-Methods.md) | The signature of an operator with its method and grid components, composition over the field component, the grid as a retract, the handler, the two erasures and the two levels of a stage. |
 | [Stage composition](./07-stage-composition.md) | Unfinished notes on compatible joins within periods. |
-| [Periods and the trellis](./08-periods-and-trellis.md) | Unfinished notes on occurrence-specific composition and boundary data. |
+| [Periods and the trellis](./08-periods-and-trellis.md) | A trellis as a diagram of connected periods; repeated maps on continuation fields and their stationary fixed points. |
 | [Branching](./09-branching.md) | Unfinished notes on labeled choices and exogenous selection. |
 | [Semi-conjugacy](./10-semi-conjugacy.md) | Unfinished notes on conditional relations between operator forms. |
 | [Abstract grammar](./11-abstract-grammar.md) | Mathematical composition notation and its distinction from concrete source grammar. |
@@ -59,6 +59,7 @@ Start with [Introduction](./01-Introduction%20to%20T-calculus.md) and the [buffe
 | [Appendix D — Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) | The type system on one account: kinds and sorts, the sort a written type names, the admissible sets of the parameters and of the settings, and the signatures, models and versions of a stage. |
 | [Appendix F — Operator algebra](./APPX-F-OPERATOR-ALGEBRA.md) | Composition, transition pairing, branching and numerical obligations. |
 | [Appendix G — Functional programming](./APPX-G-FUNCTIONAL-PROGRAMMING.md) | Primitive objects, typed expressions, stages, the calibration, methodization and configuration functors, and numerical realization. |
+| [Appendix H — Modularity](./APPX-H-MODULARITY.md) | Repeated declarations, shared calibration and equality of operator interpretations. |
 | [Catalogue index](./catalogues/index.md) | Field, function, operator and parameter/settings inventories. |
 | [Fields](./catalogues/fields.md) | Field declarations, declared sets and representatives. |
 | [Functions](./catalogues/functions.md) | Typed functions and their mathematical roles. |

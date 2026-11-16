@@ -14,4 +14,4 @@ stages:
   - keeper_cons
   - adjuster_cons
 connectors:
-  - {w_kp: w_d, h_kp: h_d, z_kp: keeper_cons.z_d, w_adj: m, z_adj: adjuster_cons.z_d}
+  - {w_kp: w_d, h_kp: h_d, z_kp: keeper_cons.z_d, w_adj: m, z_adj: adjuster_cons.z_d, age_kp: keeper_cons.age, age_adj: adjuster_cons.age}

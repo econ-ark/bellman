@@ -9,6 +9,8 @@ import re
 import sys
 import time
 
+import yaml
+
 from workbench_support import (
     BEQUEST,
     BUTTON_SHOWN_JS,
@@ -528,11 +530,8 @@ def test_item_3_a_stage_from_the_tree_offers_its_positions_its_uses_and_the_reci
     its occurrence line saying that the recipe holds no occurrence of it,
     the version word `symbolic`, with one link, to `declaration/spec.yml`.
     The link makes `spec.yml` the tab's recipe and binds the file as
-    `periods[0] / tenure`, the version word `partially bound`, since the
-    occurrence's record carries no value of tenure's `Y`, which the
-    registry's `wage_schedule.py` writes per period after `load_recipe`,
-    so the calibration verb fails and the status says so (the Workbench
-    interface review of 4 November 2026, item 3), under `durables ›
+    `periods[0] / tenure`, the version word `bound`, with the income
+    functions supplied by the declared calibration source, under `durables ›
     spec.yml › tenure › periods[0]`, the stage's view kept; Alt+←
     returns to `durables › tenure.bl`."""
     open_trellis(page, server_on(durables_folder), RECIPE_FILE, minimum=10, timeout=240_000)
@@ -692,7 +691,7 @@ def test_item_3_a_stage_from_the_tree_offers_its_positions_its_uses_and_the_reci
         "the stage bound through spec.yml",
         60.0,
     )
-    stage(TENURE, "periods[0] / tenure", "durables › spec.yml › tenure › periods[0]", "partially bound")
+    stage(TENURE, "periods[0] / tenure", "durables › spec.yml › tenure › periods[0]", "bound")
     press_outside_fields(page, "Alt+ArrowLeft")
     stage(TENURE, holds_none, "durables › tenure.bl", "symbolic")
 
@@ -704,25 +703,15 @@ def test_item_4_the_bellmantype_tabs_show_and_write_the_values_and_methods_of_th
     panel's Parameters, Settings and Methods tabs (the amendment's §5 rules 3
     to 6; the brief's rule 7; A2-D8).
 
-    At `periods[3]/tenure` of `declaration/spec.yml` the Parameters tab
-    lists the seven parameters `tenure.bl` declares, each with its set, and
-    names `declaration/calibration/durables.yml`, the last file of the
-    occurrence's calibration list: `R` is `1.045`, written at line 11 of
-    that file, and `Y` and `y_R` are `unvalued`, since `wage_schedule.py`
-    writes them outside the Workbench and no file of the folder values
-    them. `1.05` typed for `R` changes that line alone; `1.0` typed for `Y`
-    adds `Y: 1.0` at the end of the file's `calibration`; `1e-5` typed for
-    `y_R`, which reads as text, is added as typed, and the stage bound
-    again is refused in the package's sentence naming `y_R`, the tab
-    composing no sentence about a value's form (unit L, Task 16);
-    `!!bool abc`, which does not read, is refused with no byte written. A
-    text whose mappings merge seven levels of ten aliases, which the reader
-    would copy into 10**8 entries, is refused within a second and before it
-    is read, since a typed value is one value written without anchors or
-    aliases; an alias after 9,998 opening brackets is refused as a text
-    that does not read, since the YAML scanner that finds the anchors and
-    the aliases stops where the brackets nest deeper than the reader can
-    follow. The
+    At `periods[3]/tenure`, the seven parameters retain their sets and
+    source positions. Y and y_R are complete functions on Age in the last
+    calibration file, wage_schedule.yml. An edit of R changes its original
+    source alone. Removing R_H from the temporary copy makes it unvalued;
+    its replacement appends to the last calibration source. A replacement
+    list for Y is refused by the current source editor, without changing
+    any bytes. A scalar string for y_R is written and then refused by the
+    package as a value of Age → ℝ₊. Invalid YAML and aliases are refused
+    before writing, including deeply nested input. The
     Settings tab lists the settings of `declaration/settings/durables.yml`,
     each with the set its declaration in the addition names and its value as
     the file writes it, `fues_eps_d`, which no addition declares, written
@@ -750,11 +739,11 @@ def test_item_4_the_bellmantype_tabs_show_and_write_the_values_and_methods_of_th
     the amendment's §5 rules 1 and 6), `tenure.bl` opened from the tree and
     bound as `periods[3]/tenure` on the occurrence line shows the panel's
     four tabs in its bar, Fields first and shown. Parameters names the
-    calibration file it writes and shows `R` `1.045`, linked to line 11 of
-    that file, and `Y` `unvalued`; Settings shows `n_a`, in ℕ, `300`;
+    calibration file it writes and shows `R` `1.045`, linked to its source line,
+    and `Y` as a finite list; Settings shows `n_a`, in ℕ, `300`;
     Methods shows its four rows, each with a choice of method, and no
     sentence. `1.05` typed
-    for `R`, with Enter, changes line 11 of the calibration file alone, and
+    for `R`, with Enter, changes the source line of R alone, and
     the tree marks the file changed; `[1, 2` typed for `y_R`, which does not
     read as YAML, is refused, the row's input marked and the sentence
     standing in the list under the error mark with the calibration file
@@ -766,7 +755,7 @@ def test_item_4_the_bellmantype_tabs_show_and_write_the_values_and_methods_of_th
     §5 rule 2, A2-D12): at `cntn`, the group of each branch, headed
     `cntn · d = keep` and `cntn · d = adjust` by the control that selects
     it, with that branch's states and the values on them, then the group
-    `cntn · all branches`, empty, since no field is held by every branch,
+    `cntn · all branches`, holding the two incoming age fields,
     each group with its own +. `ℝ₊` entered as the set of z_kp in the group
     `keep` and saved changes line 23 of the file alone, z_adj of `adjust`
     keeping its set; `x`, `ℝ₊`, `state` added in the group `all branches`
@@ -776,12 +765,13 @@ def test_item_4_the_bellmantype_tabs_show_and_write_the_values_and_methods_of_th
     fields of its own."""
     folder = model.open_folder(scratch_durables)
     calibration = "declaration/calibration/durables.yml"
+    wages = "declaration/calibration/wage_schedule.yml"
     settings = "declaration/settings/durables.yml"
     tenure_methods = "declaration/stages/tenure/methods.bl"
     keeper_methods = "declaration/stages/keeper_cons/methods.bl"
     before = {
         path: (scratch_durables / path).read_bytes()
-        for path in (calibration, settings, keeper_methods)
+        for path in (calibration, wages, settings, keeper_methods)
     }
     lines = {path: before[path].decode("utf-8").split("\n") for path in before}
 
@@ -796,47 +786,72 @@ def test_item_4_the_bellmantype_tabs_show_and_write_the_values_and_methods_of_th
 
     tenure = bound(TENURE, "tenure")
     parameters = recipe.parameters_tab(folder, tenure.stage, tenure.record, "tenure")
-    assert (parameters.file, parameters.sentence) == (calibration, None)
-    assert [(row.name, row.domain, row.value) for row in parameters.rows] == [
-        ("R", "ℝ₊₊", "1.045"),
-        ("R_H", "ℝ₊₊", "1.0"),
-        ("δ", "[0, 1)", "0.0"),
-        ("ρ_z", "(0, 1)", "0.82"),
-        ("σ_z", "ℝ₊", "0.11"),
-        ("Y", "ℝ₊", "unvalued"),
-        ("y_R", "ℝ₊", "unvalued"),
+    assert (parameters.file, parameters.sentence) == (wages, None)
+    rows = {row.name: row for row in parameters.rows}
+    income = yaml.safe_load(before[wages])["calibration"]
+    original_y = rows["Y"].value
+    assert [(row.name, row.domain) for row in parameters.rows] == [
+        ("R", "ℝ₊₊"), ("R_H", "ℝ₊₊"), ("δ", "[0, 1)"),
+        ("ρ_z", "(0, 1)"), ("σ_z", "ℝ₊"),
+        ("Y", "Age → ℝ₊"), ("y_R", "Age → ℝ₊"),
     ]
+    assert [rows[name].value for name in ("R", "R_H", "δ", "ρ_z", "σ_z")] == [
+        "1.045", "1.0", "0.0", "0.82", "0.11",
+    ]
+    for name in ("Y", "y_R"):
+        assert yaml.safe_load(rows[name].value) == income[name]
+        assert len(income[name]) == 52
     places = {row.name: row.place for row in parameters.rows}
-    assert places["R"] == recipe.Place(calibration, "calibration.R", 11)
-    assert places["Y"] is None and places["y_R"] is None
+    r_line = lines[calibration].index("  R: 1.045") + 1
+    assert places["R"] == recipe.Place(calibration, "calibration.R", r_line)
+    for name in ("Y", "y_R"):
+        assert places[name] == recipe.Place(
+            wages, f"calibration.{name}", lines[wages].index(f"  {name}:") + 2
+        )
     assert recipe.value_place(folder, tenure.record, "calibration", "R") == places["R"]
 
     written = recipe.write_value(
         folder, tenure.record, "tenure", "calibration", "R", "1.045", "1.05"
     )
     assert written.saved
-    lines[calibration][10] = "  R: 1.05"
+    lines[calibration][r_line - 1] = "  R: 1.05"
     assert written.text == "\n".join(lines[calibration])
+
+    # An absent scalar appends to the final source, preserving its income tables.
+    lines[calibration].remove("  R_H: 1.0")
+    (scratch_durables / calibration).write_text("\n".join(lines[calibration]), encoding="utf-8")
+    incomplete = bound(TENURE, "tenure")
+    absent = next(row for row in recipe.parameters_tab(
+        folder, incomplete.stage, incomplete.record, "tenure"
+    ).rows if row.name == "R_H")
+    assert (absent.value, absent.place) == ("unvalued", None)
     written = recipe.write_value(
-        folder, tenure.record, "tenure", "calibration", "Y", "unvalued", "1.0"
+        folder, incomplete.record, "tenure", "calibration", "R_H", "unvalued", "1.0"
     )
     assert written.saved
-    # the mapping `calibration` ends with `K: 1.3` at line 38, the file's last
-    assert lines[calibration][37] == "  K: 1.3"
-    lines[calibration].insert(38, "  Y: 1.0")
-    assert written.text == "\n".join(lines[calibration])
-    # a value that reads as text is written as typed, and the package's
-    # check of the calibration refuses it when the stage is bound (unit L,
-    # Task 16, which retires the tab's own sentence about a value's form)
+    lines[wages].insert(len(lines[wages]) - 1, "  R_H: 1.0")
+    assert written.text == "\n".join(lines[wages])
+    assert bound(TENURE, "tenure").notes == []
+
+    refused = recipe.write_value(
+        folder, tenure.record, "tenure", "calibration", "Y", rows["Y"].value,
+        "[" + ", ".join(["1.0"] * 52) + "]",
+    )
+    assert not refused.saved
+    assert "a list is no string, int, float, boolean or tag" in refused.reason
+    assert (scratch_durables / wages).read_text(encoding="utf-8") == "\n".join(lines[wages])
+
     written = recipe.write_value(
-        folder, tenure.record, "tenure", "calibration", "y_R", "unvalued", "1e-5"
+        folder, tenure.record, "tenure", "calibration", "y_R", rows["y_R"].value, "1e-5"
     )
     assert written.saved
-    lines[calibration].insert(39, "  y_R: 1e-5")
-    assert written.text == "\n".join(lines[calibration])
+    start = lines[wages].index("  y_R:") + 1
+    end = lines[wages].index("  R_H: 1.0")
+    lines[wages][start:end] = ["    1e-5"]
+    assert written.text == "\n".join(lines[wages])
     refused_notes = [note for note in bound(TENURE, "tenure").notes if "parameter 'y_R'" in note]
     assert len(refused_notes) == 1
-    assert "the value '1e-5' lies outside the declared set ℝ₊" in refused_notes[0]
+    assert "the value '1e-5' is one value where Age → ℝ₊ takes one entry per member" in refused_notes[0]
     # a text with a value its core tag cannot build does not read
     refused = recipe.write_value(
         folder, tenure.record, "tenure", "calibration", "y_R", "1e-5", "!!bool abc"
@@ -860,7 +875,7 @@ def test_item_4_the_bellmantype_tabs_show_and_write_the_values_and_methods_of_th
         folder, tenure.record, "tenure", "calibration", "y_R", "1e-5", bracketed
     )
     assert (refused.saved, refused.reason) == (False, f"{bracketed} does not read as YAML")
-    assert (scratch_durables / calibration).read_text(encoding="utf-8") == written.text
+    assert (scratch_durables / wages).read_text(encoding="utf-8") == written.text
 
     tab = recipe.settings_tab(folder, tenure.stage, tenure.record, "tenure")
     assert (tab.file, tab.sentence) == (settings, None)
@@ -963,8 +978,8 @@ def test_item_4_the_bellmantype_tabs_show_and_write_the_values_and_methods_of_th
     tenure = bound(TENURE, "tenure")
     rows = recipe.parameters_tab(folder, tenure.stage, tenure.record, "tenure").rows
     assert {row.name: (row.value, row.place) for row in rows if row.name in ("R", "Y")} == {
-        "R": ("1.05", recipe.Place(calibration, "calibration.R", 11)),
-        "Y": ("1.0", recipe.Place(calibration, "calibration.Y", 39)),
+        "R": ("1.05", recipe.Place(calibration, "calibration.R", r_line)),
+        "Y": (original_y, places["Y"]),
     }
     settings_rows = recipe.settings_tab(folder, tenure.stage, tenure.record, "tenure").rows
     assert settings_rows[1].value == "400"
@@ -975,7 +990,8 @@ def test_item_4_the_bellmantype_tabs_show_and_write_the_values_and_methods_of_th
     # keeper's addition declares, so the package refuses it at this binding
     # (decision S7-S1)
     (note,) = keeper.notes
-    assert "setting-outside-set" in note and "keeper_upper_envelope" in note
+    assert keeper.failures[0].rule == "setting-outside-set"
+    assert "keeper_upper_envelope" in note and "lies outside the declared set" in note
 
     # the copy as the fixture made it, for the steps that follow
     for path, data in before.items():
@@ -1015,14 +1031,14 @@ def test_item_4_the_bellmantype_tabs_show_and_write_the_values_and_methods_of_th
         return cell.input_value() if cell.count() else None
 
     chosen("Parameters")
-    assert page.locator(".bl-values-file").text_content() == f"writes {calibration}"
-    assert (value("R"), value("Y")) == ("1.045", "unvalued")
+    assert page.locator(".bl-values-file").text_content() == f"writes {wages}"
+    assert (value("R"), value("Y")) == ("1.045", original_y)
     # the row's name is the button that opens its file at its line (unit R,
     # R-D23)
     link = page.locator('.bl-values-row[data-name="R"] .bl-values-name button')
     assert link.get_attribute("data-path") == calibration
-    assert link.get_attribute("data-line") == "11"
-    assert link.get_attribute("aria-description") == f"{calibration}:11"
+    assert link.get_attribute("data-line") == str(r_line)
+    assert link.get_attribute("aria-description") == f"{calibration}:{r_line}"
     chosen("Settings")
     assert page.locator(".bl-values-file").text_content() == f"writes {settings}"
     assert value("n_a") == "300"
@@ -1039,7 +1055,7 @@ def test_item_4_the_bellmantype_tabs_show_and_write_the_values_and_methods_of_th
     cell.fill("1.05")
     cell.press("Enter")
     calibration_lines = before[calibration].decode("utf-8").split("\n")
-    calibration_lines[10] = "  R: 1.05"
+    calibration_lines[r_line - 1] = "  R: 1.05"
     wait_until(
         lambda: (scratch_durables / calibration).read_text(encoding="utf-8")
         == "\n".join(calibration_lines),
@@ -1053,12 +1069,12 @@ def test_item_4_the_bellmantype_tabs_show_and_write_the_values_and_methods_of_th
     cell.fill("[1, 2")
     cell.press("Enter")
     # the row's input marked, and the sentence in the list under the error
-    # mark with the file the write would change, y_R having no line there
+    # mark with the source file and line of y_R
     marked = '.bl-values-row[data-name="y_R"] .bl-values-value.bl-refusal-mark'
     page.locator(marked).wait_for(timeout=10_000)
     sentence = "[1, 2 does not read as YAML"
     wait_until(
-        lambda: (sentence, calibration, None) in error_lines(page),
+        lambda: (sentence, wages, places["y_R"].line) in error_lines(page),
         10.0,
         "the refused value's sentence in the list under the error mark",
     )
@@ -1074,7 +1090,7 @@ def test_item_4_the_bellmantype_tabs_show_and_write_the_values_and_methods_of_th
 
     # the tab Fields of the branching stage (A2-D12): at `cntn`, one group
     # per branch, headed by the control `d` that selects it, then the group
-    # of the fields every branch holds, of which tenure.bl declares none,
+    # of the fields every branch holds, including the two incoming ages,
     # each group with its own +
     page.click('.bl-class-tab[data-tab="Fields"]')
     page.wait_for_selector(".bl-class-tables:not(.bl-stale)", timeout=10_000)
@@ -1089,8 +1105,9 @@ def test_item_4_the_bellmantype_tabs_show_and_write_the_values_and_methods_of_th
         if row["perch"] == "cntn":
             groups.setdefault(row["group"], []).append(row["field"])
     assert groups == {
-        "cntn/keep": ["w_kp", "h_kp", "z_kp", "V_kp[>]", "dV_w_kp[>]", "dV_h_kp[>]"],
-        "cntn/adjust": ["w_adj", "z_adj", "V_adj[>]", "dV_w_adj[>]"],
+        "cntn/keep": ["w_kp", "h_kp", "z_kp", "V_kp[>]"],
+        "cntn/adjust": ["w_adj", "z_adj", "V_adj[>]"],
+        "cntn/all branches": ["age_kp[>]", "age_adj[>]"],
     }
     assert [
         cntn.locator(f'.bl-class-group[data-group="cntn/{name}"] .bl-add-button').count()

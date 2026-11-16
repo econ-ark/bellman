@@ -1,0 +1,1022 @@
+BELLMAN-SYM / STAGE mortality                             [VERSION = SYMBOLIC]
+a stage occurrence of
+applications/life-cycle/declaration/stages/mortality/mortality.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        z_1≺ state, a_1≺ state, V≺ value, age≺ value
+  ∼ decision       z_m state, a_m state, V value, age value
+  ≻ continuation   age≻ value, z_2≻ state, a_2≻ state, a_b≻ state, death≻
+                   state, V≻ value
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           z_1≺ at arrival, a_1≺ at arrival, z_m at decision, a_m at
+                   decision, z_2≻ at continuation, a_2≻ at continuation, a_b≻
+                   at continuation, death≻ at continuation
+  controls         none
+  values           V at every perch; age at every perch
+  shocks           none
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → arvl_to_dcsn   (z_1≺, a_1≺) : !arvl -> (z_m, a_m) : !dcsn
+  → dcsn_to_cntn   (z_m : !dcsn, a_m : !dcsn, s : !shck, age≻ : !cntn) ->
+                   (z_2≻, a_2≻, a_b≻, death≻) : !cntn
+  ← cntn_to_dcsn   (V≻, age≻) : !cntn -> (V, age) : !dcsn
+  ← dcsn_to_arvl   (V, age) : !dcsn -> (V≺, age≺) : !arvl
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  sets                     3   Xa := ℝ₊, Ages := {0, …, J - 1}, Z := {1, 2, 3}
+  distributions            1   s
+  parameters               5   J : ℤ @ [1, inf); ρ : (1, inf); b : ℝ₊;
+                               ξ : ℝ₊₊; ψ : Ages → [0, 1]
+  functions                1   𝜙 on ℝ₊
+  laws of motion           2   z_m = z_1; a_m = a_1;
+                               z_2 = z_m; a_2 = a_m; a_b = a_m; death = s(age)
+  value aggregators        2   V = E_{s}((V[>], 𝜙(a_m))[s]), D_{a_m}(V) =
+                               E_{s}((D_{a_2}V[>], b*(a_m + ξ)^(-ρ))[s]);
+                               V[<] = V, D_{a_1}V[<] = D_{a_m}(V)
+  block lines             10   arvl_to_dcsn.1, arvl_to_dcsn.2,
+                               dcsn_to_cntn.survive.1,
+                               dcsn_to_cntn.survive.2, dcsn_to_cntn.die.1,
+                               dcsn_to_cntn.die.2, cntn_to_dcsn.value,
+                               cntn_to_dcsn.marginal_decision,
+                               dcsn_to_arvl.value,
+                               dcsn_to_arvl.marginal_arrival
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   (𝑎𝑔𝑒≻, 𝑉≻) ↦ 𝑉≺, 𝑎𝑔𝑒≺
+                    forward    μ≺ ↦ μ_survive≻, μ_die≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ≺ z_1≺, a_1≺  →  ∼ z_m, a_m  →  ≻ z_2≻, a_2≻, a_b≻, death≻
+  backward   ≺ V≺, age≺  ←  ∼ V, age  ←  ≻ V≻, age≻
+
+==== stage ====
+STAGE mortality
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑎𝑔𝑒≻        : {()} → Ages
+         𝑉≻          : Z × Xa → ℝ
+         ──────────────────────────────────────────────────────
+    out  𝑉≺          : Z × Xa → ℝ
+         𝑎𝑔𝑒≺        : {()} → Ages
+  forward
+    in   μ≺          : finite measure on Z × Xa
+         ──────────────────────────────────────────────────────
+    out  μ_survive≻  : finite measure on Z × Xa
+         μ_die≻      : finite measure on Xa × {survive, die}
+
+Where
+  (z_m, a_m) = 𝑔≺(z_1, a_1)
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉≻, 𝑎𝑔𝑒≻                     out: 𝑉, 𝑎𝑔𝑒
+
+    2  dcsn_to_arvl
+       in: 𝑉, 𝑎𝑔𝑒                       out: 𝑉≺, 𝑎𝑔𝑒≺
+
+  forward
+    1  arvl_to_dcsn
+       in: μ≺                           out: μ
+
+    2  dcsn_to_cntn
+       in: μ                            out: μ_survive≻, μ_die≻
+
+Conditions
+  cntn_to_dcsn:Aggregation        𝑉(z_m, a_m) ∈ ℝ
+  cntn_to_dcsn:Aggregation        𝑎𝑔𝑒 ∈ Ages
+  dcsn_to_arvl:Aggregation        𝑉≺(z_1, a_1) ∈ ℝ
+  dcsn_to_arvl:Aggregation        𝑎𝑔𝑒≺ ∈ Ages
+  cntn_to_dcsn.marginal_decision  marginal-reading: the right side of each
+                                    derivative line equals the derivative, in
+                                    the named coordinate, of the value the
+                                    builder writes, under the envelope
+                                    conditions: concavity of the continuation
+                                    value, interiority of the maximizer or the
+                                    multiplier's term at a binding constraint,
+                                    differentiability of the reward in the
+                                    control, a measurable selection of the
+                                    policy, and differentiability of the value
+                                    at the point read; listed and not checked
+                                     [required]
+  Ages                            J − 1 ∈ ℤ ∧ 0 ≤ J − 1
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  15  s(_age) ~ Categorical((ψ[_age], 1 - ψ[_age]))
+  20  z_m = z_1
+  21  a_m = a_1
+  26  z_2 = z_m
+  27  a_2 = a_m
+  30  a_b = a_m
+  31  death = s(age)
+  36  V = E_{s}((V[>], 𝜙(a_m))[s])
+        :: [id=value]
+  37  D_{a_m}V = E_{s}((D_{a_2}V[>], b*(a_m + ξ)^(-ρ))[s])
+        :: [id=marginal_decision]
+  41  V[<] = V
+        :: [id=value]
+  42  D_{a_1}V[<] = D_{a_m}V
+        :: [id=marginal_arrival]
+
+Definitions referenced
+  Xa    mortality:set:Xa
+  J     mortality:parameter:J
+  Ages  mortality:set:Ages
+  Z     mortality:set:Z
+  s     mortality:distribution:s
+  𝑔≺    mortality:g:arvl_to_dcsn
+
+File
+  applications/life-cycle/declaration/stages/mortality/mortality.bl
+
+Perches
+  ≺  arrival, written [<]
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE mortality / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻    : {age≻, V≻}
+       age≻  : {age≻}
+       ──────────────────
+  out  V     : {V, age}
+       age   : {age}
+
+Conditions
+  𝑉(z_m, a_m) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Ages
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  36  V = E_{s}((V[>], 𝜙(a_m))[s])
+        :: [id=value]
+  37  D_{a_m}V = E_{s}((D_{a_2}V[>], b*(a_m + ξ)^(-ρ))[s])
+        :: [id=marginal_decision]
+
+Definitions referenced
+  Ages  mortality:set:Ages
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward dcsn_to_arvl ====
+STAGE mortality / BACKWARD BLOCK dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V     : {V, age}
+       age   : {age}
+       ──────────────────
+  out  V≺    : {V≺, age≺}
+       age≺  : {age≺}
+
+Conditions
+  𝑉≺(z_1, a_1) ∈ ℝ
+  𝑎𝑔𝑒≺ ∈ Ages
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  41  V[<] = V                :: [id=value]
+  42  D_{a_1}V[<] = D_{a_m}V  :: [id=marginal_arrival]
+
+Definitions referenced
+  Ages  mortality:set:Ages
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward arvl_to_dcsn ====
+STAGE mortality / FORWARD BLOCK arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   z_1≺  : {z_1≺}
+       a_1≺  : {z_1≺, a_1≺}
+       ────────────────────
+  out  z_m   : {z_m}
+       a_m   : {z_m, a_m}
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  20  z_m = z_1
+  21  a_m = a_1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE mortality / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   z_m     : {z_m}
+       a_m     : {z_m, a_m}
+       s       : {s}
+       age≻    : {age≻}
+       ────────────────────────────
+  out  z_2≻    : {z_2≻}
+       a_2≻    : {z_2≻, a_2≻, a_b≻}
+       a_b≻    : {z_2≻, a_2≻, a_b≻}
+       death≻  : {death≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  26  z_2 = z_m
+  27  a_2 = a_m
+  30  a_b = a_m
+  31  death = s(age)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn / survive ====
+STAGE mortality / FORWARD BLOCK dcsn_to_cntn / survive
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   z_m   : {z_m}
+       a_m   : {z_m, a_m}
+       ──────────────────────────
+  out  z_2≻  : {z_2≻}
+       a_2≻  : {z_2≻, a_2≻, a_b≻}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn / die ====
+STAGE mortality / FORWARD BLOCK dcsn_to_cntn / die
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   a_m     : {z_m, a_m}
+       s       : {s}
+       age≻    : {age≻}
+       ────────────────────────────
+  out  a_b≻    : {z_2≻, a_2≻, a_b≻}
+       death≻  : {death≻}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE mortality / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻    : Z × Xa → ℝ
+       𝑎𝑔𝑒≻  : {()} → Ages
+       ─────────────────────────────────────────────────────
+  out  𝑉     : Z × Xa → ℝ
+       𝑎𝑔𝑒   : {()} → Ages
+
+Where
+  𝑔_survive≻  : Z × Xa → Z × Xa,  𝑔_survive≻(z_m, a_m) = 𝑔≻(z_m, a_m, survive)
+  (z_2, a_2) = 𝑔_survive≻(z_m, a_m)
+
+Operations
+  1  Pullback:survive
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔_survive≻
+     ───────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔_survive≻)(z_m, a_m) = 𝑉≻(𝑔_survive≻(z_m, a_m))
+
+  2  Aggregation
+     in: 𝑎𝑔𝑒≻, (1)                      out: 𝑉, 𝑎𝑔𝑒
+     ───────────────────────────────────────────────────────
+     rule: 𝑉 = E_{s}[(𝑉≻(𝑔_survive≻(z_m, a_m)), 𝜙(a_m))[s]]
+           on (z_m, a_m) ∈ Z × Xa
+           𝑎𝑔𝑒 = 𝑎𝑔𝑒≻()                                 on (z_m, a_m) ∈ Z × Xa
+
+  3  Evaluation
+     in: 𝑉, 𝑎𝑔𝑒                         out: 𝑉, 𝑎𝑔𝑒
+     ───────────────────────────────────────────────────────
+     rule: 𝑉 : Z × Xa → ℝ
+           D_{a_m}𝑉(z_m, a_m)
+             = E_{s}[(D_{a_2}𝑉≻(𝑔_survive≻(z_m, a_m)), b · (a_m + ξ)^(−ρ))[s]]
+           𝑎𝑔𝑒 : {()} → Ages
+
+Conditions
+  Aggregation  𝑉(z_m, a_m) ∈ ℝ
+  Aggregation  𝑎𝑔𝑒 ∈ Ages
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  36  V = E_{s}((V[>], 𝜙(a_m))[s])
+        :: [id=value]
+  37  D_{a_m}V = E_{s}((D_{a_2}V[>], b*(a_m + ξ)^(-ρ))[s])
+        :: [id=marginal_decision]
+
+Definitions referenced
+  Xa    mortality:set:Xa
+  Ages  mortality:set:Ages
+  Z     mortality:set:Z
+  ρ     mortality:parameter:ρ
+  b     mortality:parameter:b
+  ξ     mortality:parameter:ξ
+  s     mortality:distribution:s
+  𝜙     mortality:function:𝜙
+  𝑔≻    mortality:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback:survive ====
+STAGE mortality / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Pullback:survive
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Z × Xa → ℝ
+       ────────────────
+  out  𝑉≻ ∘ 𝑔_survive≻
+           : Z × Xa → ℝ
+
+Where
+  𝑔_survive≻  : Z × Xa → Z × Xa,  𝑔_survive≻(z_m, a_m) = 𝑔≻(z_m, a_m, survive)
+
+Rule
+  (𝑉≻ ∘ 𝑔_survive≻)(z_m, a_m) = 𝑉≻(𝑔_survive≻(z_m, a_m))
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  26  z_2 = z_m
+  27  a_2 = a_m
+  30  a_b = a_m
+  31  death = s(age)
+
+Definitions referenced
+  Xa    mortality:set:Xa
+  Z     mortality:set:Z
+  𝑔≻    mortality:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE mortality / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑎𝑔𝑒≻  : {()} → Ages
+       𝑉≻ ∘ 𝑔_survive≻
+             : Z × Xa → ℝ
+       ─────────────────────
+  out  𝑉     : Z × Xa → ℝ
+       𝑎𝑔𝑒   : Z × Xa → Ages
+
+Where
+  𝑔_survive≻  : Z × Xa → Z × Xa,  𝑔_survive≻(z_m, a_m) = 𝑔≻(z_m, a_m, survive)
+
+Rule
+  𝑉 = E_{s}[(𝑉≻(𝑔_survive≻(z_m, a_m)), 𝜙(a_m))[s]]      on (z_m, a_m) ∈ Z × Xa
+  𝑎𝑔𝑒 = 𝑎𝑔𝑒≻()                                          on (z_m, a_m) ∈ Z × Xa
+
+Conditions
+  𝑉(z_m, a_m) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Ages
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  36  V = E_{s}((V[>], 𝜙(a_m))[s])  :: [id=value]
+
+Definitions referenced
+  Xa    mortality:set:Xa
+  Ages  mortality:set:Ages
+  Z     mortality:set:Z
+  s     mortality:distribution:s
+  𝜙     mortality:function:𝜙
+  𝑔≻    mortality:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE mortality / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉    : Z × Xa → ℝ
+       𝑎𝑔𝑒  : Z × Xa → Ages
+       ────────────────────
+  out  𝑉    : Z × Xa → ℝ
+       𝑎𝑔𝑒  : {()} → Ages
+
+Where
+  𝑔_survive≻  : Z × Xa → Z × Xa,  𝑔_survive≻(z_m, a_m) = 𝑔≻(z_m, a_m, survive)
+  (z_2, a_2) = 𝑔_survive≻(z_m, a_m)
+
+Rule
+  𝑉 = E_{s}[(𝑉≻(𝑔_survive≻(z_m, a_m)), 𝜙(a_m))[s]]      on (z_m, a_m) ∈ Z × Xa
+  𝑉 : Z × Xa → ℝ
+  D_{a_m}𝑉(z_m, a_m)
+    = E_{s}[(D_{a_2}𝑉≻(𝑔_survive≻(z_m, a_m)), b · (a_m + ξ)^(−ρ))[s]]
+  𝑎𝑔𝑒 = 𝑎𝑔𝑒≻()                                          on (z_m, a_m) ∈ Z × Xa
+  𝑎𝑔𝑒 : {()} → Ages
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  37  D_{a_m}V = E_{s}((D_{a_2}V[>], b*(a_m + ξ)^(-ρ))[s])
+        :: [id=marginal_decision]
+
+Definitions referenced
+  Xa    mortality:set:Xa
+  Ages  mortality:set:Ages
+  Z     mortality:set:Z
+  ρ     mortality:parameter:ρ
+  b     mortality:parameter:b
+  ξ     mortality:parameter:ξ
+  s     mortality:distribution:s
+  𝜙     mortality:function:𝜙
+  𝑔≻    mortality:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl ====
+STAGE mortality / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉     : Z × Xa → ℝ
+       𝑎𝑔𝑒   : {()} → Ages
+       ──────────────────────────────────────────────
+  out  𝑉≺    : Z × Xa → ℝ
+       𝑎𝑔𝑒≺  : {()} → Ages
+
+Where
+  (z_m, a_m) = 𝑔≺(z_1, a_1)
+
+Operations
+  1  Pullback
+     in: 𝑉                              out: 𝑉 ∘ 𝑔≺
+     ────────────────────────────────────────────────
+     rule: (𝑉 ∘ 𝑔≺)(z_1, a_1) = 𝑉(𝑔≺(z_1, a_1))
+
+  2  Aggregation
+     in: (1), 𝑎𝑔𝑒                       out: 𝑉≺, 𝑎𝑔𝑒≺
+     ────────────────────────────────────────────────
+     rule: 𝑉≺ = 𝑉(𝑔≺(z_1, a_1))                         on (z_1, a_1) ∈ Z × Xa
+           𝑎𝑔𝑒≺ = 𝑎𝑔𝑒()                                 on (z_1, a_1) ∈ Z × Xa
+
+  3  Evaluation
+     in: 𝑉≺, 𝑎𝑔𝑒≺                       out: 𝑉≺, 𝑎𝑔𝑒≺
+     ────────────────────────────────────────────────
+     rule: 𝑉≺ : Z × Xa → ℝ
+           D_{a_1}𝑉≺(z_1, a_1) = D_{a_m}𝑉(z_m, a_m)
+           𝑎𝑔𝑒≺ : {()} → Ages
+
+Conditions
+  Aggregation  𝑉≺(z_1, a_1) ∈ ℝ
+  Aggregation  𝑎𝑔𝑒≺ ∈ Ages
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  41  V[<] = V                :: [id=value]
+  42  D_{a_1}V[<] = D_{a_m}V  :: [id=marginal_arrival]
+
+Definitions referenced
+  Xa    mortality:set:Xa
+  Ages  mortality:set:Ages
+  Z     mortality:set:Z
+  𝑔≺    mortality:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Pullback ====
+STAGE mortality / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : Z × Xa → ℝ
+       ───────────────
+  out  𝑉 ∘ 𝑔≺
+          : Z × Xa → ℝ
+
+Rule
+  (𝑉 ∘ 𝑔≺)(z_1, a_1) = 𝑉(𝑔≺(z_1, a_1))
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  20  z_m = z_1
+  21  a_m = a_1
+
+Definitions referenced
+  Xa    mortality:set:Xa
+  Z     mortality:set:Z
+  𝑔≺    mortality:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Aggregation ====
+STAGE mortality / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉 ∘ 𝑔≺
+             : Z × Xa → ℝ
+       𝑎𝑔𝑒   : {()} → Ages
+       ─────────────────────
+  out  𝑉≺    : Z × Xa → ℝ
+       𝑎𝑔𝑒≺  : Z × Xa → Ages
+
+Rule
+  𝑉≺ = 𝑉(𝑔≺(z_1, a_1))                                  on (z_1, a_1) ∈ Z × Xa
+  𝑎𝑔𝑒≺ = 𝑎𝑔𝑒()                                          on (z_1, a_1) ∈ Z × Xa
+
+Conditions
+  𝑉≺(z_1, a_1) ∈ ℝ
+  𝑎𝑔𝑒≺ ∈ Ages
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  41  V[<] = V  :: [id=value]
+
+Definitions referenced
+  Xa    mortality:set:Xa
+  Ages  mortality:set:Ages
+  Z     mortality:set:Z
+  𝑔≺    mortality:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Evaluation ====
+STAGE mortality / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≺    : Z × Xa → ℝ
+       𝑎𝑔𝑒≺  : Z × Xa → Ages
+       ─────────────────────
+  out  𝑉≺    : Z × Xa → ℝ
+       𝑎𝑔𝑒≺  : {()} → Ages
+
+Where
+  (z_m, a_m) = 𝑔≺(z_1, a_1)
+
+Rule
+  𝑉≺ = 𝑉(𝑔≺(z_1, a_1))                                  on (z_1, a_1) ∈ Z × Xa
+  𝑉≺ : Z × Xa → ℝ
+  D_{a_1}𝑉≺(z_1, a_1) = D_{a_m}𝑉(z_m, a_m)
+  𝑎𝑔𝑒≺ = 𝑎𝑔𝑒()                                          on (z_1, a_1) ∈ Z × Xa
+  𝑎𝑔𝑒≺ : {()} → Ages
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  42  D_{a_1}V[<] = D_{a_m}V  :: [id=marginal_arrival]
+
+Definitions referenced
+  Xa    mortality:set:Xa
+  Ages  mortality:set:Ages
+  Z     mortality:set:Z
+  𝑔≺    mortality:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn ====
+STAGE mortality / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Z × Xa
+       ───────────────────────────────────────
+  out  μ   : finite measure on Z × Xa
+
+Operations
+  1  Pushforward
+     in: μ≺                             out: μ
+     ─────────────────────────────────────────
+     rule: μ(B) = μ≺({z_1≺, a_1≺ ∈ Z × Xa | 𝑔≺(z_1≺, a_1≺) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  20  z_m = z_1
+  21  a_m = a_1
+
+Definitions referenced
+  Xa    mortality:set:Xa
+  Z     mortality:set:Z
+  𝑔≺    mortality:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / Pushforward ====
+STAGE mortality / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Z × Xa
+       ──────────────────────────────
+  out  μ   : finite measure on Z × Xa
+
+Rule
+  μ(B) = μ≺({z_1≺, a_1≺ ∈ Z × Xa | 𝑔≺(z_1≺, a_1≺) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  20  z_m = z_1
+  21  a_m = a_1
+
+Definitions referenced
+  Xa    mortality:set:Xa
+  Z     mortality:set:Z
+  𝑔≺    mortality:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE mortality / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ           : finite measure on Z × Xa
+       ────────────────────────────────────────────────────────
+  out  μ_survive≻  : finite measure on Z × Xa
+       μ_die≻      : finite measure on Xa × {survive, die}
+
+Where
+  𝑔_survive≻  : Z × Xa → Z × Xa,  𝑔_survive≻(z_m, a_m) = 𝑔≻(z_m, a_m, survive)
+  𝑔_die≻      : Z × Xa → Xa × {survive, die},
+                𝑔_die≻(z_m, a_m) = 𝑔≻(z_m, a_m, die)
+
+Operations
+  1  DistributionExtension:s
+     in: μ                              out: μ⊗P_s
+     ──────────────────────────────────────────────────────────
+     rule: μ⊗P_s(B)
+             = ∫_{(z_m, a_m) ∈ Z × Xa}
+                 [P_s(𝑎𝑔𝑒≻())({s ∈ {survive, die} | (z_m, a_m, s) ∈ B})]
+               μ(d(z_m, a_m))
+
+  2  Pushforward
+     in: (1)                            out: μ_survive≻, μ_die≻
+     ──────────────────────────────────────────────────────────
+     rule: μ_survive≻(B)
+             = μ⊗P_s({z_m, a_m, s ∈ Z × Xa × {survive, die} |
+                       s = survive ∧ 𝑔_survive≻(z_m, a_m) ∈ B})
+           μ_die≻(B)
+             = μ⊗P_s({z_m, a_m, s ∈ Z × Xa × {survive, die} |
+                       s = die ∧ 𝑔_die≻(z_m, a_m) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  26  z_2 = z_m
+  27  a_2 = a_m
+  30  a_b = a_m
+  31  death = s(age)
+
+Definitions referenced
+  Xa    mortality:set:Xa
+  Z     mortality:set:Z
+  P_s   mortality:distribution:s
+  s     mortality:distribution:s
+  𝑔≻    mortality:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / DistributionExtension:s ====
+STAGE mortality / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+  / DistributionExtension:s
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ  : finite measure on Z × Xa
+       ──────────────────────────────────────────────
+  out  μ⊗P_s
+          : finite measure on Z × Xa × {survive, die}
+
+Rule
+  μ⊗P_s(B)
+    = ∫_{(z_m, a_m) ∈ Z × Xa}
+        [P_s(𝑎𝑔𝑒≻())({s ∈ {survive, die} | (z_m, a_m, s) ∈ B})] μ(d(z_m, a_m))
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  15  s(_age) ~ Categorical((ψ[_age], 1 - ψ[_age]))
+
+Definitions referenced
+  Xa    mortality:set:Xa
+  Z     mortality:set:Z
+  P_s   mortality:distribution:s
+  s     mortality:distribution:s
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE mortality / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ⊗P_s
+                   : finite measure on Z × Xa × {survive, die}
+       ───────────────────────────────────────────────────────
+  out  μ_survive≻  : finite measure on Z × Xa
+       μ_die≻      : finite measure on Xa × {survive, die}
+
+Where
+  𝑔_survive≻  : Z × Xa → Z × Xa,  𝑔_survive≻(z_m, a_m) = 𝑔≻(z_m, a_m, survive)
+  𝑔_die≻      : Z × Xa → Xa × {survive, die},
+                𝑔_die≻(z_m, a_m) = 𝑔≻(z_m, a_m, die)
+
+Rule
+  μ_survive≻(B)
+    = μ⊗P_s({z_m, a_m, s ∈ Z × Xa × {survive, die} |
+              s = survive ∧ 𝑔_survive≻(z_m, a_m) ∈ B})
+  μ_die≻(B)
+    = μ⊗P_s({z_m, a_m, s ∈ Z × Xa × {survive, die} |
+              s = die ∧ 𝑔_die≻(z_m, a_m) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  26  z_2 = z_m
+  27  a_2 = a_m
+  30  a_b = a_m
+  31  death = s(age)
+
+Definitions referenced
+  Xa    mortality:set:Xa
+  Z     mortality:set:Z
+  P_s   mortality:distribution:s
+  s     mortality:distribution:s
+  𝑔≻    mortality:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== mortality:set:Xa ====
+STAGE mortality / SET Xa
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xa  = ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  4  Xa := ℝ₊  :: ["assets"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== mortality:set:Ages ====
+STAGE mortality / SET Ages
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Ages  = {0, …, J − 1}
+
+Conditions
+  J − 1 ∈ ℤ ∧ 0 ≤ J − 1
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  6  Ages := {0, …, J - 1}
+
+Definitions referenced
+  J     mortality:parameter:J
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== mortality:set:Z ====
+STAGE mortality / SET Z
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Z  = {1, 2, 3}
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  7  Z := {1, 2, 3}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== mortality:parameter:J ====
+STAGE mortality / PARAMETER J
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  J  ∈ {J ∈ ℤ | J ≥ 1}
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  5  J : ℤ @ [1, inf)  :: ["number of ages"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== mortality:parameter:ρ ====
+STAGE mortality / PARAMETER ρ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  ρ  ∈ (1, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  9  ρ : (1, inf)  :: ["coefficient of relative risk aversion"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== mortality:parameter:b ====
+STAGE mortality / PARAMETER b
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  b  ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  10  b : ℝ₊  :: ["weight of the bequest in utility"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== mortality:parameter:ξ ====
+STAGE mortality / PARAMETER ξ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  ξ  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  11  ξ : ℝ₊₊  :: ["shift of the bequest utility"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== mortality:parameter:ψ ====
+STAGE mortality / PARAMETER ψ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  ψ  ∈ Ages → [0, 1]
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  12  ψ : Ages → [0,1]  :: ["probability of surviving the period, by age"]
+
+Definitions referenced
+  Ages  mortality:set:Ages
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== mortality:distribution:s ====
+STAGE mortality / DISTRIBUTION s
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  P_s  ~ _age ↦ Categorical(ψ[_age], 1 − ψ[_age])
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  15  s(_age) ~ Categorical((ψ[_age], 1 - ψ[_age]))
+
+Definitions referenced
+  ψ     mortality:parameter:ψ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== mortality:function:𝜙 ====
+STAGE mortality / FUNCTION 𝜙
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝜙  : ℝ₊ → (−∞, 0],  a ↦ b · (a + ξ)^(1 − ρ)/(1 − ρ)
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  17  𝜙(a : ℝ₊) := b*(a + ξ)^(1-ρ)/(1-ρ)  :: [id=bequest_utility]
+
+Definitions referenced
+  ρ     mortality:parameter:ρ
+  b     mortality:parameter:b
+  ξ     mortality:parameter:ξ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.1 ====
+STAGE mortality / FORWARD BLOCK arvl_to_dcsn / 1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  mortality.bl
+  20  z_m = z_1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.2 ====
+STAGE mortality / FORWARD BLOCK arvl_to_dcsn / 2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  mortality.bl
+  21  a_m = a_1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.survive.1 ====
+STAGE mortality / FORWARD BLOCK dcsn_to_cntn / survive.1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  mortality.bl
+  26  z_2 = z_m
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.survive.2 ====
+STAGE mortality / FORWARD BLOCK dcsn_to_cntn / survive.2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  mortality.bl
+  27  a_2 = a_m
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.die.1 ====
+STAGE mortality / FORWARD BLOCK dcsn_to_cntn / die.1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  mortality.bl
+  30  a_b = a_m
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.die.2 ====
+STAGE mortality / FORWARD BLOCK dcsn_to_cntn / die.2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  mortality.bl
+  31  death = s(age)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.value ====
+STAGE mortality / BACKWARD BLOCK cntn_to_dcsn / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(z_m, a_m) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Ages
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  36  V = E_{s}((V[>], 𝜙(a_m))[s])  :: [id=value]
+
+Definitions referenced
+  Ages  mortality:set:Ages
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.marginal_decision ====
+STAGE mortality / BACKWARD BLOCK cntn_to_dcsn / marginal_decision
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  37  D_{a_m}V = E_{s}((D_{a_2}V[>], b*(a_m + ξ)^(-ρ))[s])
+        :: [id=marginal_decision]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.value ====
+STAGE mortality / BACKWARD BLOCK dcsn_to_arvl / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉≺(z_1, a_1) ∈ ℝ
+  𝑎𝑔𝑒≺ ∈ Ages
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  41  V[<] = V  :: [id=value]
+
+Definitions referenced
+  Ages  mortality:set:Ages
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.marginal_arrival ====
+STAGE mortality / BACKWARD BLOCK dcsn_to_arvl / marginal_arrival
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  42  D_{a_1}V[<] = D_{a_m}V  :: [id=marginal_arrival]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== mortality:g:arvl_to_dcsn ====
+STAGE mortality / LAW OF MOTION arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≺  : Z × Xa → Z × Xa,  (z_1, a_1) ↦ (z_1, a_1)
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  20  z_m = z_1
+  21  a_m = a_1
+
+Definitions referenced
+  Xa    mortality:set:Xa
+  Z     mortality:set:Z
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== mortality:g:dcsn_to_cntn ====
+STAGE mortality / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : Z × Xa × {survive, die} → (Z × Xa, Xa × {survive, die})[s],
+        (z_m, a_m, s) ↦ ((z_m, a_m), (a_m, s))[s]
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  26  z_2 = z_m
+  27  a_2 = a_m
+  30  a_b = a_m
+  31  death = s(age)
+
+Definitions referenced
+  Xa    mortality:set:Xa
+  Z     mortality:set:Z
+  s     mortality:distribution:s
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== mortality:G:cntn_to_dcsn ====
+STAGE mortality / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : Ages × ℝ × Z × Xa → ℝ × Ages,
+        (age, V≻, z_m, a_m) ↦ (ψ[age] · V≻ + (1 − ψ[age]) · 𝜙(a_m), age)
+
+Conditions
+  𝑉(z_m, a_m) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Ages
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  36  V = E_{s}((V[>], 𝜙(a_m))[s])
+        :: [id=value]
+  37  D_{a_m}V = E_{s}((D_{a_2}V[>], b*(a_m + ξ)^(-ρ))[s])
+        :: [id=marginal_decision]
+
+Definitions referenced
+  Xa    mortality:set:Xa
+  Ages  mortality:set:Ages
+  Z     mortality:set:Z
+  ψ     mortality:parameter:ψ
+  𝜙     mortality:function:𝜙
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== mortality:G:dcsn_to_arvl ====
+STAGE mortality / VALUE AGGREGATOR dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≺  : ℝ × Ages × Z × Xa → ℝ × Ages,  (V, age, z_1, a_1) ↦ (V, age)
+
+Conditions
+  𝑉≺(z_1, a_1) ∈ ℝ
+  𝑎𝑔𝑒≺ ∈ Ages
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  mortality.bl
+  41  V[<] = V                :: [id=value]
+  42  D_{a_1}V[<] = D_{a_m}V  :: [id=marginal_arrival]
+
+Definitions referenced
+  Xa    mortality:set:Xa
+  Ages  mortality:set:Ages
+  Z     mortality:set:Z
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

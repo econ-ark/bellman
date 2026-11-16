@@ -1,0 +1,745 @@
+BELLMAN-SYM / STAGE retire_choice                         [VERSION = SYMBOLIC]
+a stage occurrence of applications/pension-retirement/declaration/stages/
+retire_choice/retire_choice.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        none
+  ∼ decision       y_f_d state, y_p_d state, d control, V value
+  ≻ continuation   y_f_wk≻ state, y_p_wk≻ state, y_f_rt≻ state, y_p_rt≻ state,
+                   V_wk≻ value, V_rt≻ value
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           y_f_d at decision, y_p_d at decision, y_f_wk≻ at
+                   continuation, y_p_wk≻ at continuation, y_f_rt≻ at
+                   continuation, y_p_rt≻ at continuation
+  controls         d at decision
+  values           V at the decision perch; V_wk at the continuation perch;
+                   V_rt at the continuation perch
+  shocks           none
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → dcsn_to_cntn   (y_f_d, y_p_d) : !dcsn, at d ->
+                   (y_f_wk≻, y_p_wk≻, y_f_rt≻, y_p_rt≻) : !cntn
+  ← cntn_to_dcsn   (V_wk≻, V_rt≻) : !cntn, at d -> (V) : !dcsn
+  ← policy         (V_wk≻, V_rt≻) : !cntn -> (d) : !dcsn
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  sets                     2   Xf := ℝ₊, Xp := ℝ₊
+  laws of motion           1   y_f_wk = y_f_d; y_p_wk = y_p_d; y_f_rt = y_f_d;
+                               y_p_rt = y_p_d
+  value aggregators        2   V = (V_wk[>], V_rt[>])[d];
+                               d = argmax_{d}(V_wk[>], V_rt[>])
+  block lines              6   dcsn_to_cntn.work.financial_if_working,
+                               dcsn_to_cntn.work.pension_if_working,
+                               dcsn_to_cntn.retire.financial_if_retiring,
+                               dcsn_to_cntn.retire.pension_paid_out,
+                               cntn_to_dcsn.choice_value, policy.choice
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   (𝑉_wk≻, 𝑉_rt≻) ↦ 𝑑(y_f_d, y_p_d), 𝑉
+                    forward    μ ↦ μ_work≻, μ_retire≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ∼ y_f_d, y_p_d  →  ≻ y_f_wk≻, y_p_wk≻, y_f_rt≻, y_p_rt≻
+  backward   ∼ V  ←  ≻ V_wk≻, V_rt≻
+  policy     ∼ d  ←  ≻ V_wk≻, V_rt≻
+
+==== stage ====
+STAGE retire_choice
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑉_wk≻      : Xf × Xp → ℝ
+         𝑉_rt≻      : Xf × Xp → ℝ
+         ──────────────────────────────────────────────────────
+    out  𝑑          : Xf × Xp → {work, retire}
+         𝑉          : Xf × Xp → ℝ
+  forward
+    in   μ          : finite measure on Xf × Xp
+         ──────────────────────────────────────────────────────
+    out  μ_work≻    : finite measure on Xf × Xp
+         μ_retire≻  : finite measure on Xf × Xp
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉_wk≻, 𝑉_rt≻                 out: 𝑉
+
+    2  policy
+       in: 𝑉_wk≻, 𝑉_rt≻                 out: 𝑑
+
+  forward
+    1  dcsn_to_cntn
+       in: μ                            out: μ_work≻, μ_retire≻
+
+Conditions
+  cntn_to_dcsn:Aggregation  𝑉(y_f_d, y_p_d) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  retire_choice.bl
+  8   y_f_wk = y_f_d                    :: [id=financial_if_working]
+  9   y_p_wk = y_p_d                    :: [id=pension_if_working]
+  12  y_f_rt = y_f_d                    :: [id=financial_if_retiring]
+  13  y_p_rt = y_p_d                    :: [id=pension_paid_out]
+  18  V = (V_wk[>], V_rt[>])[d]         :: [id=choice_value]
+  22  d = argmax_{d}(V_wk[>], V_rt[>])  :: [id=choice]
+
+Definitions referenced
+  Xf    retire_choice:set:Xf
+  Xp    retire_choice:set:Xp
+
+File
+  applications/pension-retirement/declaration/stages/retire_choice/
+  retire_choice.bl
+
+Perches
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE retire_choice / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V_wk≻  : {V_wk≻, V_rt≻}
+       V_rt≻  : {V_wk≻, V_rt≻}
+       ───────────────────────
+  out  V      : {V}
+
+Conditions
+  𝑉(y_f_d, y_p_d) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  retire_choice.bl
+  18  V = (V_wk[>], V_rt[>])[d]  :: [id=choice_value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward policy ====
+STAGE retire_choice / POLICY BLOCK policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V_wk≻  : {V_wk≻, V_rt≻}
+       V_rt≻  : {V_wk≻, V_rt≻}
+       ───────────────────────
+  out  d      : {d}
+──────────────────────────────────────────────────────────────────────────────
+Source  retire_choice.bl
+  22  d = argmax_{d}(V_wk[>], V_rt[>])  :: [id=choice]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE retire_choice / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   y_f_d    : {y_f_d, y_p_d}
+       y_p_d    : {y_f_d, y_p_d}
+       ───────────────────────────────────────────────
+  out  y_f_wk≻  : {y_f_wk≻, y_p_wk≻, y_f_rt≻, y_p_rt≻}
+       y_p_wk≻  : {y_f_wk≻, y_p_wk≻, y_f_rt≻, y_p_rt≻}
+       y_f_rt≻  : {y_f_wk≻, y_p_wk≻, y_f_rt≻, y_p_rt≻}
+       y_p_rt≻  : {y_f_wk≻, y_p_wk≻, y_f_rt≻, y_p_rt≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  retire_choice.bl
+  8   y_f_wk = y_f_d  :: [id=financial_if_working]
+  9   y_p_wk = y_p_d  :: [id=pension_if_working]
+  12  y_f_rt = y_f_d  :: [id=financial_if_retiring]
+  13  y_p_rt = y_p_d  :: [id=pension_paid_out]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn / work ====
+STAGE retire_choice / FORWARD BLOCK dcsn_to_cntn / work
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   y_f_d    : {y_f_d, y_p_d}
+       y_p_d    : {y_f_d, y_p_d}
+       ───────────────────────────────────────────────
+  out  y_f_wk≻  : {y_f_wk≻, y_p_wk≻, y_f_rt≻, y_p_rt≻}
+       y_p_wk≻  : {y_f_wk≻, y_p_wk≻, y_f_rt≻, y_p_rt≻}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn / retire ====
+STAGE retire_choice / FORWARD BLOCK dcsn_to_cntn / retire
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   y_f_d    : {y_f_d, y_p_d}
+       y_p_d    : {y_f_d, y_p_d}
+       ───────────────────────────────────────────────
+  out  y_f_rt≻  : {y_f_wk≻, y_p_wk≻, y_f_rt≻, y_p_rt≻}
+       y_p_rt≻  : {y_f_wk≻, y_p_wk≻, y_f_rt≻, y_p_rt≻}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE retire_choice / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_wk≻  : Xf × Xp → ℝ
+       𝑉_rt≻  : Xf × Xp → ℝ
+       ───────────────────────────────────────────────────────
+  out  𝑉      : Xf × Xp → ℝ
+
+At
+  𝑑  : Xf × Xp → {work, retire}
+
+Where
+  𝑔_work≻    : Xf × Xp → Xf × Xp,
+               𝑔_work≻(y_f_d, y_p_d) = 𝑔≻(y_f_d, y_p_d, work)
+  𝑔_retire≻  : Xf × Xp → Xf × Xp,
+               𝑔_retire≻(y_f_d, y_p_d) = 𝑔≻(y_f_d, y_p_d, retire)
+
+Operations
+  1  Pullback:work
+     in: 𝑉_wk≻                          out: 𝑉_wk≻ ∘ 𝑔_work≻
+     ─────────────────────────────────────────────────────────
+     rule: (𝑉_wk≻ ∘ 𝑔_work≻)(y_f_d, y_p_d) = 𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d))
+
+  2  Pullback:retire
+     in: 𝑉_rt≻                          out: 𝑉_rt≻ ∘ 𝑔_retire≻
+     ─────────────────────────────────────────────────────────
+     rule: (𝑉_rt≻ ∘ 𝑔_retire≻)(y_f_d, y_p_d) = 𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d))
+
+  3  Aggregation
+     in: (1), (2)                       out: 𝑉
+     ─────────────────────────────────────────────────────────
+     rule: 𝑉 =
+             (𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d)), 𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d)))[𝑑]
+           on (y_f_d, y_p_d) ∈ Xf × Xp
+
+  4  Evaluation
+     in: 𝑉                              out: 𝑉
+     ─────────────────────────────────────────────────────────
+     rule: 𝑉 : Xf × Xp → ℝ
+
+Conditions
+  Aggregation  𝑉(y_f_d, y_p_d) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  retire_choice.bl
+  18  V = (V_wk[>], V_rt[>])[d]  :: [id=choice_value]
+
+Definitions referenced
+  Xf    retire_choice:set:Xf
+  Xp    retire_choice:set:Xp
+  𝑔≻    retire_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback:work ====
+STAGE retire_choice / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Pullback:work
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_wk≻  : Xf × Xp → ℝ
+       ────────────────────
+  out  𝑉_wk≻ ∘ 𝑔_work≻
+              : Xf × Xp → ℝ
+
+Where
+  𝑔_work≻  : Xf × Xp → Xf × Xp,
+             𝑔_work≻(y_f_d, y_p_d) = 𝑔≻(y_f_d, y_p_d, work)
+
+Rule
+  (𝑉_wk≻ ∘ 𝑔_work≻)(y_f_d, y_p_d) = 𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d))
+──────────────────────────────────────────────────────────────────────────────
+Source  retire_choice.bl
+  8   y_f_wk = y_f_d  :: [id=financial_if_working]
+  9   y_p_wk = y_p_d  :: [id=pension_if_working]
+  12  y_f_rt = y_f_d  :: [id=financial_if_retiring]
+  13  y_p_rt = y_p_d  :: [id=pension_paid_out]
+
+Definitions referenced
+  Xf    retire_choice:set:Xf
+  Xp    retire_choice:set:Xp
+  𝑔≻    retire_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback:retire ====
+STAGE retire_choice / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Pullback:retire
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_rt≻  : Xf × Xp → ℝ
+       ────────────────────
+  out  𝑉_rt≻ ∘ 𝑔_retire≻
+              : Xf × Xp → ℝ
+
+Where
+  𝑔_retire≻  : Xf × Xp → Xf × Xp,
+               𝑔_retire≻(y_f_d, y_p_d) = 𝑔≻(y_f_d, y_p_d, retire)
+
+Rule
+  (𝑉_rt≻ ∘ 𝑔_retire≻)(y_f_d, y_p_d) = 𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d))
+──────────────────────────────────────────────────────────────────────────────
+Source  retire_choice.bl
+  8   y_f_wk = y_f_d  :: [id=financial_if_working]
+  9   y_p_wk = y_p_d  :: [id=pension_if_working]
+  12  y_f_rt = y_f_d  :: [id=financial_if_retiring]
+  13  y_p_rt = y_p_d  :: [id=pension_paid_out]
+
+Definitions referenced
+  Xf    retire_choice:set:Xf
+  Xp    retire_choice:set:Xp
+  𝑔≻    retire_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE retire_choice / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_wk≻ ∘ 𝑔_work≻
+          : Xf × Xp → ℝ
+       𝑉_rt≻ ∘ 𝑔_retire≻
+          : Xf × Xp → ℝ
+       ─────────────────
+  out  𝑉  : Xf × Xp → ℝ
+
+Where
+  𝑔_work≻    : Xf × Xp → Xf × Xp,
+               𝑔_work≻(y_f_d, y_p_d) = 𝑔≻(y_f_d, y_p_d, work)
+  𝑔_retire≻  : Xf × Xp → Xf × Xp,
+               𝑔_retire≻(y_f_d, y_p_d) = 𝑔≻(y_f_d, y_p_d, retire)
+
+Rule
+  𝑉 = (𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d)), 𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d)))[𝑑]
+  on (y_f_d, y_p_d) ∈ Xf × Xp
+
+Conditions
+  𝑉(y_f_d, y_p_d) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  retire_choice.bl
+  18  V = (V_wk[>], V_rt[>])[d]  :: [id=choice_value]
+
+Definitions referenced
+  Xf    retire_choice:set:Xf
+  Xp    retire_choice:set:Xp
+  𝑔≻    retire_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE retire_choice / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : Xf × Xp → ℝ
+       ────────────────
+  out  𝑉  : Xf × Xp → ℝ
+
+Where
+  𝑔_work≻    : Xf × Xp → Xf × Xp,
+               𝑔_work≻(y_f_d, y_p_d) = 𝑔≻(y_f_d, y_p_d, work)
+  𝑔_retire≻  : Xf × Xp → Xf × Xp,
+               𝑔_retire≻(y_f_d, y_p_d) = 𝑔≻(y_f_d, y_p_d, retire)
+
+Rule
+  𝑉 = (𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d)), 𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d)))[𝑑]
+  on (y_f_d, y_p_d) ∈ Xf × Xp
+  𝑉 : Xf × Xp → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xf    retire_choice:set:Xf
+  Xp    retire_choice:set:Xp
+  𝑔≻    retire_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy ====
+STAGE retire_choice / POLICY BUILDER policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_wk≻  : Xf × Xp → ℝ
+       𝑉_rt≻  : Xf × Xp → ℝ
+       ───────────────────────────────────────────────────────
+  out  𝑑      : Xf × Xp → {work, retire}
+
+Where
+  𝑔_work≻    : Xf × Xp → Xf × Xp,
+               𝑔_work≻(y_f_d, y_p_d) = 𝑔≻(y_f_d, y_p_d, work)
+  𝑔_retire≻  : Xf × Xp → Xf × Xp,
+               𝑔_retire≻(y_f_d, y_p_d) = 𝑔≻(y_f_d, y_p_d, retire)
+
+Operations
+  1  Pullback:work
+     in: 𝑉_wk≻                          out: 𝑉_wk≻ ∘ 𝑔_work≻
+     ─────────────────────────────────────────────────────────
+     rule: (𝑉_wk≻ ∘ 𝑔_work≻)(y_f_d, y_p_d) = 𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d))
+
+  2  Pullback:retire
+     in: 𝑉_rt≻                          out: 𝑉_rt≻ ∘ 𝑔_retire≻
+     ─────────────────────────────────────────────────────────
+     rule: (𝑉_rt≻ ∘ 𝑔_retire≻)(y_f_d, y_p_d) = 𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d))
+
+  3  choice:Aggregation
+     in: (1), (2)
+     out: (y_f_d, y_p_d, d)
+            ↦ (𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d)),
+               𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d)))[d]
+     ─────────────────────────────────────────────────────────
+     rule: (y_f_d, y_p_d, d)
+             ↦ (𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d)),
+                𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d)))[d]
+
+  4  choice:Argmax
+     in: (3)                            out: 𝑑
+     ─────────────────────────────────────────────────────────
+     rule: 𝑑(y_f_d, y_p_d)
+             ∈ argmax_{d ∈ {work, retire}}
+                 [(𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d)),
+                   𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d)))[d]]
+
+  5  Evaluation
+     in: 𝑑                              out: 𝑑
+     ─────────────────────────────────────────────────────────
+     rule: 𝑑 : Xf × Xp → {work, retire}
+──────────────────────────────────────────────────────────────────────────────
+Source  retire_choice.bl
+  22  d = argmax_{d}(V_wk[>], V_rt[>])  :: [id=choice]
+
+Definitions referenced
+  Xf    retire_choice:set:Xf
+  Xp    retire_choice:set:Xp
+  𝑔≻    retire_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback:work ====
+STAGE retire_choice / POLICY BUILDER policy / Pullback:work
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_wk≻  : Xf × Xp → ℝ
+       ────────────────────
+  out  𝑉_wk≻ ∘ 𝑔_work≻
+              : Xf × Xp → ℝ
+
+Where
+  𝑔_work≻  : Xf × Xp → Xf × Xp,
+             𝑔_work≻(y_f_d, y_p_d) = 𝑔≻(y_f_d, y_p_d, work)
+
+Rule
+  (𝑉_wk≻ ∘ 𝑔_work≻)(y_f_d, y_p_d) = 𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d))
+──────────────────────────────────────────────────────────────────────────────
+Source  retire_choice.bl
+  8   y_f_wk = y_f_d  :: [id=financial_if_working]
+  9   y_p_wk = y_p_d  :: [id=pension_if_working]
+  12  y_f_rt = y_f_d  :: [id=financial_if_retiring]
+  13  y_p_rt = y_p_d  :: [id=pension_paid_out]
+
+Definitions referenced
+  Xf    retire_choice:set:Xf
+  Xp    retire_choice:set:Xp
+  𝑔≻    retire_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback:retire ====
+STAGE retire_choice / POLICY BUILDER policy / Pullback:retire
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_rt≻  : Xf × Xp → ℝ
+       ────────────────────
+  out  𝑉_rt≻ ∘ 𝑔_retire≻
+              : Xf × Xp → ℝ
+
+Where
+  𝑔_retire≻  : Xf × Xp → Xf × Xp,
+               𝑔_retire≻(y_f_d, y_p_d) = 𝑔≻(y_f_d, y_p_d, retire)
+
+Rule
+  (𝑉_rt≻ ∘ 𝑔_retire≻)(y_f_d, y_p_d) = 𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d))
+──────────────────────────────────────────────────────────────────────────────
+Source  retire_choice.bl
+  8   y_f_wk = y_f_d  :: [id=financial_if_working]
+  9   y_p_wk = y_p_d  :: [id=pension_if_working]
+  12  y_f_rt = y_f_d  :: [id=financial_if_retiring]
+  13  y_p_rt = y_p_d  :: [id=pension_paid_out]
+
+Definitions referenced
+  Xf    retire_choice:set:Xf
+  Xp    retire_choice:set:Xp
+  𝑔≻    retire_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / choice:Aggregation ====
+STAGE retire_choice / POLICY BUILDER policy / choice:Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_wk≻ ∘ 𝑔_work≻
+         : Xf × Xp → ℝ
+       𝑉_rt≻ ∘ 𝑔_retire≻
+         : Xf × Xp → ℝ
+       ─────────────────────────────────────────────────────────────────────
+  out  (y_f_d, y_p_d, d)
+         ↦ (𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d)), 𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d)))[d]
+         : Xf × Xp × {work, retire} → ℝ
+
+Where
+  𝑔_work≻    : Xf × Xp → Xf × Xp,
+               𝑔_work≻(y_f_d, y_p_d) = 𝑔≻(y_f_d, y_p_d, work)
+  𝑔_retire≻  : Xf × Xp → Xf × Xp,
+               𝑔_retire≻(y_f_d, y_p_d) = 𝑔≻(y_f_d, y_p_d, retire)
+
+Rule
+  (y_f_d, y_p_d, d)
+    ↦ (𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d)), 𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d)))[d]
+──────────────────────────────────────────────────────────────────────────────
+Source  retire_choice.bl
+  22  d = argmax_{d}(V_wk[>], V_rt[>])  :: [id=choice]
+
+Definitions referenced
+  Xf    retire_choice:set:Xf
+  Xp    retire_choice:set:Xp
+  𝑔≻    retire_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / choice:Argmax ====
+STAGE retire_choice / POLICY BUILDER policy / choice:Argmax
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (y_f_d, y_p_d, d)
+         ↦ (𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d)), 𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d)))[d]
+          : Xf × Xp × {work, retire} → ℝ
+       ─────────────────────────────────────────────────────────────────────
+  out  𝑑  : Xf × Xp → {work, retire}
+
+Where
+  𝑔_work≻    : Xf × Xp → Xf × Xp,
+               𝑔_work≻(y_f_d, y_p_d) = 𝑔≻(y_f_d, y_p_d, work)
+  𝑔_retire≻  : Xf × Xp → Xf × Xp,
+               𝑔_retire≻(y_f_d, y_p_d) = 𝑔≻(y_f_d, y_p_d, retire)
+
+Rule
+  𝑑(y_f_d, y_p_d)
+    ∈ argmax_{d ∈ {work, retire}}
+        [(𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d)), 𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d)))[d]]
+──────────────────────────────────────────────────────────────────────────────
+Source  retire_choice.bl
+  22  d = argmax_{d}(V_wk[>], V_rt[>])  :: [id=choice]
+
+Definitions referenced
+  Xf    retire_choice:set:Xf
+  Xp    retire_choice:set:Xp
+  𝑔≻    retire_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Evaluation ====
+STAGE retire_choice / POLICY BUILDER policy / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑑  : Xf × Xp → {work, retire}
+       ─────────────────────────────
+  out  𝑑  : Xf × Xp → {work, retire}
+
+Where
+  𝑔_work≻    : Xf × Xp → Xf × Xp,
+               𝑔_work≻(y_f_d, y_p_d) = 𝑔≻(y_f_d, y_p_d, work)
+  𝑔_retire≻  : Xf × Xp → Xf × Xp,
+               𝑔_retire≻(y_f_d, y_p_d) = 𝑔≻(y_f_d, y_p_d, retire)
+
+Rule
+  𝑑(y_f_d, y_p_d)
+    ∈ argmax_{d ∈ {work, retire}}
+        [(𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d)), 𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d)))[d]]
+  𝑑 : Xf × Xp → {work, retire}
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xf    retire_choice:set:Xf
+  Xp    retire_choice:set:Xp
+  𝑔≻    retire_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE retire_choice / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ          : finite measure on Xf × Xp
+       ────────────────────────────────────────────────────────
+  out  μ_work≻    : finite measure on Xf × Xp
+       μ_retire≻  : finite measure on Xf × Xp
+
+At
+  𝑑  : Xf × Xp → {work, retire}
+
+Where
+  𝑔_work≻    : Xf × Xp → Xf × Xp,
+               𝑔_work≻(y_f_d, y_p_d) = 𝑔≻(y_f_d, y_p_d, work)
+  𝑔_retire≻  : Xf × Xp → Xf × Xp,
+               𝑔_retire≻(y_f_d, y_p_d) = 𝑔≻(y_f_d, y_p_d, retire)
+
+Operations
+  1  Pushforward
+     in: μ                              out: μ_work≻, μ_retire≻
+     ──────────────────────────────────────────────────────────
+     rule: μ_work≻(B)
+             = μ({y_f_d, y_p_d ∈ Xf × Xp |
+                   𝑑(y_f_d, y_p_d) = work ∧ 𝑔_work≻(y_f_d, y_p_d) ∈ B})
+           μ_retire≻(B)
+             = μ({y_f_d, y_p_d ∈ Xf × Xp |
+                   𝑑(y_f_d, y_p_d) = retire ∧ 𝑔_retire≻(y_f_d, y_p_d) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  retire_choice.bl
+  8   y_f_wk = y_f_d  :: [id=financial_if_working]
+  9   y_p_wk = y_p_d  :: [id=pension_if_working]
+  12  y_f_rt = y_f_d  :: [id=financial_if_retiring]
+  13  y_p_rt = y_p_d  :: [id=pension_paid_out]
+
+Definitions referenced
+  Xf    retire_choice:set:Xf
+  Xp    retire_choice:set:Xp
+  𝑔≻    retire_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE retire_choice / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ          : finite measure on Xf × Xp
+       ──────────────────────────────────────
+  out  μ_work≻    : finite measure on Xf × Xp
+       μ_retire≻  : finite measure on Xf × Xp
+
+Where
+  𝑔_work≻    : Xf × Xp → Xf × Xp,
+               𝑔_work≻(y_f_d, y_p_d) = 𝑔≻(y_f_d, y_p_d, work)
+  𝑔_retire≻  : Xf × Xp → Xf × Xp,
+               𝑔_retire≻(y_f_d, y_p_d) = 𝑔≻(y_f_d, y_p_d, retire)
+
+Rule
+  μ_work≻(B)
+    = μ({y_f_d, y_p_d ∈ Xf × Xp |
+          𝑑(y_f_d, y_p_d) = work ∧ 𝑔_work≻(y_f_d, y_p_d) ∈ B})
+  μ_retire≻(B)
+    = μ({y_f_d, y_p_d ∈ Xf × Xp |
+          𝑑(y_f_d, y_p_d) = retire ∧ 𝑔_retire≻(y_f_d, y_p_d) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  retire_choice.bl
+  8   y_f_wk = y_f_d  :: [id=financial_if_working]
+  9   y_p_wk = y_p_d  :: [id=pension_if_working]
+  12  y_f_rt = y_f_d  :: [id=financial_if_retiring]
+  13  y_p_rt = y_p_d  :: [id=pension_paid_out]
+
+Definitions referenced
+  Xf    retire_choice:set:Xf
+  Xp    retire_choice:set:Xp
+  𝑔≻    retire_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retire_choice:set:Xf ====
+STAGE retire_choice / SET Xf
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xf  = ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  retire_choice.bl
+  3  Xf := ℝ₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retire_choice:set:Xp ====
+STAGE retire_choice / SET Xp
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xp  = ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  retire_choice.bl
+  4  Xp := ℝ₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.work.financial_if_working ====
+STAGE retire_choice / FORWARD BLOCK dcsn_to_cntn / work.financial_if_working
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  retire_choice.bl
+  8  y_f_wk = y_f_d  :: [id=financial_if_working]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.work.pension_if_working ====
+STAGE retire_choice / FORWARD BLOCK dcsn_to_cntn / work.pension_if_working
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  retire_choice.bl
+  9  y_p_wk = y_p_d  :: [id=pension_if_working]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.retire.financial_if_retiring ====
+STAGE retire_choice / FORWARD BLOCK dcsn_to_cntn
+  / retire.financial_if_retiring
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  retire_choice.bl
+  12  y_f_rt = y_f_d  :: [id=financial_if_retiring]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.retire.pension_paid_out ====
+STAGE retire_choice / FORWARD BLOCK dcsn_to_cntn / retire.pension_paid_out
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  retire_choice.bl
+  13  y_p_rt = y_p_d  :: [id=pension_paid_out]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.choice_value ====
+STAGE retire_choice / BACKWARD BLOCK cntn_to_dcsn / choice_value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(y_f_d, y_p_d) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  retire_choice.bl
+  18  V = (V_wk[>], V_rt[>])[d]  :: [id=choice_value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== policy.choice ====
+STAGE retire_choice / POLICY BLOCK policy / choice
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  retire_choice.bl
+  22  d = argmax_{d}(V_wk[>], V_rt[>])  :: [id=choice]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retire_choice:g:dcsn_to_cntn ====
+STAGE retire_choice / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : Xf × Xp × {work, retire} → (Xf × Xp, Xf × Xp)[d],
+        (y_f_d, y_p_d, d) ↦ ((y_f_d, y_p_d), (y_f_d, y_p_d))[d]
+──────────────────────────────────────────────────────────────────────────────
+Source  retire_choice.bl
+  8   y_f_wk = y_f_d  :: [id=financial_if_working]
+  9   y_p_wk = y_p_d  :: [id=pension_if_working]
+  12  y_f_rt = y_f_d  :: [id=financial_if_retiring]
+  13  y_p_rt = y_p_d  :: [id=pension_paid_out]
+
+Definitions referenced
+  Xf    retire_choice:set:Xf
+  Xp    retire_choice:set:Xp
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retire_choice:G:cntn_to_dcsn ====
+STAGE retire_choice / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : ℝ × ℝ × Xf × Xp × {work, retire} → ℝ,
+        (V_wk≻, V_rt≻, y_f_d, y_p_d, d) ↦ (V_wk≻, V_rt≻)[d]
+
+Conditions
+  𝑉(y_f_d, y_p_d) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  retire_choice.bl
+  18  V = (V_wk[>], V_rt[>])[d]  :: [id=choice_value]
+
+Definitions referenced
+  Xf    retire_choice:set:Xf
+  Xp    retire_choice:set:Xp
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== retire_choice:G:policy ====
+STAGE retire_choice / VALUE AGGREGATOR policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : ℝ × ℝ × Xf × Xp × {work, retire} → ℝ,
+        (V_wk≻, V_rt≻, y_f_d, y_p_d, d) ↦ (V_wk≻, V_rt≻)[d]
+──────────────────────────────────────────────────────────────────────────────
+Source  retire_choice.bl
+  22  d = argmax_{d}(V_wk[>], V_rt[>])  :: [id=choice]
+
+Definitions referenced
+  Xf    retire_choice:set:Xf
+  Xp    retire_choice:set:Xp
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

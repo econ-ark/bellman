@@ -1,0 +1,1223 @@
+BELLMAN-SYM / STAGE consumption                           [VERSION = SYMBOLIC]
+a stage occurrence of
+applications/life-cycle/declaration/stages/consumption/consumption.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        z_3≺ state, a_3≺ state, V≺ value, age≺ value
+  ∼ decision       z_c state, m state, c control, V value, age value
+  ≻ continuation   age_next≻ value, z_4≻ state, a_4≻ state, V≻ value
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           z_3≺ at arrival, a_3≺ at arrival, z_c at decision, m at
+                   decision, z_4≻ at continuation, a_4≻ at continuation
+  controls         c at decision
+  values           V at every perch; age at the arrival, decision perches;
+                   age_next at the continuation perch
+  shocks           none
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → arvl_to_dcsn   (z_3≺ : !arvl, a_3≺ : !arvl, age_next≻ : !cntn) -> (z_c, m)
+                   : !dcsn
+  → dcsn_to_cntn   (z_c, m) : !dcsn, at c -> (z_4≻, a_4≻) : !cntn
+  ← cntn_to_dcsn   (V≻, age_next≻) : !cntn, at c -> (V, age) : !dcsn
+  ← dcsn_to_arvl   (V, age) : !dcsn -> (V≺, age≺) : !arvl
+  ← policy         (V≻) : !cntn -> (c) : !dcsn
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  sets                     5   Xa := ℝ₊, Xm := ℝ₊₊, Ages := {0, …, J - 1},
+                               Clock := {0, …, J}, Z := {1, 2, 3}
+  parameters              10   J : ℤ @ [1, inf); β : (0, 1); ρ : (1, inf);
+                               R : ℝ₊₊; w : ℝ₊₊; τ : [0, 1); I : ℝ₊;
+                               F : Ages → ℝ₊₊; ζ : Z → ℝ₊₊;
+                               work : Ages → {0, 1}
+  functions                2   𝑢 on ℝ₊₊, 𝑦 on Z × Ages
+  correspondences          1   Γ_c : ℝ₊₊ ⇉ ℝ₊₊
+  laws of motion           2   z_c = z_3; m = R*(a_3 + I) +
+                               (1 - τ)*𝑦(z_3, age_next - 1);
+                               z_4 = z_c; a_4 = m - c
+  value aggregators        3   V = 𝑢(c) + β*V[>], age = age_next - 1;
+                               V[<] = V, D_{a_3}V[<] = R*D_{m}(V);
+                               c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])
+  block lines              9   arvl_to_dcsn.1, arvl_to_dcsn.cash_on_hand,
+                               dcsn_to_cntn.1, dcsn_to_cntn.savings,
+                               cntn_to_dcsn.value, cntn_to_dcsn.clock,
+                               dcsn_to_arvl.value,
+                               dcsn_to_arvl.marginal_arrival,
+                               policy.optimality
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   (𝑎𝑔𝑒_next≻, 𝑉≻) ↦ 𝑉≺, 𝑎𝑔𝑒≺, 𝑐(z_c, m)
+                    forward    μ≺ ↦ μ≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ≺ z_3≺, a_3≺  and  ≻ age_next≻  →  ∼ z_c, m  →  ≻ z_4≻, a_4≻
+  backward   ≺ V≺, age≺  ←  ∼ V, age  ←  ≻ V≻, age_next≻
+  policy     ∼ c  ←  ≻ V≻
+
+==== stage ====
+STAGE consumption
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑎𝑔𝑒_next≻  : {()} → Clock
+         𝑉≻         : Z × Xa → ℝ
+         ────────────────────────────────────────────
+    out  𝑉≺         : Z × Xa → ℝ
+         𝑎𝑔𝑒≺       : {()} → Ages
+         𝑐          : Z × Xm → ℝ₊₊,  𝑐(z_c, m) ∈ Γ_c(m)
+  forward
+    in   μ≺         : finite measure on Z × Xa
+         ────────────────────────────────────────────
+    out  μ≻         : finite measure on Z × Xa
+
+Where
+  (z_c, m) = 𝑔≺(z_3, a_3, 𝑎𝑔𝑒_next≻())
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉≻, 𝑎𝑔𝑒_next≻                out: 𝑉, 𝑎𝑔𝑒
+
+    2  dcsn_to_arvl
+       in: 𝑉, 𝑎𝑔𝑒, 𝑎𝑔𝑒_next≻            out: 𝑉≺, 𝑎𝑔𝑒≺
+
+    3  policy
+       in: 𝑉≻                           out: 𝑐
+
+  forward
+    1  arvl_to_dcsn
+       in: μ≺                           out: μ
+
+    2  dcsn_to_cntn
+       in: μ                            out: μ≻
+
+Conditions
+  cntn_to_dcsn:Aggregation       𝑉(z_c, m) ∈ ℝ
+  cntn_to_dcsn:Aggregation       𝑎𝑔𝑒 ∈ Ages
+  dcsn_to_arvl:Aggregation       𝑉≺(z_3, a_3) ∈ ℝ
+  dcsn_to_arvl:Aggregation       𝑎𝑔𝑒≺ ∈ Ages
+  arvl_to_dcsn:Pushforward       R · (a_3 + I)
+                                   + (1 − τ) · 𝑦(z_3, age_next − 1)
+                                   ∈ Xm
+  dcsn_to_arvl.marginal_arrival  marginal-reading: the right side of each
+                                   derivative line equals the derivative, in
+                                   the named coordinate, of the value the
+                                   builder writes, under the envelope
+                                   conditions: concavity of the continuation
+                                   value, interiority of the maximizer or the
+                                   multiplier's term at a binding constraint,
+                                   differentiability of the reward in the
+                                   control, a measurable selection of the
+                                   policy, and differentiability of the value
+                                   at the point read; listed and not checked
+                                   [required]
+  Ages                           J − 1 ∈ ℤ ∧ 0 ≤ J − 1
+  Clock                          J ∈ ℤ ∧ 0 ≤ J
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  26  z_c = z_3
+  27  m   = R*(a_3 + I) + (1 - τ)*𝑦(z_3, age_next - 1)
+        :: [id=cash_on_hand]
+  31  z_4 = z_c
+  32  a_4 = m - c
+        :: [id=savings]
+  36  V   = 𝑢(c) + β*V[>]
+        :: [id=value]
+  37  age = age_next - 1
+        :: [id=clock]
+  41  V[<] = V
+        :: [id=value]
+  42  D_{a_3}V[<] = R*D_{m}V
+        :: [id=marginal_arrival]
+  46  c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])
+        :: [id=optimality]
+
+Definitions referenced
+  Xa     consumption:set:Xa
+  Xm     consumption:set:Xm
+  J      consumption:parameter:J
+  Ages   consumption:set:Ages
+  Clock  consumption:set:Clock
+  Z      consumption:set:Z
+  R      consumption:parameter:R
+  τ      consumption:parameter:τ
+  I      consumption:parameter:I
+  𝑦      consumption:function:𝑦
+  Γ_c    consumption:correspondence:Γ_c
+  𝑔≺     consumption:g:arvl_to_dcsn
+
+File
+  applications/life-cycle/declaration/stages/consumption/consumption.bl
+
+Perches
+  ≺  arrival, written [<]
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE consumption / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻         : {age_next≻, V≻}
+       age_next≻  : {age_next≻}
+       ────────────────────────────
+  out  V          : {V, age}
+       age        : {age}
+
+Conditions
+  𝑉(z_c, m) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Ages
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  36  V   = 𝑢(c) + β*V[>]  :: [id=value]
+  37  age = age_next - 1   :: [id=clock]
+
+Definitions referenced
+  Ages  consumption:set:Ages
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward dcsn_to_arvl ====
+STAGE consumption / BACKWARD BLOCK dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V     : {V, age}
+       age   : {age}
+       ──────────────────
+  out  V≺    : {V≺, age≺}
+       age≺  : {age≺}
+
+Conditions
+  𝑉≺(z_3, a_3) ∈ ℝ
+  𝑎𝑔𝑒≺ ∈ Ages
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  41  V[<] = V                :: [id=value]
+  42  D_{a_3}V[<] = R*D_{m}V  :: [id=marginal_arrival]
+
+Definitions referenced
+  Ages  consumption:set:Ages
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward policy ====
+STAGE consumption / POLICY BLOCK policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {age_next≻, V≻}
+       ─────────────────────
+  out  c   : {c}
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  46  c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])  :: [id=optimality]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward arvl_to_dcsn ====
+STAGE consumption / FORWARD BLOCK arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   z_3≺       : {z_3≺}
+       a_3≺       : {z_3≺, a_3≺}
+       age_next≻  : {age_next≻}
+       ─────────────────────────
+  out  z_c        : {z_c}
+       m          : {z_c, m}
+
+Conditions
+  R · (a_3 + I) + (1 − τ) · 𝑦(z_3, age_next − 1) ∈ Xm
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  26  z_c = z_3
+  27  m   = R*(a_3 + I) + (1 - τ)*𝑦(z_3, age_next - 1)  :: [id=cash_on_hand]
+
+Definitions referenced
+  Xm    consumption:set:Xm
+  R     consumption:parameter:R
+  τ     consumption:parameter:τ
+  I     consumption:parameter:I
+  𝑦     consumption:function:𝑦
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE consumption / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   z_c   : {z_c}
+       m     : {z_c, m}
+       ────────────────────
+  out  z_4≻  : {z_4≻}
+       a_4≻  : {z_4≻, a_4≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  31  z_4 = z_c
+  32  a_4 = m - c  :: [id=savings]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE consumption / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻         : Z × Xa → ℝ
+       𝑎𝑔𝑒_next≻  : {()} → Clock
+       ──────────────────────────────────────────────────────
+  out  𝑉          : Z × Xm → ℝ
+       𝑎𝑔𝑒        : {()} → Ages
+
+At
+  𝑐  : Z × Xm → ℝ₊₊,  𝑐(z_c, m) ∈ Γ_c(m)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻(·, ·, 𝑐)
+     ────────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻(·, ·, 𝑐))(z_c, m) = 𝑉≻(𝑔≻(z_c, m, 𝑐(z_c, m)))
+
+  2  Aggregation
+     in: (1), 𝑎𝑔𝑒_next≻                 out: 𝑉, 𝑎𝑔𝑒
+     ────────────────────────────────────────────────────────
+     rule: 𝑉 = 𝑢(𝑐) + β · 𝑉≻(𝑔≻(z_c, m, 𝑐))               on (z_c, m) ∈ Z × Xm
+           𝑎𝑔𝑒 = 𝑎𝑔𝑒_next≻ − 1                            on (z_c, m) ∈ Z × Xm
+
+  3  Evaluation
+     in: 𝑉, 𝑎𝑔𝑒                         out: 𝑉, 𝑎𝑔𝑒
+     ────────────────────────────────────────────────────────
+     rule: 𝑉 : Z × Xm → ℝ
+           𝑎𝑔𝑒 : {()} → Ages
+
+Conditions
+  Aggregation  𝑉(z_c, m) ∈ ℝ
+  Aggregation  𝑎𝑔𝑒 ∈ Ages
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  36  V   = 𝑢(c) + β*V[>]  :: [id=value]
+  37  age = age_next - 1   :: [id=clock]
+
+Definitions referenced
+  Xa     consumption:set:Xa
+  Xm     consumption:set:Xm
+  Ages   consumption:set:Ages
+  Clock  consumption:set:Clock
+  Z      consumption:set:Z
+  β      consumption:parameter:β
+  𝑢      consumption:function:𝑢
+  Γ_c    consumption:correspondence:Γ_c
+  𝑔≻     consumption:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback ====
+STAGE consumption / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Z × Xa → ℝ
+       ────────────────
+  out  𝑉≻ ∘ 𝑔≻(·, ·, 𝑐)
+           : Z × Xm → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻(·, ·, 𝑐))(z_c, m) = 𝑉≻(𝑔≻(z_c, m, 𝑐(z_c, m)))
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  31  z_4 = z_c
+  32  a_4 = m - c  :: [id=savings]
+
+Definitions referenced
+  Xa    consumption:set:Xa
+  Xm    consumption:set:Xm
+  Z     consumption:set:Z
+  𝑔≻    consumption:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE consumption / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻(·, ·, 𝑐)
+                  : Z × Xm → ℝ
+       𝑎𝑔𝑒_next≻  : {()} → Clock
+       ──────────────────────────
+  out  𝑉          : Z × Xm → ℝ
+       𝑎𝑔𝑒        : Z × Xm → Ages
+
+Rule
+  𝑉 = 𝑢(𝑐) + β · 𝑉≻(𝑔≻(z_c, m, 𝑐))                        on (z_c, m) ∈ Z × Xm
+  𝑎𝑔𝑒 = 𝑎𝑔𝑒_next≻ − 1                                     on (z_c, m) ∈ Z × Xm
+
+Conditions
+  𝑉(z_c, m) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Ages
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  36  V   = 𝑢(c) + β*V[>]  :: [id=value]
+  37  age = age_next - 1   :: [id=clock]
+
+Definitions referenced
+  Xm     consumption:set:Xm
+  Ages   consumption:set:Ages
+  Clock  consumption:set:Clock
+  Z      consumption:set:Z
+  β      consumption:parameter:β
+  𝑢      consumption:function:𝑢
+  𝑔≻     consumption:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE consumption / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉    : Z × Xm → ℝ
+       𝑎𝑔𝑒  : Z × Xm → Ages
+       ────────────────────
+  out  𝑉    : Z × Xm → ℝ
+       𝑎𝑔𝑒  : {()} → Ages
+
+Rule
+  𝑉 = 𝑢(𝑐) + β · 𝑉≻(𝑔≻(z_c, m, 𝑐))                        on (z_c, m) ∈ Z × Xm
+  𝑉 : Z × Xm → ℝ
+  𝑎𝑔𝑒 = 𝑎𝑔𝑒_next≻ − 1                                     on (z_c, m) ∈ Z × Xm
+  𝑎𝑔𝑒 : {()} → Ages
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xm    consumption:set:Xm
+  Ages  consumption:set:Ages
+  Z     consumption:set:Z
+  β     consumption:parameter:β
+  𝑢     consumption:function:𝑢
+  𝑔≻    consumption:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl ====
+STAGE consumption / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉          : Z × Xm → ℝ
+       𝑎𝑔𝑒        : {()} → Ages
+       𝑎𝑔𝑒_next≻  : {()} → Clock
+       ─────────────────────────────────────────────────────────────
+  out  𝑉≺         : Z × Xa → ℝ
+       𝑎𝑔𝑒≺       : {()} → Ages
+
+Where
+  (z_c, m) = 𝑔≺(z_3, a_3, 𝑎𝑔𝑒_next≻())
+
+Operations
+  1  Pullback
+     in: 𝑉, 𝑎𝑔𝑒_next≻                   out: 𝑉 ∘ 𝑔≺(·, ·, 𝑎𝑔𝑒_next≻)
+     ───────────────────────────────────────────────────────────────
+     rule: (𝑉 ∘ 𝑔≺(·, ·, 𝑎𝑔𝑒_next≻))(z_3, a_3) = 𝑉(𝑔≺(z_3, a_3, 𝑎𝑔𝑒_next≻()))
+
+  2  Aggregation
+     in: (1), 𝑎𝑔𝑒                       out: 𝑉≺, 𝑎𝑔𝑒≺
+     ───────────────────────────────────────────────────────────────
+     rule: 𝑉≺ = 𝑉(𝑔≺(z_3, a_3, 𝑎𝑔𝑒_next≻()))            on (z_3, a_3) ∈ Z × Xa
+           𝑎𝑔𝑒≺ = 𝑎𝑔𝑒()                                 on (z_3, a_3) ∈ Z × Xa
+
+  3  Evaluation
+     in: 𝑉≺, 𝑎𝑔𝑒≺                       out: 𝑉≺, 𝑎𝑔𝑒≺
+     ───────────────────────────────────────────────────────────────
+     rule: 𝑉≺ : Z × Xa → ℝ
+           D_{a_3}𝑉≺(z_3, a_3) = R · D_{m}𝑉(z_c, m)
+           𝑎𝑔𝑒≺ : {()} → Ages
+
+Conditions
+  Aggregation  𝑉≺(z_3, a_3) ∈ ℝ
+  Aggregation  𝑎𝑔𝑒≺ ∈ Ages
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  41  V[<] = V                :: [id=value]
+  42  D_{a_3}V[<] = R*D_{m}V  :: [id=marginal_arrival]
+
+Definitions referenced
+  Xa     consumption:set:Xa
+  Xm     consumption:set:Xm
+  Ages   consumption:set:Ages
+  Clock  consumption:set:Clock
+  Z      consumption:set:Z
+  R      consumption:parameter:R
+  𝑔≺     consumption:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Pullback ====
+STAGE consumption / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉          : Z × Xm → ℝ
+       𝑎𝑔𝑒_next≻  : {()} → Clock
+       ─────────────────────────
+  out  𝑉 ∘ 𝑔≺(·, ·, 𝑎𝑔𝑒_next≻)
+                  : Z × Xa → ℝ
+
+Rule
+  (𝑉 ∘ 𝑔≺(·, ·, 𝑎𝑔𝑒_next≻))(z_3, a_3) = 𝑉(𝑔≺(z_3, a_3, 𝑎𝑔𝑒_next≻()))
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  26  z_c = z_3
+  27  m   = R*(a_3 + I) + (1 - τ)*𝑦(z_3, age_next - 1)  :: [id=cash_on_hand]
+
+Definitions referenced
+  Xa     consumption:set:Xa
+  Xm     consumption:set:Xm
+  Clock  consumption:set:Clock
+  Z      consumption:set:Z
+  𝑔≺     consumption:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Aggregation ====
+STAGE consumption / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉 ∘ 𝑔≺(·, ·, 𝑎𝑔𝑒_next≻)
+             : Z × Xa → ℝ
+       𝑎𝑔𝑒   : {()} → Ages
+       ───────────────────────
+  out  𝑉≺    : Z × Xa → ℝ
+       𝑎𝑔𝑒≺  : Z × Xa → Ages
+
+Rule
+  𝑉≺ = 𝑉(𝑔≺(z_3, a_3, 𝑎𝑔𝑒_next≻()))                     on (z_3, a_3) ∈ Z × Xa
+  𝑎𝑔𝑒≺ = 𝑎𝑔𝑒()                                          on (z_3, a_3) ∈ Z × Xa
+
+Conditions
+  𝑉≺(z_3, a_3) ∈ ℝ
+  𝑎𝑔𝑒≺ ∈ Ages
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  41  V[<] = V  :: [id=value]
+
+Definitions referenced
+  Xa    consumption:set:Xa
+  Ages  consumption:set:Ages
+  Z     consumption:set:Z
+  𝑔≺    consumption:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Evaluation ====
+STAGE consumption / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≺    : Z × Xa → ℝ
+       𝑎𝑔𝑒≺  : Z × Xa → Ages
+       ─────────────────────
+  out  𝑉≺    : Z × Xa → ℝ
+       𝑎𝑔𝑒≺  : {()} → Ages
+
+Where
+  (z_c, m) = 𝑔≺(z_3, a_3, 𝑎𝑔𝑒_next≻())
+
+Rule
+  𝑉≺ = 𝑉(𝑔≺(z_3, a_3, 𝑎𝑔𝑒_next≻()))                     on (z_3, a_3) ∈ Z × Xa
+  𝑉≺ : Z × Xa → ℝ
+  D_{a_3}𝑉≺(z_3, a_3) = R · D_{m}𝑉(z_c, m)
+  𝑎𝑔𝑒≺ = 𝑎𝑔𝑒()                                          on (z_3, a_3) ∈ Z × Xa
+  𝑎𝑔𝑒≺ : {()} → Ages
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  42  D_{a_3}V[<] = R*D_{m}V  :: [id=marginal_arrival]
+
+Definitions referenced
+  Xa    consumption:set:Xa
+  Ages  consumption:set:Ages
+  Z     consumption:set:Z
+  R     consumption:parameter:R
+  𝑔≺    consumption:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy ====
+STAGE consumption / POLICY BUILDER policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Z × Xa → ℝ
+       ─────────────────────────────────────────────
+  out  𝑐   : Z × Xm → ℝ₊₊,  𝑐(z_c, m) ∈ Γ_c(m)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻
+     ───────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻)(z_c, m, c) = 𝑉≻(𝑔≻(z_c, m, c))
+
+  2  optimality:Aggregation
+     in: (1)
+     out: (z_c, m, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(z_c, m, c))
+     ───────────────────────────────────────────────
+     rule: (z_c, m, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(z_c, m, c))
+
+  3  optimality:Argmax
+     in: (2)                            out: 𝑐
+     ───────────────────────────────────────────────
+     rule: 𝑐(z_c, m) ∈ argmax_{cp ∈ Γ_c(m)} [𝑢(cp) + β · 𝑉≻(𝑔≻(z_c, m, cp))]
+
+  4  Evaluation
+     in: 𝑐                              out: 𝑐
+     ───────────────────────────────────────────────
+     rule: 𝑐 : Z × Xm → ℝ₊₊,  𝑐(z_c, m) ∈ Γ_c(m)
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  46  c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xa    consumption:set:Xa
+  Xm    consumption:set:Xm
+  Z     consumption:set:Z
+  β     consumption:parameter:β
+  𝑢     consumption:function:𝑢
+  Γ_c   consumption:correspondence:Γ_c
+  𝑔≻    consumption:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback ====
+STAGE consumption / POLICY BUILDER policy / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : Z × Xa → ℝ
+       ─────────────────────────────────────────────────
+  out  𝑉≻ ∘ 𝑔≻
+           : {z_c, m, c ∈ Z × Xm × ℝ₊₊ | c ∈ Γ_c(m)} → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻)(z_c, m, c) = 𝑉≻(𝑔≻(z_c, m, c))
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  31  z_4 = z_c
+  32  a_4 = m - c  :: [id=savings]
+
+Definitions referenced
+  Xa    consumption:set:Xa
+  Xm    consumption:set:Xm
+  Z     consumption:set:Z
+  Γ_c   consumption:correspondence:Γ_c
+  𝑔≻    consumption:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / optimality:Aggregation ====
+STAGE consumption / POLICY BUILDER policy / optimality:Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻
+         : {z_c, m, c ∈ Z × Xm × ℝ₊₊ | c ∈ Γ_c(m)} → ℝ
+       ───────────────────────────────────────────────
+  out  (z_c, m, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(z_c, m, c))
+         : {z_c, m, c ∈ Z × Xm × ℝ₊₊ | c ∈ Γ_c(m)} → ℝ
+
+Rule
+  (z_c, m, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(z_c, m, c))
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  46  c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xm    consumption:set:Xm
+  Z     consumption:set:Z
+  β     consumption:parameter:β
+  𝑢     consumption:function:𝑢
+  Γ_c   consumption:correspondence:Γ_c
+  𝑔≻    consumption:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / optimality:Argmax ====
+STAGE consumption / POLICY BUILDER policy / optimality:Argmax
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (z_c, m, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(z_c, m, c))
+          : {z_c, m, c ∈ Z × Xm × ℝ₊₊ | c ∈ Γ_c(m)} → ℝ
+       ────────────────────────────────────────────────
+  out  𝑐  : Z × Xm → ℝ₊₊,  𝑐(z_c, m) ∈ Γ_c(m)
+
+Rule
+  𝑐(z_c, m) ∈ argmax_{cp ∈ Γ_c(m)} [𝑢(cp) + β · 𝑉≻(𝑔≻(z_c, m, cp))]
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  46  c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xm    consumption:set:Xm
+  Z     consumption:set:Z
+  β     consumption:parameter:β
+  𝑢     consumption:function:𝑢
+  Γ_c   consumption:correspondence:Γ_c
+  𝑔≻    consumption:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Evaluation ====
+STAGE consumption / POLICY BUILDER policy / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑐  : Z × Xm → ℝ₊₊,  𝑐(z_c, m) ∈ Γ_c(m)
+       ──────────────────────────────────────
+  out  𝑐  : Z × Xm → ℝ₊₊,  𝑐(z_c, m) ∈ Γ_c(m)
+
+Rule
+  𝑐(z_c, m) ∈ argmax_{cp ∈ Γ_c(m)} [𝑢(cp) + β · 𝑉≻(𝑔≻(z_c, m, cp))]
+  𝑐 : Z × Xm → ℝ₊₊,  𝑐(z_c, m) ∈ Γ_c(m)
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Xm    consumption:set:Xm
+  Z     consumption:set:Z
+  β     consumption:parameter:β
+  𝑢     consumption:function:𝑢
+  Γ_c   consumption:correspondence:Γ_c
+  𝑔≻    consumption:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn ====
+STAGE consumption / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Z × Xa
+       ───────────────────────────────────────
+  out  μ   : finite measure on Z × Xm
+
+Operations
+  1  Pushforward
+     in: μ≺                             out: μ
+     ─────────────────────────────────────────
+     rule: μ(B) = μ≺({z_3≺, a_3≺ ∈ Z × Xa | 𝑔≺(z_3≺, a_3≺, 𝑎𝑔𝑒_next≻()) ∈ B})
+
+Conditions
+  Pushforward  R · (a_3 + I) + (1 − τ) · 𝑦(z_3, age_next − 1) ∈ Xm
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  26  z_c = z_3
+  27  m   = R*(a_3 + I) + (1 - τ)*𝑦(z_3, age_next - 1)  :: [id=cash_on_hand]
+
+Definitions referenced
+  Xa    consumption:set:Xa
+  Xm    consumption:set:Xm
+  Z     consumption:set:Z
+  R     consumption:parameter:R
+  τ     consumption:parameter:τ
+  I     consumption:parameter:I
+  𝑦     consumption:function:𝑦
+  𝑔≺    consumption:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / Pushforward ====
+STAGE consumption / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on Z × Xa
+       ──────────────────────────────
+  out  μ   : finite measure on Z × Xm
+
+Rule
+  μ(B) = μ≺({z_3≺, a_3≺ ∈ Z × Xa | 𝑔≺(z_3≺, a_3≺, 𝑎𝑔𝑒_next≻()) ∈ B})
+
+Conditions
+  R · (a_3 + I) + (1 − τ) · 𝑦(z_3, age_next − 1) ∈ Xm
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  26  z_c = z_3
+  27  m   = R*(a_3 + I) + (1 - τ)*𝑦(z_3, age_next - 1)  :: [id=cash_on_hand]
+
+Definitions referenced
+  Xa    consumption:set:Xa
+  Xm    consumption:set:Xm
+  Z     consumption:set:Z
+  R     consumption:parameter:R
+  τ     consumption:parameter:τ
+  I     consumption:parameter:I
+  𝑦     consumption:function:𝑦
+  𝑔≺    consumption:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE consumption / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on Z × Xm
+       ────────────────────────────────────────
+  out  μ≻  : finite measure on Z × Xa
+
+At
+  𝑐  : Z × Xm → ℝ₊₊,  𝑐(z_c, m) ∈ Γ_c(m)
+
+Operations
+  1  Pushforward
+     in: μ                              out: μ≻
+     ──────────────────────────────────────────
+     rule: μ≻(B) = μ({z_c, m ∈ Z × Xm | 𝑔≻(z_c, m, 𝑐(z_c, m)) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  31  z_4 = z_c
+  32  a_4 = m - c  :: [id=savings]
+
+Definitions referenced
+  Xa    consumption:set:Xa
+  Xm    consumption:set:Xm
+  Z     consumption:set:Z
+  Γ_c   consumption:correspondence:Γ_c
+  𝑔≻    consumption:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE consumption / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on Z × Xm
+       ──────────────────────────────
+  out  μ≻  : finite measure on Z × Xa
+
+Rule
+  μ≻(B) = μ({z_c, m ∈ Z × Xm | 𝑔≻(z_c, m, 𝑐(z_c, m)) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  31  z_4 = z_c
+  32  a_4 = m - c  :: [id=savings]
+
+Definitions referenced
+  Xa    consumption:set:Xa
+  Xm    consumption:set:Xm
+  Z     consumption:set:Z
+  𝑔≻    consumption:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== consumption:set:Xa ====
+STAGE consumption / SET Xa
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xa  = ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  4  Xa := ℝ₊  :: ["assets"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== consumption:set:Xm ====
+STAGE consumption / SET Xm
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Xm  = ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  5  Xm := ℝ₊₊  :: ["cash on hand"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== consumption:set:Ages ====
+STAGE consumption / SET Ages
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Ages  = {0, …, J − 1}
+
+Conditions
+  J − 1 ∈ ℤ ∧ 0 ≤ J − 1
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  7  Ages := {0, …, J - 1}
+
+Definitions referenced
+  J     consumption:parameter:J
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== consumption:set:Clock ====
+STAGE consumption / SET Clock
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Clock  = {0, …, J}
+
+Conditions
+  J ∈ ℤ ∧ 0 ≤ J
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  8  Clock := {0, …, J}
+       :: ["the ages, and J, which the stage after the last age sends back"]
+
+Definitions referenced
+  J     consumption:parameter:J
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== consumption:set:Z ====
+STAGE consumption / SET Z
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Z  = {1, 2, 3}
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  9  Z := {1, 2, 3}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== consumption:parameter:J ====
+STAGE consumption / PARAMETER J
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  J  ∈ {J ∈ ℤ | J ≥ 1}
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  6  J : ℤ @ [1, inf)  :: ["number of ages"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== consumption:parameter:β ====
+STAGE consumption / PARAMETER β
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  β  ∈ (0, 1)
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  11  β : (0,1)  :: ["discount factor"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== consumption:parameter:ρ ====
+STAGE consumption / PARAMETER ρ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  ρ  ∈ (1, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  12  ρ : (1, inf)  :: ["coefficient of relative risk aversion"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== consumption:parameter:R ====
+STAGE consumption / PARAMETER R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  R  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  13  R : ℝ₊₊  :: ["gross return, an input of the date"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== consumption:parameter:w ====
+STAGE consumption / PARAMETER w
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  w  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  14  w : ℝ₊₊  :: ["wage, an input of the date"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== consumption:parameter:τ ====
+STAGE consumption / PARAMETER τ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  τ  ∈ [0, 1)
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  15  τ : [0,1)  :: ["tax rate, an input of the date"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== consumption:parameter:I ====
+STAGE consumption / PARAMETER I
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  I  ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  16  I : ℝ₊  :: ["inheritance, an input of the date"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== consumption:parameter:F ====
+STAGE consumption / PARAMETER F
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  F  ∈ Ages → ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  17  F : Ages → ℝ₊₊  :: ["age factor of productivity"]
+
+Definitions referenced
+  Ages  consumption:set:Ages
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== consumption:parameter:ζ ====
+STAGE consumption / PARAMETER ζ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  ζ  ∈ Z → ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  18  ζ : Z → ℝ₊₊  :: ["productivity in each state"]
+
+Definitions referenced
+  Z     consumption:set:Z
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== consumption:parameter:work ====
+STAGE consumption / PARAMETER work
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  work  ∈ Ages → {0, 1}
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  19  work : Ages → {0,1}
+        :: ["one at a working age, zero at a retirement age"]
+
+Definitions referenced
+  Ages  consumption:set:Ages
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== consumption:function:𝑢 ====
+STAGE consumption / FUNCTION 𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑢  : ℝ₊₊ → (−∞, 0),  c ↦ c^(1 − ρ)/(1 − ρ)
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  21  𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)  :: [id=util]
+
+Definitions referenced
+  ρ     consumption:parameter:ρ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== consumption:function:𝑦 ====
+STAGE consumption / FUNCTION 𝑦
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑦  : Z × Ages → ℝ,  (z, j) ↦ (work[j] · w + 1 − work[j]) · F[j] · ζ[z]
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  22  𝑦(z : Z, j : Ages) := (work[j]*w + 1 - work[j])*F[j]*ζ[z]
+        :: [id=income]
+
+Definitions referenced
+  Ages  consumption:set:Ages
+  Z     consumption:set:Z
+  w     consumption:parameter:w
+  F     consumption:parameter:F
+  ζ     consumption:parameter:ζ
+  work  consumption:parameter:work
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== consumption:correspondence:Γ_c ====
+STAGE consumption / CORRESPONDENCE Γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Γ_c  : ℝ₊₊ ⇉ ℝ₊₊,  x ↦ (0, x]
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  23  Γ_c(x : ℝ₊₊) := (0, x]  :: [id=feasible_consumption]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.1 ====
+STAGE consumption / FORWARD BLOCK arvl_to_dcsn / 1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  consumption.bl
+  26  z_c = z_3
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.cash_on_hand ====
+STAGE consumption / FORWARD BLOCK arvl_to_dcsn / cash_on_hand
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  R · (a_3 + I) + (1 − τ) · 𝑦(z_3, age_next − 1) ∈ Xm
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  27  m   = R*(a_3 + I) + (1 - τ)*𝑦(z_3, age_next - 1)  :: [id=cash_on_hand]
+
+Definitions referenced
+  Xm    consumption:set:Xm
+  R     consumption:parameter:R
+  τ     consumption:parameter:τ
+  I     consumption:parameter:I
+  𝑦     consumption:function:𝑦
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.1 ====
+STAGE consumption / FORWARD BLOCK dcsn_to_cntn / 1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  consumption.bl
+  31  z_4 = z_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.savings ====
+STAGE consumption / FORWARD BLOCK dcsn_to_cntn / savings
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  consumption.bl
+  32  a_4 = m - c  :: [id=savings]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.value ====
+STAGE consumption / BACKWARD BLOCK cntn_to_dcsn / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(z_c, m) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Ages
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  36  V   = 𝑢(c) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  Ages  consumption:set:Ages
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.clock ====
+STAGE consumption / BACKWARD BLOCK cntn_to_dcsn / clock
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(z_c, m) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Ages
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  37  age = age_next - 1  :: [id=clock]
+
+Definitions referenced
+  Ages  consumption:set:Ages
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.value ====
+STAGE consumption / BACKWARD BLOCK dcsn_to_arvl / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉≺(z_3, a_3) ∈ ℝ
+  𝑎𝑔𝑒≺ ∈ Ages
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  41  V[<] = V  :: [id=value]
+
+Definitions referenced
+  Ages  consumption:set:Ages
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.marginal_arrival ====
+STAGE consumption / BACKWARD BLOCK dcsn_to_arvl / marginal_arrival
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  42  D_{a_3}V[<] = R*D_{m}V  :: [id=marginal_arrival]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== policy.optimality ====
+STAGE consumption / POLICY BLOCK policy / optimality
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  consumption.bl
+  46  c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])  :: [id=optimality]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== consumption:g:arvl_to_dcsn ====
+STAGE consumption / LAW OF MOTION arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≺  : Z × Xa × Clock → Z × Xm,
+        (z_3, a_3, age_next)
+          ↦ (z_3, R · (a_3 + I) + (1 − τ) · 𝑦(z_3, age_next − 1))
+
+Conditions
+  R · (a_3 + I) + (1 − τ) · 𝑦(z_3, age_next − 1) ∈ Xm
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  26  z_c = z_3
+  27  m   = R*(a_3 + I) + (1 - τ)*𝑦(z_3, age_next - 1)  :: [id=cash_on_hand]
+
+Definitions referenced
+  Xa     consumption:set:Xa
+  Xm     consumption:set:Xm
+  Clock  consumption:set:Clock
+  Z      consumption:set:Z
+  R      consumption:parameter:R
+  τ      consumption:parameter:τ
+  I      consumption:parameter:I
+  𝑦      consumption:function:𝑦
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== consumption:g:dcsn_to_cntn ====
+STAGE consumption / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : {z_c, m, c ∈ Z × Xm × ℝ₊₊ | c ∈ Γ_c(m)} → Z × Xa,
+        (z_c, m, c) ↦ (z_c, m − c)
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  31  z_4 = z_c
+  32  a_4 = m - c  :: [id=savings]
+
+Definitions referenced
+  Xa    consumption:set:Xa
+  Xm    consumption:set:Xm
+  Z     consumption:set:Z
+  Γ_c   consumption:correspondence:Γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== consumption:G:cntn_to_dcsn ====
+STAGE consumption / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, age_next≻, z_c, m, c ∈ ℝ × Clock × Z × Xm × ℝ₊₊ | c ∈ Γ_c(m)}
+          → ℝ × Ages,
+        (V≻, age_next≻, z_c, m, c) ↦ (𝑢(c) + β · V≻, age_next≻ − 1)
+
+Conditions
+  𝑉(z_c, m) ∈ ℝ
+  𝑎𝑔𝑒 ∈ Ages
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  36  V   = 𝑢(c) + β*V[>]  :: [id=value]
+  37  age = age_next - 1   :: [id=clock]
+
+Definitions referenced
+  Xm     consumption:set:Xm
+  Ages   consumption:set:Ages
+  Clock  consumption:set:Clock
+  Z      consumption:set:Z
+  β      consumption:parameter:β
+  𝑢      consumption:function:𝑢
+  Γ_c    consumption:correspondence:Γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== consumption:G:dcsn_to_arvl ====
+STAGE consumption / VALUE AGGREGATOR dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≺  : ℝ × Ages × Z × Xa → ℝ × Ages,  (V, age, z_3, a_3) ↦ (V, age)
+
+Conditions
+  𝑉≺(z_3, a_3) ∈ ℝ
+  𝑎𝑔𝑒≺ ∈ Ages
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  41  V[<] = V                :: [id=value]
+  42  D_{a_3}V[<] = R*D_{m}V  :: [id=marginal_arrival]
+
+Definitions referenced
+  Xa    consumption:set:Xa
+  Ages  consumption:set:Ages
+  Z     consumption:set:Z
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== consumption:G:policy ====
+STAGE consumption / VALUE AGGREGATOR policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, z_c, m, c ∈ ℝ × Z × Xm × ℝ₊₊ | c ∈ Γ_c(m)} → ℝ,
+        (V≻, z_c, m, c) ↦ 𝑢(c) + β · V≻
+──────────────────────────────────────────────────────────────────────────────
+Source  consumption.bl
+  46  c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  Xm    consumption:set:Xm
+  Z     consumption:set:Z
+  β     consumption:parameter:β
+  𝑢     consumption:function:𝑢
+  Γ_c   consumption:correspondence:Γ_c
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

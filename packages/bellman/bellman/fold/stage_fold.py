@@ -35,7 +35,13 @@ from __future__ import annotations
 import dataclasses
 from dataclasses import dataclass
 
-from bellman.distributions.edges import drawn_edges, factorization_obligation, joint_distribution
+from bellman.distributions.edges import (
+    drawn_edges,
+    factorization_obligation,
+    joint_distribution,
+    law_arguments,
+    shock_application,
+)
 from bellman.distributions.families import (
     NORMAL,
     bernoulli_probability,
@@ -51,6 +57,7 @@ from bellman.distributions.families import (
 from bellman.fold.backward import fold_backward_block
 from bellman.fold.block_lines import (
     block_direction,
+    blocks_in_file_order,
     blocks,
     header_wire_sorts,
 )
@@ -290,7 +297,9 @@ def _line_obligations(ctx, blocks, lines, table, obligations):
             # occurrences of one term on two lines are two conditions,
             # each owned by the piece realizing its line
             ctx.conditions((core,), obligations, piece_identity(record.address), block=box.name)
-            for call in external_calls(core, ctx.function_names):
+            for call in external_calls(core, set(ctx.law_formals) | ctx.function_names):
+                if ctx.role(ctx.resolve(call, box.name)) in VALUE_ROLES:
+                    continue
                 obligations.append(
                     (
                         "external-callable-signature-and-provider",
@@ -493,7 +502,7 @@ class _StageBlocks:
             self.ctx, self.blocks, self.directions
         )
         self.owners, self.ordered, self.edges = _forward_edges(
-            self.ctx, self.blocks, self.directions, self.definitions
+            self.ctx, self.blocks, self.directions, self.definitions, self.lines, self.items
         )
         self.sections, self.labels, self.bases = _branches(
             self.ctx, self.blocks, self.directions, self.lines, self.items
@@ -538,7 +547,7 @@ def _forward_blocks(ctx, blocks, directions):
     return by_target, g_identity
 
 
-def _forward_edges(ctx, blocks, directions, definitions):
+def _forward_edges(ctx, blocks, directions, definitions, lines, items):
     """The owners of the shocks, the owners in dependency order, and the edge
     each forward builder draws its shocks on (AMD-SG-009 §2)."""
 
@@ -568,6 +577,35 @@ def _forward_edges(ctx, blocks, directions, definitions):
         forward,
         refuse,
     )
+    if ctx.law_formals:
+        headers = {box.name: header_identities(box).inputs for box in blocks}
+
+        def resolve_constant(term, block, _address):
+            if not isinstance(term, T.Sym):
+                return None
+            name, side = next(iter(symbol_occurrences(term)), (None, None))
+            identity = ctx.resolve(name, block, side)
+            return identity if identity in headers[block] and ctx.ports[identity].constant else None
+
+        actuals = law_arguments(
+            ctx.law_formals,
+            assignment,
+            (
+                (block, record.address, statement_core(items[record.address]))
+                for block, held in lines.items()
+                for _, record in held
+            ),
+            resolve_constant,
+            refuse,
+        )
+        bound = {
+            owner.identity: dataclasses.replace(
+                owner, actuals=actuals.get(owner.subjects[0], ())
+            )
+            for owner in owners
+        }
+        owners = tuple(bound[owner.identity] for owner in owners)
+        ordered = tuple(bound[owner.identity] for owner in ordered)
     edges = {}
     for box in blocks:
         if directions[box.name] == "forward":
@@ -1019,8 +1057,9 @@ def _statement_definitions(item, ctx, written, derived):
                 address=written,
             ),
         )
-    if isinstance(core, T.Law):
+    if isinstance(core, (T.Law, T.ParameterizedLaw)):
         subjects = tuple(core.subjects)
+        formals = core.arguments if isinstance(core, T.ParameterizedLaw) else ()
         # the coordinates are the declaration's state, control and shock
         # arguments; the retained Law keeps its subject (AMD-SG-009 §1)
         return (
@@ -1029,7 +1068,7 @@ def _statement_definitions(item, ctx, written, derived):
                 kind="distribution",
                 coordinates=tuple(
                     (name, ctx.sets.get(identity))
-                    for name, identity in family_term_arguments(core.law, ctx)
+                    for name, identity in family_term_arguments(core.law, ctx, formals)
                 ),
                 equations=(core,),
                 tags=_declared_tags(item.annot),
@@ -1321,6 +1360,9 @@ def law_of_motion_equations(ctx, block, equations):
         return result
 
     def substitute(term):
+        application = shock_application(term, ctx.law_formals)
+        if application is not None:
+            return T.Sym(T.Constant(application[0]))
         if isinstance(term, T.Sym) and isinstance(term.symbol, (T.Constant, T.Variable)):
             spelling = next(iter(symbol_occurrences(term)), None)
             return definition(spelling) if spelling in definitions else term
@@ -1349,4 +1391,14 @@ def law_of_motion_equations(ctx, block, equations):
             return dataclasses.replace(core, core=equation(core.core))
         return dataclasses.replace(core, rhs=definition(defined_name(core)))
 
-    return tuple(equation(core) for core in equations)
+    resolved_equations = tuple(equation(core) for core in equations)
+    box = next(b for b in blocks_in_file_order(ctx.stage_object) if b.name == block)
+    inputs, outputs = header_identities(box)
+    defined = {wire for core in resolved_equations for wire in ctx.defined(core, block)}
+    source = {wire.field: wire for wire in inputs if ctx.role(wire) == "state"}
+    projections = tuple(
+        T.Equation(ctx.symbol(wire), ctx.symbol(source[wire.field]))
+        for wire in outputs
+        if wire not in defined and ctx.role(wire) == "state" and wire.field in source
+    )
+    return resolved_equations + projections

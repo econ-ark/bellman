@@ -1,0 +1,22 @@
+@methods: entrepreneur_ageing
+# The methods of the stage entrepreneur_ageing as an addition to
+# entrepreneur_ageing.bl: the exact sum over the new draws of the two
+# abilities in the arrival expectation, the sum over remaining young and
+# ageing in the decision value, a histogram on the asset grid for the measure
+# that `arvl_to_dcsn` pushes forward, and the deterministic transition of the
+# forward decision builder `dcsn_to_cntn`, which branches over the shock s.
+# No method adds a line, and the package refuses a block with an empty body,
+# so every entry is a line at file level, which the package attaches to the
+# block that the first segment of its path names; each of the two
+# expectations is named by its block id and its operator, which types every
+# occurrence of the operator in that block.
+
+n_a : ℕ        :: ["number of points of the asset grid"]
+a_min : Xa     :: ["lowest point of the asset grid, the borrowing limit"]
+a_max : Xa     :: ["highest point of the asset grid"]
+
+dcsn_to_arvl.E_y_n_θ_n.method : !exact_markov
+cntn_to_dcsn.E_s.method : !sum
+arvl_to_dcsn.method : !histogram
+arvl_to_dcsn.grid : !Cartesian(a=(a_min, a_max, n_a))        # the coordinate a of the codomain of arvl_to_dcsn; y and θ take no factor
+dcsn_to_cntn.method : !deterministic        # the method of a block whose body is two branches with labels

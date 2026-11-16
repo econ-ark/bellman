@@ -54,6 +54,7 @@ from bellman.stage.grids import (
     expectation_names,
     factor_form_of,
     grid_domain,
+    grid_sum_operands,
     parameters_read_at,
     place_row,
     point_in_declared_set,
@@ -352,6 +353,15 @@ def _check_grid_names(stage, place, record, grid):
 
     for factor in grid_factors(grid):
         for argument in _factor_arguments(factor):
+            if isinstance(argument, T.ExpressionArgument):
+                if grid_sum_operands(stage, place, argument) is None:
+                    refuse(
+                        factor,
+                        f"writes the sum {to_source(argument)}",
+                        "write one scalar constant supplied at continuation, named as in the "
+                        "block header, plus one scalar setting declared in the methods file",
+                    )
+                continue
             if isinstance(argument, T.Literal):
                 refuse(
                     factor,
@@ -488,9 +498,10 @@ def check_bound_values(stage, values):
         for d in stage.definitions.values()
         if d.kind in ("set", "correspondence")
     }
+    declared = setting_sets(stage)
     for place, held, _ in _typed_places(stage):
         row = bound_row(stage, held.method.name) if held.method is not None else None
-        for name in dict.fromkeys(setting_names(held)):
+        for name in dict.fromkeys(setting_names(held, declared=declared)):
             if name not in values and name not in defined and name not in expectations:
                 named = (
                     f"the method !{held.method.name} at that place names"
@@ -612,19 +623,30 @@ def _check_grid_bounds(stage, place, held, values, domain):
     for factor in grid_factors(held.grid):
         declared = domain.states.get(factor.coordinate)
         if isinstance(factor, T.Spaced):
-            lower, upper, count = (
-                _valued(part, values) for part in (factor.lower, factor.upper, factor.count)
+            lower, upper = (
+                None if isinstance(part, T.ExpressionArgument) else _valued(part, values)
+                for part in (factor.lower, factor.upper)
             )
-            if not (_finite_real(lower) and _finite_real(upper)) or lower >= upper:
+            known = tuple(
+                point for part, point in zip((factor.lower, factor.upper), (lower, upper))
+                if not isinstance(part, T.ExpressionArgument)
+            )
+            if not all(_finite_real(point) for point in known) or (
+                len(known) == 2 and lower >= upper
+            ):
                 refuse(
                     factor,
                     f"has the bounds {lower!r} and {upper!r}, which are not two finite reals in "
                     "order",
                     "write a lower bound below the upper bound",
                 )
-            if not _positive_integer(count) or count < 2:
-                refuse(factor, f"has the count {count!r}", "write an integer count of at least two")
-            for point in (lower, upper):
+            if not isinstance(factor.count, T.ExpressionArgument):
+                count = _valued(factor.count, values)
+                if not _positive_integer(count) or count < 2:
+                    refuse(
+                        factor, f"has the count {count!r}", "write an integer count of at least two"
+                    )
+            for point in known:
                 inside(factor, point, declared)
         elif isinstance(factor, T.Listed) and factor.nodes in values:
             points = values[factor.nodes]
@@ -643,7 +665,9 @@ def _check_grid_bounds(stage, place, held, values, domain):
                 )
             for point in points:
                 inside(factor, point, declared)
-        elif isinstance(factor, T.Feasible):
+        elif isinstance(factor, T.Feasible) and not isinstance(
+            factor.count, T.ExpressionArgument
+        ):
             count = _valued(factor.count, values)
             if not _positive_integer(count) or count < 2:
                 refuse(factor, f"has the count {count!r}", "write an integer count of at least two")

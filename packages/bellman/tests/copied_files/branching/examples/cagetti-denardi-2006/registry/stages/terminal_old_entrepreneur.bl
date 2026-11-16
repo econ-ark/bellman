@@ -1,0 +1,24 @@
+@stage: terminal_old_entrepreneur
+
+# The continuation value of an old entrepreneur who repays, at the end of the
+# terminal year, the terminal period periods[0]; in every other year the next
+# year's entrepreneur_death supplies it. The arrival fields carry the tag to
+# and are reached from old_entrepreneur's a_oe_ed, θ_oe_ed by the connector of
+# the terminal period's own entry of trellis.yml.
+
+Xa := ℝ₊
+Θ  := ℝ₊         :: ["entrepreneurial ability; the nonnegative reals stand in for its two levels, 0 and θ_e"]
+
+[id=arvl_to_dcsn, (a_to : Xa, θ_to : Θ) : !arvl -> (a : Xa, θ : Θ) : !dcsn] {
+    a = a_to
+    θ = θ_to
+}
+
+# V[>] is the terminal boundary data, zero, supplied at realization
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu) -> (V : ℝ @ !vlu) : !dcsn] {
+    V = V[>]                             :: [id=value]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<] = V                             :: [id=value]
+}

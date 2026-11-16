@@ -39,6 +39,8 @@ This identity maps a sequence of exact iterates of $\mathbb T_1$ to one of $\mat
 
 <a id="2-worked-examples-recognising-semi-conjugacy-in-everyday-dp"></a>
 
+When a repeated operator also updates fields such as a borrowing bound, its fixed-point problem is posed on the complete pair of those fields and the remaining representing functions. A comparison of value functions alone omits this update unless it is held fixed. [Periods and the trellis](./08-periods-and-trellis.md) states the corresponding partial map.
+
 ## 2. Candidate reformulations
 
 ### 2.1 The post-decision reformulation (EGM)

@@ -1,0 +1,469 @@
+==== wires ====
+Sort('port:cntn:V', 'field', perch='cntn', role='value', domain='ℝ', coordinates=('port:cntn:m_next',), derivatives=())
+Sort('port:dcsn:V', 'field', perch='dcsn', role='value', domain='ℝ', coordinates=('port:dcsn:k_d',), derivatives=())
+Sort('port:arvl:V', 'field', perch='arvl', role='value', domain='ℝ', coordinates=('port:arvl:k',), derivatives=())
+Sort('port:dcsn:ς', 'field', perch='dcsn', role='control', domain='[0, 1]', coordinates=(), derivatives=())
+Sort('port:arvl:k', 'field', perch='arvl', role='state', domain='ℝ₊', coordinates=(), derivatives=())
+Sort('port:shck:Ψ', 'field', perch='shck', role='shock', domain='ℝ₊₊', coordinates=(), derivatives=())
+Sort('port:shck:θ', 'field', perch='shck', role='shock', domain='ℝ₊₊', coordinates=(), derivatives=())
+Sort('port:dcsn:k_d', 'field', perch='dcsn', role='state', domain='ℝ₊', coordinates=(), derivatives=())
+Sort('port:cntn:m_next', 'field', perch='cntn', role='state', domain='ℝ₊₊', coordinates=(), derivatives=())
+Sort('port:function:cntn:V', 'function', perch='cntn', role='value', domain='ℝ', coordinates=('port:cntn:m_next',), derivatives=())
+Sort('port:function:dcsn:V', 'function', perch='dcsn', role='value', domain='ℝ', coordinates=('port:dcsn:k_d',), derivatives=('port:dcsn:k_d',))
+Sort('port:function:arvl:V', 'function', perch='arvl', role='value', domain='ℝ', coordinates=('port:arvl:k',), derivatives=())
+Sort('policy:Evaluation:ς:result', 'function', perch='dcsn', role='control', domain='[0, 1]', coordinates=('port:dcsn:k_d',), derivatives=())
+Sort('port:function:cntn:V:g', 'function', perch='cntn', role='value', domain='ℝ', coordinates=('port:dcsn:k_d', 'port:shck:Ψ', 'port:shck:θ'), derivatives=())
+Sort('cntn_to_dcsn.value:Expectation:1:result', 'function', perch=None, role='value', domain=None, coordinates=('port:dcsn:k_d',), derivatives=())
+Sort('cntn_to_dcsn:Aggregation:V:result', 'function', perch=None, role='value', domain=None, coordinates=('port:dcsn:k_d',), derivatives=())
+Sort('port:function:dcsn:V:g', 'function', perch='dcsn', role='value', domain='ℝ', coordinates=('port:arvl:k',), derivatives=())
+Sort('dcsn_to_arvl:Aggregation:V:result', 'function', perch=None, role='value', domain=None, coordinates=('port:arvl:k',), derivatives=())
+Sort('port:function:cntn:V:g:policy', 'function', perch='cntn', role='value', domain='ℝ', coordinates=('port:dcsn:k_d', 'port:dcsn:ς', 'port:shck:Ψ', 'port:shck:θ'), derivatives=())
+Sort('policy.foc:Aggregation:1:result', 'function', perch=None, role='value', domain=None, coordinates=('port:dcsn:k_d', 'port:dcsn:ς', 'port:shck:Ψ', 'port:shck:θ'), derivatives=())
+Sort('policy.foc:Expectation:1:result', 'function', perch=None, role='value', domain=None, coordinates=('port:dcsn:k_d', 'port:dcsn:ς'), derivatives=())
+Sort('policy.foc:Aggregation:ς:result', 'function', perch='dcsn', role='control', domain='[0, 1]', coordinates=('port:dcsn:k_d',), derivatives=())
+Sort('port:measure:arvl', 'measure', perch='arvl', role='measure', domain=None, coordinates=('port:arvl:k',), derivatives=())
+Sort('port:measure:dcsn', 'measure', perch='dcsn', role='measure', domain=None, coordinates=('port:dcsn:k_d',), derivatives=())
+Sort('port:measure:cntn', 'measure', perch='cntn', role='measure', domain=None, coordinates=('port:cntn:m_next',), derivatives=())
+Sort('port:measure:dcsn:with-distribution:Ψ_θ', 'measure', perch='dcsn', role='measure', domain=None, coordinates=('port:dcsn:k_d', 'port:shck:Ψ', 'port:shck:θ'), derivatives=())
+
+==== conditions of the stage ====
+finite-real-arithmetic (required): cntn_to_dcsn.marginal; Mul; ¬(¬(D_{m_next}V[>] ∈ ℝ) ∧ ς*Ψ + (1 - ς)*R ∈ [0, 0])
+    The operands of Mul at cntn_to_dcsn.marginal must have a defined result.
+finite-real-arithmetic (required): policy.foc; Mul; ¬(¬(D_{m_next}V[>] ∈ ℝ) ∧ Ψ - R ∈ [0, 0])
+    The operands of Mul at policy.foc must have a defined result.
+covariance-positive-semidefinite (required): port:distribution:Ψ_θ
+    The covariance matrix of port:distribution:Ψ_θ must be positive semidefinite.
+joint-distribution-factorization (required): port:distribution:Ψ_θ; dcsn_to_cntn
+    The joint distribution for dcsn_to_cntn is assumed to be the product of the declared conditional distributions given their named parents and the source coordinates: (Ψ, θ) given (k_d, ς) by port:distribution:Ψ_θ.
+expectation-integrability (required): cntn_to_dcsn.value:Expectation:1; cntn_to_dcsn.value; V[>]; port:distribution:Ψ_θ
+    The integrand V[>] at cntn_to_dcsn.value must be integrable for cntn_to_dcsn.value:Expectation:1 under port:distribution:Ψ_θ.
+aggregation-admissibility (required): cntn_to_dcsn:Aggregation; cntn_to_dcsn.value; cntn_to_dcsn:Aggregation:V:result; V(k_d) ∈ ℝ
+    The equations at cntn_to_dcsn.value must define cntn_to_dcsn:Aggregation on its declared inputs with values in its declared output sets.
+marginal-reading (required): cntn_to_dcsn.marginal
+    the right side of each derivative line equals the derivative, in the named coordinate, of the value the builder writes, under the envelope conditions: concavity of the continuation value, interiority of the maximizer or the multiplier's term at a binding constraint, differentiability of the reward in the control, a measurable selection of the policy, and differentiability of the value at the point read; listed and not checked
+aggregation-admissibility (required): dcsn_to_arvl:Aggregation; dcsn_to_arvl.value; dcsn_to_arvl:Aggregation:V:result; V≺(k) ∈ ℝ
+    The equations at dcsn_to_arvl.value must define dcsn_to_arvl:Aggregation on its declared inputs with values in its declared output sets.
+expectation-integrability (required): policy.foc:Expectation:1; policy.foc; D_{m_next}V[>]*(Ψ - R); port:distribution:Ψ_θ
+    The integrand D_{m_next}V[>]*(Ψ - R) at policy.foc must be integrable for policy.foc:Expectation:1 under port:distribution:Ψ_θ.
+law-support (required): port:shck:Ψ; port:shck:θ
+    The distribution of Ψ, θ gives probability only to values in the declared shock sets.
+continuation-input (required): port:cntn:V; ℝ; port:cntn:m_next
+    The representing function for V[>] must be measurable on its declared domain, depend only on (m_next) in that order, and take values in ℝ.
+
+==== initial backward: conditions ====
+the same as conditions of the stage
+
+==== initial backward builder: listing ====
+cntn_to_dcsn
+  cntn_to_dcsn.value
+  cntn_to_dcsn.marginal
+dcsn_to_arvl
+  dcsn_to_arvl.value
+policy
+  policy.foc
+
+==== initial backward builder: wiring ====
+inputs: port:cntn:V
+outputs: port:arvl:V, port:dcsn:ς
+cntn_to_dcsn
+    reads: port:cntn:V
+    writes: port:dcsn:V
+    declares: port:cntn:V, port:dcsn:ς
+    inside:
+        inputs: port:cntn:V
+        outputs: port:dcsn:V
+        cntn_to_dcsn.value
+            reads: port:cntn:V
+            writes: port:dcsn:V
+        cntn_to_dcsn.marginal
+            reads: port:dcsn:V, port:cntn:V
+            writes: none
+dcsn_to_arvl
+    reads: port:dcsn:V
+    writes: port:arvl:V
+    declares: port:dcsn:V
+    inside:
+        inputs: port:dcsn:V
+        outputs: port:arvl:V
+        dcsn_to_arvl.value
+            reads: port:dcsn:V
+            writes: port:arvl:V
+policy
+    reads: port:cntn:V
+    writes: port:dcsn:ς
+    declares: port:cntn:V
+    inside:
+        inputs: port:cntn:V
+        outputs: port:dcsn:ς
+        policy.foc
+            reads: port:cntn:V
+            writes: port:dcsn:ς
+
+==== initial backward sub-builder: listing ====
+cntn_to_dcsn.value
+cntn_to_dcsn.marginal
+dcsn_to_arvl.value
+policy.foc
+
+==== initial backward sub-builder: wiring ====
+inputs: port:cntn:V
+outputs: port:arvl:V, port:dcsn:ς
+cntn_to_dcsn.value
+    reads: port:cntn:V
+    writes: port:dcsn:V
+cntn_to_dcsn.marginal
+    reads: port:dcsn:V, port:cntn:V
+    writes: none
+dcsn_to_arvl.value
+    reads: port:dcsn:V
+    writes: port:arvl:V
+policy.foc
+    reads: port:cntn:V
+    writes: port:dcsn:ς
+
+==== initial backward primitive: listing ====
+the same as initial backward sub-builder: listing
+
+==== initial backward primitive: wiring ====
+the same as initial backward sub-builder: wiring
+
+==== initial backward combined: listing ====
+cntn_to_dcsn.value
+dcsn_to_arvl.value
+policy.foc
+
+==== initial backward combined: wiring ====
+inputs: port:cntn:V
+outputs: port:arvl:V, port:dcsn:ς
+cntn_to_dcsn.value
+    reads: port:cntn:V
+    writes: port:dcsn:V
+dcsn_to_arvl.value
+    reads: port:dcsn:V
+    writes: port:arvl:V
+policy.foc
+    reads: port:cntn:V
+    writes: port:dcsn:ς
+
+==== initial backward factored: listing ====
+the same as initial backward sub-builder: listing
+
+==== initial backward factored: wiring ====
+the same as initial backward sub-builder: wiring
+
+==== initial forward: conditions ====
+covariance-positive-semidefinite (required): port:distribution:Ψ_θ
+    The covariance matrix of port:distribution:Ψ_θ must be positive semidefinite.
+joint-distribution-factorization (required): port:distribution:Ψ_θ; dcsn_to_cntn
+    The joint distribution for dcsn_to_cntn is assumed to be the product of the declared conditional distributions given their named parents and the source coordinates: (Ψ, θ) given (k_d, ς) by port:distribution:Ψ_θ.
+law-support (required): port:shck:Ψ; port:shck:θ
+    The distribution of Ψ, θ gives probability only to values in the declared shock sets.
+continuation-input (required): port:cntn:V; ℝ; port:cntn:m_next
+    The representing function for V[>] must be measurable on its declared domain, depend only on (m_next) in that order, and take values in ℝ.
+
+==== initial forward builder: listing ====
+arvl_to_dcsn
+  arvl_to_dcsn.1
+dcsn_to_cntn
+  dcsn_to_cntn.1
+
+==== initial forward builder: wiring ====
+inputs: port:arvl:k, port:shck:Ψ, port:shck:θ
+outputs: port:cntn:m_next
+arvl_to_dcsn
+    reads: port:arvl:k
+    writes: port:dcsn:k_d
+    declares: port:arvl:k
+    inside:
+        inputs: port:arvl:k
+        outputs: port:dcsn:k_d
+        arvl_to_dcsn.1
+            reads: port:arvl:k
+            writes: port:dcsn:k_d
+dcsn_to_cntn
+    reads: port:dcsn:k_d, port:shck:Ψ, port:shck:θ
+    writes: port:cntn:m_next
+    declares: port:dcsn:k_d, port:dcsn:ς, port:shck:Ψ, port:shck:θ
+    inside:
+        inputs: port:dcsn:k_d, port:shck:Ψ, port:shck:θ
+        outputs: port:cntn:m_next
+        dcsn_to_cntn.1
+            reads: port:dcsn:k_d, port:shck:Ψ, port:shck:θ
+            writes: port:cntn:m_next
+
+==== initial forward sub-builder: listing ====
+arvl_to_dcsn.1
+dcsn_to_cntn.1
+
+==== initial forward sub-builder: wiring ====
+inputs: port:arvl:k, port:shck:Ψ, port:shck:θ
+outputs: port:cntn:m_next
+arvl_to_dcsn.1
+    reads: port:arvl:k
+    writes: port:dcsn:k_d
+dcsn_to_cntn.1
+    reads: port:dcsn:k_d, port:shck:Ψ, port:shck:θ
+    writes: port:cntn:m_next
+
+==== initial forward primitive: listing ====
+the same as initial forward sub-builder: listing
+
+==== initial forward primitive: wiring ====
+the same as initial forward sub-builder: wiring
+
+==== initial forward combined: listing ====
+the same as initial forward sub-builder: listing
+
+==== initial forward combined: wiring ====
+the same as initial forward sub-builder: wiring
+
+==== initial forward factored: listing ====
+the same as initial forward sub-builder: listing
+
+==== initial forward factored: wiring ====
+the same as initial forward sub-builder: wiring
+
+==== builders backward: conditions ====
+the same as conditions of the stage
+
+==== builders backward builder: listing ====
+cntn_to_dcsn
+  Pullback of 𝑉≻ along 𝑔 at 𝜍
+  Expectation of the statement value under the distribution of Ψ_θ
+  Value aggregation 𝐺
+  Evaluation of 𝑉
+dcsn_to_arvl
+  Pullback of 𝑉 along the law of motion 𝑔
+  Value aggregation 𝐺
+  Evaluation of 𝑉≺
+policy
+  Pullback of 𝑉≻ along the law of motion 𝑔
+  Apply 𝐺 of the statement foc, occurrence 1
+  Expectation of the statement foc under the distribution of Ψ_θ
+  Apply 𝐺 of the statement foc
+  Evaluation of 𝜍
+
+==== builders backward builder: wiring ====
+inputs: port:function:cntn:V
+outputs: port:function:arvl:V, policy:Evaluation:ς:result
+cntn_to_dcsn
+    reads: port:function:cntn:V
+    writes: port:function:dcsn:V
+    inside:
+        inputs: port:function:cntn:V
+        outputs: port:function:dcsn:V
+        cntn_to_dcsn:Pullback [Pullback]
+            reads: port:function:cntn:V
+            writes: port:function:cntn:V:g
+            refers to: port:g:dcsn_to_cntn, port:function:dcsn:ς
+        cntn_to_dcsn.value:Expectation:1 [Expectation]
+            reads: port:function:cntn:V:g
+            writes: cntn_to_dcsn.value:Expectation:1:result
+            refers to: port:distribution:Ψ_θ, port:function:dcsn:ς
+        cntn_to_dcsn:Aggregation [Aggregation]
+            reads: cntn_to_dcsn.value:Expectation:1:result
+            writes: cntn_to_dcsn:Aggregation:V:result
+            refers to: port:G:cntn_to_dcsn, port:function:dcsn:ς
+        cntn_to_dcsn:Evaluation [Evaluation]
+            reads: cntn_to_dcsn:Aggregation:V:result
+            writes: port:function:dcsn:V
+dcsn_to_arvl
+    reads: port:function:dcsn:V
+    writes: port:function:arvl:V
+    inside:
+        inputs: port:function:dcsn:V
+        outputs: port:function:arvl:V
+        dcsn_to_arvl:Pullback [Pullback]
+            reads: port:function:dcsn:V
+            writes: port:function:dcsn:V:g
+            refers to: port:g:arvl_to_dcsn
+        dcsn_to_arvl:Aggregation [Aggregation]
+            reads: port:function:dcsn:V:g
+            writes: dcsn_to_arvl:Aggregation:V:result
+            refers to: port:G:dcsn_to_arvl
+        dcsn_to_arvl:Evaluation [Evaluation]
+            reads: dcsn_to_arvl:Aggregation:V:result
+            writes: port:function:arvl:V
+policy
+    reads: port:function:cntn:V
+    writes: policy:Evaluation:ς:result
+    inside:
+        inputs: port:function:cntn:V
+        outputs: policy:Evaluation:ς:result
+        policy:Pullback [Pullback]
+            reads: port:function:cntn:V
+            writes: port:function:cntn:V:g:policy
+            refers to: port:g:dcsn_to_cntn
+        policy.foc:Aggregation:1 [Aggregation]
+            reads: port:function:cntn:V:g:policy
+            writes: policy.foc:Aggregation:1:result
+            refers to: port:G:policy
+        policy.foc:Expectation:1 [Expectation]
+            reads: policy.foc:Aggregation:1:result
+            writes: policy.foc:Expectation:1:result
+            refers to: port:distribution:Ψ_θ
+        policy.foc:Aggregation [Aggregation]
+            reads: policy.foc:Expectation:1:result
+            writes: policy.foc:Aggregation:ς:result
+            refers to: port:G:policy
+        policy:Evaluation [Evaluation]
+            reads: policy.foc:Aggregation:ς:result
+            writes: policy:Evaluation:ς:result
+
+==== builders backward sub-builder: listing ====
+Pullback of 𝑉≻ along 𝑔 at 𝜍
+Expectation of the statement value under the distribution of Ψ_θ
+Value aggregation 𝐺
+Evaluation of 𝑉
+Pullback of 𝑉 along the law of motion 𝑔
+Value aggregation 𝐺
+Evaluation of 𝑉≺
+Pullback of 𝑉≻ along the law of motion 𝑔
+Apply 𝐺 of the statement foc, occurrence 1
+Expectation of the statement foc under the distribution of Ψ_θ
+Apply 𝐺 of the statement foc
+Evaluation of 𝜍
+
+==== builders backward sub-builder: wiring ====
+inputs: port:function:cntn:V
+outputs: port:function:arvl:V, policy:Evaluation:ς:result
+cntn_to_dcsn:Pullback [Pullback]
+    reads: port:function:cntn:V
+    writes: port:function:cntn:V:g
+    refers to: port:g:dcsn_to_cntn, port:function:dcsn:ς
+cntn_to_dcsn.value:Expectation:1 [Expectation]
+    reads: port:function:cntn:V:g
+    writes: cntn_to_dcsn.value:Expectation:1:result
+    refers to: port:distribution:Ψ_θ, port:function:dcsn:ς
+cntn_to_dcsn:Aggregation [Aggregation]
+    reads: cntn_to_dcsn.value:Expectation:1:result
+    writes: cntn_to_dcsn:Aggregation:V:result
+    refers to: port:G:cntn_to_dcsn, port:function:dcsn:ς
+cntn_to_dcsn:Evaluation [Evaluation]
+    reads: cntn_to_dcsn:Aggregation:V:result
+    writes: port:function:dcsn:V
+dcsn_to_arvl:Pullback [Pullback]
+    reads: port:function:dcsn:V
+    writes: port:function:dcsn:V:g
+    refers to: port:g:arvl_to_dcsn
+dcsn_to_arvl:Aggregation [Aggregation]
+    reads: port:function:dcsn:V:g
+    writes: dcsn_to_arvl:Aggregation:V:result
+    refers to: port:G:dcsn_to_arvl
+dcsn_to_arvl:Evaluation [Evaluation]
+    reads: dcsn_to_arvl:Aggregation:V:result
+    writes: port:function:arvl:V
+policy:Pullback [Pullback]
+    reads: port:function:cntn:V
+    writes: port:function:cntn:V:g:policy
+    refers to: port:g:dcsn_to_cntn
+policy.foc:Aggregation:1 [Aggregation]
+    reads: port:function:cntn:V:g:policy
+    writes: policy.foc:Aggregation:1:result
+    refers to: port:G:policy
+policy.foc:Expectation:1 [Expectation]
+    reads: policy.foc:Aggregation:1:result
+    writes: policy.foc:Expectation:1:result
+    refers to: port:distribution:Ψ_θ
+policy.foc:Aggregation [Aggregation]
+    reads: policy.foc:Expectation:1:result
+    writes: policy.foc:Aggregation:ς:result
+    refers to: port:G:policy
+policy:Evaluation [Evaluation]
+    reads: policy.foc:Aggregation:ς:result
+    writes: policy:Evaluation:ς:result
+
+==== builders backward primitive: listing ====
+the same as builders backward sub-builder: listing
+
+==== builders backward primitive: wiring ====
+the same as builders backward sub-builder: wiring
+
+==== builders backward combined: listing ====
+the same as builders backward sub-builder: listing
+
+==== builders backward combined: wiring ====
+the same as builders backward sub-builder: wiring
+
+==== builders backward factored: listing ====
+the same as builders backward sub-builder: listing
+
+==== builders backward factored: wiring ====
+the same as builders backward sub-builder: wiring
+
+==== builders forward: conditions ====
+the same as initial forward: conditions
+
+==== builders forward builder: listing ====
+arvl_to_dcsn
+  Push-forward through the law of motion 𝑔
+dcsn_to_cntn
+  Extension of the measure by the distribution of Ψ_θ
+  Push-forward through 𝑔 at 𝜍
+
+==== builders forward builder: wiring ====
+inputs: port:measure:arvl
+outputs: port:measure:cntn
+arvl_to_dcsn
+    reads: port:measure:arvl
+    writes: port:measure:dcsn
+    inside:
+        inputs: port:measure:arvl
+        outputs: port:measure:dcsn
+        arvl_to_dcsn:Pushforward [Pushforward]
+            reads: port:measure:arvl
+            writes: port:measure:dcsn
+            refers to: port:g:arvl_to_dcsn
+dcsn_to_cntn
+    reads: port:measure:dcsn
+    writes: port:measure:cntn
+    inside:
+        inputs: port:measure:dcsn
+        outputs: port:measure:cntn
+        dcsn_to_cntn:DistributionExtension:Ψ_θ [DistributionExtension]
+            reads: port:measure:dcsn
+            writes: port:measure:dcsn:with-distribution:Ψ_θ
+            refers to: port:distribution:Ψ_θ, port:function:dcsn:ς
+        dcsn_to_cntn:Pushforward [Pushforward]
+            reads: port:measure:dcsn:with-distribution:Ψ_θ
+            writes: port:measure:cntn
+            refers to: port:g:dcsn_to_cntn, port:function:dcsn:ς
+
+==== builders forward sub-builder: listing ====
+Push-forward through the law of motion 𝑔
+Extension of the measure by the distribution of Ψ_θ
+Push-forward through 𝑔 at 𝜍
+
+==== builders forward sub-builder: wiring ====
+inputs: port:measure:arvl
+outputs: port:measure:cntn
+arvl_to_dcsn:Pushforward [Pushforward]
+    reads: port:measure:arvl
+    writes: port:measure:dcsn
+    refers to: port:g:arvl_to_dcsn
+dcsn_to_cntn:DistributionExtension:Ψ_θ [DistributionExtension]
+    reads: port:measure:dcsn
+    writes: port:measure:dcsn:with-distribution:Ψ_θ
+    refers to: port:distribution:Ψ_θ, port:function:dcsn:ς
+dcsn_to_cntn:Pushforward [Pushforward]
+    reads: port:measure:dcsn:with-distribution:Ψ_θ
+    writes: port:measure:cntn
+    refers to: port:g:dcsn_to_cntn, port:function:dcsn:ς
+
+==== builders forward primitive: listing ====
+the same as builders forward sub-builder: listing
+
+==== builders forward primitive: wiring ====
+the same as builders forward sub-builder: wiring
+
+==== builders forward combined: listing ====
+the same as builders forward sub-builder: listing
+
+==== builders forward combined: wiring ====
+the same as builders forward sub-builder: wiring
+
+==== builders forward factored: listing ====
+the same as builders forward sub-builder: listing
+
+==== builders forward factored: wiring ====
+the same as builders forward sub-builder: wiring

@@ -1,0 +1,43 @@
+@stage: mortality
+# Only the survivor state continues. The death branch records the bequeathed assets and the mortality label.
+
+Xa := ℝ₊                  :: ["assets"]
+J : ℤ @ [1, inf)          :: ["number of ages"]
+Ages := {0, …, J - 1}
+Z := {1, 2, 3}
+
+ρ : (1, inf)              :: ["coefficient of relative risk aversion"]
+b : ℝ₊                    :: ["weight of the bequest in utility"]
+ξ : ℝ₊₊                   :: ["shift of the bequest utility"]
+ψ : Ages → [0,1]          :: ["probability of surviving the period, by age"]
+
+s : {survive, die}
+s(_age) ~ Categorical((ψ[_age], 1 - ψ[_age]))
+
+𝜙(a : ℝ₊) := b*(a + ξ)^(1-ρ)/(1-ρ)                          :: [id=bequest_utility]
+
+[id=arvl_to_dcsn, (z_1 : Z, a_1 : Xa) : !arvl -> (z_m : Z, a_m : Xa) : !dcsn] {
+    z_m = z_1
+    a_m = a_1
+}
+
+[id=dcsn_to_cntn, (z_m, a_m, s, age) : !dcsn -> ()] {
+    [label=survive, () -> (z_2 : Z, a_2 : Xa) : !cntn] {
+        z_2 = z_m
+        a_2 = a_m
+    }
+    [label=die, () -> (a_b : Xa, death : {survive, die}) : !cntn] {
+        a_b = a_m
+        death = s(age)
+    }
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, age : Ages @ !vlu @ !cnst) : !cntn -> (V : ℝ @ !vlu, age) : !dcsn] {
+    V = E_{s}((V[>], 𝜙(a_m))[s])   :: [id=value]
+    D_{a_m}V = E_{s}((D_{a_2}V[>], b*(a_m + ξ)^(-ρ))[s])  :: [id=marginal_decision]
+}
+
+[id=dcsn_to_arvl, (V, age) : !dcsn -> (V[<] : ℝ @ !vlu, age) : !arvl] {
+    V[<] = V                       :: [id=value]
+    D_{a_1}V[<] = D_{a_m}V  :: [id=marginal_arrival]
+}

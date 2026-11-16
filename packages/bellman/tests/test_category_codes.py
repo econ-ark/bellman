@@ -1,62 +1,49 @@
-"""The acceptance file of the brief "named integer domains with retained
-category meanings" (Bellman-SYM specification 0.5; the second layer of the
-tests, `packages/bellman/README.md` §8): one test for each of the brief's
-acceptance items 1 to 6, the first five through the public calls of
-construction, binding, denotation, export and connection, and the sixth on
-the executed notebook. Every stage text is written here, since no corpus
-stage is marked.
-
-The rule. A named set written as a comprehension over ℤ or ℕ with integer
-bounds and marked `!categories`, with an optional identifier and one
-`name=code` entry for each member, is the set I of its members with the
-category map m_I: `HouseholdStatus` of `HOUSEHOLD` below is I = {0, 1} with
-0 ↦ newborn and 1 ↦ old. The set's `Definition` holds m_I as `categories`,
-a `CategoryCodes` of the identifier and the (code, name) pairs in code
-order. The set's denotation holds I and m_I as two denoted objects, which
-the supporting definitions of the stage and of a builder repeat, and the
-stage's encoding and the answer encodings write the codes. A marker in any
-other form or on any other item, and a field declared on a coded set at one
-site and on another set at another, are refused under `category-codes` at
-the item's position; an unmarked set keeps its meaning. A connection copies
-values between coded domains when every code written stands for the same
-category where it is read. The category named c is (κ, c), κ the identifier
-or, without one, the stage text's digest with the set's name.
-
-Not checked here: the documents that item 6 updates at merge; and the corpus
-stages' printed snapshot and recorded encodings, which items 2 and 5 require
-unchanged except for the grammar's digest, and which `test_snapshot.py` and
-`test_snapshot.py` compare.
-"""
+"""Category codes: a finite set of integers whose members carry names, read
+through their codes in kernels and across periods."""
 
 import json
 from typing import NamedTuple
 
 import pytest
-from conftest import ROOT, stage_from_text
+from stage_builders import stage_from_text
+from stage_texts import changed, line_of
 
 from bellman.display.encoding_checks import validate_encoding
 from bellman.native import records
 from bellman.native.hypergraphs import copy_native
 from bellman.refusals import ConstructionError
-from bellman.stage import make_stage
+from bellman.stage import make_stage, to_source
 from bellman.syntax.decode import from_json
 from bellman.syntax.lower import parse_with_spans, to_json
-from bellman.syntax.source import to_source
 from bellman.trellis import connection_report, elaborate_trellis
 
+# the origin under which each stage text of this file is elaborated
 ORIGIN = "household_status.bl"
-SET = "household_status:set:HouseholdStatus"
-# the comprehension and the annotation of the set as the brief's §2 writes
-# them, and the map the set's record holds, as `CategoryCodes` arguments
-RANGE = "{i : ℤ | i >= 0, i <= 1}"
-CODES = "[!categories household_status, newborn=0, old=1]"
+
+
+# the identity of the named set `HouseholdStatus` among the definitions of the
+# household stage
+SET_IDENTITY = "household_status:set:HouseholdStatus"
+
+
+# the comprehension that defines the set of the household's status
+COMPREHENSION = "{i : ℤ | i >= 0, i <= 1}"
+
+
+# the annotation of that set: the marker `!categories`, the identifier
+# `household_status` and the category of each code
+ANNOTATION = "[!categories household_status, newborn=0, old=1]"
+
+
+# the same codes as the arguments of `records.CategoryCodes`: the identifier,
+# then each code with its category
 HOUSEHOLD_CODES = ("household_status", ((0, "newborn"), (1, "old")))
 
-# The household stage of the brief's §2: `household_status.bl` of the
-# example, its three bounded-integer typings replaced by the named set. The
-# status at decision, n, is the status at arrival, n_pre; the status next
-# period is n_next = 1, old; the value is the payment 100 − 120·n plus the
-# discounted continuation value.
+
+# The household stage of the documentation of stages, with its three status
+# fields declared on the named set. The status at decision, n, is the status
+# at arrival, n_pre; the status next period is n_next = 1, old; the value is
+# the payment 100 − 120·n plus the discounted continuation value.
 HOUSEHOLD = """@stage: household_status
 
 β : (0,1)              :: ["discount factor"]
@@ -81,190 +68,269 @@ n_next : HouseholdStatus
 }
 """
 
-# the three kinds of pair item 4 reads, in the order `connected` answers them
+
+# The forward household stage: the household stage cut before its block
+# `cntn_to_dcsn`, with its declarations and its two forward blocks, which read
+# n_pre and write n and n_next. Its connections are those of the whole stage,
+# and its encoding is smaller.
+HOUSEHOLD_FORWARD = HOUSEHOLD[: HOUSEHOLD.index("[id=cntn_to_dcsn")]
+
+
+# the three kinds of pair that `compatibility_by_kind` answers, in its order
 KINDS = ("authored", "inferred", "inter-period")
 
 
-def changed(text, *changes):
-    """`text` with each `(written, replacement)` pair applied; a written
-    fragment the text does not hold exactly once is refused, so that no
-    change is lost."""
-    for written, replacement in changes:
-        assert text.count(written) == 1, written
-        text = text.replace(written, replacement)
-    return text
+def household_with(codes=ANNOTATION, body=COMPREHENSION, text=HOUSEHOLD):
+    """The household stage, or the stage `text`, with the annotation `codes`
+    and the body `body` in place of the set's."""
+    return changed(text, (ANNOTATION, codes), (COMPREHENSION, body))
 
 
-def household(codes=CODES, body=RANGE):
-    """The household stage with the annotation `codes` and the body `body`
-    in place of the set's."""
-    return changed(HOUSEHOLD, (CODES, codes), (RANGE, body))
+def household_with_lines(lines, after=ANNOTATION, text=HOUSEHOLD):
+    """The household stage, or the stage `text`, with `lines` written after
+    the line that ends with `after`, the set's line unless another is
+    named."""
+    return changed(text, (after + "\n", f"{after}\n{lines}\n"))
 
 
-def added(lines, after=CODES):
-    """The household stage with `lines` written after the line that ends
-    with `after`, the set's line unless another is named."""
-    return changed(HOUSEHOLD, (after + "\n", f"{after}\n{lines}\n"))
+# the annotation of the set with the codes the other way round: 0 is old and
+# 1 is newborn
+OPPOSITE_ANNOTATION = "[!categories household_status, newborn=1, old=0]"
 
 
-class Refused(NamedTuple):
-    """The refusal of an item 2 case: each of its texts is refused under
-    `category-codes` with one message, at the line that holds `at` and at
-    `address`, the file position of that line where `address` is None; the
-    message holds each of `words`."""
+# the forward household stage with the codes the other way round
+OPPOSITE_CODES = household_with(codes=OPPOSITE_ANNOTATION, text=HOUSEHOLD_FORWARD)
+
+
+# the forward household stage whose annotation writes no identifier, so that
+# its categories belong to the set of this one stage text
+LOCAL = household_with(codes="[!categories, newborn=0, old=1]", text=HOUSEHOLD_FORWARD)
+
+
+@pytest.fixture(scope="module")
+def household_stage():
+    """The symbolic household stage."""
+    return stage_from_text(HOUSEHOLD, ORIGIN)
+
+
+@pytest.fixture(scope="module")
+def forward_stage():
+    """The symbolic stage of the household stage with its two forward blocks
+    alone."""
+    return stage_from_text(HOUSEHOLD_FORWARD, ORIGIN)
+
+
+@pytest.fixture(scope="module")
+def forward_term():
+    """The parsed term of the household stage with its two forward blocks
+    alone."""
+    term, _ = parse_with_spans(HOUSEHOLD_FORWARD, ORIGIN)
+    return term
+
+
+@pytest.fixture(scope="module")
+def forward_encoding(forward_stage):
+    """The encoding of the forward household stage, written to JSON and read
+    back, which `validate_encoding` admits."""
+    return validate_encoding(json.loads(json.dumps(forward_stage.encoding())))
+
+
+# the set's denotation and the domains of its fields
+
+
+def test_the_denotation_of_a_set_with_category_codes_holds_the_set_and_its_map_of_codes(
+    household_stage,
+):
+    """The denotation of the household set holds two objects, the set as
+    written and its map of codes, printed as the comprehension and as
+    `0 ↦ newborn, 1 ↦ old (categories household_status)`."""
+    record = household_stage.definitions[SET_IDENTITY]
+    denoted = household_stage.definitions.denote(SET_IDENTITY).denoted
+    assert [(d.symbol, d.expression) for d in denoted] == [
+        ("HouseholdStatus", record.equations[0]),
+        ("HouseholdStatus", record.categories),
+    ]
+    assert [d.rule for d in denoted] == [
+        "{i ∈ ℤ | i ≥ 0 ∧ i ≤ 1}",
+        "0 ↦ newborn, 1 ↦ old (categories household_status)",
+    ]
+
+
+@pytest.mark.parametrize(
+    "denotation_of",
+    [
+        pytest.param(lambda stage: stage.denote(), id="the-stage"),
+        pytest.param(
+            lambda stage: stage.builder["dcsn", "cntn"].denote(),
+            id="the-builder-from-decision-to-continuation",
+        ),
+    ],
+)
+def test_the_definitions_referenced_by_a_denotation_hold_the_denotation_of_the_coded_set(
+    household_stage, denotation_of
+):
+    """The definitions referenced by the denotation of the household stage,
+    and by that of its builder from decision to continuation, hold the two
+    objects of the denotation of the household set."""
+    denoted = household_stage.definitions.denote(SET_IDENTITY).denoted
+    # the set as written and its map of codes, so that the comparison below
+    # is not one of two empty lists
+    assert len(denoted) == 2
+    referenced = denotation_of(household_stage).definitions
+    assert [d for d in referenced if d.identity == SET_IDENTITY] == list(denoted)
+
+
+def test_each_state_field_declared_on_a_set_with_category_codes_has_that_set_as_its_domain(
+    household_stage,
+):
+    """The domain of each state field of the household stage is the named
+    set `HouseholdStatus`."""
+    domains = {
+        str(identity): to_source(sort.domain)
+        for identity, sort in household_stage.fields().items()
+        if sort.role == "state"
+    }
+    assert domains == dict.fromkeys(
+        ("household_status:arvl:n_pre", "household_status:dcsn:n", "household_status:cntn:n_next"),
+        "HouseholdStatus",
+    )
+
+
+# the forms that the marker `!categories` admits and refuses
+
+
+class RefusedAt(NamedTuple):
+    """A row whose text is refused under `category-codes` at the line that
+    holds `at` and at `address`, the file position of that line where
+    `address` is None, with a message that holds each of `phrases`."""
 
     at: str
-    words: tuple
+    phrases: tuple
     address: str | None = None
 
 
-class Kept(NamedTuple):
-    """An item 2 text that elaborates: the tags of its set as written, the
+class ElaboratesWith(NamedTuple):
+    """A row whose text elaborates: the tags of its set as written, the
     arguments of the set's `CategoryCodes` or None, and the set as its card
     prints it."""
 
     tags: tuple
     codes: tuple | None
-    rule: str
+    printed_set: str
 
 
-def set_fault(case, *words, **change):
-    """An item 2 case of a fault of the marked set: the household stage with
-    `change` made by `household`, refused at the set's line with a message
-    that names the set and each of `words`."""
-    refusal = Refused("HouseholdStatus :=", ("HouseholdStatus", *words))
-    return pytest.param((household(**change),), refusal, id=case)
+# the household stage whose marked set is bounded above by a parameter J,
+# which the marker refuses; without its annotation the set elaborates
+BOUNDED_BY_A_PARAMETER = changed(
+    household_with(body="{i : ℤ | i >= 0, i <= J}"), ("β : (0,1)", "J : ℕ\nβ : (0,1)")
+)
 
 
-ITEM_2 = [
+def refused_marked_set(case, *phrases, **change):
+    """A row of a fault of the marked set: the household stage with `change`
+    made by `household_with`, refused at the set's line with a message that
+    names the set and each of `phrases`."""
+    expected = RefusedAt("HouseholdStatus :=", ("HouseholdStatus", *phrases))
+    return pytest.param(household_with(**change), expected, id=case)
+
+
+MARKED_SETS = [
     # the entries and the marker of the set
-    set_fault(
+    refused_marked_set(
         "a-code-outside-the-range",
         "`old=2`",
         "outside",
         "the member 1 has no category",
-        codes=CODES.replace("old=1", "old=2"),
+        codes=ANNOTATION.replace("old=1", "old=2"),
     ),
-    set_fault(
+    refused_marked_set(
         "a-reserved-key",
         "`!categories=household_status`",
-        codes=CODES.replace("!categories ", "!categories="),
+        codes=ANNOTATION.replace("!categories ", "!categories="),
     ),
-    set_fault("a-bare-tag", "`retired`", codes=CODES.replace("]", ", retired]")),
-    set_fault("a-single-quoted-entry", "`'retired'`", codes=CODES.replace("]", ", 'retired']")),
-    set_fault("minus-0-repeats-0", "`old=-0`", codes=CODES.replace("old=1", "old=-0")),
-    set_fault(
+    refused_marked_set("a-bare-tag", "`retired`", codes=ANNOTATION.replace("]", ", retired]")),
+    refused_marked_set(
+        "a-single-quoted-entry", "`'retired'`", codes=ANNOTATION.replace("]", ", 'retired']")
+    ),
+    refused_marked_set(
+        "minus-0-repeats-0", "`old=-0`", codes=ANNOTATION.replace("old=1", "old=-0")
+    ),
+    refused_marked_set(
         "a-second-marker",
         "`!categories age`",
-        codes=CODES.replace(", newborn", ", !categories age, newborn"),
+        codes=ANNOTATION.replace(", newborn", ", !categories age, newborn"),
     ),
-    set_fault(
+    refused_marked_set(
         "a-marker-of-two-words",
         "`!categories household status`",
-        codes=CODES.replace("household_status", "household status"),
+        codes=ANNOTATION.replace("household_status", "household status"),
     ),
-    set_fault("a-code-that-is-no-integer", "`newborn=zero`", codes=CODES.replace("=0", "=zero")),
-    set_fault(
+    refused_marked_set(
+        "a-code-that-is-no-integer", "`newborn=zero`", codes=ANNOTATION.replace("=0", "=zero")
+    ),
+    refused_marked_set(
         "a-tab-after-the-marker",
         "U+0009",
-        codes=CODES.replace("!categories ", "!categories\t"),
-    ),
-    # the marker alone lowers to one tag however it is written, so the three
-    # are refused alike, for the codes they do not write
-    pytest.param(
-        tuple(
-            household(codes=alone) for alone in ("[!categories]", "!categories", '"!categories"')
-        ),
-        Refused("HouseholdStatus :=", ("HouseholdStatus", "writes no category")),
-        id="the-marker-without-codes-bracketed-bare-or-quoted",
+        codes=ANNOTATION.replace("!categories ", "!categories\t"),
     ),
     # the set the marker stands on
-    set_fault("the-natural-numbers-from-0", "ℕ", body="{i : ℕ | i >= 0, i <= 1}"),
-    set_fault("a-binder-over-the-reals", "`ℝ`", body="{i : ℝ | i >= 0, i <= 1}"),
-    set_fault("one-bound", "upper bound", body="{i : ℤ | i >= 0}"),
-    set_fault("an-equality-condition", "`i = 1`", body="{i : ℤ | i >= 0, i = 1}"),
-    set_fault("an-empty-range", "leave no integer", body="{i : ℤ | i > 0, i < 1}"),
-    set_fault("the-integers", "`ℤ`", body="ℤ"),
-    set_fault("an-interval", "`[0, 1]`", body="[0, 1]"),
-    set_fault("an-integer-range", "`{0, …, 1}`", body="{0, …, 1}"),
-    set_fault("listed-integers", "`{0, 1}`", body="{0, 1}"),
+    refused_marked_set("the-natural-numbers-from-0", "ℕ", body="{i : ℕ | i >= 0, i <= 1}"),
+    refused_marked_set("a-binder-over-the-reals", "`ℝ`", body="{i : ℝ | i >= 0, i <= 1}"),
+    refused_marked_set("one-bound", "upper bound", body="{i : ℤ | i >= 0}"),
+    refused_marked_set("an-equality-condition", "`i = 1`", body="{i : ℤ | i >= 0, i = 1}"),
+    refused_marked_set("an-empty-range", "leave no integer", body="{i : ℤ | i > 0, i < 1}"),
+    refused_marked_set("the-integers", "`ℤ`", body="ℤ"),
+    refused_marked_set("an-interval", "`[0, 1]`", body="[0, 1]"),
+    refused_marked_set("an-integer-range", "`{0, …, 1}`", body="{0, …, 1}"),
+    refused_marked_set("listed-integers", "`{0, 1}`", body="{0, 1}"),
     pytest.param(
-        (changed(household(body="{i : ℤ | i >= 0, i <= J}"), ("β : (0,1)", "J : ℕ\nβ : (0,1)")),),
-        Refused("HouseholdStatus :=", ("HouseholdStatus", "`i <= J`")),
+        BOUNDED_BY_A_PARAMETER,
+        RefusedAt("HouseholdStatus :=", ("HouseholdStatus", "`i <= J`")),
         id="a-parameter-bound",
     ),
     # a set of names and a restriction of the coded set, each marked beside it
     pytest.param(
-        (added(f"Labels := {{newborn, old}} :: {CODES}"),),
-        Refused("Labels :=", ("Labels", "`{newborn, old}`")),
+        household_with_lines(f"Labels := {{newborn, old}} :: {ANNOTATION}"),
+        RefusedAt("Labels :=", ("Labels", "`{newborn, old}`")),
         id="a-set-of-names",
     ),
     pytest.param(
-        (added("Old := {j : HouseholdStatus | j >= 1} :: [!categories household_status, old=1]"),),
-        Refused("Old :=", ("Old", "`HouseholdStatus`")),
+        household_with_lines(
+            "Old := {j : HouseholdStatus | j >= 1} :: [!categories household_status, old=1]"
+        ),
+        RefusedAt("Old :=", ("Old", "`HouseholdStatus`")),
         id="a-restricted-coded-set",
-    ),
-    # the marker on another item, and a coded field's site naming another set
-    pytest.param(
-        (
-            changed(
-                HOUSEHOLD, ("n      : HouseholdStatus\n", f"n      : HouseholdStatus :: {CODES}\n")
-            ),
-        ),
-        Refused("n      : HouseholdStatus ::", ("`!categories household_status`",)),
-        id="a-marker-on-a-field-declaration",
-    ),
-    pytest.param(
-        (
-            added(
-                f"𝑝(m : HouseholdStatus) := 100 - 120*m :: {CODES}",
-                after="n_next : HouseholdStatus",
-            ),
-        ),
-        Refused("𝑝(m", ("𝑝", "`!categories household_status`")),
-        id="a-marker-on-a-function",
-    ),
-    pytest.param(
-        (changed(HOUSEHOLD, (":: [id=ageing]", ":: [id=ageing, !categories household_status]")),),
-        Refused("n_next = 1", ("`!categories household_status`",), "dcsn_to_cntn.ageing"),
-        id="a-marker-on-a-line",
-    ),
-    pytest.param(
-        (changed(HOUSEHOLD, ("[id=dcsn_to_cntn, (n)", "[id=dcsn_to_cntn, !categories, (n)")),),
-        Refused("[id=dcsn_to_cntn", ("`!categories`",), "dcsn_to_cntn"),
-        id="a-marker-on-a-block-header",
-    ),
-    pytest.param(
-        (changed(HOUSEHOLD, ("[id=dcsn_to_cntn, (n)", "[id=dcsn_to_cntn, (n : ℤ)")),),
-        Refused("[id=dcsn_to_cntn", ("`HouseholdStatus`", "`ℤ`"), "dcsn_to_cntn"),
-        id="a-field-site-naming-another-set",
     ),
     # texts that elaborate
     pytest.param(
-        (household(codes='["!categories household_status", "newborn=0", "old=1"]', body="ℤ"),),
-        Kept(('"!categories household_status"', '"newborn=0"', '"old=1"'), None, "ℤ"),
+        HOUSEHOLD,
+        ElaboratesWith(
+            ("!categories household_status", "newborn=0", "old=1"),
+            HOUSEHOLD_CODES,
+            "{i ∈ ℤ | i ≥ 0 ∧ i ≤ 1}",
+        ),
+        id="the-household-set-as-written",
+    ),
+    pytest.param(
+        household_with(codes='["!categories household_status", "newborn=0", "old=1"]', body="ℤ"),
+        ElaboratesWith(('"!categories household_status"', '"newborn=0"', '"old=1"'), None, "ℤ"),
         id="double-quoted-entries-on-an-unmarked-set",
     ),
     pytest.param(
-        (household(codes="[!categories_status]", body="ℤ"),),
-        Kept(("!categories_status",), None, "ℤ"),
+        household_with(codes="[!categories_status]", body="ℤ"),
+        ElaboratesWith(("!categories_status",), None, "ℤ"),
         id="a-longer-word-than-the-marker",
     ),
     pytest.param(
-        (
-            changed(
-                HOUSEHOLD,
-                (" :: " + CODES, ""),
-                (RANGE, "{i : ℤ | i >= 0, i <= J}"),
-                ("β : (0,1)", "J : ℕ\nβ : (0,1)"),
-            ),
-        ),
-        Kept((), None, "{i ∈ ℤ | i ≥ 0 ∧ i ≤ J}"),
+        changed(BOUNDED_BY_A_PARAMETER, (" :: " + ANNOTATION, "")),
+        ElaboratesWith((), None, "{i ∈ ℤ | i ≥ 0 ∧ i ≤ J}"),
         id="an-unmarked-comprehension-with-a-parameter-bound",
     ),
     pytest.param(
-        (household(codes=CODES.replace(", newborn", ', id=status, "the status", newborn')),),
-        Kept(
+        household_with(
+            codes=ANNOTATION.replace(", newborn", ', id=status, "the status", newborn')
+        ),
+        ElaboratesWith(
             ("!categories household_status", "id=status", '"the status"', "newborn=0", "old=1"),
             HOUSEHOLD_CODES,
             "{i ∈ ℤ | i ≥ 0 ∧ i ≤ 1}",
@@ -274,13 +340,11 @@ ITEM_2 = [
     # the bounds −1 and 0, written either way round, strictly and with signs;
     # the transition's 1 lies outside them and stays a recorded condition
     pytest.param(
-        (
-            household(
-                codes="[!categories household_status, newborn=-1, old=0]",
-                body="{i : ℤ | -1 <= i, i > -2, i < 1}",
-            ),
+        household_with(
+            codes="[!categories household_status, newborn=-1, old=0]",
+            body="{i : ℤ | -1 <= i, i > -2, i < 1}",
         ),
-        Kept(
+        ElaboratesWith(
             ("!categories household_status", "newborn=-1", "old=0"),
             ("household_status", ((-1, "newborn"), (0, "old"))),
             "{i ∈ ℤ | −1 ≤ i ∧ i > −2 ∧ i < 1}",
@@ -290,7 +354,236 @@ ITEM_2 = [
 ]
 
 
-def connected(writer, reader):
+@pytest.mark.parametrize("text, expected", MARKED_SETS)
+def test_a_marked_set_elaborates_only_in_its_admitted_form_and_an_unmarked_set_keeps_its_meaning(
+    text, expected
+):
+    """A set definition elaborates with the tags and the codes of its row
+    where its annotation and its set take a form that the marker
+    `!categories` admits, or where it writes no marker and keeps the meaning
+    of its set, and is refused under `category-codes` at its line
+    otherwise."""
+    if isinstance(expected, ElaboratesWith):
+        stage = stage_from_text(text, ORIGIN)
+        record = stage.definitions[SET_IDENTITY]
+        assert record.tags == expected.tags
+        codes = None if expected.codes is None else records.CategoryCodes(*expected.codes)
+        assert record.categories == codes
+        denoted = stage.definitions.denote(SET_IDENTITY).denoted
+        assert [d.expression for d in denoted] == [record.equations[0]] + (
+            [] if codes is None else [codes]
+        )
+        assert denoted[0].rule == expected.printed_set
+    else:
+        with pytest.raises(ConstructionError) as refused:
+            stage_from_text(text, ORIGIN)
+        line = line_of(text, expected.at)
+        address = expected.address or f"{ORIGIN}:{line}"
+        assert (refused.value.rule, refused.value.address, refused.value.line) == (
+            "category-codes",
+            address,
+            line,
+        )
+        message = refused.value.message
+        assert [phrase for phrase in expected.phrases if phrase not in message] == []
+
+
+def test_the_marker_of_categories_written_alone_is_refused_alike_bracketed_bare_or_quoted():
+    """The marker `!categories` written as the whole annotation of the set,
+    in brackets, bare or in double quotes, is refused alike under
+    `category-codes` at the set's line, with one message that says that it
+    writes no category."""
+    bracketed, bare, quoted = (
+        household_with(codes=alone) for alone in ("[!categories]", "!categories", '"!categories"')
+    )
+    with pytest.raises(ConstructionError) as refused_bracketed:
+        stage_from_text(bracketed, ORIGIN)
+    with pytest.raises(ConstructionError) as refused_bare:
+        stage_from_text(bare, ORIGIN)
+    with pytest.raises(ConstructionError) as refused_quoted:
+        stage_from_text(quoted, ORIGIN)
+    refusals = [refused_bracketed.value, refused_bare.value, refused_quoted.value]
+    line = line_of(bracketed, "HouseholdStatus :=")
+    message = refusals[0].message
+    assert [(error.rule, error.address, error.line, error.message) for error in refusals] == [
+        ("category-codes", f"{ORIGIN}:{line}", line, message)
+    ] * 3
+    phrases = ("HouseholdStatus", "writes no category")
+    assert [phrase for phrase in phrases if phrase not in message] == []
+
+
+MARKER_ON_ANOTHER_ITEM = [
+    pytest.param(
+        changed(
+            HOUSEHOLD,
+            ("n      : HouseholdStatus\n", f"n      : HouseholdStatus :: {ANNOTATION}\n"),
+        ),
+        RefusedAt("n      : HouseholdStatus ::", ("`!categories household_status`",)),
+        id="a-field-declaration",
+    ),
+    pytest.param(
+        household_with_lines(
+            f"𝑝(m : HouseholdStatus) := 100 - 120*m :: {ANNOTATION}",
+            after="n_next : HouseholdStatus",
+        ),
+        RefusedAt("𝑝(m", ("𝑝", "`!categories household_status`")),
+        id="a-function",
+    ),
+    pytest.param(
+        changed(HOUSEHOLD, (":: [id=ageing]", ":: [id=ageing, !categories household_status]")),
+        RefusedAt("n_next = 1", ("`!categories household_status`",), "dcsn_to_cntn.ageing"),
+        id="a-line",
+    ),
+    pytest.param(
+        changed(HOUSEHOLD, ("[id=dcsn_to_cntn, (n)", "[id=dcsn_to_cntn, !categories, (n)")),
+        RefusedAt("[id=dcsn_to_cntn", ("`!categories`",), "dcsn_to_cntn"),
+        id="a-block-header",
+    ),
+]
+
+
+@pytest.mark.parametrize("text, expected", MARKER_ON_ANOTHER_ITEM)
+def test_the_marker_of_categories_is_refused_on_a_field_declaration_a_function_a_line_or_a_header(
+    text, expected
+):
+    """The marker `!categories` written on a field declaration, a function,
+    a line or a block header is refused under `category-codes` at that
+    item, with a message that quotes the marker."""
+    with pytest.raises(ConstructionError) as refused:
+        stage_from_text(text, ORIGIN)
+    line = line_of(text, expected.at)
+    address = expected.address or f"{ORIGIN}:{line}"
+    assert (refused.value.rule, refused.value.address, refused.value.line) == (
+        "category-codes",
+        address,
+        line,
+    )
+    message = refused.value.message
+    assert [phrase for phrase in expected.phrases if phrase not in message] == []
+
+
+def test_a_block_header_that_writes_another_set_for_a_coded_field_is_refused_at_the_block():
+    """A block header that writes `ℤ` for the field `n`, which is declared on
+    the coded set `HouseholdStatus`, is refused under `category-codes` at
+    the block, with a message that names both sets."""
+    text = changed(HOUSEHOLD, ("[id=dcsn_to_cntn, (n)", "[id=dcsn_to_cntn, (n : ℤ)"))
+    with pytest.raises(ConstructionError) as refused:
+        stage_from_text(text, ORIGIN)
+    line = line_of(text, "[id=dcsn_to_cntn")
+    assert (refused.value.rule, refused.value.address, refused.value.line) == (
+        "category-codes",
+        "dcsn_to_cntn",
+        line,
+    )
+    message = refused.value.message
+    assert [phrase for phrase in ("`HouseholdStatus`", "`ℤ`") if phrase not in message] == []
+
+
+# the kernels, which compute with the codes
+
+
+def category_of_each_code(stage, domain):
+    """The category of each code of the named set `domain`: the map that the
+    set's denotation holds as its second object."""
+    _, coded = stage.definitions.denote(f"household_status:set:{domain.name}").denoted
+    return dict(coded.expression.codes)
+
+
+def calibrated_kernels(text):
+    """The stage `text` calibrated at β = 0.96, with the push-forward of its
+    law of motion and the aggregation of its value line."""
+    stage = stage_from_text(text, ORIGIN).calibrate({"β": 0.96})
+    law = stage.builder.fwd["dcsn_to_cntn"].primitives["Pushforward"]
+    value = stage.builder.bwd["cntn_to_dcsn"].primitives["Aggregation"]
+    return stage, law, value
+
+
+def kernel_outcomes(stage, law, value):
+    """The next status and the value at V≻ = 0 that the compiled kernels give
+    at each code of the set of the argument n of the law, and the next
+    category and the payment of each category, read through the maps that
+    the denotations of the sets of n and of n_next hold."""
+    (status,) = law.kernel().arguments
+    now = category_of_each_code(stage, status[1])
+    then = category_of_each_code(stage, stage.fields()["household_status:cntn:n_next"].domain)
+    law_kernel, value_kernel = law.compile_kernel(), value.compile_kernel()
+    law_parameters = law.kernel().parameter_values
+    value_parameters = value.kernel().parameter_values
+    # the law reads n alone; the aggregation reads V≻, here 0, and then n
+    numbers = {
+        code: (
+            int(law_kernel(code, *law_parameters)),
+            float(value_kernel(0.0, code, *value_parameters)),
+        )
+        for code in now
+    }
+    decoded = {now[code]: (then[after], paid) for code, (after, paid) in numbers.items()}
+    return numbers, decoded
+
+
+def test_the_compiled_law_of_motion_and_value_aggregation_compute_with_the_integer_codes():
+    """After calibration at β = 0.96, the compiled law of motion of the
+    household stage gives the next status 1 at each of the codes 0 and 1,
+    where the compiled aggregation of its value line at V≻ = 0 gives the
+    payment 100 at 0 and −20 at 1."""
+    stage, law, value = calibrated_kernels(HOUSEHOLD)
+    # the law reads n alone, and the aggregation reads n, in the same set,
+    # as its second argument, as `kernel_outcomes` calls them
+    (status,) = law.kernel().arguments
+    assert status[0] == "n" and value.kernel().arguments[1] == status
+    numbers, _ = kernel_outcomes(stage, law, value)
+    assert numbers == {0: (1, 100.0), 1: (1, -20.0)}
+
+
+def test_through_the_map_of_codes_the_kernels_give_each_category_its_next_category_and_payment():
+    """Read through the maps that the denotations of the sets of n and of
+    n_next hold, the kernels of the household stage take the newborn
+    household and the old one both to old, with the payments 100 and −20."""
+    stage, law, value = calibrated_kernels(HOUSEHOLD)
+    # the law reads n alone, and the aggregation reads n, in the same set,
+    # as its second argument, as `kernel_outcomes` calls them
+    (status,) = law.kernel().arguments
+    assert status[0] == "n" and value.kernel().arguments[1] == status
+    _, decoded = kernel_outcomes(stage, law, value)
+    assert decoded == {"newborn": ("old", 100.0), "old": ("old", -20.0)}
+
+
+def test_full_recoding_keeps_the_outcome_of_each_category_and_recoding_the_codes_alone_does_not():
+    """The household stage with its codes, its law of motion and its payment
+    swapped together, `old=0, newborn=1`, `n_next = 0` and
+    `V = −20 + 120·n + β·V≻`, gives each category the next category and the
+    payment of the household stage, where the stage with its codes alone
+    swapped gives others."""
+    swapped_codes = "[!categories household_status, old=0, newborn=1]"
+    recoded = changed(
+        household_with(codes=swapped_codes),
+        ("n_next = 1 ", "n_next = 0 "),
+        ("V = 100 - 120*n", "V = -20 + 120*n"),
+    )
+    relabelled = household_with(codes=swapped_codes)
+    # in each stage the law reads n alone, and the aggregation reads n, in the
+    # same set, as its second argument, as `kernel_outcomes` calls them
+    stage, law, value = calibrated_kernels(HOUSEHOLD)
+    (status,) = law.kernel().arguments
+    assert status[0] == "n" and value.kernel().arguments[1] == status
+    _, decoded = kernel_outcomes(stage, law, value)
+    stage, law, value = calibrated_kernels(recoded)
+    (status,) = law.kernel().arguments
+    assert status[0] == "n" and value.kernel().arguments[1] == status
+    assert kernel_outcomes(stage, law, value)[1] == decoded
+    stage, law, value = calibrated_kernels(relabelled)
+    (status,) = law.kernel().arguments
+    assert status[0] == "n" and value.kernel().arguments[1] == status
+    assert kernel_outcomes(stage, law, value)[1] == {
+        "old": ("newborn", 100.0),
+        "newborn": ("newborn", -20.0),
+    }
+
+
+# the compatibility of two coded domains joined by a pair
+
+
+def compatibility_by_kind(writer, reader):
     """The compatibility and the reason of the pair that copies the
     continuation field `n_next` of the household text `writer` into the
     arrival field of the household text `reader`, for each of `KINDS`:
@@ -331,251 +624,137 @@ def connected(writer, reader):
     return found
 
 
-def test_item_1_the_household_stage_elaborates_and_its_denotations_hold_the_set_and_its_map():
-    """The household stage, with the displayed domain, `n_next = 1` and
-    `V = 100 − 120·n + β·V≻`, elaborates. The set's record holds the map
-    0 ↦ newborn, 1 ↦ old under the identifier `household_status` and keeps
-    the annotation as written. The set's denotation holds two objects, the
-    set I as written and the map m_I, printed as `0 ↦ newborn, 1 ↦ old
-    (categories household_status)`; the supporting definitions of the stage
-    and of the builder from dcsn to cntn hold the same two. The domain of
-    each state field is the named set."""
-    stage = stage_from_text(HOUSEHOLD, ORIGIN)
-    record = stage.definitions[SET]
-    assert record.categories == records.CategoryCodes(*HOUSEHOLD_CODES)
-    assert record.tags == ("!categories household_status", "newborn=0", "old=1")
-    denoted = stage.definitions.denote(SET).denoted
-    assert [(d.symbol, d.expression) for d in denoted] == [
-        ("HouseholdStatus", record.equations[0]),
-        ("HouseholdStatus", record.categories),
-    ]
-    assert [d.rule for d in denoted] == [
-        "{i ∈ ℤ | i ≥ 0 ∧ i ≤ 1}",
-        "0 ↦ newborn, 1 ↦ old (categories household_status)",
-    ]
-    for answer in (stage.denote(), stage.builder["dcsn", "cntn"].denote()):
-        assert [d for d in answer.definitions if d.identity == SET] == list(denoted)
-    domains = {
-        str(identity): to_source(sort.domain)
-        for identity, sort in stage.fields().items()
-        if sort.role == "state"
-    }
-    assert domains == dict.fromkeys(
-        ("household_status:arvl:n_pre", "household_status:dcsn:n", "household_status:cntn:n_next"),
-        "HouseholdStatus",
-    )
-
-
-@pytest.mark.parametrize("texts, expected", ITEM_2)
-def test_item_2_category_codes_refuses_each_invalid_form_and_unmarked_sets_keep_their_meaning(
-    texts, expected
-):
-    """Each text of a `Refused` case is refused under `category-codes` at
-    the position of the item that writes the fault, a fault of the marked
-    set at the set's file position: a code outside the range together with
-    the member it leaves without a category; a reserved key; a bare tag,
-    single-quoted or not; `-0` repeating `0`; a second marker and a marker
-    of two words; a code that is no integer; the marker without codes,
-    bracketed, bare or quoted, refused alike; the ℕ bound, a binder over ℝ,
-    one bound, an empty range and a parameter bound; ℤ, an interval,
-    `{0, …, 1}`, `{0, 1}`, a set of names and a restriction of the coded
-    set; the marker on a field declaration, a function, a line and a block
-    header; and a site of a coded field naming another set. Each `Kept` text
-    elaborates, its set's record holding the tags as written and the codes
-    or None, its denotation the set alone or the set and the codes:
-    double-quoted entries on an unmarked set and a longer word than the
-    marker mark nothing; an unmarked comprehension with a parameter bound
-    keeps its meaning; an `id=` entry and a description stand beside the
-    codes; and bounds written either way round, strict or negative, give the
-    range they bound."""
-    if isinstance(expected, Kept):
-        (text,) = texts
-        stage = stage_from_text(text, ORIGIN)
-        record = stage.definitions[SET]
-        assert record.tags == expected.tags
-        codes = None if expected.codes is None else records.CategoryCodes(*expected.codes)
-        assert record.categories == codes
-        denoted = stage.definitions.denote(SET).denoted
-        assert [d.expression for d in denoted] == [record.equations[0]] + (
-            [] if codes is None else [codes]
-        )
-        assert denoted[0].rule == expected.rule
-        return
-    refusals = []
-    for text in texts:
-        with pytest.raises(ConstructionError) as refused:
-            stage_from_text(text, ORIGIN)
-        refusals.append(refused.value)
-    line = texts[0][: texts[0].index(expected.at)].count("\n") + 1
-    address = expected.address or f"{ORIGIN}:{line}"
-    message = refusals[0].message
-    for error in refusals:
-        assert (error.rule, error.address, error.line, error.message) == (
-            "category-codes",
-            address,
-            line,
-            message,
-        )
-    for word in expected.words:
-        assert word in message, (word, message)
-
-
-def test_item_3_kernels_read_through_the_denoted_map_keep_their_outcomes_under_a_full_recoding():
-    """After `calibrate({"β": 0.96})`, the compiled law of motion gives the
-    next status 1 at the codes 0 and 1, and the compiled aggregation of the
-    value line at V≻ = 0 gives the payment 100 at 0 and −20 at 1. Read
-    through the map the stage's denotation holds for the set that the
-    kernels' argument n and the next status lie in, the newborn household
-    and the old one both become old and are paid 100 and −20. The stage with
-    its codes, its transition and its payment swapped together, `old=0,
-    newborn=1`, `n_next = 0` and `V = −20 + 120·n + β·V≻`, has the same
-    outcomes; the stage with its codes alone swapped has others."""
-
-    def categories(stage, domain):
-        """The category of each code of the named set `domain`: the map the
-        set's denotation holds as its second object."""
-        _, coded = stage.definitions.denote(f"household_status:set:{domain.name}").denoted
-        return dict(coded.expression.codes)
-
-    def outcomes(text):
-        """The kernels' numbers at each code, and each category's next
-        category and payment."""
-        stage = stage_from_text(text, ORIGIN).calibrate({"β": 0.96})
-        law = stage.builder.fwd["dcsn_to_cntn"].primitives["Pushforward"]
-        value = stage.builder.bwd["cntn_to_dcsn"].primitives["Aggregation"]
-        # the law reads n, the aggregation V≻ and then n, in the same set
-        (status,) = law.kernel().arguments
-        assert status[0] == "n" and value.kernel().arguments[1] == status
-        now = categories(stage, status[1])
-        then = categories(stage, stage.fields()["household_status:cntn:n_next"].domain)
-        g, G = law.compile_kernel(), value.compile_kernel()
-        laws, values = law.kernel().parameter_values, value.kernel().parameter_values
-        numbers = {code: (int(g(code, *laws)), float(G(0.0, code, *values))) for code in now}
-        return numbers, {now[code]: (then[after], paid) for code, (after, paid) in numbers.items()}
-
-    numbers, decoded = outcomes(HOUSEHOLD)
-    assert numbers == {0: (1, 100.0), 1: (1, -20.0)}
-    assert decoded == {"newborn": ("old", 100.0), "old": ("old", -20.0)}
-    swapped_codes = "[!categories household_status, old=0, newborn=1]"
-    swapped = changed(
-        household(codes=swapped_codes),
-        ("n_next = 1 ", "n_next = 0 "),
-        ("V = 100 - 120*n", "V = -20 + 120*n"),
-    )
-    assert outcomes(swapped)[1] == decoded
-    relabelled = household(codes=swapped_codes)
-    assert outcomes(relabelled)[1] == {"old": ("newborn", 100.0), "newborn": ("newborn", -20.0)}
-
-
-def test_item_4_authored_inferred_and_inter_period_pairs_join_coded_domains_whose_maps_agree():
-    """Through an authored, an inferred and an inter-period pair alike: two
-    domains of integers without codes are compatible, as before; one
-    identifier with agreeing maps is compatible, the entries reversed
-    included; another identifier, opposite codes, and a coded domain against
-    an uncoded one either way are incompatible; the restriction of the coded
-    set to old is compatible into the set, and the set is not compatible
-    into it; a product whose coded factor agrees is compatible, and one
-    whose coded factor has opposite codes is not; a reading restriction
-    whose condition names a parameter is not established, and so is a
-    writing one into the opposite codes, since it may be empty; a
-    restriction by an equality, `j = 1`, is the restriction to old, and a
-    restriction by a literal bound and a parameter has the codes within the
-    literal bound; two texts
-    with equal maps and no identifier are incompatible; and a recoding
-    stage, `n_next = 1 − n` from the codes into the opposite codes, is
-    compatible on both sides, where the direct pair into the opposite codes
-    is not. One restriction by the parameter k on both sides is one set
-    within a period and not established between periods, where k names two
-    parameters, or under two identifiers; a restriction whose condition
-    calls a function is not established on both sides, since the names
-    alone do not fix its members. One text without an identifier joined to
-    its next-period occurrence is compatible, and a stage made from a term,
-    which holds no text digest, is not established against itself; the
-    reason of an incompatible pair names both maps."""
-
-    def statuses(writer, reader):
-        return {kind: status for kind, (status, _) in connected(writer, reader).items()}
-
-    opposite = "[!categories household_status, newborn=1, old=0]"
-    opposite_codes = household(codes=opposite)
-    entries_reversed = household(codes="[!categories household_status, old=1, newborn=0]")
-    another_identifier = household(codes=CODES.replace("household_status", "age_group"))
-    uncoded = changed(HOUSEHOLD, (" :: " + CODES, ""))
-    old = added("Old := {j : HouseholdStatus | j >= 1}")
-    old_written = changed(old, ("n_next : HouseholdStatus", "n_next : Old"))
-    old_read = changed(old, ("n_pre  : HouseholdStatus", "n_pre  : Old"))
+def coded_domain_pairs():
+    """The rows of the table of pairs: a writing and a reading text, each a
+    change of the forward household stage, and the compatibility of the
+    pair for each of `KINDS`, in that order."""
+    forward = HOUSEHOLD_FORWARD
     fields = "n_pre  : HouseholdStatus\nn      : HouseholdStatus\nn_next : HouseholdStatus\n"
+    integers = changed(forward, (f"{COMPREHENSION} :: {ANNOTATION}", "ℤ"))
+    entries_reversed = household_with(
+        codes="[!categories household_status, old=1, newborn=0]", text=forward
+    )
+    another_identifier = household_with(
+        codes=ANNOTATION.replace("household_status", "age_group"), text=forward
+    )
+    uncoded = changed(forward, (" :: " + ANNOTATION, ""))
+    # the restriction of the coded set to old, written into and read from
+    old = household_with_lines("Old := {j : HouseholdStatus | j >= 1}", text=forward)
+    written_into_old = changed(old, ("n_next : HouseholdStatus", "n_next : Old"))
+    read_from_old = changed(old, ("n_pre  : HouseholdStatus", "n_pre  : Old"))
+    # the product of the coded set and the positive reals, on all three fields
     product = changed(
-        HOUSEHOLD,
+        forward,
         (fields, fields.replace("HouseholdStatus\n", "HouseholdStatus × ℝ₊\n")),
         ("n_next = 1 ", "n_next = n "),
-        ("100 - 120*n + β*V[>]", "β*V[>]"),
     )
-    product_opposite = changed(product, (CODES, opposite))
-    eligible = changed(
-        added("k : ℤ\nEligible := {j : HouseholdStatus | j >= k}"),
+    product_with_opposite_codes = changed(product, (ANNOTATION, OPPOSITE_ANNOTATION))
+    # the restriction by the parameter k, read; then read and written
+    read_from_eligible = changed(
+        household_with_lines("k : ℤ\nEligible := {j : HouseholdStatus | j >= k}", text=forward),
         ("n_pre  : HouseholdStatus", "n_pre  : Eligible"),
     )
-    eligible_written = changed(eligible, ("n_next : HouseholdStatus", "n_next : Eligible"))
-    eligible_elsewhere = changed(
-        eligible_written, (CODES, CODES.replace("household_status", "age_group"))
+    eligible_on_both_sides = changed(
+        read_from_eligible, ("n_next : HouseholdStatus", "n_next : Eligible")
     )
-    one = added("One := {j : HouseholdStatus | j = 1}")
-    one_written = changed(one, ("n_next : HouseholdStatus", "n_next : One"))
-    one_read = changed(one, ("n_pre  : HouseholdStatus", "n_pre  : One"))
+    eligible_under_another_identifier = changed(
+        eligible_on_both_sides, (ANNOTATION, ANNOTATION.replace("household_status", "age_group"))
+    )
+    # the restriction by the equality j = 1, written into and read from
+    one = household_with_lines("One := {j : HouseholdStatus | j = 1}", text=forward)
+    written_into_one = changed(one, ("n_next : HouseholdStatus", "n_next : One"))
+    read_from_one = changed(one, ("n_pre  : HouseholdStatus", "n_pre  : One"))
     bounded = changed(
-        added("k : ℤ\nBounded := {j : HouseholdStatus | j >= 1, j <= k}"),
+        household_with_lines(
+            "k : ℤ\nBounded := {j : HouseholdStatus | j >= 1, j <= k}", text=forward
+        ),
         ("n_next : HouseholdStatus", "n_next : Bounded"),
     )
     called = changed(
-        added("k : ℤ\n𝑓(x : ℤ) := x + k\nCalled := {j : HouseholdStatus | j >= 𝑓(0)}"),
+        household_with_lines(
+            "k : ℤ\n𝑓(x : ℤ) := x + k\nCalled := {j : HouseholdStatus | j >= 𝑓(0)}",
+            text=forward,
+        ),
         ("n_pre  : HouseholdStatus", "n_pre  : Called"),
         ("n_next : HouseholdStatus", "n_next : Called"),
     )
-    local = household(codes="[!categories, newborn=0, old=1]")
-    local_elsewhere = changed(local, ("discount", "the discount"))
+    local_in_another_text = changed(LOCAL, ("discount", "the discount"))
+    # a stage that writes n_next = 1 − n into the set with the opposite codes
     recoding = changed(
-        added(f"Recoded := {RANGE} :: {opposite}"),
+        household_with_lines(f"Recoded := {COMPREHENSION} :: {OPPOSITE_ANNOTATION}", text=forward),
         ("n_next : HouseholdStatus", "n_next : Recoded"),
         ("n_next = 1 ", "n_next = 1 - n "),
     )
-    integers = changed(HOUSEHOLD, (f"{RANGE} :: {CODES}", "ℤ"))
-    assert statuses(integers, integers) == dict.fromkeys(KINDS, "compatible")
-    for case, writer, reader, status in (
-        ("one identifier", HOUSEHOLD, HOUSEHOLD, "compatible"),
-        ("entries reversed", HOUSEHOLD, entries_reversed, "compatible"),
-        ("another identifier", HOUSEHOLD, another_identifier, "incompatible"),
-        ("opposite codes", HOUSEHOLD, opposite_codes, "incompatible"),
-        ("coded into uncoded", HOUSEHOLD, uncoded, "incompatible"),
-        ("uncoded into coded", uncoded, HOUSEHOLD, "incompatible"),
-        ("restriction into the set", old_written, HOUSEHOLD, "compatible"),
-        ("set into the restriction", HOUSEHOLD, old_read, "incompatible"),
-        ("agreeing products", product, product, "compatible"),
-        ("a conflicting product factor", product, product_opposite, "incompatible"),
-        ("a restriction by a parameter", HOUSEHOLD, eligible, "not-established"),
-        ("a restriction that may be empty", eligible_written, opposite_codes, "not-established"),
-        ("an equality into the set", one_written, HOUSEHOLD, "compatible"),
-        ("the set into an equality", HOUSEHOLD, one_read, "incompatible"),
-        ("a literal bound beside a parameter", bounded, old_read, "compatible"),
-        (
-            "one restriction under two identifiers",
-            eligible_written,
-            eligible_elsewhere,
-            "not-established",
+    compatible = ("compatible",) * 3
+    incompatible = ("incompatible",) * 3
+    not_established = ("not-established",) * 3
+    return [
+        pytest.param(integers, integers, compatible, id="two-domains-of-integers-without-codes"),
+        pytest.param(forward, forward, compatible, id="one-identifier"),
+        pytest.param(forward, entries_reversed, compatible, id="entries-reversed"),
+        pytest.param(forward, another_identifier, incompatible, id="another-identifier"),
+        pytest.param(forward, OPPOSITE_CODES, incompatible, id="opposite-codes"),
+        pytest.param(forward, uncoded, incompatible, id="coded-into-uncoded"),
+        pytest.param(uncoded, forward, incompatible, id="uncoded-into-coded"),
+        pytest.param(written_into_old, forward, compatible, id="restriction-into-the-set"),
+        pytest.param(forward, read_from_old, incompatible, id="set-into-the-restriction"),
+        pytest.param(product, product, compatible, id="agreeing-products"),
+        pytest.param(
+            product, product_with_opposite_codes, incompatible, id="a-conflicting-product-factor"
         ),
-        ("a condition that calls a function", called, called, "not-established"),
-        ("two texts without an identifier", local, local_elsewhere, "incompatible"),
-        ("into the recoding stage", HOUSEHOLD, recoding, "compatible"),
-        ("out of the recoding stage", recoding, opposite_codes, "compatible"),
-    ):
-        assert statuses(writer, reader) == dict.fromkeys(KINDS, status), case
-    assert statuses(eligible_written, eligible_written) == {
-        "authored": "compatible",
-        "inferred": "compatible",
-        "inter-period": "not-established",
-    }
-    assert connected(local, local)["inter-period"][0] == "compatible"
-    without_text = make_stage(*parse_with_spans(local, ORIGIN))
+        pytest.param(
+            forward, read_from_eligible, not_established, id="a-restriction-by-a-parameter"
+        ),
+        pytest.param(
+            eligible_on_both_sides,
+            OPPOSITE_CODES,
+            not_established,
+            id="a-restriction-that-may-be-empty",
+        ),
+        pytest.param(written_into_one, forward, compatible, id="an-equality-into-the-set"),
+        pytest.param(forward, read_from_one, incompatible, id="the-set-into-an-equality"),
+        pytest.param(bounded, read_from_old, compatible, id="a-literal-bound-beside-a-parameter"),
+        pytest.param(
+            eligible_on_both_sides,
+            eligible_under_another_identifier,
+            not_established,
+            id="one-restriction-under-two-identifiers",
+        ),
+        pytest.param(called, called, not_established, id="a-condition-that-calls-a-function"),
+        pytest.param(
+            LOCAL, local_in_another_text, incompatible, id="two-texts-without-an-identifier"
+        ),
+        pytest.param(forward, recoding, compatible, id="into-the-recoding-stage"),
+        pytest.param(recoding, OPPOSITE_CODES, compatible, id="out-of-the-recoding-stage"),
+        # one set within a period; between periods k names two parameters
+        pytest.param(
+            eligible_on_both_sides,
+            eligible_on_both_sides,
+            ("compatible", "compatible", "not-established"),
+            id="one-restriction-by-a-parameter-on-both-sides",
+        ),
+    ]
+
+
+@pytest.mark.parametrize("writer, reader, statuses", coded_domain_pairs())
+def test_the_compatibility_of_two_domains_follows_from_their_maps_of_codes_and_their_restrictions(
+    writer, reader, statuses
+):
+    """The connection report finds the domains of the writing and the reading
+    text of each row compatible, incompatible or not established, as the
+    row states for an authored, an inferred and an inter-period pair, from
+    their maps of codes and their restrictions."""
+    found = {kind: status for kind, (status, _) in compatibility_by_kind(writer, reader).items()}
+    assert found == dict(zip(KINDS, statuses))
+
+
+def test_a_set_whose_categories_carry_no_identifier_joins_its_next_period_occurrence_by_its_text():
+    """A set whose annotation writes no identifier is compatible with its
+    occurrence in the next period of the same stage text, and not
+    established where the stage is made from a term, which holds no digest
+    of a text."""
+    assert compatibility_by_kind(LOCAL, LOCAL)["inter-period"][0] == "compatible"
+    without_text = make_stage(*parse_with_spans(LOCAL, ORIGIN))
     report = connection_report(
         elaborate_trellis(
             {
@@ -589,66 +768,142 @@ def test_item_4_authored_inferred_and_inter_period_pairs_join_coded_domains_whos
     )
     (pair,) = [pair for pair in report.pairs if pair.reading.key == "R"]
     assert pair.compatibility == "not-established" and "no digest" in pair.reason, pair.reason
-    _, reason = connected(HOUSEHOLD, opposite_codes)["authored"]
-    assert "0 ↦ newborn, 1 ↦ old" in reason and "0 ↦ old, 1 ↦ newborn" in reason, reason
 
 
-def test_item_5_the_assignment_round_trips_its_codes_are_exported_and_each_version_holds_them():
-    """The new assignment prints to source as the brief writes it, without
-    its annotation, and the printed text parses to an equal core; the
-    annotated AST of the stage round-trips through `to_json` and
-    `from_json`. The stage's encoding passes the package's encoding checks;
-    its stored entry of the set, and no other, writes `categories`, and the
-    encoded answer of the set's card writes the codes as its second denoted
-    object. The checks refuse a stored map whose codes decrease, a map on a
-    parameter's entry and an answer node whose names repeat. Two
-    calibrations and two trellis occurrences of the text hold four distinct
-    records equal to the map, which a refused construction under the same
-    identifier leaves as they were."""
-    term, _ = parse_with_spans(HOUSEHOLD, ORIGIN)
-    statement = term.items[2]  # the item after `@stage` and the declaration of β
+def test_the_reason_of_an_incompatible_pair_of_coded_domains_writes_the_map_of_each_side():
+    """The reason that the connection report gives for the incompatible
+    authored pair into the opposite codes writes the map of codes of each
+    side."""
+    status, reason = compatibility_by_kind(HOUSEHOLD_FORWARD, OPPOSITE_CODES)["authored"]
+    # the pair is incompatible, the case whose reason this test reads
+    assert status == "incompatible"
+    maps = ("0 ↦ newborn, 1 ↦ old", "0 ↦ old, 1 ↦ newborn")
+    assert [phrase for phrase in maps if phrase not in reason] == [], reason
+
+
+# the printed source, the abstract syntax and the encoding
+
+
+def test_the_definition_of_a_coded_set_prints_to_source_without_its_annotation(forward_term):
+    """The definition of the household set prints to source as the
+    comprehension it writes, without its annotation."""
+    statement = forward_term.items[2]  # the item after `@stage` and the declaration of β
+    assert to_source(statement.core) == "HouseholdStatus := {i : ℤ | i >= 0, i <= 1}"
+
+
+def test_the_printed_definition_of_a_coded_set_parses_to_an_equal_core(forward_term):
+    """The source that the definition of the household set prints parses to
+    a statement equal to the core of the definition, its statement without
+    its annotation."""
+    statement = forward_term.items[2]  # the item after `@stage` and the declaration of β
     printed = to_source(statement.core)
-    assert printed == "HouseholdStatus := {i : ℤ | i >= 0, i <= 1}"
+    # the item after `@stage`
     reparsed = parse_with_spans("@stage: x\n" + printed + "\n").term.items[1]
     assert to_json(reparsed.core) == to_json(statement.core)
-    assert from_json(json.loads(json.dumps(to_json(term)))) == term
 
-    stage = stage_from_text(HOUSEHOLD, ORIGIN)
-    encoding = validate_encoding(json.loads(json.dumps(stage.encoding())))
-    written = {"identifier": "household_status", "codes": [[0, "newborn"], [1, "old"]]}
-    stored = {entry["identity"]: entry for entry in encoding["definitions"]}
-    assert [identity for identity, entry in stored.items() if "categories" in entry] == [SET]
-    assert stored[SET]["categories"] == written
-    card = encoding["derived"]["definitions"][list(stored).index(SET)]
+
+def test_the_parsed_term_of_a_stage_with_category_codes_is_read_back_equal_from_its_json(
+    forward_term,
+):
+    """The parsed term of the forward household stage, written by `to_json`
+    to JSON text and read back by `from_json`, is equal to the term."""
+    assert from_json(json.loads(json.dumps(to_json(forward_term)))) == forward_term
+
+
+def test_the_entry_of_the_coded_set_alone_holds_its_codes_in_the_definitions_of_the_encoding(
+    forward_encoding,
+):
+    """Among the definitions of the encoding of the forward household stage,
+    the entry of the household set, and no other entry, holds the key
+    `categories`, which holds its identifier and its codes."""
+    entries = {entry["identity"]: entry for entry in forward_encoding["definitions"]}
+    assert [identity for identity, entry in entries.items() if "categories" in entry] == [
+        SET_IDENTITY
+    ]
+    assert entries[SET_IDENTITY]["categories"] == {
+        "identifier": "household_status",
+        "codes": [[0, "newborn"], [1, "old"]],
+    }
+
+
+def test_the_card_of_the_coded_set_under_derived_holds_its_codes_as_its_second_denoted_object(
+    forward_encoding,
+):
+    """In the encoding of the forward household stage, the card of the
+    household set under `derived` denotes a comprehension and then the
+    category codes, which hold the identifier and the codes of the set."""
+    order = [entry["identity"] for entry in forward_encoding["definitions"]]
+    card = forward_encoding["derived"]["definitions"][order.index(SET_IDENTITY)]
     denoted = [item["fields"]["expression"] for item in card["value"]["fields"]["denoted"]]
     assert [expression["node"] for expression in denoted] == [
         "terms.Comprehension",
         "records.CategoryCodes",
     ]
-    assert denoted[1]["fields"] == written
-    # a stored map whose codes decrease, a map on the entry of the parameter
-    # β, and an encoded map whose names repeat are refused
-    order = list(stored)
-    for fault in ("decreasing", "on a parameter", "repeated names"):
-        broken = json.loads(json.dumps(encoding))
-        entries = broken["definitions"]
-        node = broken["derived"]["definitions"][order.index(SET)]["value"]["fields"]
-        if fault == "decreasing":
-            entries[order.index(SET)]["categories"]["codes"].reverse()
-        elif fault == "on a parameter":
-            entries[order.index("household_status:parameter:β")]["categories"] = written
-        else:
-            node["denoted"][1]["fields"]["expression"]["fields"]["codes"][1][1] = "newborn"
-        words = {
-            "decreasing": "increase strictly",
-            "on a parameter": "writes no category map",
-            "repeated names": "names must be distinct",
-        }[fault]
-        with pytest.raises(ValueError, match=words):
-            validate_encoding(broken)
+    assert denoted[1]["fields"] == {
+        "identifier": "household_status",
+        "codes": [[0, "newborn"], [1, "old"]],
+    }
 
+
+def codes_that_decrease(encoding):
+    """Reverse the codes in the entry of the household set among the
+    definitions of `encoding`."""
+    order = [entry["identity"] for entry in encoding["definitions"]]
+    encoding["definitions"][order.index(SET_IDENTITY)]["categories"]["codes"].reverse()
+
+
+def codes_on_a_parameter(encoding):
+    """Write a map of codes into the entry of the parameter β among the
+    definitions of `encoding`."""
+    order = [entry["identity"] for entry in encoding["definitions"]]
+    encoding["definitions"][order.index("household_status:parameter:β")]["categories"] = {
+        "identifier": "household_status",
+        "codes": [[0, "newborn"], [1, "old"]],
+    }
+
+
+def a_category_written_twice(encoding):
+    """Write the category `newborn` for the code 1 in the map of codes of the
+    card of the household set under `derived` in `encoding`."""
+    order = [entry["identity"] for entry in encoding["definitions"]]
+    card = encoding["derived"]["definitions"][order.index(SET_IDENTITY)]["value"]["fields"]
+    card["denoted"][1]["fields"]["expression"]["fields"]["codes"][1][1] = "newborn"
+
+
+@pytest.mark.parametrize(
+    "fault, phrase",
+    [
+        pytest.param(codes_that_decrease, "increase strictly", id="codes-that-decrease"),
+        pytest.param(codes_on_a_parameter, "writes no category map", id="codes-on-a-parameter"),
+        pytest.param(
+            a_category_written_twice,
+            "names must be distinct",
+            id="a-category-written-twice-on-the-card",
+        ),
+    ],
+)
+def test_validate_encoding_refuses_a_map_of_codes_out_of_order_misplaced_or_with_repeated_names(
+    forward_encoding, fault, phrase
+):
+    """`validate_encoding`, which admits the encoding of the forward
+    household stage, refuses a copy of it with the fault of the row: codes
+    that decrease in the entry of the set, codes in the entry of a
+    parameter, or a category written twice in the map of the card."""
+    broken = json.loads(json.dumps(forward_encoding))
+    fault(broken)
+    with pytest.raises(ValueError, match=phrase):
+        validate_encoding(broken)
+
+
+# the versions of a stage, each of which holds its own record of the codes
+
+
+def four_versions(stage):
+    """Four versions of the forward household stage: two copies of `stage`
+    calibrated at β = 0.96 and at β = 0.9, and the occurrences of its text in
+    the two periods of a trellis."""
     occurrence = {
-        "stage": {"text": HOUSEHOLD, "origin": ORIGIN},
+        "stage": {"text": HOUSEHOLD_FORWARD, "origin": ORIGIN},
         "calibration": {},
         "settings": {},
         "methods": {},
@@ -659,56 +914,44 @@ def test_item_5_the_assignment_round_trips_its_codes_are_exported_and_each_versi
             "inter_connectors": [{"n_next": "n_pre"}],
         }
     )
-    # each calibration binds a stage of its own (specification 0.6
-    # decision 1 and R4)
-    versions = [
+    # calibrate binds the stage it is called on, so each calibration binds a
+    # copy of its own
+    calibrated = [
         copy_native(stage).calibrate({"β": 0.96}),
         copy_native(stage).calibrate({"β": 0.9}),
-    ] + [period["stages"]["H"] for period in trellis["periods"]]
-    held = [version.definitions[SET].categories for version in versions]
+    ]
+    return calibrated + [period["stages"]["H"] for period in trellis["periods"]]
+
+
+def test_two_calibrations_and_two_trellis_occurrences_of_a_stage_hold_four_records_of_its_codes(
+    forward_stage,
+):
+    """Two calibrations of the forward household stage and the occurrences
+    of its text in two periods of a trellis hold four distinct records, each
+    equal to the map of codes of the household set."""
+    held = [
+        version.definitions[SET_IDENTITY].categories for version in four_versions(forward_stage)
+    ]
     assert held == [records.CategoryCodes(*HOUSEHOLD_CODES)] * 4
     assert len({id(codes) for codes in held}) == 4
+
+
+def test_a_refused_construction_under_the_same_identifier_leaves_the_records_of_other_versions(
+    forward_stage,
+):
+    """A stage text refused under `category-codes` with the identifier
+    `household_status` leaves each of four versions of the forward household
+    stage holding its own record of the map of codes, unchanged."""
+    versions = four_versions(forward_stage)
+    held = [version.definitions[SET_IDENTITY].categories for version in versions]
     with pytest.raises(ConstructionError) as refused:
-        stage_from_text(household(codes=CODES.replace("old=1", "old=2")), ORIGIN)
+        stage_from_text(
+            household_with(codes=ANNOTATION.replace("old=1", "old=2"), text=HOUSEHOLD_FORWARD),
+            ORIGIN,
+        )
     assert refused.value.rule == "category-codes"
     assert all(
-        version.definitions[SET].categories is codes for version, codes in zip(versions, held)
+        version.definitions[SET_IDENTITY].categories is codes
+        for version, codes in zip(versions, held)
     )
     assert held == [records.CategoryCodes(*HOUSEHOLD_CODES)] * 4
-
-
-def test_item_6_the_notebook_is_executed_and_keeps_its_two_reserved_cells():
-    """The notebook of the brief stands in the verification folder of the
-    internal records, executed: every code cell ran; an error output stands
-    only in a cell tagged `raises-exception`, one per such cell; no output
-    prints `False`, so every comparison of the notebook held when it was
-    executed; and the last four cells are the reserved `### Observation` and
-    `### Decision` cells, which record no personal acceptance. The notebook
-    is found by its folder name, since no file outside the internal folder
-    names a path under it; the test is skipped in a checkout without that
-    folder."""
-    found = sorted(
-        ROOT.glob(
-            "*/operations/verification/*/spec_0.5/2026-10-20-category-codes/category-codes.ipynb"
-        )
-    )
-    if not found:
-        pytest.skip("the notebook's folder is not in this checkout")
-    (path,) = found
-    notebook = json.loads(path.read_text(encoding="utf-8"))
-    cells = notebook["cells"]
-    code = [cell for cell in cells if cell["cell_type"] == "code"]
-    assert code and all(cell["execution_count"] for cell in code)
-    refused = [cell for cell in code if "raises-exception" in cell["metadata"].get("tags", [])]
-    assert len(refused) == 11
-    for cell in code:
-        errors = [output for output in cell["outputs"] if output["output_type"] == "error"]
-        assert len(errors) == (1 if cell in refused else 0), "".join(cell["source"])
-        for output in cell["outputs"]:
-            shown = "".join(output.get("text", "")) + "".join(
-                output.get("data", {}).get("text/plain", "")
-            )
-            assert "False" not in shown, "".join(cell["source"])
-    assert [cell["cell_type"] for cell in cells[-4:]] == ["markdown"] * 4
-    assert "".join(cells[-4]["source"]).strip() == "### Observation"
-    assert "".join(cells[-2]["source"]).strip() == "### Decision"

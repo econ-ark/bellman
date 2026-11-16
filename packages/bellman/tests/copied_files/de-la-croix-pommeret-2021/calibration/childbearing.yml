@@ -1,0 +1,34 @@
+# The parameter values the paper reports. Three are fixed a priori (p. 14 and Table 1,
+# p. 15); the fecundity parameters are fitted to Leridon's conception data
+# (p. 16); the returns and the volatility are the education category (7)
+# column of Table 4 (p. 20), the college graduates, which is the group the
+# paper uses to calibrate the distribution of the taste for children.
+#
+# Δ is not a parameter of the paper. It is the length of one date in the
+# discrete-time statement, whose limit Δ → 0 is the paper's problem. The value
+# below is one year, the unit in which the paper states ρ ("2% on an annual
+# basis", p. 14), evaluates π at integer ages, and sets the menopause age.
+#
+# Not bound here, and why:
+#   ω   — the paper reports no value. The taste for children is drawn across
+#         women from N(m_ω, s_ω²) with m_ω = 0.898228 and s_ω = 1.03692
+#         (p. 20), and the two thresholds of Proposition 3 at this calibration
+#         are ω̄ = 0.04 and ω̃ = 1.44 (p. 20).
+#   T   — the menopause age, T = 35 in model time, that is age 53 (p. 15). The
+#         fecundity function of fecundity.bl has no cut-off, so the parameter
+#         has nowhere to bind.
+#   a0  — initial wealth, 26.528 (p. 20), chosen so that a woman with ω = 1
+#         picks the observed mean age at first birth. It is boundary data for
+#         the forward recursion, not a stage parameter.
+calibration:
+  Δ: 1.0
+  ρ: 0.02
+  ε: 6.0
+  β: 0.15
+  r1: 0.124
+  r2: 0.075
+  σ: 0.069
+  π_a: 0.96
+  π_b: 3.53
+  π_c: 0.33
+  π_d: 0.012

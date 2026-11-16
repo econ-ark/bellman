@@ -1,0 +1,687 @@
+BELLMAN-SYM / STAGE renter_cons                           [VERSION = SYMBOLIC]
+a stage occurrence of
+applications/housing-renting/declaration/stages/renter_cons/renter_cons.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        none
+  ∼ decision       w_d state, S_d state, y_d state, c control, V value
+  ≻ continuation   a_nxt_r≻ state, H_nxt_r≻ state, y_nxt_r≻ state, V≻ value
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           w_d at decision, S_d at decision, y_d at decision, a_nxt_r≻
+                   at continuation, H_nxt_r≻ at continuation, y_nxt_r≻ at
+                   continuation
+  controls         c at decision
+  values           V at the decision, continuation perches
+  shocks           none
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → dcsn_to_cntn   (w_d, S_d, y_d) : !dcsn, at c ->
+                   (a_nxt_r≻, H_nxt_r≻, y_nxt_r≻) : !cntn
+  ← cntn_to_dcsn   (V≻) : !cntn, at c -> (V) : !dcsn
+  ← policy         (V≻) : !cntn -> (c) : !dcsn
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  parameters               5   β : (0, 1); α : (0, 1); κ : ℝ₊₊; ι : ℝ₊₊;
+                               ϑ : ℝ₊₊
+  functions                3   𝑢 on ℝ₊₊ × ℝ₊, 𝑑𝑢, 𝑑𝑢𝑖𝑛𝑣 on ℝ₊₊
+  correspondences          1   Γ : ℝ₊₊ ⇉ ℝ₊₊
+  laws of motion           1   a_nxt_r = w_d - c; H_nxt_r = 0; y_nxt_r = y_d
+  value aggregators        2   V = 𝑢(c, ϑ*S_d) + β*V[>];
+                               c = argmax_{c : Γ(w_d)}(𝑢(c, ϑ*S_d) + β*V[>])
+  block lines              5   dcsn_to_cntn.savings, dcsn_to_cntn.no_housing,
+                               dcsn_to_cntn.3, cntn_to_dcsn.value,
+                               policy.optimality
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   𝑉≻ ↦ 𝑐(w_d, S_d, y_d), 𝑉
+                    forward    μ ↦ μ≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ∼ w_d, S_d, y_d  →  ≻ a_nxt_r≻, H_nxt_r≻, y_nxt_r≻
+  backward   ∼ V  ←  ≻ V≻
+  policy     ∼ c  ←  ≻ V≻
+
+==== stage ====
+STAGE renter_cons
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑉≻  : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+         ──────────────────────────────────────
+    out  𝑐   : ℝ₊₊ × ℝ₊ × ℝ₊₊ → ℝ₊₊,  𝑐(w_d, S_d, y_d) ∈ Γ(w_d)
+         𝑉   : ℝ₊₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+  forward
+    in   μ   : finite measure on ℝ₊₊ × ℝ₊ × ℝ₊₊
+         ──────────────────────────────────────
+    out  μ≻  : finite measure on ℝ₊ × ℝ₊ × ℝ₊₊
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉≻                           out: 𝑉
+
+    2  policy
+       in: 𝑉≻                           out: 𝑐
+
+  forward
+    1  dcsn_to_cntn
+       in: μ                            out: μ≻
+
+Conditions
+  cntn_to_dcsn:Aggregation  ¬(𝑢(c, ϑ · S_d) ∈ [∞, ∞] ∧ β · V[>] ∈ [−∞, −∞])
+  cntn_to_dcsn:Aggregation  𝑉(w_d, S_d, y_d) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  renter_cons.bl
+  15  a_nxt_r = w_d - c
+        :: [id=savings]
+  16  H_nxt_r = 0
+        :: [id=no_housing, "a renter holds no housing at the end of the
+        period"]
+  17  y_nxt_r = y_d
+  21  V = 𝑢(c, ϑ*S_d) + β*V[>]
+        :: [id=value]
+  25  c = argmax_{c : Γ(w_d)}(𝑢(c, ϑ*S_d) + β*V[>])
+        :: [id=optimality]
+
+Definitions referenced
+  β     renter_cons:parameter:β
+  ϑ     renter_cons:parameter:ϑ
+  𝑢     renter_cons:function:𝑢
+  Γ     renter_cons:correspondence:Γ
+
+File
+  applications/housing-renting/declaration/stages/renter_cons/renter_cons.bl
+
+Perches
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE renter_cons / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻}
+       ──────────
+  out  V   : {V}
+
+Conditions
+  ¬(𝑢(c, ϑ · S_d) ∈ [∞, ∞] ∧ β · V[>] ∈ [−∞, −∞])
+  𝑉(w_d, S_d, y_d) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  renter_cons.bl
+  21  V = 𝑢(c, ϑ*S_d) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  β     renter_cons:parameter:β
+  ϑ     renter_cons:parameter:ϑ
+  𝑢     renter_cons:function:𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward policy ====
+STAGE renter_cons / POLICY BLOCK policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻}
+       ──────────
+  out  c   : {c}
+──────────────────────────────────────────────────────────────────────────────
+Source  renter_cons.bl
+  25  c = argmax_{c : Γ(w_d)}(𝑢(c, ϑ*S_d) + β*V[>])  :: [id=optimality]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE renter_cons / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   w_d       : {w_d, y_d}
+       S_d       : {w_d, S_d, y_d}
+       y_d       : {w_d, y_d}
+       ──────────────────────────────────────────
+  out  a_nxt_r≻  : {a_nxt_r≻, H_nxt_r≻, y_nxt_r≻}
+       H_nxt_r≻  : {a_nxt_r≻, H_nxt_r≻, y_nxt_r≻}
+       y_nxt_r≻  : {y_nxt_r≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  renter_cons.bl
+  15  a_nxt_r = w_d - c
+        :: [id=savings]
+  16  H_nxt_r = 0
+        :: [id=no_housing, "a renter holds no housing at the end of the
+        period"]
+  17  y_nxt_r = y_d
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE renter_cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+       ─────────────────────────────────────────────────────────
+  out  𝑉   : ℝ₊₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+
+At
+  𝑐  : ℝ₊₊ × ℝ₊ × ℝ₊₊ → ℝ₊₊,  𝑐(w_d, S_d, y_d) ∈ Γ(w_d)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻(·, ·, ·, 𝑐)
+     ───────────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻(·, ·, ·, 𝑐))(w_d, S_d, y_d)
+             = 𝑉≻(𝑔≻(w_d, S_d, y_d, 𝑐(w_d, S_d, y_d)))
+
+  2  Aggregation
+     in: (1)                            out: 𝑉
+     ───────────────────────────────────────────────────────────
+     rule: 𝑉 = 𝑢(𝑐, ϑ · S_d) + β · 𝑉≻(𝑔≻(w_d, S_d, y_d, 𝑐))
+           on (w_d, S_d, y_d) ∈ ℝ₊₊ × ℝ₊ × ℝ₊₊
+
+  3  Evaluation
+     in: 𝑉                              out: 𝑉
+     ───────────────────────────────────────────────────────────
+     rule: 𝑉 : ℝ₊₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+
+Conditions
+  Aggregation  ¬(𝑢(c, ϑ · S_d) ∈ [∞, ∞] ∧ β · V[>] ∈ [−∞, −∞])
+  Aggregation  𝑉(w_d, S_d, y_d) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  renter_cons.bl
+  21  V = 𝑢(c, ϑ*S_d) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  β     renter_cons:parameter:β
+  ϑ     renter_cons:parameter:ϑ
+  𝑢     renter_cons:function:𝑢
+  Γ     renter_cons:correspondence:Γ
+  𝑔≻    renter_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback ====
+STAGE renter_cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+       ──────────────────────────────
+  out  𝑉≻ ∘ 𝑔≻(·, ·, ·, 𝑐)
+           : ℝ₊₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+
+Rule
+  (𝑉≻ ∘ 𝑔≻(·, ·, ·, 𝑐))(w_d, S_d, y_d)
+    = 𝑉≻(𝑔≻(w_d, S_d, y_d, 𝑐(w_d, S_d, y_d)))
+──────────────────────────────────────────────────────────────────────────────
+Source  renter_cons.bl
+  15  a_nxt_r = w_d - c
+        :: [id=savings]
+  16  H_nxt_r = 0
+        :: [id=no_housing, "a renter holds no housing at the end of the
+        period"]
+  17  y_nxt_r = y_d
+
+Definitions referenced
+  𝑔≻    renter_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE renter_cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻(·, ·, ·, 𝑐)
+          : ℝ₊₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+       ─────────────────────────────
+  out  𝑉  : ℝ₊₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+
+Rule
+  𝑉 = 𝑢(𝑐, ϑ · S_d) + β · 𝑉≻(𝑔≻(w_d, S_d, y_d, 𝑐))
+  on (w_d, S_d, y_d) ∈ ℝ₊₊ × ℝ₊ × ℝ₊₊
+
+Conditions
+  ¬(𝑢(c, ϑ · S_d) ∈ [∞, ∞] ∧ β · V[>] ∈ [−∞, −∞])
+  𝑉(w_d, S_d, y_d) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  renter_cons.bl
+  21  V = 𝑢(c, ϑ*S_d) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  β     renter_cons:parameter:β
+  ϑ     renter_cons:parameter:ϑ
+  𝑢     renter_cons:function:𝑢
+  𝑔≻    renter_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE renter_cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : ℝ₊₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+       ─────────────────────────────
+  out  𝑉  : ℝ₊₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+
+Rule
+  𝑉 = 𝑢(𝑐, ϑ · S_d) + β · 𝑉≻(𝑔≻(w_d, S_d, y_d, 𝑐))
+  on (w_d, S_d, y_d) ∈ ℝ₊₊ × ℝ₊ × ℝ₊₊
+  𝑉 : ℝ₊₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  β     renter_cons:parameter:β
+  ϑ     renter_cons:parameter:ϑ
+  𝑢     renter_cons:function:𝑢
+  𝑔≻    renter_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy ====
+STAGE renter_cons / POLICY BUILDER policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+       ────────────────────────────────────────────────────────────────────
+  out  𝑐   : ℝ₊₊ × ℝ₊ × ℝ₊₊ → ℝ₊₊,  𝑐(w_d, S_d, y_d) ∈ Γ(w_d)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻
+     ──────────────────────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻)(w_d, S_d, y_d, c) = 𝑉≻(𝑔≻(w_d, S_d, y_d, c))
+
+  2  optimality:Aggregation
+     in: (1)
+     out: (w_d, S_d, y_d, c) ↦ 𝑢(c, ϑ · S_d) + β · 𝑉≻(𝑔≻(w_d, S_d, y_d, c))
+     ──────────────────────────────────────────────────────────────────────
+     rule: (w_d, S_d, y_d, c) ↦ 𝑢(c, ϑ · S_d) + β · 𝑉≻(𝑔≻(w_d, S_d, y_d, c))
+
+  3  optimality:Argmax
+     in: (2)                            out: 𝑐
+     ──────────────────────────────────────────────────────────────────────
+     rule: 𝑐(w_d, S_d, y_d)
+             ∈ argmax_{c ∈ Γ(w_d)}
+                 [𝑢(c, ϑ · S_d) + β · 𝑉≻(𝑔≻(w_d, S_d, y_d, c))]
+
+  4  Evaluation
+     in: 𝑐                              out: 𝑐
+     ──────────────────────────────────────────────────────────────────────
+     rule: 𝑐 : ℝ₊₊ × ℝ₊ × ℝ₊₊ → ℝ₊₊,  𝑐(w_d, S_d, y_d) ∈ Γ(w_d)
+──────────────────────────────────────────────────────────────────────────────
+Source  renter_cons.bl
+  25  c = argmax_{c : Γ(w_d)}(𝑢(c, ϑ*S_d) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  β     renter_cons:parameter:β
+  ϑ     renter_cons:parameter:ϑ
+  𝑢     renter_cons:function:𝑢
+  Γ     renter_cons:correspondence:Γ
+  𝑔≻    renter_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback ====
+STAGE renter_cons / POLICY BUILDER policy / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊ × ℝ₊ × ℝ₊₊ → [−∞, ∞)
+       ──────────────────────────────────────────────────────────────────────
+  out  𝑉≻ ∘ 𝑔≻
+           : {w_d, S_d, y_d, c ∈ ℝ₊₊ × ℝ₊ × ℝ₊₊ × ℝ₊₊ | c ∈ Γ(w_d)} → [−∞, ∞)
+
+Rule
+  (𝑉≻ ∘ 𝑔≻)(w_d, S_d, y_d, c) = 𝑉≻(𝑔≻(w_d, S_d, y_d, c))
+──────────────────────────────────────────────────────────────────────────────
+Source  renter_cons.bl
+  15  a_nxt_r = w_d - c
+        :: [id=savings]
+  16  H_nxt_r = 0
+        :: [id=no_housing, "a renter holds no housing at the end of the
+        period"]
+  17  y_nxt_r = y_d
+
+Definitions referenced
+  Γ     renter_cons:correspondence:Γ
+  𝑔≻    renter_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / optimality:Aggregation ====
+STAGE renter_cons / POLICY BUILDER policy / optimality:Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻
+         : {w_d, S_d, y_d, c ∈ ℝ₊₊ × ℝ₊ × ℝ₊₊ × ℝ₊₊ | c ∈ Γ(w_d)} → [−∞, ∞)
+       ────────────────────────────────────────────────────────────────────
+  out  (w_d, S_d, y_d, c) ↦ 𝑢(c, ϑ · S_d) + β · 𝑉≻(𝑔≻(w_d, S_d, y_d, c))
+         : {w_d, S_d, y_d, c ∈ ℝ₊₊ × ℝ₊ × ℝ₊₊ × ℝ₊₊ | c ∈ Γ(w_d)} → [−∞, ∞)
+
+Rule
+  (w_d, S_d, y_d, c) ↦ 𝑢(c, ϑ · S_d) + β · 𝑉≻(𝑔≻(w_d, S_d, y_d, c))
+──────────────────────────────────────────────────────────────────────────────
+Source  renter_cons.bl
+  25  c = argmax_{c : Γ(w_d)}(𝑢(c, ϑ*S_d) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  β     renter_cons:parameter:β
+  ϑ     renter_cons:parameter:ϑ
+  𝑢     renter_cons:function:𝑢
+  Γ     renter_cons:correspondence:Γ
+  𝑔≻    renter_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / optimality:Argmax ====
+STAGE renter_cons / POLICY BUILDER policy / optimality:Argmax
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (w_d, S_d, y_d, c) ↦ 𝑢(c, ϑ · S_d) + β · 𝑉≻(𝑔≻(w_d, S_d, y_d, c))
+          : {w_d, S_d, y_d, c ∈ ℝ₊₊ × ℝ₊ × ℝ₊₊ × ℝ₊₊ | c ∈ Γ(w_d)} → [−∞, ∞)
+       ─────────────────────────────────────────────────────────────────────
+  out  𝑐  : ℝ₊₊ × ℝ₊ × ℝ₊₊ → ℝ₊₊,  𝑐(w_d, S_d, y_d) ∈ Γ(w_d)
+
+Rule
+  𝑐(w_d, S_d, y_d)
+    ∈ argmax_{c ∈ Γ(w_d)} [𝑢(c, ϑ · S_d) + β · 𝑉≻(𝑔≻(w_d, S_d, y_d, c))]
+──────────────────────────────────────────────────────────────────────────────
+Source  renter_cons.bl
+  25  c = argmax_{c : Γ(w_d)}(𝑢(c, ϑ*S_d) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  β     renter_cons:parameter:β
+  ϑ     renter_cons:parameter:ϑ
+  𝑢     renter_cons:function:𝑢
+  Γ     renter_cons:correspondence:Γ
+  𝑔≻    renter_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Evaluation ====
+STAGE renter_cons / POLICY BUILDER policy / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑐  : ℝ₊₊ × ℝ₊ × ℝ₊₊ → ℝ₊₊,  𝑐(w_d, S_d, y_d) ∈ Γ(w_d)
+       ─────────────────────────────────────────────────────
+  out  𝑐  : ℝ₊₊ × ℝ₊ × ℝ₊₊ → ℝ₊₊,  𝑐(w_d, S_d, y_d) ∈ Γ(w_d)
+
+Rule
+  𝑐(w_d, S_d, y_d)
+    ∈ argmax_{c ∈ Γ(w_d)} [𝑢(c, ϑ · S_d) + β · 𝑉≻(𝑔≻(w_d, S_d, y_d, c))]
+  𝑐 : ℝ₊₊ × ℝ₊ × ℝ₊₊ → ℝ₊₊,  𝑐(w_d, S_d, y_d) ∈ Γ(w_d)
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  β     renter_cons:parameter:β
+  ϑ     renter_cons:parameter:ϑ
+  𝑢     renter_cons:function:𝑢
+  Γ     renter_cons:correspondence:Γ
+  𝑔≻    renter_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE renter_cons / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on ℝ₊₊ × ℝ₊ × ℝ₊₊
+       ────────────────────────────────────────
+  out  μ≻  : finite measure on ℝ₊ × ℝ₊ × ℝ₊₊
+
+At
+  𝑐  : ℝ₊₊ × ℝ₊ × ℝ₊₊ → ℝ₊₊,  𝑐(w_d, S_d, y_d) ∈ Γ(w_d)
+
+Operations
+  1  Pushforward
+     in: μ                              out: μ≻
+     ──────────────────────────────────────────
+     rule: μ≻(B)
+             = μ({w_d, S_d, y_d ∈ ℝ₊₊ × ℝ₊ × ℝ₊₊ |
+                   𝑔≻(w_d, S_d, y_d, 𝑐(w_d, S_d, y_d)) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  renter_cons.bl
+  15  a_nxt_r = w_d - c
+        :: [id=savings]
+  16  H_nxt_r = 0
+        :: [id=no_housing, "a renter holds no housing at the end of the
+        period"]
+  17  y_nxt_r = y_d
+
+Definitions referenced
+  Γ     renter_cons:correspondence:Γ
+  𝑔≻    renter_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE renter_cons / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on ℝ₊₊ × ℝ₊ × ℝ₊₊
+       ──────────────────────────────────────
+  out  μ≻  : finite measure on ℝ₊ × ℝ₊ × ℝ₊₊
+
+Rule
+  μ≻(B)
+    = μ({w_d, S_d, y_d ∈ ℝ₊₊ × ℝ₊ × ℝ₊₊ |
+          𝑔≻(w_d, S_d, y_d, 𝑐(w_d, S_d, y_d)) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  renter_cons.bl
+  15  a_nxt_r = w_d - c
+        :: [id=savings]
+  16  H_nxt_r = 0
+        :: [id=no_housing, "a renter holds no housing at the end of the
+        period"]
+  17  y_nxt_r = y_d
+
+Definitions referenced
+  𝑔≻    renter_cons:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== renter_cons:parameter:β ====
+STAGE renter_cons / PARAMETER β
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  β  ∈ (0, 1)
+──────────────────────────────────────────────────────────────────────────────
+Source  renter_cons.bl
+  3  β : (0,1)  :: ["discount factor"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== renter_cons:parameter:α ====
+STAGE renter_cons / PARAMETER α
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  α  ∈ (0, 1)
+──────────────────────────────────────────────────────────────────────────────
+Source  renter_cons.bl
+  4  α : (0,1)  :: ["weight of non-durable consumption in utility"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== renter_cons:parameter:κ ====
+STAGE renter_cons / PARAMETER κ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  κ  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  renter_cons.bl
+  5  κ : ℝ₊₊  :: ["housing services per unit of housing"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== renter_cons:parameter:ι ====
+STAGE renter_cons / PARAMETER ι
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  ι  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  renter_cons.bl
+  6  ι : ℝ₊₊
+       :: ["shift of housing in the services term, which keeps utility finite
+       at zero housing"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== renter_cons:parameter:ϑ ====
+STAGE renter_cons / PARAMETER ϑ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  ϑ  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  renter_cons.bl
+  7  ϑ : ℝ₊₊
+       :: ["housing enjoyed per unit of rented services; the printed model is
+       the case ϑ = 1"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== renter_cons:function:𝑢 ====
+STAGE renter_cons / FUNCTION 𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑢  : ℝ₊₊ × ℝ₊ → ℝ,  (c, h) ↦ α · log(c) + (1 − α) · log(κ · (h + ι))
+──────────────────────────────────────────────────────────────────────────────
+Source  renter_cons.bl
+  9  𝑢(c : ℝ₊₊, h : ℝ₊) := α*log(c) + (1 - α)*log(κ*(h + ι))  :: [id=util]
+
+Definitions referenced
+  α     renter_cons:parameter:α
+  κ     renter_cons:parameter:κ
+  ι     renter_cons:parameter:ι
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== renter_cons:function:𝑑𝑢 ====
+STAGE renter_cons / FUNCTION 𝑑𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑑𝑢  : ℝ₊₊ → ℝ₊₊,  c ↦ α/c
+──────────────────────────────────────────────────────────────────────────────
+Source  renter_cons.bl
+  10  𝑑𝑢(c : ℝ₊₊) := α/c  :: [id=marg_util]
+
+Definitions referenced
+  α     renter_cons:parameter:α
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== renter_cons:function:𝑑𝑢𝑖𝑛𝑣 ====
+STAGE renter_cons / FUNCTION 𝑑𝑢𝑖𝑛𝑣
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑑𝑢𝑖𝑛𝑣  : ℝ₊₊ → ℝ₊₊,  x ↦ α/x
+──────────────────────────────────────────────────────────────────────────────
+Source  renter_cons.bl
+  11  𝑑𝑢𝑖𝑛𝑣(x : ℝ₊₊) := α/x  :: [id=inv_marg_util]
+
+Definitions referenced
+  α     renter_cons:parameter:α
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== renter_cons:correspondence:Γ ====
+STAGE renter_cons / CORRESPONDENCE Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Γ  : ℝ₊₊ ⇉ ℝ₊₊,  x ↦ (0, x]
+──────────────────────────────────────────────────────────────────────────────
+Source  renter_cons.bl
+  12  Γ(x : ℝ₊₊) := (0, x]  :: [id=feasible]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.savings ====
+STAGE renter_cons / FORWARD BLOCK dcsn_to_cntn / savings
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  renter_cons.bl
+  15  a_nxt_r = w_d - c  :: [id=savings]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.no_housing ====
+STAGE renter_cons / FORWARD BLOCK dcsn_to_cntn / no_housing
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  renter_cons.bl
+  16  H_nxt_r = 0
+        :: [id=no_housing, "a renter holds no housing at the end of the
+        period"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.3 ====
+STAGE renter_cons / FORWARD BLOCK dcsn_to_cntn / 3
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  renter_cons.bl
+  17  y_nxt_r = y_d
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.value ====
+STAGE renter_cons / BACKWARD BLOCK cntn_to_dcsn / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  ¬(𝑢(c, ϑ · S_d) ∈ [∞, ∞] ∧ β · V[>] ∈ [−∞, −∞])
+  𝑉(w_d, S_d, y_d) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  renter_cons.bl
+  21  V = 𝑢(c, ϑ*S_d) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  β     renter_cons:parameter:β
+  ϑ     renter_cons:parameter:ϑ
+  𝑢     renter_cons:function:𝑢
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== policy.optimality ====
+STAGE renter_cons / POLICY BLOCK policy / optimality
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  renter_cons.bl
+  25  c = argmax_{c : Γ(w_d)}(𝑢(c, ϑ*S_d) + β*V[>])  :: [id=optimality]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== renter_cons:g:dcsn_to_cntn ====
+STAGE renter_cons / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : {w_d, S_d, y_d, c ∈ ℝ₊₊ × ℝ₊ × ℝ₊₊ × ℝ₊₊ | c ∈ Γ(w_d)}
+          → ℝ₊ × ℝ₊ × ℝ₊₊,
+        (w_d, S_d, y_d, c) ↦ (w_d − c, 0, y_d)
+──────────────────────────────────────────────────────────────────────────────
+Source  renter_cons.bl
+  15  a_nxt_r = w_d - c
+        :: [id=savings]
+  16  H_nxt_r = 0
+        :: [id=no_housing, "a renter holds no housing at the end of the
+        period"]
+  17  y_nxt_r = y_d
+
+Definitions referenced
+  Γ     renter_cons:correspondence:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== renter_cons:G:cntn_to_dcsn ====
+STAGE renter_cons / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, w_d, S_d, y_d, c ∈ [−∞, ∞) × ℝ₊₊ × ℝ₊ × ℝ₊₊ × ℝ₊₊ | c ∈ Γ(w_d)}
+          → [−∞, ∞),
+        (V≻, w_d, S_d, y_d, c) ↦ 𝑢(c, ϑ · S_d) + β · V≻
+
+Conditions
+  ¬(𝑢(c, ϑ · S_d) ∈ [∞, ∞] ∧ β · V[>] ∈ [−∞, −∞])
+  𝑉(w_d, S_d, y_d) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  renter_cons.bl
+  21  V = 𝑢(c, ϑ*S_d) + β*V[>]  :: [id=value]
+
+Definitions referenced
+  β     renter_cons:parameter:β
+  ϑ     renter_cons:parameter:ϑ
+  𝑢     renter_cons:function:𝑢
+  Γ     renter_cons:correspondence:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== renter_cons:G:policy ====
+STAGE renter_cons / VALUE AGGREGATOR policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, w_d, S_d, y_d, c ∈ [−∞, ∞) × ℝ₊₊ × ℝ₊ × ℝ₊₊ × ℝ₊₊ | c ∈ Γ(w_d)}
+          → [−∞, ∞),
+        (V≻, w_d, S_d, y_d, c) ↦ 𝑢(c, ϑ · S_d) + β · V≻
+──────────────────────────────────────────────────────────────────────────────
+Source  renter_cons.bl
+  25  c = argmax_{c : Γ(w_d)}(𝑢(c, ϑ*S_d) + β*V[>])  :: [id=optimality]
+
+Definitions referenced
+  β     renter_cons:parameter:β
+  ϑ     renter_cons:parameter:ϑ
+  𝑢     renter_cons:function:𝑢
+  Γ     renter_cons:correspondence:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

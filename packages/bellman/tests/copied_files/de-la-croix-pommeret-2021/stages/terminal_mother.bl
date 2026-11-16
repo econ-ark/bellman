@@ -1,0 +1,28 @@
+@stage: terminal_mother
+
+# The continuation of a mother after the last date of the trellis. The paper's
+# horizon is infinite and it states no terminal condition, so the trellis
+# ends on the boundary data its
+# trellis file names: the value of the mother's wealth after the last date,
+# V[>] at this stage's continuation perch, a function of wealth supplied at
+# realization. The stage computes nothing.
+# Its arrival field a_tm differs from cons_mother's a_mother, so the one
+# inter-period mapping reaches cons_mother alone.
+
+Xa := ℝ₊₊
+
+[id=arvl_to_dcsn, (a_tm : Xa) : !arvl -> (m_tm : Xa) : !dcsn] {
+    m_tm = a_tm                              :: [id=wealth]
+}
+
+[id=dcsn_to_cntn, (m_tm) : !dcsn -> (b_tm : Xa) : !cntn] {
+    b_tm = m_tm                              :: [id=wealth]
+}
+
+[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+    V  = V[>]                                :: [id=value]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl] {
+    V[<]  = V                                :: [id=value]
+}

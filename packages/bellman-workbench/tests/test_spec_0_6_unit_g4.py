@@ -358,8 +358,8 @@ def test_item_5_a_job_s_result_shows_its_five_parts_apart_and_its_files_are_reac
     as the one the conversation discusses and names it in the composer's
     chips, and `Download returned files`. The
     download writes the saved copy, after which the construction and
-    binding of the copy reads `constructed`, with the one binding note the
-    folder's own reading meets, and the actions are `Open returned files`
+    binding of the copy reads `constructed`, with its two declared terminal
+    inputs, and the actions are `Open returned files`
     and `Replace model files…`. The plan names the calibration's
     destination with its line difference; `Replace model files` writes it,
     and `Commit…` stands for the recorded adoption."""
@@ -418,8 +418,9 @@ def test_item_5_a_job_s_result_shows_its_five_parts_apart_and_its_files_are_reac
         values = _texts_of(rendered, "bl-matsya-part-value")
         assert values[3] == "constructed", values
         details = _texts_of(rendered, "bl-matsya-part-detail")
-        assert "parameter 'Y'" in details[2], details
-        assert details[3:] == ["External terminal input V[>] · bequest"]
+        assert details[2:] == [
+            "External terminal input V[>] · bequest", "External terminal input age[>] · bequest",
+        ]
         rendered.find(
             ipyvue.Html, tag="button", class_="bl-text-button bl-matsya-open-copy"
         ).assert_single()

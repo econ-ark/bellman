@@ -35,7 +35,7 @@ from pathlib import PurePosixPath
 from types import MappingProxyType
 from typing import NamedTuple
 
-from bellman.display.printed_records import tuple_text
+from bellman.display.printed_records import KernelGuard, PieceKernel, tuple_text
 from bellman.distributions.conditionals import conditional_texts
 from bellman.fold.block_lines import field_role
 from bellman.fold.conditions import conditional_distribution_of, edge_drawing
@@ -56,17 +56,19 @@ from bellman.refusals import ConstructionError, construction_error
 from bellman.stage.boxes import operator_target, origins, row_at, rows_of
 from bellman.stage.defining_expressions import section_identity, wire_name
 from bellman.stage.grains import (
-    construction_table,
     answers_function_set,
     block_id_of,
+    construction_table,
     explicit_side,
     is_relation,
     wire_table,
 )
 from bellman.stage.kernel_records import (
-    derivative_kernel,
+    aggregation_output_record,
     aggregator_kernel,
+    derivative_kernel,
     distribution_arguments,
+    guard_kernel_record,
     is_kernel_output,
     kernel_output_name,
     kernel_record,
@@ -77,7 +79,7 @@ from bellman.stage.kernel_records import (
 )
 from bellman.syntax import terms as T
 from bellman.syntax.source import distribution_subject_text, to_source
-from bellman.syntax.vocabulary import PERCH_MARK
+from bellman.syntax.vocabulary import INTEGER, PERCH_MARK
 from bellman.typing import sets
 from bellman.typing.declarations import (
     DERIVED_PARAMETER_ELEMENTARY,
@@ -316,6 +318,91 @@ def compile_kernel(stage, box):
             file=source_file(stage),
         )
     return _function_of(_python_text(stage, target, spec))
+
+
+def derivative_piece_kernel(stage, name, spec, *, kind="Derivative", holder=None):
+    """A detached explicit kernel for a derivative or one of its integrands."""
+    try:
+        written = _python_text(stage, _NamedPiece(name), spec)
+    except ConstructionError as error:
+        if error.rule != "kernel-form":
+            raise
+        written = None
+    parameters = () if written is None else written.parameters
+    values = stage.bindings.calibration
+    relative = name.split(".", 1)[-1]
+    return PieceKernel(
+        key=relative if holder is None else (holder, relative),
+        relative_name=relative,
+        name=relative,
+        kind=kind,
+        function=None if written is None else _function_of(written),
+        arguments=spec.names,
+        outputs=spec.outputs,
+        parameters=parameters,
+        parameter_values=None if values is None else tuple(values[arg] for arg in parameters),
+        reads=spec.names,
+        writes=spec.outputs,
+        kernel="\n".join(spec.lines),
+        relation=None,
+        python=None if written is None else written.source,
+        integrated=spec.integrated,
+        fallback=(
+            None if spec.fallback is None
+            else derivative_piece_kernel(stage, name, spec.fallback, kind=kind, holder=holder)
+        ),
+    )
+
+
+def piece_output_kernels(stage, box, row, piece):
+    """The explicit callable for each native output of a primitive."""
+    if piece.function is None or row.kind not in ("Aggregation", "Pullback", "Pushforward"):
+        return MappingProxyType({})
+    if row.kind != "Aggregation":
+        return MappingProxyType(dict.fromkeys(row.outputs, piece))
+
+    spec = aggregator_kernel(stage, row)
+    values = stage.bindings.calibration
+    inputs = tuple(zip(row.inputs, piece.reads))
+    outputs = {}
+    for position, output in enumerate(row.outputs):
+        selected = aggregation_output_record(stage, spec, position)
+        if selected is spec:
+            outputs[output] = piece
+            continue
+        written = _python_text(stage, box, selected)
+        outputs[output] = piece._replace(
+            function=_function_of(written),
+            arguments=selected.names,
+            outputs=selected.outputs,
+            parameters=written.parameters,
+            parameter_values=(
+                None if values is None else tuple(values[name] for name in written.parameters)
+            ),
+            reads=tuple(name for identity, name in inputs if identity in selected.index),
+            writes=(piece.writes[position],),
+            kernel="\n".join(selected.lines),
+            python=written.source,
+        )
+    return MappingProxyType(outputs)
+
+
+def compile_guards(stage, box, builder, guards, *, scope=None):
+    """The guards compiled on their own arguments and the bound calibration."""
+    from bellman.stage.stage_answers import value_on_guard
+
+    values = stage.bindings.calibration
+    found = []
+    for subject, predicate in guards:
+        term = value_on_guard(T.Number(True), predicate, T.Number(False))
+        spec = guard_kernel_record(stage, builder, subject, predicate, term, scope)
+        written = _python_text(stage, box, spec)
+        parameters = written.parameters
+        found.append(KernelGuard(
+            subject, predicate, _function_of(written), spec.names, parameters,
+            None if values is None else tuple(values[name] for name in parameters),
+        ))
+    return tuple(found)
 
 
 class Kernel(str):
@@ -864,13 +951,14 @@ _COMPARISON_SIGNS = {T.Lt: "<", T.Le: "<=", T.Eq: "==", T.Ge: ">=", T.Gt: ">"}
 class _Written(NamedTuple):
     """One written Python expression: its text, the precedence of its
     outermost operation, the number of axes its value has at a point, and
-    whether its value can carry the axes of the evaluation points, as a value
-    read from the kernel's arguments can and a number or a parameter cannot."""
+    whether its value can carry the axes of the evaluation points, and
+    whether it is a callable rather than an array value."""
 
     text: str
     precedence: int
     axes: int
     batched: bool
+    is_callable: bool = False
 
 
 class _Text(NamedTuple):
@@ -1117,6 +1205,7 @@ class _Writer:
                 _ATOM,
                 len(_declared_shape(declared, self.ctx.set_terms) or ()),
                 True,
+                sets.callable_set(declared, self.ctx.set_terms) is not None,
             )
             for name, declared in zip(spec.names, spec.argument_sets)
         )
@@ -1126,6 +1215,7 @@ class _Writer:
                 _ATOM,
                 len(_declared_shape(declared, self.ctx.set_terms) or ()),
                 False,
+                sets.callable_set(declared, self.ctx.set_terms) is not None,
             )
             for name, declared in self.ctx.parameter_sets.items()
         }
@@ -1143,6 +1233,7 @@ class _Writer:
         self.derived, self.derived_lines, self.writing_derived = {}, [], set()
         self.read = set()
         self.position = None
+        self.case_argument = None
 
     def expression(self, term, env, domains):
         """The Python expression of `term`; `env` holds the written
@@ -1170,11 +1261,11 @@ class _Writer:
             return self._stacked(term, env, domains)
         if isinstance(term, T.Select) and isinstance(term.sel, T.Pos):
             return self._position(term, env, domains)
-        if isinstance(term, T.Select) and isinstance(term.sel, T.Key):
+        if isinstance(term, T.Select) and isinstance(term.sel, (T.Key, T.Term)):
             return self._key(term, env, domains)
         if isinstance(term, T.Call):
             return self._call(term, env, domains)
-        if isinstance(term, T.Conditional) and self.writing_derived:
+        if isinstance(term, T.Conditional) and not self.writing:
             return self._conditional(term, env, domains)
         case = label_case(self.ctx, term, self.spec.builder)
         if case is not None:
@@ -1188,24 +1279,27 @@ class _Writer:
         refused."""
         spec, ctx = self.spec, self.ctx
         if is_wire_symbol(term):
-            return self.arguments[spec.index[term.symbol.name]]
-        name, side = spelling(term)
-        if side is None and name in env:
-            return env[name]
-        if side is None and name in ("inf", "∞"):
-            return _Written("np.inf", _ATOM, 0, False)
-        if side is None and name in ctx.parameter_names:
-            self.read.add(name)
-            return self.parameters[name]
-        if side is None and name in ctx.derived:
-            return self._derived_parameter(name)
-        position = spec.index.get(ctx.resolve(name, spec.builder, side))
-        if position is None:
-            self._refuse(
-                f"the name {self._printed(term)}, which is neither "
-                "an argument of the kernel nor a parameter"
-            )
-        return self.arguments[position]
+            written = self.arguments[spec.index[term.symbol.name]]
+        else:
+            name, side = spelling(term)
+            if side is None and name in env:
+                written = env[name]
+            elif side is None and name in ("inf", "∞"):
+                return _Written("np.inf", _ATOM, 0, False)
+            elif side is None and name in ctx.parameter_names:
+                self.read.add(name)
+                written = self.parameters[name]
+            elif side is None and name in ctx.derived:
+                written = self._derived_parameter(name)
+            else:
+                position = spec.index.get(ctx.resolve(name, spec.builder, side))
+                if position is None:
+                    self._refuse(
+                        f"the name {self._printed(term)}, which is neither "
+                        "an argument of the kernel nor a parameter"
+                    )
+                written = self.arguments[position]
+        return written if self.case_argument is None else self.case_argument(written)
 
     def _derived_parameter(self, name):
         """A derived parameter written through its definition: one assignment
@@ -1217,9 +1311,14 @@ class _Writer:
             return self.derived[name]
         if name in self.writing_derived:
             self._refuse(f"the derived parameter {name}, whose definition reaches itself")
+        case_argument = self.case_argument
+        self.case_argument = None
         self.writing_derived.add(name)
-        value = self.expression(self.ctx.derived[name].equations[0], {}, {})
-        self.writing_derived.discard(name)
+        try:
+            value = self.expression(self.ctx.derived[name].equations[0], {}, {})
+        finally:
+            self.case_argument = case_argument
+            self.writing_derived.discard(name)
         python = self.names.take(name, "derived")
         self.derived_lines.append(f"{python} = {value.text}")
         self.derived[name] = _Written(python, _ATOM, value.axes, False)
@@ -1259,6 +1358,15 @@ class _Writer:
                 f"the tuple {self._printed(term)}, whose entries have different shapes at a point"
             )
         count = counts.pop()
+        if self.case_argument is not None and count == 0:
+            components = "".join(f"{entry.text}, " for entry in entries)
+            declared = self.spec.output_sets[self.position]
+            dtype = (
+                ", dtype=object"
+                if _case_value_dtype(declared, self.ctx.set_terms) == "object"
+                else ""
+            )
+            return _Written(f"np.asarray(({components}){dtype})", _ATOM, 1, False)
         return _Written(
             f"np.stack(np.broadcast_arrays({', '.join(entry.text for entry in entries)}), "
             f"axis={-(count + 1)})",
@@ -1300,8 +1408,9 @@ class _Writer:
         gives no value. For a product value the key's own declared finite set
         of labels gives the component's position, written as one selection by
         a label for each; a key with no such set is refused."""
-        ctx, name = self.ctx, term.sel.at
-        key = self.expression(T.Sym(T.Constant(name)), env, domains)
+        ctx = self.ctx
+        key_term = term.sel.at if isinstance(term.sel, T.Term) else T.Sym(T.Constant(term.sel.at))
+        key = self.expression(key_term, env, domains)
         if key.axes:
             self._refuse(f"the selection {self._printed(term)}, whose key is no label at a point")
         indexed = sets.index_sets(self._family_set(term.family, domains), ctx.set_terms)
@@ -1340,12 +1449,7 @@ class _Writer:
                 )
             components = [_component(family, index) for index in range(len(conditions))]
             return self._cases(conditions, components, by_label=isinstance(first, T.FiniteSet))
-        declared = (
-            domains[name]
-            if name in domains
-            else ctx.declared_set(ctx.resolve(name, self.spec.builder))
-        )
-        domain = _set_named(declared, ctx.set_terms)
+        domain = _set_named(self._family_set(key_term, domains), ctx.set_terms)
         if not isinstance(domain, T.FiniteSet):
             self._refuse(
                 f"the selection {self._printed(term)}, whose key has no declared finite set "
@@ -1525,12 +1629,12 @@ class _Writer:
         return self.functions[key].name
 
     def _conditional(self, term, env, domains):
-        """A definition by cases inside a derived parameter's definition,
-        `if Γ < R then 1/(R - Γ) else inf`, written as a call of the inner
-        function `by_cases` (`_by_cases_helper`), each branch given as a
-        function without arguments."""
+        """Choose a branch at each point, or once for a derived parameter."""
         left = self.expression(term.test.left, env, domains)
         right = self.expression(term.test.right, env, domains)
+        if not self.writing_derived:
+            test = f"{left.text} {_COMPARISON_SIGNS[type(term.test.op)]} {right.text}"
+            return self._conditional_on_line(term, test, env, domains)
         then = self.expression(term.then, env, domains)
         otherwise = self.expression(term.otherwise, env, domains)
         written = (left, right, then, otherwise)
@@ -1541,6 +1645,105 @@ class _Writer:
             max(part.axes for part in written),
             any(part.batched for part in written),
         )
+
+    def _conditional_on_line(self, term, test, env, domains):
+        """The branches as functions of their inputs at selected points."""
+        outside = self.case_argument
+        arguments = {}
+
+        def at_point(written):
+            value = outside(written) if outside is not None else written
+            if value not in arguments:
+                arguments[value] = self.names.take("point", "point")
+            return value._replace(text=arguments[value])
+
+        self.case_argument = at_point
+        try:
+            consequent = self.expression(term.then, env, domains)
+            alternative = self.expression(term.otherwise, env, domains)
+        finally:
+            self.case_argument = outside
+        if consequent.is_callable != alternative.is_callable:
+            self._refuse(f"the branches of {self._printed(term)} have different value kinds")
+        if consequent.axes != alternative.axes:
+            self._refuse(f"the branches of {self._printed(term)} have different shapes at a point")
+        key = ("line_cases", len(self.functions))
+        name = self.names.take("line_cases", "function")
+        values = tuple(argument.text for argument in arguments)
+        call = f"{name}({', '.join((test, *values))})"
+        if consequent.is_callable:
+            parameters = ", ".join(("_test", *arguments.values()))
+            lines = (
+                f"def {name}({parameters}):",
+                "    if np.ndim(_test) != 0:",
+                "        raise ValueError('a case that returns a function requires a scalar test')",
+                f"    return {consequent.text} if _test else {alternative.text}",
+            )
+            self.functions[key] = _Function(name, lines, 0, ())
+            self.order.append(key)
+            return _Written(call, _ATOM, 0, False, True)
+        parameters, conversions, broadcasts, bindings = [], [], [], []
+        shapes = ["_guard.shape"]
+        for argument, point in arguments.items():
+            if argument.is_callable:
+                parameters.append(point)
+                continue
+            array = f"_{point}"
+            parameters.append(array)
+            conversions.append(f"    {array} = np.asarray({array})")
+            rank = argument.axes
+            if rank:
+                shapes.append(f"{array}.shape[:-{rank}]")
+                shape = f"_shape + {array}.shape[-{rank}:]"
+            else:
+                shapes.append(f"{array}.shape")
+                shape = "_shape"
+            broadcasts.append(f"    {array} = np.broadcast_to({array}, {shape})")
+            bindings.append(f"        {point} = {array}[_index]")
+        axes = consequent.axes
+        declared = self.spec.output_sets[self.position]
+        declared_shape = _declared_shape(declared, self.ctx.set_terms)
+        dtype = (
+            "np.bool_" if self.spec.boolean else _case_value_dtype(declared, self.ctx.set_terms)
+        )
+        point_shape = (
+            declared_shape
+            if declared_shape is not None and len(declared_shape) == axes
+            else (0,) * axes
+        )
+        initial = tuple(size or 0 for size in point_shape)
+        lines = [
+            f"def {name}({', '.join(('_test', *parameters))}):",
+            "    _guard = np.asarray(_test)",
+            *conversions,
+            f"    _shape = np.broadcast_shapes({', '.join(shapes)})",
+            "    _guard = np.broadcast_to(_guard, _shape)",
+            *broadcasts,
+            f"    _result = np.empty(_shape + {initial!r}, dtype={dtype})",
+        ]
+        if axes:
+            lines.append("    _first = True")
+        lines.extend(("    for _index in np.ndindex(_shape):", *bindings))
+        if axes:
+            lines.extend(
+                (
+                    "        if _guard[_index]:",
+                    f"            _value = np.asarray({consequent.text}, dtype={dtype})",
+                    "        else:",
+                    f"            _value = np.asarray({alternative.text}, dtype={dtype})",
+                    "        if _first:",
+                    f"            _result = np.empty(_shape + np.shape(_value), dtype={dtype})",
+                    "            _first = False",
+                )
+            )
+        else:
+            lines.append(
+                f"        _value = {consequent.text} if _guard[_index] else {alternative.text}"
+            )
+        lines.extend(("        _result[_index] = _value", "    return _result[()]"))
+        self.functions[key] = _Function(name, tuple(lines), axes, ())
+        self.order.append(key)
+        return _Written(call, _ATOM, axes, True)
 
     def _by_cases_helper(self):
         """The inner function of a definition by cases. Where the test is one
@@ -1750,10 +1953,9 @@ class _Writer:
         of it has a value; NumPy returns the least or the greatest of
         integers as a NumPy integer, which refuses such a power. A call of
         `min` or `max` on a line of a block, `L = max(L[>], b)`, is written
-        by the same rule where the stage defines no function of that name;
-        it is refused where an argument is a tuple or a collection, since
-        the rule takes the least and the greatest of numbers. In the body of
-        a closed-form function the two names are written by no rule."""
+        by the same rule where the stage defines no function of that name.
+        One tuple argument supplies its components as the family of numbers.
+        The bodies of declared functions admit no such compiled extrema."""
         on_a_line = (
             not self.writing_derived
             and not self.writing
@@ -1761,7 +1963,14 @@ class _Writer:
             and term.fun not in self.ctx.functions
         )
         if derived_parameter_call(term) and (self.writing_derived or on_a_line):
-            written = [self.expression(argument, env, domains) for argument in term.args]
+            operands = term.args
+            if on_a_line and len(operands) == 1 and isinstance(operands[0], T.Tuple):
+                operands = operands[0].items
+            written = [self.expression(argument, env, domains) for argument in operands]
+            if on_a_line and len(written) == 1 and written[0].axes == 1:
+                declared = _set_named(self._family_set(operands[0], domains), self.ctx.set_terms)
+                if isinstance(declared, T.Product):
+                    written = [_component(written[0], i) for i in range(len(declared.factors))]
             if on_a_line and any(argument.axes for argument in written):
                 self._refuse(
                     f"the call {self._printed(term)} with an argument that is no single "
@@ -1769,7 +1978,7 @@ class _Writer:
                 )
             if term.fun in DERIVED_PARAMETER_EXTREMA:
                 function = "np.minimum" if term.fun == "min" else "np.maximum"
-                if len(written) > 1 and not any(map(_surely_float, term.args)):
+                if len(written) > 1 and not any(map(_surely_float, operands)):
                     first = written[0]
                     written[0] = _Written(
                         f"1.0*{_bracketed(first, _POWER)}", _PRODUCT, first.axes, first.batched
@@ -1786,6 +1995,18 @@ class _Writer:
             argument = written[0]
             return _Written(
                 f"np.{term.fun}({argument.text})", _ATOM, argument.axes, argument.batched
+            )
+        callee = T.Sym(T.Constant(term.fun))
+        declared = sets.callable_set(self._family_set(callee, domains), self.ctx.set_terms)
+        if declared is not None:
+            function = self.expression(callee, env, domains)
+            arguments = [self.expression(argument, env, domains) for argument in term.args]
+            return _Written(
+                f"{function.text}({', '.join(argument.text for argument in arguments)})",
+                _ATOM,
+                len(_declared_shape(declared.codomain, self.ctx.set_terms) or ()),
+                any(argument.batched for argument in arguments),
+                sets.callable_set(declared.codomain, self.ctx.set_terms) is not None,
             )
         definition, core = self._closed_form(term)
         if len(term.args) != len(core.params):
@@ -1837,7 +2058,12 @@ class _Writer:
                 True,
             )
             domains[param.stem] = declared
-        body = self.expression(core.body, env, domains)
+        outside = self.case_argument
+        self.case_argument = None
+        try:
+            body = self.expression(core.body, env, domains)
+        finally:
+            self.case_argument = outside
         name = self.function_names[definition.identity.field]
         function = _Function(
             name,
@@ -2007,6 +2233,31 @@ def _set_named(term, declared_sets):
     return term
 
 
+def _case_value_dtype(declared, definitions):
+    """The case result's array dtype, including labels and exact integers."""
+    declared = sets.defined(declared, definitions)
+    if isinstance(declared, T.Space):
+        return _case_value_dtype(declared.set, definitions)
+    if isinstance(declared, T.Comprehension):
+        return _case_value_dtype(declared.base, definitions)
+    if isinstance(declared, T.Functions):
+        return _case_value_dtype(declared.codomain, definitions)
+    if isinstance(declared, T.Product):
+        dtypes = {_case_value_dtype(part, definitions) for part in declared.factors}
+        if "object" in dtypes:
+            return "object"
+        if dtypes == {"np.int64"}:
+            return "np.int64"
+    if isinstance(declared, T.FiniteSet):
+        return "object"
+    primitive = sets.primitive_of(declared)
+    if isinstance(declared, (T.IntegerRange, T.Points)) or (
+        primitive is not None and primitive.kind == INTEGER
+    ):
+        return "np.int64"
+    return "np.float64"
+
+
 def _declared_shape(declared, declared_sets=None):
     """The shape one value of a declared set has at a point: `()` for a set of
     numbers, `(n,)` for a product of n sets such as `ℝ₊₊ × ℝ₊₊`, one axis per
@@ -2022,7 +2273,7 @@ def _declared_shape(declared, declared_sets=None):
         return (len(declared.factors),)
     if isinstance(declared, T.Comprehension):
         return _declared_shape(declared.base, declared_sets)
-    if isinstance(declared, T.Functions):
+    if sets.index_factors(declared, declared_sets or {}) is not None:
         domain = _set_named(declared.domain, declared_sets or {})
         axes = len(domain.factors) if isinstance(domain, T.Product) else 1
         return (None,) * axes + tuple(_declared_shape(declared.codomain, declared_sets) or ())

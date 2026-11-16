@@ -3,7 +3,7 @@
 -- additions, stage.asdl the stage additions) into one standard
 -- Zephyr module, so that
 -- pyasdl can parse it and gen_types.py can generate the dataclass
--- layer (stage_types.py). The three listings remain canonical:
+-- layer (bellman/syntax/terms.py). The three listings remain canonical:
 -- edit them first, then remake this file to match.
 -- Merge-only adjustments, both documented in the working record:
 --   * the baseline symbol constructor Value(name, time) is renamed
@@ -37,6 +37,7 @@ module dynspec
        | Slack(stmt core, cond bound)   -- core ⟂ bound: complementary
                                         -- slackness; the bound is held
                                         -- and checked by nothing
+       | ParameterizedLaw(identifier* subjects, identifier* arguments, expr law)
 
   range = Range(end? left, expr lower, expr upper, end? right)
   end   = Open | Closed
@@ -47,6 +48,7 @@ module dynspec
         | Typer(typer typing)
         | Tagged(word tag)                     -- (core) a tag with keyword arguments, capital(order=2)
 
+  -- The date forms are retained from dynspec. No stage symbol carries a date.
   symbol = Constant(identifier name)
          | TimeValue(identifier name, int time)
          | Variable(identifier name, index when, int shift)
@@ -67,13 +69,14 @@ module dynspec
        | Select(expr family, selector sel)
        | Space(setexpr set)
        | Conditional(cond test, expr then, expr otherwise)
-                                              -- (stage) if test then … else …: the
-                                              -- right side of a derived parameter's
-                                              -- definition, or a branch of one
+                                              -- (stage) the right side of a derived
+                                              -- parameter definition or a block
+                                              -- equation, or a branch of another
+                                              -- conditional
 
   selector  = Pos(int at) | Key(identifier at)
-            | Term(expr at)                  -- (stage) a selector that is a term, in the
-                                             -- subject of a typing entry alone
+            | Term(expr at)                  -- (stage) a marked table key or a term
+                                             -- in the subject of a typing entry
   subscript = Var(identifier name)
             | In(identifier var, expr set)
 
@@ -99,6 +102,7 @@ module dynspec
              | Role(role kind)
              | Method(word m)                -- (stage) policy.method : !egm(tol=tol_v)
              | Grid(grid g)                  -- (stage) policy.grid : !Cartesian(a=(a_min, a_max, n_a))
+             | Constancy
 
   -- (core) a name with its keyword arguments, and the values an argument takes
   word     = Word(identifier name, keyword* arguments)
@@ -108,6 +112,7 @@ module dynspec
            | Quoted(string text)
            | Values(argument* items)
            | Nested(word word)
+           | ExpressionArgument(expr value)
 
   -- (stage) the grid, one outer grid word with its predicate words: a product
   -- of at most one factor per coordinate, the finite support of declared

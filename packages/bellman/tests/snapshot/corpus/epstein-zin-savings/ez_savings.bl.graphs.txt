@@ -1,0 +1,392 @@
+==== wires ====
+Sort('ez_savings:cntn:V', 'field', perch='cntn', role='value', domain='ℝ', coordinates=('ez_savings:cntn:a',), derivatives=())
+Sort('ez_savings:dcsn:V', 'field', perch='dcsn', role='value', domain='ℝ', coordinates=('ez_savings:dcsn:m_d',), derivatives=())
+Sort('ez_savings:dcsn:c', 'field', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=(), derivatives=())
+Sort('ez_savings:dcsn:m_d', 'field', perch='dcsn', role='state', domain='ℝ₊₊', coordinates=(), derivatives=())
+Sort('ez_savings:shck:Ψ', 'field', perch='shck', role='shock', domain='ℝ₊₊', coordinates=(), derivatives=())
+Sort('ez_savings:cntn:a', 'field', perch='cntn', role='state', domain='ℝ₊₊', coordinates=(), derivatives=())
+Sort('ez_savings:function:cntn:V', 'function', perch='cntn', role='value', domain='ℝ', coordinates=('ez_savings:cntn:a',), derivatives=())
+Sort('ez_savings:function:dcsn:V', 'function', perch='dcsn', role='value', domain='ℝ', coordinates=('ez_savings:dcsn:m_d',), derivatives=())
+Sort('policy:Evaluation:c:result', 'function', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=('ez_savings:dcsn:m_d',), derivatives=())
+Sort('ez_savings:function:cntn:V:g', 'function', perch='cntn', role='value', domain='ℝ', coordinates=('ez_savings:dcsn:m_d', 'ez_savings:shck:Ψ'), derivatives=())
+Sort('cntn_to_dcsn.value:Aggregation:1:result', 'function', perch=None, role='value', domain=None, coordinates=('ez_savings:dcsn:m_d', 'ez_savings:shck:Ψ'), derivatives=())
+Sort('cntn_to_dcsn.value:Expectation:1:result', 'function', perch=None, role='value', domain=None, coordinates=('ez_savings:dcsn:m_d',), derivatives=())
+Sort('cntn_to_dcsn:Aggregation:V:result', 'function', perch=None, role='value', domain=None, coordinates=('ez_savings:dcsn:m_d',), derivatives=())
+Sort('ez_savings:function:cntn:V:g:policy', 'function', perch='cntn', role='value', domain='ℝ', coordinates=('ez_savings:dcsn:m_d', 'ez_savings:dcsn:c', 'ez_savings:shck:Ψ'), derivatives=())
+Sort('policy.objective:Aggregation:1:result', 'function', perch=None, role='value', domain=None, coordinates=('ez_savings:dcsn:m_d', 'ez_savings:dcsn:c', 'ez_savings:shck:Ψ'), derivatives=())
+Sort('policy.objective:Expectation:1:result', 'function', perch=None, role='value', domain=None, coordinates=('ez_savings:dcsn:m_d', 'ez_savings:dcsn:c'), derivatives=())
+Sort('policy.objective:Aggregation:result', 'function', perch=None, role='value', domain=None, coordinates=('ez_savings:dcsn:m_d', 'ez_savings:dcsn:c'), derivatives=())
+Sort('policy.objective:Argmax:c:result', 'function', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=('ez_savings:dcsn:m_d',), derivatives=())
+Sort('ez_savings:measure:dcsn', 'measure', perch='dcsn', role='measure', domain=None, coordinates=('ez_savings:dcsn:m_d',), derivatives=())
+Sort('ez_savings:measure:cntn', 'measure', perch='cntn', role='measure', domain=None, coordinates=('ez_savings:cntn:a',), derivatives=())
+Sort('ez_savings:measure:dcsn:with-distribution:Ψ', 'measure', perch='dcsn', role='measure', domain=None, coordinates=('ez_savings:dcsn:m_d', 'ez_savings:shck:Ψ'), derivatives=())
+
+==== conditions of the stage ====
+arithmetic-definedness (required): ez_savings:derived:q; q ∈ ℝ
+    The derived parameter q, defined as `(β*exp((1 - ρ)*(μ_Ψ + (1 - γ)*σ_Ψ^2/2)))^(1/ρ)`, must have a finite real value at the calibration.
+arithmetic-definedness (required): cntn_to_dcsn:Aggregation; (1 − β) · c(m_d)^(1 − ρ) + β · cntn_to_dcsn.value:Expectation:1(m_d)^((1 − ρ)/(1 − γ)) > 0
+    The power ((1 - β)*c^(1 - ρ) + β*E_{Ψ}(V[>]^(1 - γ))^((1 - ρ)/(1 - γ)))^(1/(1 - ρ)) at cntn_to_dcsn requires real operands and either a positive base, a zero base with positive exponent, or a negative base with integer exponent.
+arithmetic-definedness (required): cntn_to_dcsn:Aggregation; cntn_to_dcsn.value:Expectation:1(m_d) > 0
+    The power E_{Ψ}(V[>]^(1 - γ))^((1 - ρ)/(1 - γ)) at cntn_to_dcsn requires real operands and either a positive base, a zero base with positive exponent, or a negative base with integer exponent.
+arithmetic-definedness (required): cntn_to_dcsn.value:Aggregation:1; V≻(𝑔(m_d, c(m_d), Ψ)) > 0
+    The power V[>]^(1 - γ) at cntn_to_dcsn requires real operands and either a positive base, a zero base with positive exponent, or a negative base with integer exponent.
+arithmetic-definedness (required): cntn_to_dcsn:Aggregation; ¬(1 − γ = 0)
+    The divisor 1 - γ at cntn_to_dcsn must be nonzero.
+arithmetic-definedness (required): cntn_to_dcsn:Aggregation; ¬(1 − ρ = 0)
+    The divisor 1 - ρ at cntn_to_dcsn must be nonzero.
+arithmetic-definedness (required): policy.objective:Aggregation; (1 − β) · c^(1 − ρ) + β · policy.objective:Expectation:1(m_d, c)^((1 − ρ)/(1 − γ)) ∈ ℝ₊₊
+    The power ((1 - β)*c^(1 - ρ) + β*E_{Ψ}(V[>]^(1 - γ))^((1 - ρ)/(1 - γ)))^(1/(1 - ρ)) at policy requires real operands and either a positive base, a zero base with positive exponent, or a negative base with integer exponent.
+arithmetic-definedness (required): policy.objective:Aggregation; c ∈ ℝ₊₊
+    The power c^(1 - ρ) at policy requires real operands and either a positive base, a zero base with positive exponent, or a negative base with integer exponent.
+arithmetic-definedness (required): policy.objective:Aggregation; policy.objective:Expectation:1(m_d, c) > 0
+    The power E_{Ψ}(V[>]^(1 - γ))^((1 - ρ)/(1 - γ)) at policy requires real operands and either a positive base, a zero base with positive exponent, or a negative base with integer exponent.
+arithmetic-definedness (required): policy.objective:Aggregation:1; V≻(𝑔(m_d, c, Ψ)) > 0
+    The power V[>]^(1 - γ) at policy requires real operands and either a positive base, a zero base with positive exponent, or a negative base with integer exponent.
+joint-distribution-factorization (required): ez_savings:distribution:Ψ; dcsn_to_cntn
+    The joint distribution for dcsn_to_cntn is assumed to be the product of the declared conditional distributions given their named parents and the source coordinates: Ψ given (m_d, c) by ez_savings:distribution:Ψ.
+expectation-integrability (required): cntn_to_dcsn.value:Expectation:1; cntn_to_dcsn.value; V[>]^(1 - γ); ez_savings:distribution:Ψ
+    The integrand V[>]^(1 - γ) at cntn_to_dcsn.value must be integrable for cntn_to_dcsn.value:Expectation:1 under ez_savings:distribution:Ψ.
+aggregation-admissibility (required): cntn_to_dcsn:Aggregation; cntn_to_dcsn.value; cntn_to_dcsn:Aggregation:V:result; V(m_d) ∈ ℝ
+    The equations at cntn_to_dcsn.value must define cntn_to_dcsn:Aggregation on its declared inputs with values in its declared output sets.
+expectation-integrability (required): policy.objective:Expectation:1; policy.objective; V[>]^(1 - γ); ez_savings:distribution:Ψ
+    The integrand V[>]^(1 - γ) at policy.objective must be integrable for policy.objective:Expectation:1 under ez_savings:distribution:Ψ.
+arithmetic-definedness (required): policy.objective:Aggregation; (1 − β) · c^(1 − ρ) + β · policy.objective:Expectation:1(m_d, c)^((1 − ρ)/(1 − γ)) > 0
+    The power ((1 - β)*c^(1 - ρ) + β*E_{Ψ}(V[>]^(1 - γ))^((1 - ρ)/(1 - γ)))^(1/(1 - ρ)) at policy requires real operands and either a positive base, a zero base with positive exponent, or a negative base with integer exponent.
+law-support (required): ez_savings:shck:Ψ
+    The distribution of Ψ gives probability only to values in the declared shock set.
+continuation-input (required): ez_savings:cntn:V; ℝ; ez_savings:cntn:a
+    The representing function for V[>] must be measurable on its declared domain, depend only on (a) in that order, and take values in ℝ.
+
+==== initial backward: conditions ====
+the same as conditions of the stage
+
+==== initial backward builder: listing ====
+cntn_to_dcsn
+  cntn_to_dcsn.value
+policy
+  policy.objective
+
+==== initial backward builder: wiring ====
+inputs: ez_savings:cntn:V
+outputs: ez_savings:dcsn:c, ez_savings:dcsn:V
+cntn_to_dcsn
+    reads: ez_savings:cntn:V
+    writes: ez_savings:dcsn:V
+    declares: ez_savings:cntn:V, ez_savings:dcsn:c
+    inside:
+        inputs: ez_savings:cntn:V
+        outputs: ez_savings:dcsn:V
+        cntn_to_dcsn.value
+            reads: ez_savings:cntn:V
+            writes: ez_savings:dcsn:V
+policy
+    reads: ez_savings:cntn:V
+    writes: ez_savings:dcsn:c
+    declares: ez_savings:cntn:V
+    inside:
+        inputs: ez_savings:cntn:V
+        outputs: ez_savings:dcsn:c
+        policy.objective
+            reads: ez_savings:cntn:V, ez_savings:dcsn:m_d
+            writes: ez_savings:dcsn:c
+
+==== initial backward sub-builder: listing ====
+cntn_to_dcsn.value
+policy.objective
+
+==== initial backward sub-builder: wiring ====
+inputs: ez_savings:cntn:V
+outputs: ez_savings:dcsn:c, ez_savings:dcsn:V
+cntn_to_dcsn.value
+    reads: ez_savings:cntn:V
+    writes: ez_savings:dcsn:V
+policy.objective
+    reads: ez_savings:cntn:V, ez_savings:dcsn:m_d
+    writes: ez_savings:dcsn:c
+
+==== initial backward primitive: listing ====
+the same as initial backward sub-builder: listing
+
+==== initial backward primitive: wiring ====
+the same as initial backward sub-builder: wiring
+
+==== initial backward combined: listing ====
+the same as initial backward sub-builder: listing
+
+==== initial backward combined: wiring ====
+the same as initial backward sub-builder: wiring
+
+==== initial backward factored: listing ====
+the same as initial backward sub-builder: listing
+
+==== initial backward factored: wiring ====
+the same as initial backward sub-builder: wiring
+
+==== initial forward: conditions ====
+arithmetic-definedness (required): ez_savings:derived:q; q ∈ ℝ
+    The derived parameter q, defined as `(β*exp((1 - ρ)*(μ_Ψ + (1 - γ)*σ_Ψ^2/2)))^(1/ρ)`, must have a finite real value at the calibration.
+joint-distribution-factorization (required): ez_savings:distribution:Ψ; dcsn_to_cntn
+    The joint distribution for dcsn_to_cntn is assumed to be the product of the declared conditional distributions given their named parents and the source coordinates: Ψ given (m_d, c) by ez_savings:distribution:Ψ.
+law-support (required): ez_savings:shck:Ψ
+    The distribution of Ψ gives probability only to values in the declared shock set.
+continuation-input (required): ez_savings:cntn:V; ℝ; ez_savings:cntn:a
+    The representing function for V[>] must be measurable on its declared domain, depend only on (a) in that order, and take values in ℝ.
+
+==== initial forward builder: listing ====
+dcsn_to_cntn
+  dcsn_to_cntn.savings
+
+==== initial forward builder: wiring ====
+inputs: ez_savings:dcsn:m_d, ez_savings:shck:Ψ
+outputs: ez_savings:cntn:a
+dcsn_to_cntn
+    reads: ez_savings:dcsn:m_d, ez_savings:shck:Ψ
+    writes: ez_savings:cntn:a
+    declares: ez_savings:dcsn:m_d, ez_savings:dcsn:c, ez_savings:shck:Ψ
+    inside:
+        inputs: ez_savings:dcsn:m_d, ez_savings:shck:Ψ
+        outputs: ez_savings:cntn:a
+        dcsn_to_cntn.savings
+            reads: ez_savings:dcsn:m_d, ez_savings:shck:Ψ
+            writes: ez_savings:cntn:a
+
+==== initial forward sub-builder: listing ====
+dcsn_to_cntn.savings
+
+==== initial forward sub-builder: wiring ====
+inputs: ez_savings:dcsn:m_d, ez_savings:shck:Ψ
+outputs: ez_savings:cntn:a
+dcsn_to_cntn.savings
+    reads: ez_savings:dcsn:m_d, ez_savings:shck:Ψ
+    writes: ez_savings:cntn:a
+
+==== initial forward primitive: listing ====
+the same as initial forward sub-builder: listing
+
+==== initial forward primitive: wiring ====
+the same as initial forward sub-builder: wiring
+
+==== initial forward combined: listing ====
+the same as initial forward sub-builder: listing
+
+==== initial forward combined: wiring ====
+the same as initial forward sub-builder: wiring
+
+==== initial forward factored: listing ====
+the same as initial forward sub-builder: listing
+
+==== initial forward factored: wiring ====
+the same as initial forward sub-builder: wiring
+
+==== builders backward: conditions ====
+the same as conditions of the stage
+
+==== builders backward builder: listing ====
+cntn_to_dcsn
+  Pullback of 𝑉≻ along 𝑔 at 𝑐
+  Apply 𝐺 of the statement value, occurrence 1
+  Expectation of the statement value under the distribution of Ψ
+  Value aggregation 𝐺
+  Evaluation of 𝑉
+policy
+  Pullback of 𝑉≻ along the law of motion 𝑔
+  Apply 𝐺 of the statement objective, occurrence 1
+  Expectation of the statement objective under the distribution of Ψ
+  Apply 𝐺 of the statement objective
+  Argmax of the statement objective
+  Evaluation of 𝑐
+
+==== builders backward builder: wiring ====
+inputs: ez_savings:function:cntn:V
+outputs: policy:Evaluation:c:result, ez_savings:function:dcsn:V
+cntn_to_dcsn
+    reads: ez_savings:function:cntn:V
+    writes: ez_savings:function:dcsn:V
+    inside:
+        inputs: ez_savings:function:cntn:V
+        outputs: ez_savings:function:dcsn:V
+        cntn_to_dcsn:Pullback [Pullback]
+            reads: ez_savings:function:cntn:V
+            writes: ez_savings:function:cntn:V:g
+            refers to: ez_savings:g:dcsn_to_cntn, ez_savings:function:dcsn:c
+        cntn_to_dcsn.value:Aggregation:1 [Aggregation]
+            reads: ez_savings:function:cntn:V:g
+            writes: cntn_to_dcsn.value:Aggregation:1:result
+            refers to: ez_savings:G:cntn_to_dcsn, ez_savings:function:dcsn:c
+        cntn_to_dcsn.value:Expectation:1 [Expectation]
+            reads: cntn_to_dcsn.value:Aggregation:1:result
+            writes: cntn_to_dcsn.value:Expectation:1:result
+            refers to: ez_savings:distribution:Ψ, ez_savings:function:dcsn:c
+        cntn_to_dcsn:Aggregation [Aggregation]
+            reads: cntn_to_dcsn.value:Expectation:1:result
+            writes: cntn_to_dcsn:Aggregation:V:result
+            refers to: ez_savings:G:cntn_to_dcsn, ez_savings:function:dcsn:c
+        cntn_to_dcsn:Evaluation [Evaluation]
+            reads: cntn_to_dcsn:Aggregation:V:result
+            writes: ez_savings:function:dcsn:V
+policy
+    reads: ez_savings:function:cntn:V
+    writes: policy:Evaluation:c:result
+    inside:
+        inputs: ez_savings:function:cntn:V
+        outputs: policy:Evaluation:c:result
+        policy:Pullback [Pullback]
+            reads: ez_savings:function:cntn:V
+            writes: ez_savings:function:cntn:V:g:policy
+            refers to: ez_savings:g:dcsn_to_cntn
+        policy.objective:Aggregation:1 [Aggregation]
+            reads: ez_savings:function:cntn:V:g:policy
+            writes: policy.objective:Aggregation:1:result
+            refers to: ez_savings:G:policy
+        policy.objective:Expectation:1 [Expectation]
+            reads: policy.objective:Aggregation:1:result
+            writes: policy.objective:Expectation:1:result
+            refers to: ez_savings:distribution:Ψ
+        policy.objective:Aggregation [Aggregation]
+            reads: policy.objective:Expectation:1:result
+            writes: policy.objective:Aggregation:result
+            refers to: ez_savings:G:policy
+        policy.objective:Argmax [Argmax]
+            reads: policy.objective:Aggregation:result
+            writes: policy.objective:Argmax:c:result
+            refers to: policy.objective
+        policy:Evaluation [Evaluation]
+            reads: policy.objective:Argmax:c:result
+            writes: policy:Evaluation:c:result
+
+==== builders backward sub-builder: listing ====
+Pullback of 𝑉≻ along 𝑔 at 𝑐
+Apply 𝐺 of the statement value, occurrence 1
+Expectation of the statement value under the distribution of Ψ
+Value aggregation 𝐺
+Evaluation of 𝑉
+Pullback of 𝑉≻ along the law of motion 𝑔
+Apply 𝐺 of the statement objective, occurrence 1
+Expectation of the statement objective under the distribution of Ψ
+Apply 𝐺 of the statement objective
+Argmax of the statement objective
+Evaluation of 𝑐
+
+==== builders backward sub-builder: wiring ====
+inputs: ez_savings:function:cntn:V
+outputs: policy:Evaluation:c:result, ez_savings:function:dcsn:V
+cntn_to_dcsn:Pullback [Pullback]
+    reads: ez_savings:function:cntn:V
+    writes: ez_savings:function:cntn:V:g
+    refers to: ez_savings:g:dcsn_to_cntn, ez_savings:function:dcsn:c
+cntn_to_dcsn.value:Aggregation:1 [Aggregation]
+    reads: ez_savings:function:cntn:V:g
+    writes: cntn_to_dcsn.value:Aggregation:1:result
+    refers to: ez_savings:G:cntn_to_dcsn, ez_savings:function:dcsn:c
+cntn_to_dcsn.value:Expectation:1 [Expectation]
+    reads: cntn_to_dcsn.value:Aggregation:1:result
+    writes: cntn_to_dcsn.value:Expectation:1:result
+    refers to: ez_savings:distribution:Ψ, ez_savings:function:dcsn:c
+cntn_to_dcsn:Aggregation [Aggregation]
+    reads: cntn_to_dcsn.value:Expectation:1:result
+    writes: cntn_to_dcsn:Aggregation:V:result
+    refers to: ez_savings:G:cntn_to_dcsn, ez_savings:function:dcsn:c
+cntn_to_dcsn:Evaluation [Evaluation]
+    reads: cntn_to_dcsn:Aggregation:V:result
+    writes: ez_savings:function:dcsn:V
+policy:Pullback [Pullback]
+    reads: ez_savings:function:cntn:V
+    writes: ez_savings:function:cntn:V:g:policy
+    refers to: ez_savings:g:dcsn_to_cntn
+policy.objective:Aggregation:1 [Aggregation]
+    reads: ez_savings:function:cntn:V:g:policy
+    writes: policy.objective:Aggregation:1:result
+    refers to: ez_savings:G:policy
+policy.objective:Expectation:1 [Expectation]
+    reads: policy.objective:Aggregation:1:result
+    writes: policy.objective:Expectation:1:result
+    refers to: ez_savings:distribution:Ψ
+policy.objective:Aggregation [Aggregation]
+    reads: policy.objective:Expectation:1:result
+    writes: policy.objective:Aggregation:result
+    refers to: ez_savings:G:policy
+policy.objective:Argmax [Argmax]
+    reads: policy.objective:Aggregation:result
+    writes: policy.objective:Argmax:c:result
+    refers to: policy.objective
+policy:Evaluation [Evaluation]
+    reads: policy.objective:Argmax:c:result
+    writes: policy:Evaluation:c:result
+
+==== builders backward primitive: listing ====
+the same as builders backward sub-builder: listing
+
+==== builders backward primitive: wiring ====
+the same as builders backward sub-builder: wiring
+
+==== builders backward combined: listing ====
+the same as builders backward sub-builder: listing
+
+==== builders backward combined: wiring ====
+the same as builders backward sub-builder: wiring
+
+==== builders backward factored: listing ====
+the same as builders backward sub-builder: listing
+
+==== builders backward factored: wiring ====
+the same as builders backward sub-builder: wiring
+
+==== builders forward: conditions ====
+the same as initial forward: conditions
+
+==== builders forward builder: listing ====
+dcsn_to_cntn
+  Extension of the measure by the distribution of Ψ
+  Push-forward through 𝑔 at 𝑐
+
+==== builders forward builder: wiring ====
+inputs: ez_savings:measure:dcsn
+outputs: ez_savings:measure:cntn
+dcsn_to_cntn
+    reads: ez_savings:measure:dcsn
+    writes: ez_savings:measure:cntn
+    inside:
+        inputs: ez_savings:measure:dcsn
+        outputs: ez_savings:measure:cntn
+        dcsn_to_cntn:DistributionExtension:Ψ [DistributionExtension]
+            reads: ez_savings:measure:dcsn
+            writes: ez_savings:measure:dcsn:with-distribution:Ψ
+            refers to: ez_savings:distribution:Ψ, ez_savings:function:dcsn:c
+        dcsn_to_cntn:Pushforward [Pushforward]
+            reads: ez_savings:measure:dcsn:with-distribution:Ψ
+            writes: ez_savings:measure:cntn
+            refers to: ez_savings:g:dcsn_to_cntn, ez_savings:function:dcsn:c
+
+==== builders forward sub-builder: listing ====
+Extension of the measure by the distribution of Ψ
+Push-forward through 𝑔 at 𝑐
+
+==== builders forward sub-builder: wiring ====
+inputs: ez_savings:measure:dcsn
+outputs: ez_savings:measure:cntn
+dcsn_to_cntn:DistributionExtension:Ψ [DistributionExtension]
+    reads: ez_savings:measure:dcsn
+    writes: ez_savings:measure:dcsn:with-distribution:Ψ
+    refers to: ez_savings:distribution:Ψ, ez_savings:function:dcsn:c
+dcsn_to_cntn:Pushforward [Pushforward]
+    reads: ez_savings:measure:dcsn:with-distribution:Ψ
+    writes: ez_savings:measure:cntn
+    refers to: ez_savings:g:dcsn_to_cntn, ez_savings:function:dcsn:c
+
+==== builders forward primitive: listing ====
+the same as builders forward sub-builder: listing
+
+==== builders forward primitive: wiring ====
+the same as builders forward sub-builder: wiring
+
+==== builders forward combined: listing ====
+the same as builders forward sub-builder: listing
+
+==== builders forward combined: wiring ====
+the same as builders forward sub-builder: wiring
+
+==== builders forward factored: listing ====
+the same as builders forward sub-builder: listing
+
+==== builders forward factored: wiring ====
+the same as builders forward sub-builder: wiring

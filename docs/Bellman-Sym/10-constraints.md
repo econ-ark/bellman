@@ -23,6 +23,14 @@ A **state-dependent bound** is a feasibility correspondence, a function from sta
 
 In the maximization statement the binder introduces a bound variable, local to the statement, that ranges over the feasible set: `argmax_{cp : Γ(w, h)}` binds `cp` to $\Gamma(w,h)$, the feasible set at the state $(w, h)$ of §5.2, with the same colon that types a declaration. When the bound is fixed the bare binder suffices, `argmax_{i}(…)`, because the control's declared set is its feasible set.
 
+A feasibility correspondence may take a [continuation constant](01-stage.md#31-fields-sent-backward) as an argument. For example, the following lines give consumption room up to resources `m` less the lower savings bound `L`:
+
+```bl
+Γ(cash : ℝ, bound : ℝ) := (0, cash - bound]
+```
+
+Use the binder `argmax_{cp : Γ(m, L)}` and list `L` in the policy header. The correspondence may read only fields known before the choice. A field computed from the choice is refused in the feasible set under [`policy-feasibility`](reference/refusals.md#policy-feasibility), even when the dependence passes through another equation.
+
 A feasible set for a pair of jointly chosen quantities may be a product:
 
 ```bl
@@ -68,7 +76,7 @@ A fixed bound on a parameter is part of its declared set. A bound is an endpoint
 >
 > **Denotes.** The maximization of [Appendix C](appendices/14-appendix-c-syntax-to-semantics.md) R7 over the set the binder names, with the variable local to the statement.
 >
-> **Status.** The loading software parses both forms and records the binder with the operator occurrence. A maximization statement marked `!doc` is printed on the policy card under the heading `Declared` with the policy substituted for the control, `𝑐(m_d) ∈ argmax_{cp ∈ Γ(m_d)} [𝑢(cp) + 𝑉≻(𝑔≻(m_d, cp))]`, and forms no operation; written without the mark, it forms the Argmax operation that outputs the policy, and the card prints the same statement as that operation's rule (§4.1). For a binder over a named set, such as `argmax_{cp : Xm}`, the card prints `𝑐(m_d) ∈ Xm` beside the policy's type, and it prints the statement with `UNRESOLVED[Xm; free mathematical reference]` in place of the set. The package does not yet print a named set there ([Appendix C](appendices/14-appendix-c-syntax-to-semantics.md) §5.3).
+> **Status.** The loading software parses both forms and records the binder with the operator occurrence. A maximization statement marked `!doc` is printed on the policy card under the heading `Declared` with the policy substituted for the control, `𝑐(m_d) ∈ argmax_{cp ∈ Γ(m_d)} [𝑢(cp) + 𝑉≻(𝑔≻(m_d, cp))]`, and forms no operation; written without the mark, it forms the Argmax operation that outputs the policy, and the card prints the same statement as that operation's rule (§4.1). For a binder over a named set, such as `argmax_{cp : Xm}`, the card names `Xm` in the policy type and in the binder `argmax_{cp ∈ Xm}`.
 
 ## 2 The Kuhn–Tucker condition
 
@@ -115,6 +123,8 @@ The two-bound clause states the condition of §2 for two bounds. The worker's sa
 Its residual is the stationarity condition in the deposit less that in consumption. In a system of several conditions each clause is written so that its residual is the multiplier of its own bound, the other multipliers being eliminated by combining the first-order conditions; the loading software holds the statements as written and checks no such arrangement ([Appendix C](appendices/14-appendix-c-syntax-to-semantics.md) R10).
 
 The clause is written on the first-order condition (§4.1), on the declaration of a multiplier (§4.2), or on the candidate line of the endogenous grid method (§4.3). Where the maximization statement is marked `!doc` and the control enters the first-order condition only through the law of motion, as in §5.1 and §5.3, the condition names no output of the block, and a block that states the control by that condition alone is refused under the rule `output-defined`; attached as the property of the maximization statement written without `!doc`, the first spelling of §4.1, the same condition is accepted.
+
+The loading software does not compare the bound of a clause with the feasibility correspondence of the block `policy`. It holds both as written, and a numerical implementation must check that the two state one constraint.
 
 > [!note]- Technical details
 > Where the left side of a statement is an expression rather than a name, as it is in the examples of §5.1 and §5.2, its unknowns are the outputs of the policy block that its two sides mention and that no other **operative** statement of the block defines by name, an operative statement being one the block computes with, so any line that is neither marked `!doc` nor attached to another line as its property by a dotted id (§4.1; [Appendix C](appendices/14-appendix-c-syntax-to-semantics.md) R10). Where the maximization statement is marked `!doc` it is not operative, so the control it names on its left side stays an unknown of the operative statements below it; in the first spelling (§4.1) it is written without `!doc` and is itself the operation that outputs the control. Several such statements of one block that share an unknown state one system, whose unknowns are taken in the order of the block's header.
@@ -196,25 +206,16 @@ Operations
      in: (2)                            out: 𝑐
      ────────────────────────────────────────────────────────────────────────
      rule: 𝑐(m_d) ∈ argmax_{cp ∈ Γ(m_d)} [𝑢(cp) + 𝑉≻(𝑔≻(m_d, cp))]
-           optimality.euler: 𝑑𝑢(𝑐(m_d))
-                               = (f
-                               ↦ (c, y)
-                               ↦ sup_{a ∈
-                               {a ∈ ℝ |
-                               ∀ epsilon ∈ (0, ∞): (∃ delta ∈ (0, ∞): (∀ t ∈
-                               {t ∈ ℝ |
-                               (t²)^(1/2) > 0
-                               ∧ (t²)^(1/2) < delta
-                               ∧ c + t ∈ ℝ₊}: ((((f(c + t, y) − f(c, y))/t
-                               − a)²)^(1/2)
-                               < epsilon)))}} [a])((a, unit)
-                               ↦ 𝑉≻(𝑔≻(m_d, 𝑐(m_d))))(a≻, ())
+           optimality.euler: 𝑑𝑢(𝑐(m_d)) = D_{a}𝑉≻(𝑔≻(m_d, 𝑐(m_d)))
                                ⟂ m_d − 𝑐(m_d) ≥ 0                        on Xm
 
   4  Evaluation
      in: 𝑐                              out: 𝑐
      ────────────────────────────────────────────────────────────────────────
      rule: 𝑐 : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
+
+Conditions
+  optimality:Aggregation  ¬(𝑢(cp) ∈ [∞, ∞] ∧ V[>] ∈ [−∞, −∞])
 ──────────────────────────────────────────────────────────────────────────────
 Source  cons_argmax.bl
   31  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]
@@ -267,19 +268,7 @@ Operations
   1  endoggrid:Aggregation
      in: 𝑉≻                             out: 𝑐≻, 𝑚_d≻
      ────────────────────────────────────────────────
-     rule: 𝑐≻
-             = 𝑑𝑢𝑖𝑛𝑣((f
-                       ↦ (c, y)
-                         ↦ sup_{a ∈
-                           {a ∈ ℝ |
-                             ∀ epsilon ∈ (0, ∞): (∃ delta ∈ (0, ∞): (∀ t ∈
-                               {t ∈ ℝ |
-                               (t²)^(1/2) > 0
-                               ∧ (t²)^(1/2) < delta
-                               ∧ c + t ∈ ℝ₊}: ((((f(c + t, y) − f(c, y))/t
-                               − a)²)^(1/2)
-                               < epsilon)))}} [a])((a, unit) ↦ 𝑉≻(a))(a, ())
-                       + μ)                              on (a, μ) ∈ A≻,policy
+     rule: 𝑐≻ = 𝑑𝑢𝑖𝑛𝑣(D_{a}𝑉≻(a) + μ)                    on (a, μ) ∈ A≻,policy
            𝑚_d≻ = a + 𝑐≻                                 on (a, μ) ∈ A≻,policy
 
   2  cons_choice:Pullback
@@ -295,6 +284,7 @@ Operations
 Conditions
   endoggrid:Aggregation  𝑐≻(a, μ) ∈ ℝ₊₊
   endoggrid:Aggregation  𝑚_d≻(a, μ) ∈ Xm
+  policy.optimality      ¬(𝑢(cp) ∈ [∞, ∞] ∧ V[>] ∈ [−∞, −∞])
 ──────────────────────────────────────────────────────────────────────────────
 Source  cons_obs.bl
   31  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality, !doc]
@@ -391,8 +381,11 @@ Conditions
   grid:Aggregation  𝑚_d≻(a) ∈ Xm
   policy            egm-eligibility: the construction satisfies the declared
                       line where the continuation value 𝑉≻ is concave and
-                      continuously differentiable on (0, ∞) with a finite
-                      positive right derivative at 0   [required]
+                      continuously differentiable above the savings bound,
+                      with a positive right derivative at the bound, finite or
+                      infinite; an infinite derivative gives zero consumption
+                      as the interpolation endpoint, outside a strictly
+                      positive consumption domain   [required]
 
 Method
   !egm   !Cartesian(a=(a_min, a_max, n_a))   "cons-port:egm"            policy

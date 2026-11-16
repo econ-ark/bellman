@@ -8,9 +8,9 @@ from __future__ import annotations
 
 import dataclasses
 
-from bellman.fold.block_lines import doc_lines
+from bellman.fold.block_lines import blocks_in_file_order, doc_lines, header_of
 from bellman.fold.stage_names import StageNames, family_term_arguments
-from bellman.fold.wire_terms import is_wire_symbol, term_nodes
+from bellman.fold.wire_terms import is_wire_symbol, symbol_occurrences, term_nodes
 from bellman.native import predicates as P
 from bellman.native.identity import Identity
 from bellman.native.versions import kept_answer
@@ -18,9 +18,10 @@ from bellman.stage.grains import answers_function_set, declared_table, is_relati
 from bellman.stage.kernel_records import aggregator_kernel, law_of_motion_kernel
 from bellman.stage.term_operations import relation_of, restrict, slack
 from bellman.syntax import terms as T
-from bellman.syntax.vocabulary import CONTINUATION, PRIMITIVE_SETS, SHCK
+from bellman.syntax.vocabulary import CONTINUATION, CONTROL, DECISION, PRIMITIVE_SETS, SHCK, VALUE_ROLES
 from bellman.typing import sets
 from bellman.typing import typed_expressions as S
+from bellman.typing.line_unknowns import names_fields, policy_objective_fields
 from bellman.typing.primitive_definitions import bound_variable
 from bellman.typing.ranges import arithmetic_range, range_within
 from bellman.typing.sets import within
@@ -111,9 +112,10 @@ def _classified_field(ctx, sort):
             "field", stage=ctx.stage_name, perch=identity.perch, field=identity.field
         )
     field = ctx.ports.get(identity)
-    if field is None or field.perch == SHCK:
+    if field is None:
         return None
-    return (field.perch, field.role, resolve_set(ctx, field.domain, identity))
+    perch = None if field.perch == SHCK else field.perch
+    return (perch, field.role, resolve_set(ctx, field.domain, identity))
 
 
 def resolve_set(ctx, term, identity, missing="result set", active=()):
@@ -581,10 +583,65 @@ def result_set(ctx, sort, active=()):
         if row.kind != "Expectation" or isinstance(resolved, (T.Interval, T.Named)):
             return value
     if row.kind == "Aggregation":
+        objective = policy_objective_field(ctx, rendering, sort.identity)
+        if objective is not None:
+            return declared_set_term(ctx, ctx.declared_set(objective), objective)
         position = tuple(row.outputs).index(sort.identity)
         if position < len(row.maps):
             return expression_range(ctx, row.maps[position], row.builder, {}, active)
     return S.Unresolved(sort.identity, "result set")
+
+
+def policy_objective_field(ctx, rendering, objective):
+    """The decision field whose retained equation states an Argmax input."""
+    choice = next(
+        (
+            row for row in rendering.table.primitive_rows
+            if row.kind == "Argmax" and objective in row.inputs and row.statements
+        ),
+        None,
+    )
+    if choice is None:
+        return None
+    stage = ctx.stage_object
+    address = choice.statements[0]
+    outputs = {
+        box.name: {sort.identity for sort in header_of(box).outputs}
+        for box in blocks_in_file_order(stage)
+    }
+    decision_fields = {
+        field for fields in outputs.values() for field in fields
+        if field.perch == DECISION and ctx.role(field) in VALUE_ROLES
+    }
+    blocks = {block for block, fields in outputs.items() if fields & decision_fields}
+    blocks.add(choice.builder)
+    aliases, values, operator, policy_aliases = {}, [], None, {}
+    for definition in stage.definitions.values():
+        if definition.kind != "line" or "!doc" in definition.tags:
+            continue
+        block = definition.identity.block
+        if block not in blocks:
+            continue
+        statement = definition.equations[0]
+        core = statement.core if isinstance(statement, T.Slack) else statement
+        if not isinstance(core, T.Equation) or not names_fields(core.lhs):
+            continue
+        local = aliases.setdefault(block, {})
+        if definition.address == address:
+            operator, policy_aliases = core.rhs, dict(local)
+            continue
+        declared = outputs.get(block, ())
+        for spelling, field in zip(symbol_occurrences(core.lhs), ctx.defined(core, block)):
+            if field in declared:
+                if field in decision_fields:
+                    values.append((field, core.rhs, dict(local)))
+            elif ctx.role(field) != CONTROL:
+                local[spelling] = core.rhs
+    if not isinstance(operator, T.Operator) or operator.head != "argmax":
+        return None
+    controls = tuple(unknown.field for unknown in choice.unknowns)
+    matches = policy_objective_fields(operator, controls, policy_aliases, values)
+    return matches[0] if len(matches) == 1 else None
 
 
 def written_name(stage, identity):
@@ -626,6 +683,18 @@ def expression_range(ctx, term, block, local, active=()):
         return declared_set_term(ctx, ctx.declared_set(identity), identity)
     if isinstance(term, T.Tuple):
         return product(expression_range(ctx, child, block, local, active) for child in term.items)
+    if isinstance(term, T.Conditional):
+        left, right = (
+            expression_range(ctx, branch, block, local, active)
+            for branch in (term.then, term.otherwise)
+        )
+        if _has_unresolved(left) or _has_unresolved(right):
+            return S.Unresolved(owner, "conditional result")
+        if within(left, right, ctx.set_terms) is True:
+            return right
+        if within(right, left, ctx.set_terms) is True:
+            return left
+        return T.SetUnion((left, right))
     if (
         isinstance(term, T.Select)
         and isinstance(term.sel, T.Key)
@@ -734,12 +803,18 @@ def _field_carrier(ctx, sort, classification):
         return S.Unresolved(sort.identity, "field classifier result set")
     members = []
     for identity, field in ctx.ports.items():
-        if (field.perch, field.role) != (perch, role):
+        candidate_perch = None if field.perch == SHCK else field.perch
+        if (candidate_perch, field.role) != (perch, role):
             continue
         declared = resolve_set(ctx, field.domain, identity)
         if _has_unresolved(declared):
             return S.Unresolved(sort.identity, "classifier inclusion for " + str(identity))
         inclusion = S.alpha_equivalent(declared, result) or within(declared, result, {})
+        if inclusion is None and isinstance(
+            sets.defined(declared, ctx.set_terms), T.Functions
+        ) != isinstance(sets.defined(result, ctx.set_terms), T.Functions):
+            # a set of functions and a set of numbers hold no common member
+            inclusion = False
         if inclusion is None:
             return S.Unresolved(sort.identity, "classifier inclusion for " + str(identity))
         if inclusion:
@@ -873,8 +948,15 @@ def _definition_type(stage, definition, row, coordinates):
             _set_declarations(ctx, tuple(ctx.declared_set(i) for i in coordinates + subjects)),
         )
     if definition.kind == "distribution":
+        from bellman.fold.conditions import distribution_formal_fields
+
         law = definition.equations[0]
-        coordinates = tuple(i for _, i in family_term_arguments(law.law, ctx))
+        formals = distribution_formal_fields(stage, definition)
+        coordinates = tuple(actual for _, actual in formals) + tuple(
+            identity for _, identity in family_term_arguments(
+                law.law, ctx, formals=tuple(name for name, _ in formals)
+            )
+        )
         subjects = tuple(
             Identity("field", stage=ctx.stage_name, perch=SHCK, field=name)
             for name in law.subjects

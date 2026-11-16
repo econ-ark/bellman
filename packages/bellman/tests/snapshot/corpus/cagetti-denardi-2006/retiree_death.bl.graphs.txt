@@ -1,0 +1,488 @@
+==== wires ====
+Sort('retiree_death:cntn:W_r', 'field', perch='cntn', role='value', domain='ℝ', coordinates=('retiree_death:cntn:a_rd_rt',), derivatives=())
+Sort('retiree_death:cntn:V_young', 'field', perch='cntn', role='value', domain='ℝ', coordinates=('retiree_death:cntn:a_rd_yc', 'retiree_death:cntn:y_rd_yc', 'retiree_death:cntn:θ_rd_yc'), derivatives=())
+Sort('retiree_death:dcsn:V', 'field', perch='dcsn', role='value', domain='ℝ', coordinates=('retiree_death:dcsn:a', 'retiree_death:dcsn:y', 'retiree_death:dcsn:θ'), derivatives=())
+Sort('retiree_death:arvl:V', 'field', perch='arvl', role='value', domain='ℝ', coordinates=('retiree_death:arvl:a_rd',), derivatives=())
+Sort('retiree_death:arvl:a_rd', 'field', perch='arvl', role='state', domain='Xa', coordinates=(), derivatives=())
+Sort('retiree_death:shck:y_n', 'field', perch='shck', role='shock', domain='Y', coordinates=(), derivatives=())
+Sort('retiree_death:shck:θ_n', 'field', perch='shck', role='shock', domain='Θ', coordinates=(), derivatives=())
+Sort('retiree_death:shck:s', 'field', perch='shck', role='shock', domain='{survive, die}', coordinates=(), derivatives=())
+Sort('retiree_death:dcsn:a', 'field', perch='dcsn', role='state', domain='Xa', coordinates=(), derivatives=())
+Sort('retiree_death:dcsn:y', 'field', perch='dcsn', role='state', domain='Y', coordinates=(), derivatives=())
+Sort('retiree_death:dcsn:θ', 'field', perch='dcsn', role='state', domain='Θ', coordinates=(), derivatives=())
+Sort('retiree_death:cntn:a_rd_rt', 'field', perch='cntn', role='state', domain='Xa', coordinates=(), derivatives=())
+Sort('retiree_death:cntn:a_rd_yc', 'field', perch='cntn', role='state', domain='Xa', coordinates=(), derivatives=())
+Sort('retiree_death:cntn:y_rd_yc', 'field', perch='cntn', role='state', domain='Y', coordinates=(), derivatives=())
+Sort('retiree_death:cntn:θ_rd_yc', 'field', perch='cntn', role='state', domain='Θ', coordinates=(), derivatives=())
+Sort('retiree_death:function:cntn:W_r', 'function', perch='cntn', role='value', domain='ℝ', coordinates=('retiree_death:cntn:a_rd_rt',), derivatives=())
+Sort('retiree_death:function:cntn:V_young', 'function', perch='cntn', role='value', domain='ℝ', coordinates=('retiree_death:cntn:a_rd_yc', 'retiree_death:cntn:y_rd_yc', 'retiree_death:cntn:θ_rd_yc'), derivatives=())
+Sort('retiree_death:function:dcsn:V', 'function', perch='dcsn', role='value', domain='ℝ', coordinates=('retiree_death:dcsn:a', 'retiree_death:dcsn:y', 'retiree_death:dcsn:θ'), derivatives=())
+Sort('retiree_death:function:arvl:V', 'function', perch='arvl', role='value', domain='ℝ', coordinates=('retiree_death:arvl:a_rd',), derivatives=())
+Sort('retiree_death:function:cntn:W_r:g', 'function', perch='cntn', role='value', domain='ℝ', coordinates=('retiree_death:dcsn:a', 'retiree_death:dcsn:y', 'retiree_death:dcsn:θ'), derivatives=())
+Sort('retiree_death:function:cntn:V_young:g', 'function', perch='cntn', role='value', domain='ℝ', coordinates=('retiree_death:dcsn:a', 'retiree_death:dcsn:y', 'retiree_death:dcsn:θ'), derivatives=())
+Sort('cntn_to_dcsn:Aggregation:V:result', 'function', perch=None, role='value', domain=None, coordinates=('retiree_death:dcsn:a', 'retiree_death:dcsn:y', 'retiree_death:dcsn:θ'), derivatives=())
+Sort('retiree_death:function:dcsn:V:g', 'function', perch='dcsn', role='value', domain='ℝ', coordinates=('retiree_death:arvl:a_rd', 'retiree_death:shck:y_n', 'retiree_death:shck:θ_n'), derivatives=())
+Sort('dcsn_to_arvl.value:Expectation:1:result', 'function', perch=None, role='value', domain=None, coordinates=('retiree_death:arvl:a_rd',), derivatives=())
+Sort('dcsn_to_arvl:Aggregation:V:result', 'function', perch=None, role='value', domain=None, coordinates=('retiree_death:arvl:a_rd',), derivatives=())
+
+==== conditions of the stage ====
+external-callable-signature-and-provider (required): external:Invariant; retiree_death:distribution:y_n
+    The callable Invariant used by retiree_death:distribution:y_n needs a declared signature and provider.
+external-callable-signature-and-provider (required): external:Invariant; retiree_death:distribution:θ_n
+    The callable Invariant used by retiree_death:distribution:θ_n needs a declared signature and provider.
+distribution-weights-are-a-probability-vector (required): retiree_death:distribution:s
+    the weights (π_o, 1 - π_o) of the Categorical declaration retiree_death:distribution:s of s each lie in [0, 1] and sum to one
+joint-distribution-factorization (required): retiree_death:distribution:y_n; retiree_death:distribution:θ_n; arvl_to_dcsn
+    The joint distribution for arvl_to_dcsn is assumed to be the product of the declared conditional distributions given their named parents and the source coordinates: y_n given (a_rd) by retiree_death:distribution:y_n; θ_n given (a_rd) by retiree_death:distribution:θ_n; y_n and θ_n are conditionally independent given (a_rd).
+joint-distribution-factorization (required): retiree_death:distribution:s; dcsn_to_cntn
+    The joint distribution for dcsn_to_cntn is assumed to be the product of the declared conditional distributions given their named parents and the source coordinates: s given (a, y, θ) by retiree_death:distribution:s.
+mass-conservation (required): dcsn_to_cntn:Pushforward; retiree_death:distribution:s; dcsn_to_cntn.survive.1; dcsn_to_cntn.die.1; dcsn_to_cntn.die.2; dcsn_to_cntn.die.3
+    The masses of μ_survive≻, μ_die≻ sum to the mass of μ: the distribution of s gives the labels probabilities that sum to one, and every line of a branch writes a value in the declared set of its field.
+aggregation-admissibility (required): cntn_to_dcsn:Aggregation; cntn_to_dcsn.value; cntn_to_dcsn:Aggregation:V:result; V(a, y, θ) ∈ ℝ
+    The equations at cntn_to_dcsn.value must define cntn_to_dcsn:Aggregation on its declared inputs with values in its declared output sets.
+expectation-integrability (required): dcsn_to_arvl.value:Expectation:1; dcsn_to_arvl.value; V; retiree_death:distribution:y_n; retiree_death:distribution:θ_n
+    The integrand V at dcsn_to_arvl.value must be integrable for dcsn_to_arvl.value:Expectation:1 under retiree_death:distribution:y_n, retiree_death:distribution:θ_n.
+aggregation-admissibility (required): dcsn_to_arvl:Aggregation; dcsn_to_arvl.value; dcsn_to_arvl:Aggregation:V:result; V≺(a_rd) ∈ ℝ
+    The equations at dcsn_to_arvl.value must define dcsn_to_arvl:Aggregation on its declared inputs with values in its declared output sets.
+law-support (required): retiree_death:shck:y_n
+    The distribution of y_n gives probability only to values in the declared shock set.
+law-support (required): retiree_death:shck:θ_n
+    The distribution of θ_n gives probability only to values in the declared shock set.
+law-support (required): retiree_death:shck:s
+    The distribution of s gives probability only to values in the declared shock set.
+continuation-input (required): retiree_death:cntn:W_r; ℝ; retiree_death:cntn:a_rd_rt
+    The representing function for W_r[>] must be measurable on its declared domain, depend only on (a_rd_rt) in that order, and take values in ℝ.
+continuation-input (required): retiree_death:cntn:V_young; ℝ; retiree_death:cntn:a_rd_yc; retiree_death:cntn:y_rd_yc; retiree_death:cntn:θ_rd_yc
+    The representing function for V_young[>] must be measurable on its declared domain, depend only on (a_rd_yc, y_rd_yc, θ_rd_yc) in that order, and take values in ℝ.
+
+==== initial backward: conditions ====
+external-callable-signature-and-provider (required): external:Invariant; retiree_death:distribution:y_n
+    The callable Invariant used by retiree_death:distribution:y_n needs a declared signature and provider.
+external-callable-signature-and-provider (required): external:Invariant; retiree_death:distribution:θ_n
+    The callable Invariant used by retiree_death:distribution:θ_n needs a declared signature and provider.
+distribution-weights-are-a-probability-vector (required): retiree_death:distribution:s
+    the weights (π_o, 1 - π_o) of the Categorical declaration retiree_death:distribution:s of s each lie in [0, 1] and sum to one
+joint-distribution-factorization (required): retiree_death:distribution:y_n; retiree_death:distribution:θ_n; arvl_to_dcsn
+    The joint distribution for arvl_to_dcsn is assumed to be the product of the declared conditional distributions given their named parents and the source coordinates: y_n given (a_rd) by retiree_death:distribution:y_n; θ_n given (a_rd) by retiree_death:distribution:θ_n; y_n and θ_n are conditionally independent given (a_rd).
+joint-distribution-factorization (required): retiree_death:distribution:s; dcsn_to_cntn
+    The joint distribution for dcsn_to_cntn is assumed to be the product of the declared conditional distributions given their named parents and the source coordinates: s given (a, y, θ) by retiree_death:distribution:s.
+aggregation-admissibility (required): cntn_to_dcsn:Aggregation; cntn_to_dcsn.value; cntn_to_dcsn:Aggregation:V:result; V(a, y, θ) ∈ ℝ
+    The equations at cntn_to_dcsn.value must define cntn_to_dcsn:Aggregation on its declared inputs with values in its declared output sets.
+expectation-integrability (required): dcsn_to_arvl.value:Expectation:1; dcsn_to_arvl.value; V; retiree_death:distribution:y_n; retiree_death:distribution:θ_n
+    The integrand V at dcsn_to_arvl.value must be integrable for dcsn_to_arvl.value:Expectation:1 under retiree_death:distribution:y_n, retiree_death:distribution:θ_n.
+aggregation-admissibility (required): dcsn_to_arvl:Aggregation; dcsn_to_arvl.value; dcsn_to_arvl:Aggregation:V:result; V≺(a_rd) ∈ ℝ
+    The equations at dcsn_to_arvl.value must define dcsn_to_arvl:Aggregation on its declared inputs with values in its declared output sets.
+law-support (required): retiree_death:shck:y_n
+    The distribution of y_n gives probability only to values in the declared shock set.
+law-support (required): retiree_death:shck:θ_n
+    The distribution of θ_n gives probability only to values in the declared shock set.
+law-support (required): retiree_death:shck:s
+    The distribution of s gives probability only to values in the declared shock set.
+continuation-input (required): retiree_death:cntn:W_r; ℝ; retiree_death:cntn:a_rd_rt
+    The representing function for W_r[>] must be measurable on its declared domain, depend only on (a_rd_rt) in that order, and take values in ℝ.
+continuation-input (required): retiree_death:cntn:V_young; ℝ; retiree_death:cntn:a_rd_yc; retiree_death:cntn:y_rd_yc; retiree_death:cntn:θ_rd_yc
+    The representing function for V_young[>] must be measurable on its declared domain, depend only on (a_rd_yc, y_rd_yc, θ_rd_yc) in that order, and take values in ℝ.
+
+==== initial backward builder: listing ====
+cntn_to_dcsn
+  cntn_to_dcsn.value
+dcsn_to_arvl
+  dcsn_to_arvl.value
+
+==== initial backward builder: wiring ====
+inputs: retiree_death:cntn:W_r, retiree_death:cntn:V_young
+outputs: retiree_death:arvl:V
+cntn_to_dcsn
+    reads: retiree_death:cntn:W_r, retiree_death:cntn:V_young
+    writes: retiree_death:dcsn:V
+    declares: retiree_death:cntn:W_r, retiree_death:cntn:V_young
+    inside:
+        inputs: retiree_death:cntn:W_r, retiree_death:cntn:V_young
+        outputs: retiree_death:dcsn:V
+        cntn_to_dcsn.value
+            reads: retiree_death:cntn:W_r, retiree_death:cntn:V_young
+            writes: retiree_death:dcsn:V
+dcsn_to_arvl
+    reads: retiree_death:dcsn:V
+    writes: retiree_death:arvl:V
+    declares: retiree_death:dcsn:V
+    inside:
+        inputs: retiree_death:dcsn:V
+        outputs: retiree_death:arvl:V
+        dcsn_to_arvl.value
+            reads: retiree_death:dcsn:V
+            writes: retiree_death:arvl:V
+
+==== initial backward sub-builder: listing ====
+cntn_to_dcsn.value
+dcsn_to_arvl.value
+
+==== initial backward sub-builder: wiring ====
+inputs: retiree_death:cntn:W_r, retiree_death:cntn:V_young
+outputs: retiree_death:arvl:V
+cntn_to_dcsn.value
+    reads: retiree_death:cntn:W_r, retiree_death:cntn:V_young
+    writes: retiree_death:dcsn:V
+dcsn_to_arvl.value
+    reads: retiree_death:dcsn:V
+    writes: retiree_death:arvl:V
+
+==== initial backward primitive: listing ====
+the same as initial backward sub-builder: listing
+
+==== initial backward primitive: wiring ====
+the same as initial backward sub-builder: wiring
+
+==== initial backward combined: listing ====
+the same as initial backward sub-builder: listing
+
+==== initial backward combined: wiring ====
+the same as initial backward sub-builder: wiring
+
+==== initial backward factored: listing ====
+the same as initial backward sub-builder: listing
+
+==== initial backward factored: wiring ====
+the same as initial backward sub-builder: wiring
+
+==== initial forward: conditions ====
+external-callable-signature-and-provider (required): external:Invariant; retiree_death:distribution:y_n
+    The callable Invariant used by retiree_death:distribution:y_n needs a declared signature and provider.
+external-callable-signature-and-provider (required): external:Invariant; retiree_death:distribution:θ_n
+    The callable Invariant used by retiree_death:distribution:θ_n needs a declared signature and provider.
+distribution-weights-are-a-probability-vector (required): retiree_death:distribution:s
+    the weights (π_o, 1 - π_o) of the Categorical declaration retiree_death:distribution:s of s each lie in [0, 1] and sum to one
+joint-distribution-factorization (required): retiree_death:distribution:y_n; retiree_death:distribution:θ_n; arvl_to_dcsn
+    The joint distribution for arvl_to_dcsn is assumed to be the product of the declared conditional distributions given their named parents and the source coordinates: y_n given (a_rd) by retiree_death:distribution:y_n; θ_n given (a_rd) by retiree_death:distribution:θ_n; y_n and θ_n are conditionally independent given (a_rd).
+joint-distribution-factorization (required): retiree_death:distribution:s; dcsn_to_cntn
+    The joint distribution for dcsn_to_cntn is assumed to be the product of the declared conditional distributions given their named parents and the source coordinates: s given (a, y, θ) by retiree_death:distribution:s.
+mass-conservation (required): dcsn_to_cntn:Pushforward; retiree_death:distribution:s; dcsn_to_cntn.survive.1; dcsn_to_cntn.die.1; dcsn_to_cntn.die.2; dcsn_to_cntn.die.3
+    The masses of μ_survive≻, μ_die≻ sum to the mass of μ: the distribution of s gives the labels probabilities that sum to one, and every line of a branch writes a value in the declared set of its field.
+law-support (required): retiree_death:shck:y_n
+    The distribution of y_n gives probability only to values in the declared shock set.
+law-support (required): retiree_death:shck:θ_n
+    The distribution of θ_n gives probability only to values in the declared shock set.
+law-support (required): retiree_death:shck:s
+    The distribution of s gives probability only to values in the declared shock set.
+continuation-input (required): retiree_death:cntn:W_r; ℝ; retiree_death:cntn:a_rd_rt
+    The representing function for W_r[>] must be measurable on its declared domain, depend only on (a_rd_rt) in that order, and take values in ℝ.
+continuation-input (required): retiree_death:cntn:V_young; ℝ; retiree_death:cntn:a_rd_yc; retiree_death:cntn:y_rd_yc; retiree_death:cntn:θ_rd_yc
+    The representing function for V_young[>] must be measurable on its declared domain, depend only on (a_rd_yc, y_rd_yc, θ_rd_yc) in that order, and take values in ℝ.
+
+==== initial forward builder: listing ====
+arvl_to_dcsn
+  arvl_to_dcsn.1
+  arvl_to_dcsn.2
+  arvl_to_dcsn.3
+dcsn_to_cntn
+  dcsn_to_cntn.survive
+    dcsn_to_cntn.survive.1
+  dcsn_to_cntn.die
+    dcsn_to_cntn.die.1
+    dcsn_to_cntn.die.2
+    dcsn_to_cntn.die.3
+
+==== initial forward builder: wiring ====
+inputs: retiree_death:arvl:a_rd, retiree_death:shck:y_n, retiree_death:shck:θ_n, retiree_death:shck:s
+outputs: retiree_death:cntn:a_rd_rt, retiree_death:cntn:a_rd_yc, retiree_death:cntn:y_rd_yc, retiree_death:cntn:θ_rd_yc
+arvl_to_dcsn
+    reads: retiree_death:arvl:a_rd, retiree_death:shck:y_n, retiree_death:shck:θ_n
+    writes: retiree_death:dcsn:a, retiree_death:dcsn:y, retiree_death:dcsn:θ
+    declares: retiree_death:arvl:a_rd, retiree_death:shck:y_n, retiree_death:shck:θ_n
+    inside:
+        inputs: retiree_death:arvl:a_rd, retiree_death:shck:y_n, retiree_death:shck:θ_n
+        outputs: retiree_death:dcsn:a, retiree_death:dcsn:y, retiree_death:dcsn:θ
+        arvl_to_dcsn.1
+            reads: retiree_death:arvl:a_rd
+            writes: retiree_death:dcsn:a
+        arvl_to_dcsn.2
+            reads: retiree_death:shck:y_n
+            writes: retiree_death:dcsn:y
+        arvl_to_dcsn.3
+            reads: retiree_death:shck:θ_n
+            writes: retiree_death:dcsn:θ
+dcsn_to_cntn
+    reads: retiree_death:dcsn:a, retiree_death:dcsn:y, retiree_death:dcsn:θ, retiree_death:shck:s
+    writes: retiree_death:cntn:a_rd_rt, retiree_death:cntn:a_rd_yc, retiree_death:cntn:y_rd_yc, retiree_death:cntn:θ_rd_yc
+    declares: retiree_death:dcsn:a, retiree_death:dcsn:y, retiree_death:dcsn:θ, retiree_death:shck:s
+    inside:
+        inputs: retiree_death:dcsn:a, retiree_death:dcsn:y, retiree_death:dcsn:θ, retiree_death:shck:s
+        outputs: retiree_death:cntn:a_rd_rt, retiree_death:cntn:a_rd_yc, retiree_death:cntn:y_rd_yc, retiree_death:cntn:θ_rd_yc
+        dcsn_to_cntn.survive
+            reads: retiree_death:dcsn:a
+            writes: retiree_death:cntn:a_rd_rt
+            inside:
+                inputs: retiree_death:dcsn:a
+                outputs: retiree_death:cntn:a_rd_rt
+                dcsn_to_cntn.survive.1
+                    reads: retiree_death:dcsn:a
+                    writes: retiree_death:cntn:a_rd_rt
+        dcsn_to_cntn.die
+            reads: retiree_death:dcsn:a, retiree_death:dcsn:y, retiree_death:dcsn:θ
+            writes: retiree_death:cntn:a_rd_yc, retiree_death:cntn:y_rd_yc, retiree_death:cntn:θ_rd_yc
+            inside:
+                inputs: retiree_death:dcsn:a, retiree_death:dcsn:y, retiree_death:dcsn:θ
+                outputs: retiree_death:cntn:a_rd_yc, retiree_death:cntn:y_rd_yc, retiree_death:cntn:θ_rd_yc
+                dcsn_to_cntn.die.1
+                    reads: retiree_death:dcsn:a
+                    writes: retiree_death:cntn:a_rd_yc
+                dcsn_to_cntn.die.2
+                    reads: retiree_death:dcsn:y
+                    writes: retiree_death:cntn:y_rd_yc
+                dcsn_to_cntn.die.3
+                    reads: retiree_death:dcsn:θ
+                    writes: retiree_death:cntn:θ_rd_yc
+
+==== initial forward sub-builder: listing ====
+arvl_to_dcsn.1
+arvl_to_dcsn.2
+arvl_to_dcsn.3
+dcsn_to_cntn.survive
+  dcsn_to_cntn.survive.1
+dcsn_to_cntn.die
+  dcsn_to_cntn.die.1
+  dcsn_to_cntn.die.2
+  dcsn_to_cntn.die.3
+
+==== initial forward sub-builder: wiring ====
+inputs: retiree_death:arvl:a_rd, retiree_death:shck:y_n, retiree_death:shck:θ_n, retiree_death:shck:s
+outputs: retiree_death:cntn:a_rd_rt, retiree_death:cntn:a_rd_yc, retiree_death:cntn:y_rd_yc, retiree_death:cntn:θ_rd_yc
+arvl_to_dcsn.1
+    reads: retiree_death:arvl:a_rd
+    writes: retiree_death:dcsn:a
+arvl_to_dcsn.2
+    reads: retiree_death:shck:y_n
+    writes: retiree_death:dcsn:y
+arvl_to_dcsn.3
+    reads: retiree_death:shck:θ_n
+    writes: retiree_death:dcsn:θ
+dcsn_to_cntn.survive
+    reads: retiree_death:dcsn:a
+    writes: retiree_death:cntn:a_rd_rt
+    inside:
+        inputs: retiree_death:dcsn:a
+        outputs: retiree_death:cntn:a_rd_rt
+        dcsn_to_cntn.survive.1
+            reads: retiree_death:dcsn:a
+            writes: retiree_death:cntn:a_rd_rt
+dcsn_to_cntn.die
+    reads: retiree_death:dcsn:a, retiree_death:dcsn:y, retiree_death:dcsn:θ
+    writes: retiree_death:cntn:a_rd_yc, retiree_death:cntn:y_rd_yc, retiree_death:cntn:θ_rd_yc
+    inside:
+        inputs: retiree_death:dcsn:a, retiree_death:dcsn:y, retiree_death:dcsn:θ
+        outputs: retiree_death:cntn:a_rd_yc, retiree_death:cntn:y_rd_yc, retiree_death:cntn:θ_rd_yc
+        dcsn_to_cntn.die.1
+            reads: retiree_death:dcsn:a
+            writes: retiree_death:cntn:a_rd_yc
+        dcsn_to_cntn.die.2
+            reads: retiree_death:dcsn:y
+            writes: retiree_death:cntn:y_rd_yc
+        dcsn_to_cntn.die.3
+            reads: retiree_death:dcsn:θ
+            writes: retiree_death:cntn:θ_rd_yc
+
+==== initial forward primitive: listing ====
+arvl_to_dcsn.1
+arvl_to_dcsn.2
+arvl_to_dcsn.3
+dcsn_to_cntn.survive.1
+dcsn_to_cntn.die.1
+dcsn_to_cntn.die.2
+dcsn_to_cntn.die.3
+
+==== initial forward primitive: wiring ====
+inputs: retiree_death:arvl:a_rd, retiree_death:shck:y_n, retiree_death:shck:θ_n, retiree_death:shck:s
+outputs: retiree_death:cntn:a_rd_rt, retiree_death:cntn:a_rd_yc, retiree_death:cntn:y_rd_yc, retiree_death:cntn:θ_rd_yc
+arvl_to_dcsn.1
+    reads: retiree_death:arvl:a_rd
+    writes: retiree_death:dcsn:a
+arvl_to_dcsn.2
+    reads: retiree_death:shck:y_n
+    writes: retiree_death:dcsn:y
+arvl_to_dcsn.3
+    reads: retiree_death:shck:θ_n
+    writes: retiree_death:dcsn:θ
+dcsn_to_cntn.survive.1
+    reads: retiree_death:dcsn:a
+    writes: retiree_death:cntn:a_rd_rt
+dcsn_to_cntn.die.1
+    reads: retiree_death:dcsn:a
+    writes: retiree_death:cntn:a_rd_yc
+dcsn_to_cntn.die.2
+    reads: retiree_death:dcsn:y
+    writes: retiree_death:cntn:y_rd_yc
+dcsn_to_cntn.die.3
+    reads: retiree_death:dcsn:θ
+    writes: retiree_death:cntn:θ_rd_yc
+
+==== initial forward combined: listing ====
+the same as initial forward sub-builder: listing
+
+==== initial forward combined: wiring ====
+the same as initial forward sub-builder: wiring
+
+==== initial forward factored: listing ====
+the same as initial forward sub-builder: listing
+
+==== initial forward factored: wiring ====
+the same as initial forward sub-builder: wiring
+
+==== builders backward: conditions ====
+the same as initial backward: conditions
+
+==== builders backward builder: listing ====
+cntn_to_dcsn
+  Pullback of 𝑊_r≻ along the law of motion 𝑔
+  Pullback of 𝑉_young≻ along the law of motion 𝑔
+  Value aggregation 𝐺
+  Evaluation of 𝑉
+dcsn_to_arvl
+  Pullback of 𝑉 along the law of motion 𝑔
+  Expectation of the statement value under the distribution of y_n and θ_n
+  Value aggregation 𝐺
+  Evaluation of 𝑉≺
+
+==== builders backward builder: wiring ====
+inputs: retiree_death:function:cntn:W_r, retiree_death:function:cntn:V_young
+outputs: retiree_death:function:arvl:V
+cntn_to_dcsn
+    reads: retiree_death:function:cntn:W_r, retiree_death:function:cntn:V_young
+    writes: retiree_death:function:dcsn:V
+    inside:
+        inputs: retiree_death:function:cntn:W_r, retiree_death:function:cntn:V_young
+        outputs: retiree_death:function:dcsn:V
+        cntn_to_dcsn:Pullback:survive [Pullback]
+            reads: retiree_death:function:cntn:W_r
+            writes: retiree_death:function:cntn:W_r:g
+            refers to: retiree_death:g:dcsn_to_cntn
+        cntn_to_dcsn:Pullback:die [Pullback]
+            reads: retiree_death:function:cntn:V_young
+            writes: retiree_death:function:cntn:V_young:g
+            refers to: retiree_death:g:dcsn_to_cntn
+        cntn_to_dcsn:Aggregation [Aggregation]
+            reads: retiree_death:function:cntn:W_r:g, retiree_death:function:cntn:V_young:g
+            writes: cntn_to_dcsn:Aggregation:V:result
+            refers to: retiree_death:G:cntn_to_dcsn
+        cntn_to_dcsn:Evaluation [Evaluation]
+            reads: cntn_to_dcsn:Aggregation:V:result
+            writes: retiree_death:function:dcsn:V
+dcsn_to_arvl
+    reads: retiree_death:function:dcsn:V
+    writes: retiree_death:function:arvl:V
+    inside:
+        inputs: retiree_death:function:dcsn:V
+        outputs: retiree_death:function:arvl:V
+        dcsn_to_arvl:Pullback [Pullback]
+            reads: retiree_death:function:dcsn:V
+            writes: retiree_death:function:dcsn:V:g
+            refers to: retiree_death:g:arvl_to_dcsn
+        dcsn_to_arvl.value:Expectation:1 [Expectation]
+            reads: retiree_death:function:dcsn:V:g
+            writes: dcsn_to_arvl.value:Expectation:1:result
+            refers to: retiree_death:distribution:y_n, retiree_death:distribution:θ_n
+        dcsn_to_arvl:Aggregation [Aggregation]
+            reads: dcsn_to_arvl.value:Expectation:1:result
+            writes: dcsn_to_arvl:Aggregation:V:result
+            refers to: retiree_death:G:dcsn_to_arvl
+        dcsn_to_arvl:Evaluation [Evaluation]
+            reads: dcsn_to_arvl:Aggregation:V:result
+            writes: retiree_death:function:arvl:V
+
+==== builders backward sub-builder: listing ====
+Pullback of 𝑊_r≻ along the law of motion 𝑔
+Pullback of 𝑉_young≻ along the law of motion 𝑔
+Value aggregation 𝐺
+Evaluation of 𝑉
+Pullback of 𝑉 along the law of motion 𝑔
+Expectation of the statement value under the distribution of y_n and θ_n
+Value aggregation 𝐺
+Evaluation of 𝑉≺
+
+==== builders backward sub-builder: wiring ====
+inputs: retiree_death:function:cntn:W_r, retiree_death:function:cntn:V_young
+outputs: retiree_death:function:arvl:V
+cntn_to_dcsn:Pullback:survive [Pullback]
+    reads: retiree_death:function:cntn:W_r
+    writes: retiree_death:function:cntn:W_r:g
+    refers to: retiree_death:g:dcsn_to_cntn
+cntn_to_dcsn:Pullback:die [Pullback]
+    reads: retiree_death:function:cntn:V_young
+    writes: retiree_death:function:cntn:V_young:g
+    refers to: retiree_death:g:dcsn_to_cntn
+cntn_to_dcsn:Aggregation [Aggregation]
+    reads: retiree_death:function:cntn:W_r:g, retiree_death:function:cntn:V_young:g
+    writes: cntn_to_dcsn:Aggregation:V:result
+    refers to: retiree_death:G:cntn_to_dcsn
+cntn_to_dcsn:Evaluation [Evaluation]
+    reads: cntn_to_dcsn:Aggregation:V:result
+    writes: retiree_death:function:dcsn:V
+dcsn_to_arvl:Pullback [Pullback]
+    reads: retiree_death:function:dcsn:V
+    writes: retiree_death:function:dcsn:V:g
+    refers to: retiree_death:g:arvl_to_dcsn
+dcsn_to_arvl.value:Expectation:1 [Expectation]
+    reads: retiree_death:function:dcsn:V:g
+    writes: dcsn_to_arvl.value:Expectation:1:result
+    refers to: retiree_death:distribution:y_n, retiree_death:distribution:θ_n
+dcsn_to_arvl:Aggregation [Aggregation]
+    reads: dcsn_to_arvl.value:Expectation:1:result
+    writes: dcsn_to_arvl:Aggregation:V:result
+    refers to: retiree_death:G:dcsn_to_arvl
+dcsn_to_arvl:Evaluation [Evaluation]
+    reads: dcsn_to_arvl:Aggregation:V:result
+    writes: retiree_death:function:arvl:V
+
+==== builders backward primitive: listing ====
+the same as builders backward sub-builder: listing
+
+==== builders backward primitive: wiring ====
+the same as builders backward sub-builder: wiring
+
+==== builders backward combined: listing ====
+the same as builders backward sub-builder: listing
+
+==== builders backward combined: wiring ====
+the same as builders backward sub-builder: wiring
+
+==== builders backward factored: listing ====
+the same as builders backward sub-builder: listing
+
+==== builders backward factored: wiring ====
+the same as builders backward sub-builder: wiring
+
+==== builders forward: conditions ====
+external-callable-signature-and-provider (required): external:Invariant; retiree_death:distribution:y_n
+    The callable Invariant used by retiree_death:distribution:y_n needs a declared signature and provider.
+external-callable-signature-and-provider (required): external:Invariant; retiree_death:distribution:θ_n
+    The callable Invariant used by retiree_death:distribution:θ_n needs a declared signature and provider.
+distribution-weights-are-a-probability-vector (required): retiree_death:distribution:s
+    the weights (π_o, 1 - π_o) of the Categorical declaration retiree_death:distribution:s of s each lie in [0, 1] and sum to one
+joint-distribution-factorization (required): retiree_death:distribution:y_n; retiree_death:distribution:θ_n; arvl_to_dcsn
+    The joint distribution for arvl_to_dcsn is assumed to be the product of the declared conditional distributions given their named parents and the source coordinates: y_n given (a_rd) by retiree_death:distribution:y_n; θ_n given (a_rd) by retiree_death:distribution:θ_n; y_n and θ_n are conditionally independent given (a_rd).
+joint-distribution-factorization (required): retiree_death:distribution:s; dcsn_to_cntn
+    The joint distribution for dcsn_to_cntn is assumed to be the product of the declared conditional distributions given their named parents and the source coordinates: s given (a, y, θ) by retiree_death:distribution:s.
+law-support (required): retiree_death:shck:y_n
+    The distribution of y_n gives probability only to values in the declared shock set.
+law-support (required): retiree_death:shck:θ_n
+    The distribution of θ_n gives probability only to values in the declared shock set.
+law-support (required): retiree_death:shck:s
+    The distribution of s gives probability only to values in the declared shock set.
+continuation-input (required): retiree_death:cntn:W_r; ℝ; retiree_death:cntn:a_rd_rt
+    The representing function for W_r[>] must be measurable on its declared domain, depend only on (a_rd_rt) in that order, and take values in ℝ.
+continuation-input (required): retiree_death:cntn:V_young; ℝ; retiree_death:cntn:a_rd_yc; retiree_death:cntn:y_rd_yc; retiree_death:cntn:θ_rd_yc
+    The representing function for V_young[>] must be measurable on its declared domain, depend only on (a_rd_yc, y_rd_yc, θ_rd_yc) in that order, and take values in ℝ.
+
+==== builders forward builder: refused ====
+refused: NotConstructed: applications/cagetti-denardi-2006/declaration/stages/retiree_death/retiree_death.bl:17:1-17:165: the forward measures are not constructed: the distribution of y_n is written with the family 'Invariant', whose result set is not declared; the forward measure is constructed only for the families N, LogNormal, Uniform, TruncatedNormal, TruncatedLogNormal, TypeIExtremeValue, DiscreteMarkov, MarkovChain, Mixture, Categorical, Bernoulli (address 'applications/cagetti-denardi-2006/declaration/stages/retiree_death/retiree_death.bl:17'; rule not-constructed)
+
+==== builders forward sub-builder: refused ====
+the same as builders forward builder: refused
+
+==== builders forward primitive: refused ====
+the same as builders forward builder: refused
+
+==== builders forward combined: refused ====
+the same as builders forward builder: refused
+
+==== builders forward factored: refused ====
+the same as builders forward builder: refused

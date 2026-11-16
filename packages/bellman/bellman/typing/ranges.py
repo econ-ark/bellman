@@ -26,6 +26,7 @@ from typing import NamedTuple
 
 from bellman.native.predicates import And, Compare, Or
 from bellman.syntax import terms as T
+from bellman.syntax.vocabulary import EXTENDED_REAL
 from bellman.typing import sets
 from bellman.typing.sets import Bounds, set_of_bounds
 
@@ -128,6 +129,11 @@ def _bounds_of_set(setterm):
         return _bounds_of_set(setterm.set)
     if isinstance(setterm, T.Comprehension):
         return _bounds_of_set(setterm.base)
+    primitive = sets.primitive_of(setterm)
+    if primitive is not None and primitive.kind == EXTENDED_REAL:
+        return Bounds(
+            -_INF, primitive.glyph != "ℝ_{+∞}", _INF, primitive.glyph != "ℝ_{-∞}"
+        )
     return sets.endpoints(setterm) if setterm is not None else None
 
 
@@ -158,6 +164,9 @@ def _add_bounds(left, right):
         _includes_negative_infinity(left) and _includes_positive_infinity(right)
     ):
         return None
+    for bounds in (left, right):
+        if _singleton(bounds) and _includes_infinity(bounds):
+            return bounds
     lower = _rounded_outward(left.lower, right.lower, "add", lower=True)
     upper = _rounded_outward(left.upper, right.upper, "add", lower=False)
     if lower is None or upper is None:
@@ -205,8 +214,6 @@ def _multiply_bounds(left, right):
         return left
     if _negative_extended(right) and _strict_positive(left):
         return right
-    if _includes_infinity(left) or _includes_infinity(right):
-        return None
     if _singleton_zero(left) or _singleton_zero(right):
         return Bounds(lower=0, lower_closed=True, upper=0, upper_closed=True)
     if _nonnegative(left) and _nonnegative(right):
@@ -223,6 +230,8 @@ def _multiply_bounds(left, right):
 
 
 def _multiply_nonnegative(left, right):
+    if left.lower == _INF or right.lower == _INF:
+        return Bounds(_INF, True, _INF, True)
     lower, lower_exact = _rounded_outward(left.lower, right.lower, "mul", lower=True)
     lower_closed = left.lower_closed and right.lower_closed and lower_exact
     if lower == 0:
@@ -232,7 +241,8 @@ def _multiply_nonnegative(left, right):
         )
 
     if left.upper == _INF or right.upper == _INF:
-        upper, upper_closed = _INF, False
+        upper = _INF
+        upper_closed = _includes_positive_infinity(left) or _includes_positive_infinity(right)
     else:
         upper, upper_exact = _rounded_outward(left.upper, right.upper, "mul", lower=False)
         upper_closed = left.upper_closed and right.upper_closed and upper_exact
@@ -292,7 +302,13 @@ def _reciprocal_bounds(bounds):
 
 
 def _power_bounds(base, exponent):
-    if _includes_infinity(base) or _includes_infinity(exponent):
+    if _includes_infinity(exponent):
+        return None
+    if _strict_positive(base) and _includes_positive_infinity(base) and _strict_negative(exponent):
+        if base.lower == _INF:
+            return Bounds(0, True, 0, True)
+        return Bounds(0, True, _INF, False)
+    if _includes_infinity(base):
         return None
     if _strict_positive(base) and _finite_real(base) and _finite_real(exponent):
         return Bounds(lower=0, lower_closed=False, upper=_INF, upper_closed=False)

@@ -54,8 +54,8 @@ python -m ipykernel install --user --name bellman-ddsl
 ## Tests
 
 ```bash
-pytest packages/bellman -n auto             # the fast core
-pytest packages/bellman -n auto -m sweep    # the corpus sweeps, run before a merge
+pytest packages/bellman -n auto               # the default set: every case not marked complete_set
+pytest packages/bellman -n auto --complete    # the complete set: every case, run before a merge
 pytest tests applications tutorials packages/asva/tests -n auto
 ```
 

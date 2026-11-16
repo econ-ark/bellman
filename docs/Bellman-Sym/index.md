@@ -25,7 +25,7 @@ Begin with the [buffer-stock consumption tutorial](01-stage.md). The household o
 | Keep numerical results | [Solutions at the perches](11-solutions-at-the-perches.md) | Where a solver keeps what it computes: one plain dictionary for each stage occurrence, keyed by perch and by field, filled by the stage's compiled kernels. |
 | Examine a numerical application | the lesson `tutorials/models/cons-port/03-solving-the-two-orders.ipynb` of the repository | The portfolio–consumption model solved in both orders of its stages and the consumption rules and risky shares compared. |
 
-The lesson solves with the model's own numerical tool; parsing or constructing a stage solves nothing. A **stage occurrence** is one use of a stage file at one position of a period. Each stage occurrence can have its own parameter values and numerical settings. Construction and specification prepare stage occurrences; solving additionally requires numerical routines and continuation or terminal data.
+The lesson solves with the model's own numerical tool; parsing or constructing a stage solves nothing. A **stage occurrence** is one use of a stage file at one position of a period. A general recipe can bind calibration, methods and settings by period position. In a [modular model](../bellman-calculus/APPX-H-MODULARITY.md), repeated occurrences use their declaration's recorded calibration sources, and quantities such as age can change as fields. Solving also requires numerical routines and supplied continuation data.
 
 For discrete alternatives, read [Branching](05-branching.md), which uses the separate work-or-retire example. Choosing a continuous portfolio share is not a discrete branch.
 
@@ -54,7 +54,7 @@ Inspection is part of using Bellman-SYM. The [API](API/index.md) lists every fun
 | [Period functions](API/factory/period-factory.md) | Append a period, derive the order of its stages from their fields, and make the drawing of the period. |
 | [The trellis factory](API/factory/trellis-factory.md) | Read a trellis file, elaborate and bind every period, and make the drawing of the trellis. |
 
-For a new stage occurrence, loading and elaboration come first, then calibration, methodization and configuration, the order the factory uses. Each of the three bindings adds its binding to the stage occurrence it is called on and returns that stage; methodization must precede configuration, since the methods name the settings ([Methodization](04-methodization.md) §5). Inspecting the equations and attachments is separate from obtaining numerical policies.
+The trellis factory elaborates, calibrates, methodizes and configures, and this is the recommended order for one stage ([Methodization](04-methodization.md) §7). The stage API also permits calibration after methodization. Each binding returns the stage it binds; methodization must precede configuration, since the methods name the settings ([Methodization](04-methodization.md) §5). Inspecting the equations and attachments is separate from obtaining numerical policies.
 
 ## 4 Mathematical reference
 

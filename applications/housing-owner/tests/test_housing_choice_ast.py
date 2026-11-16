@@ -40,13 +40,13 @@ import re
 import sys
 
 _TESTS = pathlib.Path(__file__).resolve().parent
-_TOOLS = _TESTS.parents[2] / "packages" / "bellman" / "tests" / "tools"
+_TOOLS = _TESTS.parents[2] / "applications"
 sys.path.insert(0, str(_TOOLS))
 
 import stage_ast                      # noqa: E402
 from bellman.syntax.parse import build_parser  # noqa: E402
 from stage_ast import annotation as _ann, parsed, perched as _p, run_checks, sym as _c  # noqa: E402
-from stage_types import (             # noqa: E402
+from bellman.syntax.terms import (             # noqa: E402
     Add, Arrival, Assignment, At, Block, Call, Constant,
     Continuation, Control, Coordinate, Declaration, Declare, Decision,
     Domain, Equation, Infoset, Key, KeyValue, Metadata, Mul, Named,

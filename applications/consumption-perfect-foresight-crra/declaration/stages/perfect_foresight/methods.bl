@@ -1,38 +1,23 @@
 @methods: perfect_foresight
-# The closed-form solution of the perfect foresight stage, an addition to
-# perfect_foresight.bl, the stage file beside this one (economics.md, "The
-# solution in closed form"). The marginal propensity to consume κ = 1 - q is
-# the method's coefficient and is defined here; the return patience factor q,
-# human wealth h and the natural borrowing limit L = 1 - h are the stage's.
-# Each of the three builders that the closed form solves is typed !explicit,
-# and the lines of its block write its outputs as explicit functions of its
-# own perch's state: the consumption function c = κ(m - L) at the policy
-# builder, the decision value κ^(-ρ) (m - L)^(1-ρ)/(1-ρ) and its marginal at
-# the decision value builder, and the arrival value, the decision value at
-# the resources R*k/Γ + 1 normalized by Γ^(1-ρ), and its marginal at the
-# arrival value builder, whose id arrival_marginal the module reads. At the
-# operative level each line stands in place of the builder's declared line,
-# which stage.declared keeps. !explicit gives the Evaluation of each builder
-# the closed form, !closed_form. The power κ^(-ρ) is defined for every ρ > 1
-# only at κ > 0, which is the return impatience condition q < 1, the upper
-# bound of the discount factor in the stage file: calibrate refuses a
-# calibration outside that bound, and one at which the computed κ is not
-# positive. The functions hold on total wealth
-# m - L > 0, and at the arrival perch on k > L; the application's module
-# refuses an evaluation elsewhere.
+# The stationary closed form. The stage defines human wealth recursively;
+# these methods state its fixed point. The declared set of h_lim requires Γ < R.
 
 κ := 1 - q    :: ["the marginal propensity to consume, one minus the return patience factor"]
+h_lim : ℝ₊₊ := 1/(1 - Γ/R)   :: ["human wealth at the infinite horizon, the value that h = 1 + h*Γ/R maps to itself; positive exactly where Γ < R, the finite human wealth condition"]
+L_lim := 1 - h_lim           :: ["the natural borrowing limit on market resources at the infinite horizon"]
 
 [id=policy, policy.method : !explicit] {
-    c = κ*(m - L)                                        :: [id=consumption]
+    c = κ*(m - L_lim)                                        :: [id=consumption]
 }
 
 [id=cntn_to_dcsn, cntn_to_dcsn.method : !explicit] {
-    V = κ^(-ρ)*(m - L)^(1-ρ)/(1-ρ)                       :: [id=closed_value]
-    D_{m}V = κ^(-ρ)*(m - L)^(-ρ)                         :: [id=marginal]
+    V = κ^(-ρ)*(m - L_lim)^(1-ρ)/(1-ρ)                       :: [id=closed_value]
+    D_{m}V = κ^(-ρ)*(m - L_lim)^(-ρ)                         :: [id=marginal]
+    h = h_lim                                                :: [id=closed_human_wealth]
 }
 
 [id=dcsn_to_arvl, dcsn_to_arvl.method : !explicit] {
-    V[<] = Γ^(1-ρ)*κ^(-ρ)*(R*k/Γ + 1 - L)^(1-ρ)/(1-ρ)    :: [id=closed_value]
-    D_{k}V[<] = R*Γ^(-ρ)*κ^(-ρ)*(R*k/Γ + 1 - L)^(-ρ)     :: [id=arrival_marginal]
+    V[<] = Γ^(1-ρ)*κ^(-ρ)*(R*k/Γ + 1 - L_lim)^(1-ρ)/(1-ρ)    :: [id=closed_value]
+    D_{k}V[<] = R*Γ^(-ρ)*κ^(-ρ)*(R*k/Γ + 1 - L_lim)^(-ρ)     :: [id=arrival_marginal]
+    h[<] = h_lim*Γ/R                                         :: [id=closed_human_wealth]
 }

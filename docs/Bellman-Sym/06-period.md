@@ -124,7 +124,7 @@ At zero capital every share gives resources `θ`; choose share zero there. The o
 
 ## 2 Connectors
 
-A **connector** selects eligible continuation and arrival state fields for a stage join. In the main period, the outgoing field is written first and the incoming field second:
+A **connector** selects eligible continuation and arrival fields for a stage join. For a state pair, the outgoing field is written first and the incoming field second:
 
 ```yaml
 connectors:
@@ -140,6 +140,8 @@ The declared boundaries explain which connections are within the period and whic
 | `port.m_next` to the next `cons.m` | Strictly positive resources in the same units. | `{m_next: m}` between periods. |
 
 The stage declarations establish direction. Reversing the pair is not another spelling of the same join. The second authored pair belongs in the [inter-period connector](07-trellis.md#2-inter-period-connectors), not alongside the first: placing both in this period would close a cycle.
+
+A connection also pairs the value-type fields sent backward. A connector writes such a pair as `{earlier.input: later.output}`, using stage keys when an endpoint is ambiguous. When no pair is written, the package first matches names after removing perch marks. A single remaining pair can be inferred unless the incoming name is kept by the earlier stage. That field needs an equal name or an authored pair. The package compares the supplied set and dependence with those of the required field. It applies the same checks to constants, which have no state coordinates.
 
 The pair performs no calculation. Interest, income, depreciation, discounting, and unit conversion must appear in a stage equation. Equal domain labels alone do not establish compatibility: the fields must denote compatible quantities with matching economic roles and information at the join. Their continuation and arrival tags refer to different stages, but describe the same boundary information after identification. [Perch tagging rules](appendices/13-perch-tagging-rules.md) explains why tags within a stage do not by themselves identify quantities across stages.
 
@@ -246,4 +248,4 @@ None of these calls solves the model.
 
 Two uses of `cons.bl` may share source text, but each constructed stage occurrence is a separate object with its own graphs and its own specification, and the two share no object. What the stages of one period do share is the parameters they declare under one name: `β` declared in two stages of a period is one parameter of the period, whose declared sets must agree and which the period's calibration sources supply once, each declaring stage then binding that value ([The trellis factory](API/factory/trellis-factory.md) §4). A calibration change in one period does not alter another, since the same spelling in another period is another parameter, and no stage occurrence is adjusted in place. Reusing a stage file or caching its parse therefore does not justify sharing mutable stage annotations.
 
-If a stage file occurs twice inside one period, give the two uses distinct keys and supply a source entry for each. Distinct keys identify the occurrences; their field interfaces must still make every join unambiguous. Across periods, the same local key may recur because the period index distinguishes its uses. The application evaluates a parameter schedule for each index when assembling that occurrence's record.
+If a stage file occurs twice inside one period, give the two uses distinct keys and supply a source entry for each. Distinct keys identify the occurrences; their field interfaces must still make every join unambiguous. Across periods, the same local key may recur because the period index distinguishes its uses. A recipe may attach calibration, methods or settings to an index. A [modular model](../bellman-calculus/APPX-H-MODULARITY.md) takes its calibration from the declaration's sources. Data that vary over repeated uses of the same declaration can pass through fields.

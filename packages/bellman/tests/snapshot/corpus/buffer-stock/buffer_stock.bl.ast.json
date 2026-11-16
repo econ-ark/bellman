@@ -18,7 +18,7 @@
           "__class__": "Space",
           "set": {
             "__class__": "Named",
-            "name": "ℝ₊₊"
+            "name": "ℝ"
           }
         }
       },
@@ -36,7 +36,7 @@
           "__class__": "Space",
           "set": {
             "__class__": "Named",
-            "name": "ℝ₊₊"
+            "name": "ℝ"
           }
         }
       },
@@ -662,29 +662,43 @@
     {
       "__class__": "Statement",
       "core": {
-        "__class__": "Assignment",
-        "target": {
-          "__class__": "Constant",
-          "name": "𝑑𝑢"
-        },
-        "value": {
-          "__class__": "Operator",
-          "head": "D",
-          "subs": [
-            {
-              "__class__": "Var",
+        "__class__": "FuncDef",
+        "name": "𝑑𝑢",
+        "params": [
+          {
+            "__class__": "Coordinate",
+            "stem": "c",
+            "at": null,
+            "classifiers": [
+              {
+                "__class__": "Domain",
+                "space": {
+                  "__class__": "Named",
+                  "name": "ℝ₊₊"
+                }
+              }
+            ]
+          }
+        ],
+        "body": {
+          "__class__": "Pow",
+          "base": {
+            "__class__": "Sym",
+            "symbol": {
+              "__class__": "Constant",
               "name": "c"
             }
-          ],
-          "args": [
-            {
+          },
+          "exponent": {
+            "__class__": "Neg",
+            "operand": {
               "__class__": "Sym",
               "symbol": {
                 "__class__": "Constant",
-                "name": "𝑢"
+                "name": "ρ"
               }
             }
-          ]
+          }
         }
       },
       "annot": {
@@ -701,23 +715,50 @@
     {
       "__class__": "Statement",
       "core": {
-        "__class__": "Assignment",
-        "target": {
-          "__class__": "Constant",
-          "name": "𝑑𝑢𝑖𝑛𝑣"
-        },
-        "value": {
-          "__class__": "Call",
-          "fun": "Inv",
-          "args": [
-            {
-              "__class__": "Sym",
-              "symbol": {
-                "__class__": "Constant",
-                "name": "𝑑𝑢"
+        "__class__": "FuncDef",
+        "name": "𝑑𝑢𝑖𝑛𝑣",
+        "params": [
+          {
+            "__class__": "Coordinate",
+            "stem": "v",
+            "at": null,
+            "classifiers": [
+              {
+                "__class__": "Domain",
+                "space": {
+                  "__class__": "Named",
+                  "name": "ℝ₊₊"
+                }
+              }
+            ]
+          }
+        ],
+        "body": {
+          "__class__": "Pow",
+          "base": {
+            "__class__": "Sym",
+            "symbol": {
+              "__class__": "Constant",
+              "name": "v"
+            }
+          },
+          "exponent": {
+            "__class__": "Neg",
+            "operand": {
+              "__class__": "Div",
+              "left": {
+                "__class__": "Number",
+                "value": 1
+              },
+              "right": {
+                "__class__": "Sym",
+                "symbol": {
+                  "__class__": "Constant",
+                  "name": "ρ"
+                }
               }
             }
-          ]
+          }
         }
       },
       "annot": {
@@ -746,7 +787,7 @@
                 "__class__": "Domain",
                 "space": {
                   "__class__": "Named",
-                  "name": "ℝ₊₊"
+                  "name": "Xm"
                 }
               }
             ]
@@ -783,10 +824,20 @@
                 "__class__": "Lt"
               },
               "right": {
-                "__class__": "Sym",
-                "symbol": {
-                  "__class__": "Constant",
-                  "name": "x"
+                "__class__": "Sub",
+                "left": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "x"
+                  }
+                },
+                "right": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "L"
+                  }
                 }
               }
             }
@@ -1133,6 +1184,52 @@
                   },
                   {
                     "__class__": "Coordinate",
+                    "stem": "L",
+                    "at": null,
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Interval",
+                          "bounds": {
+                            "__class__": "Range",
+                            "left": {
+                              "__class__": "Open"
+                            },
+                            "lower": {
+                              "__class__": "Neg",
+                              "operand": {
+                                "__class__": "Sym",
+                                "symbol": {
+                                  "__class__": "Constant",
+                                  "name": "inf"
+                                }
+                              }
+                            },
+                            "upper": {
+                              "__class__": "Number",
+                              "value": 0
+                            },
+                            "right": {
+                              "__class__": "Closed"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "__class__": "Role",
+                        "kind": {
+                          "__class__": "Value",
+                          "order": 0
+                        }
+                      },
+                      {
+                        "__class__": "Constancy"
+                      }
+                    ]
+                  },
+                  {
+                    "__class__": "Coordinate",
                     "stem": "c",
                     "at": null,
                     "classifiers": []
@@ -1170,6 +1267,12 @@
                         }
                       }
                     ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "L",
+                    "at": null,
+                    "classifiers": []
                   }
                 ]
               },
@@ -1273,6 +1376,12 @@
                     "stem": "V",
                     "at": null,
                     "classifiers": []
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "L",
+                    "at": null,
+                    "classifiers": []
                   }
                 ]
               },
@@ -1310,6 +1419,57 @@
                           "__class__": "Value",
                           "order": 0
                         }
+                      }
+                    ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "L",
+                    "at": {
+                      "__class__": "At",
+                      "side": {
+                        "__class__": "Arrival"
+                      }
+                    },
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Interval",
+                          "bounds": {
+                            "__class__": "Range",
+                            "left": {
+                              "__class__": "Open"
+                            },
+                            "lower": {
+                              "__class__": "Neg",
+                              "operand": {
+                                "__class__": "Sym",
+                                "symbol": {
+                                  "__class__": "Constant",
+                                  "name": "inf"
+                                }
+                              }
+                            },
+                            "upper": {
+                              "__class__": "Number",
+                              "value": 0
+                            },
+                            "right": {
+                              "__class__": "Closed"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "__class__": "Role",
+                        "kind": {
+                          "__class__": "Value",
+                          "order": 0
+                        }
+                      },
+                      {
+                        "__class__": "Constancy"
                       }
                     ]
                   }
@@ -1417,6 +1577,87 @@
               }
             ]
           }
+        },
+        {
+          "__class__": "Statement",
+          "core": {
+            "__class__": "Equation",
+            "lhs": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Variable",
+                "name": "L",
+                "when": {
+                  "__class__": "At",
+                  "side": {
+                    "__class__": "Arrival"
+                  }
+                },
+                "shift": 0
+              }
+            },
+            "rhs": {
+              "__class__": "Conditional",
+              "test": {
+                "__class__": "Rel",
+                "left": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "σ_ψ"
+                  }
+                },
+                "op": {
+                  "__class__": "Gt"
+                },
+                "right": {
+                  "__class__": "Number",
+                  "value": 0
+                }
+              },
+              "then": {
+                "__class__": "Number",
+                "value": 0
+              },
+              "otherwise": {
+                "__class__": "Div",
+                "left": {
+                  "__class__": "Mul",
+                  "left": {
+                    "__class__": "Sym",
+                    "symbol": {
+                      "__class__": "Constant",
+                      "name": "Γ"
+                    }
+                  },
+                  "right": {
+                    "__class__": "Sym",
+                    "symbol": {
+                      "__class__": "Constant",
+                      "name": "L"
+                    }
+                  }
+                },
+                "right": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "R"
+                  }
+                }
+              }
+            }
+          },
+          "annot": {
+            "__class__": "Annotation",
+            "entries": [
+              {
+                "__class__": "KeyValue",
+                "key": "id",
+                "value": "borrowing_bound"
+              }
+            ]
+          }
         }
       ]
     },
@@ -1462,6 +1703,12 @@
                         }
                       }
                     ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "L",
+                    "at": null,
+                    "classifiers": []
                   }
                 ]
               },

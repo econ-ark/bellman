@@ -307,6 +307,21 @@ Definitions referenced
 
 ## 5 The kernels of a builder
 
+`builder.kernels(inputs=values)` accepts the complete mapping checked by [`stage.check_inputs(values)`](01-the-stage.md#51-supplied-continuation-fields). With a mapping, the builder repeats decidable checks and refuses missing, unknown or incompatible inputs. Keep the conditions returned by `check_inputs` beside the numerical calculation. Calibration and settings are separate bindings. A call without `inputs` remains available. Where a grid or law needs an unsupplied constant, its entry is a `Refusal` under `grid-requirement` or `law-requirement`.
+
+```python
+from bellman.trellis import assemble_trellis
+
+trellis = assemble_trellis("applications/life-cycle/declaration", "spec.yml")
+stage = trellis["periods"][1]["stages"]["mortality"]
+values = {"V[>]": lambda z, a: 0.0, "age": 1}
+conditions = stage.check_inputs(values)
+kernels = stage.builder["dcsn", "cntn"].kernels(inputs=values)
+draw = kernels.laws["DistributionExtension:s"]
+```
+
+The provided `age` selects the survival probabilities for this occurrence. The representing function for `V[>]` still leaves conditions for the caller, even though this forward builder uses only the age.
+
 `kernels()` answers one record of the builder's kernels, from which a numerical operator is built with no stage in hand: each operation in the order it is applied, with its printed kernel and the wires it reads and writes, and, where its kernel is an explicit function, its function with the names of its arguments and outputs, a derivative term the row reads standing among the arguments, `G_policy_InvEuler(V≻, a, D_{a}(V≻); ρ) → c≻` for the candidate line `InvEuler`, or, for a row that states a relation its output satisfies with no explicit side, such as the identification of a policy block, whose `compile_kernel()` is refused under `kernel-target` ([A piece](05-piece.md) §2), its printed relation; then the parameters with their values and the declared sets its operations are read on. The record refers to no stage, so cloudpickle saves it and another process reads it. The endogenous-grid step of the portfolio–consumption application is built from two such records of a specified version by one call of `asva`, the numerical toolkit installed beside the package, `asva.egm(specified.dcsn.builder.policy.kernels(), specified.dcsn.builder.bwd.kernels(), savings, evaluation)`, the caller reading the savings grid and the evaluation grid from the settings. [A piece](05-piece.md) §2 gives one operation's kernel as a function, and the lesson `tutorials/topics/kernels.ipynb` of the repository composes one step of the decision builder from its two kernels, compiles them with Numba and passes the values of a second calibration without compiling again; [Solutions at the perches](../../11-solutions-at-the-perches.md) describes the dictionaries in which a solver keeps what the kernels compute.
 
 `kernels().grids` holds the realized grid of each place within the builder that types a grid, by the address of the place: the grid's points at the bound settings and calibration, a `RealizedGrid` with the word of its outer constructor, its coordinates in their declared order and its finite points in the order they are constructed, a repeated point held once ([Methodization](../../04-methodization.md) §3.2 gives the grid entry). For a sub-builder it holds the places of the sub-builder's own node, and a grid typed at a declared function, outside every builder, stands in the record of no builder. On a version with no bound settings `grids` is `None`, since the counts and the bounds of a grid are settings. Where the construction cannot establish a grid's points and every property the grid requires, the place holds instead the `Refusal` that says why, under the rule [`grid-requirement`](../../reference/refusals.md#grid-requirement) and at the position of the entry, and the record prints it after `not constructed:`. Among the reasons are a coordinate of the place that no factor names; a factor of a feasible control written in `!Cartesian` without `!Fibred`, which is a family of grids, one at each state, and no one grid; and a fibre of two controls, whose joint sampling is unsupported. The construction supplies no default in any of these cases. The listing reads the version `methodized` of §2, calibrated and configured here:
@@ -327,3 +342,17 @@ cntn_to_dcsn.evaluate  !Cartesian on (m_d), 100 points: (0.01,), (0.110909090909
 ```
 
 The grid of savings of the endogenous grid method, `!Cartesian(a=(a_min, a_max, n_a))`, is the 800 equally spaced points from `a_min` to `a_max` that the settings give, and the grid of resources at the decision builder's Evaluation, `!Cartesian(m_d=(m_min, m_max, n_m))`, is the 100 equally spaced points from `m_min` to `m_max`; a coordinate prints as an integer where its value is one.
+
+### 5.1 Detached numerical data
+
+| Record field | Contents |
+|---|---|
+| `grids` | Realized points or a refusal, by the address of the grid entry. |
+| `grid_factors` | Operands, coordinate domain and requirements for a supported one-factor grid whose points a handler places. A feasible factor also includes its bound feasibility correspondence. The handler checks its points against these data. |
+| `laws` | The conditional law of each expectation, including a separately recorded derivative integrand, and the joint law of each distribution extension. Entries use the piece's key. |
+| `guards` | Predicates and compiled Boolean functions that select where a piece output or derivative argument is needed. Entries use the piece's key and then identify each guarded object. An output without a guard is used unconditionally. |
+| `output_kernels` | Explicit kernels for individual outputs, by piece key and output identity. A kernel for one output only reads its own arguments. |
+
+The law records substitute bound parameters and the supplied constants. They retain any state, control or parent-shock coordinates still needed by the law. If a supplied table or callable still needs such an argument, the detached declaration retains its value and declared set in `bindings`. A numeric handler may [specialize the declaration](../../reference/laws.md) at those coordinates.
+
+When evaluating a formula by cases, the handler uses the guard before evaluating a continuation function or starting an expectation. A pullback guard uses the coordinates before the law of motion. A guard within an expectation selects integrand values at the shock points under the original law. The handler keeps the original weights. An extracted expectation's result is an argument of the enclosing kernel, and `PieceKernel.fallback` supplies the part valid where its local expectations are inactive. The raw `PieceKernel.function` still takes the values in `arguments` followed by `parameter_values`.

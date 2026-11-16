@@ -29,7 +29,9 @@ topic: [calculus]
 > [!note] Not yet drafted — stub notes only
 > Structural outline and placeholders only; not yet a finished chapter.
 
-An **operator** maps objects in a specified domain to objects in a specified codomain. A **builder** composes simpler operators into the operator of one edge of the stage, or into the policy builder or the optimizing decision builder, which are the image of no edge: a backward builder is a value-recursion step, and a forward builder maps a distribution at one perch to a distribution at the next. We use $\mathbb T_{\succ,\pi}$ for decision evaluation under a fixed policy, $\mathbb T_\succ$ for optimization, and $\mathbb T_\prec$ for arrival evaluation. The corresponding stage compositions are $\mathbb T_\pi=\mathbb T_\prec\circ\mathbb T_{\succ,\pi}$ and $\mathbb T=\mathbb T_\prec\circ\mathbb T_\succ$. [Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) §6 derives the builders $\mathbb T_\prec$ and $\mathbb T_{\succ,\pi}$, and the forward builders of §9 below, as the images of the transitions of a stage under its models, where a transition is a law of motion with its shock law. A **handler** is a numerical routine attached to an operator.
+An **operator** maps objects in a specified domain to objects in a specified codomain. A **builder** composes simpler operators into the operator of one edge of the stage, or into the policy builder or the optimizing decision builder, which are the image of no edge: a backward builder is a value-recursion step, and a forward builder maps a distribution at one perch to a distribution at the next. We use $\mathbb T_{\succ,\pi}$ for decision evaluation under a fixed policy, $\mathbb T_\succ$ for optimization, and $\mathbb T_\prec$ for arrival evaluation. The corresponding stage compositions are $\mathbb T_\pi=\mathbb T_\prec\circ\mathbb T_{\succ,\pi}$ and $\mathbb T=\mathbb T_\prec\circ\mathbb T_\succ$. [Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) §6 derives the builders $\mathbb T_\prec$ and $\mathbb T_{\succ,\pi}$, and the forward builders of §9 below, as the images of the transitions of a stage under its models, where a transition is a law of motion with its shock law.
+
+A **handler** is a numerical routine attached to an operator. The scalar ranks below specialize the tuple ranks of [Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) §6. With several fields, the policy rule defines one policy, and every decision field is evaluated at it.
 
 Here $\mathsf L$ is the value line (the declared set of a value field), $\eta$ and $\zeta$ are the post-decision and pre-decision shocks on spaces $\mathsf Z_\eta$ and $\mathsf Z_\zeta$, and $\Upsilon$ interprets the declared equations as mathematical operations. At perch $p$, $\mathsf V_p$ is a chosen space of value functions on state space $\mathsf X_p$. The feasible state–action pairs form $\operatorname{Gr}(\Gamma)=\{(x,a):a\in\Gamma(x)\}$, and $\mathsf Q_\Gamma$ is a chosen space of choice-value functions on those pairs. Policies in $\Pi_\Gamma$ are measurable and feasible. These domains must make each displayed operation defined and closed under the required compositions. Every expectation below requires absolute integrability on its stated domain; fixed shock laws in the displays are conditional laws independent of the source information. State-dependent laws retain their conditioning arguments.
 
@@ -85,7 +87,9 @@ $$
 
 *(Placeholder.)* Develop the pairing from integration against the transition laws. The formulas extend to absolutely integrable evaluations. They do not pair probability propagation with reward-bearing Bellman evaluation: in constant-discount expected utility, $\mathbb T_{\succ,\pi}f=\bar r_\pi+\beta P_{\succ,\pi}f$, where $\bar r_\pi$ is expected reward under $\pi$. Optimization and nonlinear aggregation remain separate operations.
 
-## 4. Why the field graph supports both
+<a id="4-why-the-field-graph-supports-both"></a>
+
+## 4. Forward and backward interpretations
 
 The same authored `.bl` equations specify transitions, laws, and value evaluation. *(Placeholder.)* Explain how forward propagation uses the transitions and a supplied policy, while backward evaluation additionally uses the reward and policy rule. The field and function diagrams are representations of that model under their stated assumptions; a bare transition graph does not determine preferences.
 
@@ -93,7 +97,7 @@ The same authored `.bl` equations specify transitions, laws, and value evaluatio
 
 ## 5. Evaluating and selecting actions
 
-**How a builder becomes a term.** A builder equation is not a single operation but a composition of operations, each with stated inputs and outputs, inserted by the meaning map. The continuation-to-decision builder $\mathbb{T}_{\succ}$ factors through:
+**A builder as a term.** A builder equation is not a single operation but a composition of operations, each with stated inputs and outputs, inserted by the meaning map. The continuation-to-decision builder $\mathbb{T}_{\succ}$ factors through:
 
 1. the **point backward kernel**
 
@@ -152,7 +156,7 @@ The maximum is recovered on this attained-selection domain. Without attainment t
 
 Numerical methods may approximate expectations by quadrature, simulation, or finite summation. A first-order inversion approximates the same optimum as direct maximization only under its feasibility, optimality, selection, and domain-coverage conditions. Interpolation and candidate-envelope comparisons may be internal steps of a numerical method; choosing that method does not add an authored envelope equation or change exact Evaluation. An authored envelope operation has its own mathematical meaning and assumptions. Supported attachment forms are specified by Bellman-SYM's rules for [methodization](../wiki/methodization.md).
 
-The transition maps, shock laws, feasibility graph, and aggregator kernels are model data. They generate operators under $\Upsilon$, but their mathematical content is fixed by the stage file and its calibration. A handler may fuse neighboring operators in the realized computation, but the model-side term remains the same. Which operators become separate code and which are lumped is a methodization choice — a *cut* through the operator hierarchy — not something the calculus fixes.
+The transition maps, shock laws, feasibility graph, and aggregator kernels are model data. They generate operators under $\Upsilon$, but the family of operators is fixed by the stage file and its calibration. Supplied value-type fields are its arguments; a constant read by a shock law selects that law at its supplied value. A handler may fuse neighboring operators in the realized computation, but the model-side term remains the same. Which operators become separate code and which are lumped is a methodization choice — a *cut* through the operator hierarchy — not something the calculus fixes.
 
 The decision-to-arrival builder $\mathbb{T}_\prec$ is the policy-free induced aggregator
 
@@ -204,7 +208,11 @@ At the supplied continuation function, the fixed-policy builder equals the optim
 
 The semantic graph constructs the builder at a policy and the policy layer and does not compose them. In this construction, the decision builder is the operator at a policy, its signature the inputs and outputs of $\mathbb T_{\succ,\pi}$. The policy is a free name used by its indexed pullback, aggregation or conditional distribution, typed on the output of the policy builder and carried on no input wire. The policy builder stands in the same graph as its own part, inputs and output. Where a policy block reads a value the backward builders produce, that wire joins the two parts; no wire runs from the policy builder into a backward builder.
 
-A method states how the two parts are combined: the optimizing rule $v_\succ\mapsto B_{\succ,s(B_\succ v_\succ)}v_\succ$ of value-function iteration, the alternation of policy evaluation and policy improvement of Howard, or a route through a first-order condition such as the endogenous grid. The abstract dynamic programs of Sargent and Stachurski have the same two-part form: a value poset with a family of policy operators $\{T_\sigma\}_{\sigma \in \Sigma}$ and a selection made outside the family. Their Bellman operator is $Tv = \bigvee_\sigma T_\sigma v$ whenever the supremum exists, and it equals the optimizing rule under the attainment and measurable-selection conditions of §7.3. In their recursive decision process $(\Gamma, V, B)$, the policy operator is $T_\sigma v = B(\cdot, \sigma(\cdot), v)$ and a greedy selector satisfies $\sigma(x) \in \arg\max_{a \in \Gamma(x)} B(x, a, v)$. Their operators are self-maps of one value space, so the counterpart of $T_\sigma$ is the stage composite $\mathbb T_\prec \circ \mathbb T_{\succ,\pi}$ under the period identification (Sargent and Stachurski 2025, *Dynamic Programming*, vol. 2, chapters "Abstract Decision Processes", sections "ADPs on Posets" and "The Bellman Equation", and "Recursive Decision Processes", sections "Definition" and "Existence of Greedy Policies"). A fixed-policy calculation uses the operator at a policy supplied from outside.
+A method states how the two parts are combined: the optimizing rule $v_\succ\mapsto B_{\succ,s(B_\succ v_\succ)}v_\succ$ of value-function iteration, the alternation of policy evaluation and policy improvement of Howard, or a route through a first-order condition such as the endogenous grid.
+
+The abstract dynamic programs of Sargent and Stachurski have the same two-part form: a value poset with a family of policy operators $\{T_\sigma\}_{\sigma \in \Sigma}$ and a selection made outside the family. Their Bellman operator is $Tv = \bigvee_\sigma T_\sigma v$ whenever the supremum exists, and it equals the optimizing rule under the attainment and measurable-selection conditions of §7.3. In their recursive decision process $(\Gamma, V, B)$, the policy operator is $T_\sigma v = B(\cdot, \sigma(\cdot), v)$ and a greedy selector satisfies $\sigma(x) \in \arg\max_{a \in \Gamma(x)} B(x, a, v)$. Their operators are self-maps of one value space, so the counterpart of $T_\sigma$ is the stage composite $\mathbb T_\prec \circ \mathbb T_{\succ,\pi}$ under the period identification (Sargent and Stachurski 2025, *Dynamic Programming*, vol. 2, chapters "Abstract Decision Processes", sections "ADPs on Posets" and "The Bellman Equation", and "Recursive Decision Processes", sections "Definition" and "Existence of Greedy Policies").
+
+A fixed-policy calculation uses the operator at a policy supplied from outside. With further fields sent backward, the repeated operation acts on pairs of their state-independent values and the remaining representing functions ([Periods and the trellis](./08-periods-and-trellis.md) §3). A stationary problem requires both components to be fixed.
 
 ## 7. Policy selection and the builder at a policy
 
@@ -244,7 +252,9 @@ The recipes are extensionally equivalent only under the usual optimality, monoto
 
 The source can specify maximization or an implicit policy relation. After a continuation candidate has been defined, `c = c[>]` may identify the decision control implicitly through the saving transition. That equation remains a relation until a unique solution or a specified measurable selection determines a policy. The endogenous grid method approximates the relation by candidate pairs and interpolation; its numerical steps are not automatically authored operations. Bellman-SYM's Appendix D, §7, states the distinction.
 
-### 7.3 Why split selection from the indexed builder
+<a id="73-why-split-selection-from-the-indexed-builder"></a>
+
+### 7.3 Selection and policy evaluation
 
 The traditional Bellman equation $v(x)=\sup_a B_\succ(x,a,v_\succ)$ gives the optimal value. Policy selection and the indexed builder provide its displayed decomposition under the stated attainment assumptions. The split keeps their inputs and outputs distinct. Direct search and first-order inversion can approximate the same selection target under the conditions stated above; their policies then index the law of motion, aggregator and conditional distribution. The bundled max form is recovered as
 
@@ -272,7 +282,7 @@ A **forward builder** pushes a distribution from one perch to the next along the
 
 The transition pairing is the one stated in §3, with $P_\prec$ and $P_{\succ,\pi}$. An arrival reward, discounted continuation, or nonlinear aggregator is not part of those probability-transition expectations.
 
-*(Placeholder.)* Describe the available forward methods for the declared discrete-time transition, such as simulation and histogram approximation. Continuous-time evolution equations require a different model and are not automatically handlers of the displayed discrete-time stage.
+*(Placeholder.)* Describe the available forward methods for the declared discrete-time transition, such as simulation and histogram approximation, at the supplied constant values. A forward map on pairs also requires an authored update of those values; no inverse of a backward update is assumed. Continuous-time evolution equations require a different model and are not automatically handlers of the displayed discrete-time stage.
 
 <a id="10-operators-inside-a-builder-sub-transitions-and-the-post-decision-value"></a>
 

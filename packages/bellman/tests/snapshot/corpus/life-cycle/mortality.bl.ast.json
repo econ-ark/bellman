@@ -1,0 +1,1489 @@
+{
+  "__class__": "FILE",
+  "items": [
+    {
+      "__class__": "Metadata",
+      "key": "stage",
+      "value": "mortality"
+    },
+    {
+      "__class__": "Statement",
+      "core": {
+        "__class__": "Assignment",
+        "target": {
+          "__class__": "Constant",
+          "name": "Xa"
+        },
+        "value": {
+          "__class__": "Space",
+          "set": {
+            "__class__": "Named",
+            "name": "ℝ₊"
+          }
+        }
+      },
+      "annot": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "Tag",
+            "tag": "\"assets\""
+          }
+        ]
+      }
+    },
+    {
+      "__class__": "Declare",
+      "declaration": {
+        "__class__": "Declaration",
+        "subject": {
+          "__class__": "Subject",
+          "coordinates": [
+            {
+              "__class__": "Coordinate",
+              "stem": "J",
+              "at": null,
+              "classifiers": []
+            }
+          ]
+        },
+        "classifiers": [
+          {
+            "__class__": "Domain",
+            "space": {
+              "__class__": "Comprehension",
+              "bound": {
+                "__class__": "Subject",
+                "coordinates": [
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "J",
+                    "at": null,
+                    "classifiers": []
+                  }
+                ]
+              },
+              "base": {
+                "__class__": "Named",
+                "name": "ℤ"
+              },
+              "conds": [
+                {
+                  "__class__": "Rel",
+                  "left": {
+                    "__class__": "Sym",
+                    "symbol": {
+                      "__class__": "Constant",
+                      "name": "J"
+                    }
+                  },
+                  "op": {
+                    "__class__": "Ge"
+                  },
+                  "right": {
+                    "__class__": "Number",
+                    "value": 1
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "value": null
+      },
+      "annot": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "Tag",
+            "tag": "\"number of ages\""
+          }
+        ]
+      }
+    },
+    {
+      "__class__": "Statement",
+      "core": {
+        "__class__": "Assignment",
+        "target": {
+          "__class__": "Constant",
+          "name": "Ages"
+        },
+        "value": {
+          "__class__": "Space",
+          "set": {
+            "__class__": "IntegerRange",
+            "lower": {
+              "__class__": "Number",
+              "value": 0
+            },
+            "upper": {
+              "__class__": "Sub",
+              "left": {
+                "__class__": "Sym",
+                "symbol": {
+                  "__class__": "Constant",
+                  "name": "J"
+                }
+              },
+              "right": {
+                "__class__": "Number",
+                "value": 1
+              }
+            }
+          }
+        }
+      },
+      "annot": null
+    },
+    {
+      "__class__": "Statement",
+      "core": {
+        "__class__": "Assignment",
+        "target": {
+          "__class__": "Constant",
+          "name": "Z"
+        },
+        "value": {
+          "__class__": "Space",
+          "set": {
+            "__class__": "Points",
+            "members": [
+              {
+                "__class__": "Number",
+                "value": 1
+              },
+              {
+                "__class__": "Number",
+                "value": 2
+              },
+              {
+                "__class__": "Number",
+                "value": 3
+              }
+            ],
+            "superset": null
+          }
+        }
+      },
+      "annot": null
+    },
+    {
+      "__class__": "Declare",
+      "declaration": {
+        "__class__": "Declaration",
+        "subject": {
+          "__class__": "Subject",
+          "coordinates": [
+            {
+              "__class__": "Coordinate",
+              "stem": "ρ",
+              "at": null,
+              "classifiers": []
+            }
+          ]
+        },
+        "classifiers": [
+          {
+            "__class__": "Domain",
+            "space": {
+              "__class__": "Interval",
+              "bounds": {
+                "__class__": "Range",
+                "left": {
+                  "__class__": "Open"
+                },
+                "lower": {
+                  "__class__": "Number",
+                  "value": 1
+                },
+                "upper": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "inf"
+                  }
+                },
+                "right": {
+                  "__class__": "Open"
+                }
+              }
+            }
+          }
+        ],
+        "value": null
+      },
+      "annot": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "Tag",
+            "tag": "\"coefficient of relative risk aversion\""
+          }
+        ]
+      }
+    },
+    {
+      "__class__": "Declare",
+      "declaration": {
+        "__class__": "Declaration",
+        "subject": {
+          "__class__": "Subject",
+          "coordinates": [
+            {
+              "__class__": "Coordinate",
+              "stem": "b",
+              "at": null,
+              "classifiers": []
+            }
+          ]
+        },
+        "classifiers": [
+          {
+            "__class__": "Domain",
+            "space": {
+              "__class__": "Named",
+              "name": "ℝ₊"
+            }
+          }
+        ],
+        "value": null
+      },
+      "annot": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "Tag",
+            "tag": "\"weight of the bequest in utility\""
+          }
+        ]
+      }
+    },
+    {
+      "__class__": "Declare",
+      "declaration": {
+        "__class__": "Declaration",
+        "subject": {
+          "__class__": "Subject",
+          "coordinates": [
+            {
+              "__class__": "Coordinate",
+              "stem": "ξ",
+              "at": null,
+              "classifiers": []
+            }
+          ]
+        },
+        "classifiers": [
+          {
+            "__class__": "Domain",
+            "space": {
+              "__class__": "Named",
+              "name": "ℝ₊₊"
+            }
+          }
+        ],
+        "value": null
+      },
+      "annot": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "Tag",
+            "tag": "\"shift of the bequest utility\""
+          }
+        ]
+      }
+    },
+    {
+      "__class__": "Declare",
+      "declaration": {
+        "__class__": "Declaration",
+        "subject": {
+          "__class__": "Subject",
+          "coordinates": [
+            {
+              "__class__": "Coordinate",
+              "stem": "ψ",
+              "at": null,
+              "classifiers": []
+            }
+          ]
+        },
+        "classifiers": [
+          {
+            "__class__": "Domain",
+            "space": {
+              "__class__": "Functions",
+              "domain": {
+                "__class__": "Named",
+                "name": "Ages"
+              },
+              "codomain": {
+                "__class__": "Interval",
+                "bounds": {
+                  "__class__": "Range",
+                  "left": {
+                    "__class__": "Closed"
+                  },
+                  "lower": {
+                    "__class__": "Number",
+                    "value": 0
+                  },
+                  "upper": {
+                    "__class__": "Number",
+                    "value": 1
+                  },
+                  "right": {
+                    "__class__": "Closed"
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "value": null
+      },
+      "annot": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "Tag",
+            "tag": "\"probability of surviving the period, by age\""
+          }
+        ]
+      }
+    },
+    {
+      "__class__": "Declare",
+      "declaration": {
+        "__class__": "Declaration",
+        "subject": {
+          "__class__": "Subject",
+          "coordinates": [
+            {
+              "__class__": "Coordinate",
+              "stem": "s",
+              "at": null,
+              "classifiers": []
+            }
+          ]
+        },
+        "classifiers": [
+          {
+            "__class__": "Domain",
+            "space": {
+              "__class__": "FiniteSet",
+              "members": [
+                "survive",
+                "die"
+              ]
+            }
+          }
+        ],
+        "value": null
+      },
+      "annot": null
+    },
+    {
+      "__class__": "Statement",
+      "core": {
+        "__class__": "ParameterizedLaw",
+        "subjects": [
+          "s"
+        ],
+        "arguments": [
+          "_age"
+        ],
+        "law": {
+          "__class__": "Call",
+          "fun": "Categorical",
+          "args": [
+            {
+              "__class__": "Tuple",
+              "items": [
+                {
+                  "__class__": "Select",
+                  "family": {
+                    "__class__": "Sym",
+                    "symbol": {
+                      "__class__": "Constant",
+                      "name": "ψ"
+                    }
+                  },
+                  "sel": {
+                    "__class__": "Key",
+                    "at": "_age"
+                  }
+                },
+                {
+                  "__class__": "Sub",
+                  "left": {
+                    "__class__": "Number",
+                    "value": 1
+                  },
+                  "right": {
+                    "__class__": "Select",
+                    "family": {
+                      "__class__": "Sym",
+                      "symbol": {
+                        "__class__": "Constant",
+                        "name": "ψ"
+                      }
+                    },
+                    "sel": {
+                      "__class__": "Key",
+                      "at": "_age"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "annot": null
+    },
+    {
+      "__class__": "Statement",
+      "core": {
+        "__class__": "FuncDef",
+        "name": "𝜙",
+        "params": [
+          {
+            "__class__": "Coordinate",
+            "stem": "a",
+            "at": null,
+            "classifiers": [
+              {
+                "__class__": "Domain",
+                "space": {
+                  "__class__": "Named",
+                  "name": "ℝ₊"
+                }
+              }
+            ]
+          }
+        ],
+        "body": {
+          "__class__": "Div",
+          "left": {
+            "__class__": "Mul",
+            "left": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "b"
+              }
+            },
+            "right": {
+              "__class__": "Pow",
+              "base": {
+                "__class__": "Add",
+                "left": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "a"
+                  }
+                },
+                "right": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "ξ"
+                  }
+                }
+              },
+              "exponent": {
+                "__class__": "Sub",
+                "left": {
+                  "__class__": "Number",
+                  "value": 1
+                },
+                "right": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "ρ"
+                  }
+                }
+              }
+            }
+          },
+          "right": {
+            "__class__": "Sub",
+            "left": {
+              "__class__": "Number",
+              "value": 1
+            },
+            "right": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "ρ"
+              }
+            }
+          }
+        }
+      },
+      "annot": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "KeyValue",
+            "key": "id",
+            "value": "bequest_utility"
+          }
+        ]
+      }
+    },
+    {
+      "__class__": "Block",
+      "tag": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "KeyValue",
+            "key": "id",
+            "value": "arvl_to_dcsn"
+          },
+          {
+            "__class__": "Typer",
+            "typing": {
+              "__class__": "Signature",
+              "source": {
+                "__class__": "Subject",
+                "coordinates": [
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "z_1",
+                    "at": null,
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "Z"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "a_1",
+                    "at": null,
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "Xa"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "source_types": [
+                {
+                  "__class__": "Infoset",
+                  "side": {
+                    "__class__": "Arrival"
+                  }
+                }
+              ],
+              "target": {
+                "__class__": "Subject",
+                "coordinates": [
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "z_m",
+                    "at": null,
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "Z"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "a_m",
+                    "at": null,
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "Xa"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "target_types": [
+                {
+                  "__class__": "Infoset",
+                  "side": {
+                    "__class__": "Decision"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "body": [
+        {
+          "__class__": "Statement",
+          "core": {
+            "__class__": "Equation",
+            "lhs": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "z_m"
+              }
+            },
+            "rhs": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "z_1"
+              }
+            }
+          },
+          "annot": null
+        },
+        {
+          "__class__": "Statement",
+          "core": {
+            "__class__": "Equation",
+            "lhs": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "a_m"
+              }
+            },
+            "rhs": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "a_1"
+              }
+            }
+          },
+          "annot": null
+        }
+      ]
+    },
+    {
+      "__class__": "Block",
+      "tag": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "KeyValue",
+            "key": "id",
+            "value": "dcsn_to_cntn"
+          },
+          {
+            "__class__": "Typer",
+            "typing": {
+              "__class__": "Signature",
+              "source": {
+                "__class__": "Subject",
+                "coordinates": [
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "z_m",
+                    "at": null,
+                    "classifiers": []
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "a_m",
+                    "at": null,
+                    "classifiers": []
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "s",
+                    "at": null,
+                    "classifiers": []
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "age",
+                    "at": null,
+                    "classifiers": []
+                  }
+                ]
+              },
+              "source_types": [
+                {
+                  "__class__": "Infoset",
+                  "side": {
+                    "__class__": "Decision"
+                  }
+                }
+              ],
+              "target": {
+                "__class__": "Subject",
+                "coordinates": []
+              },
+              "target_types": []
+            }
+          }
+        ]
+      },
+      "body": [
+        {
+          "__class__": "Block",
+          "tag": {
+            "__class__": "Annotation",
+            "entries": [
+              {
+                "__class__": "KeyValue",
+                "key": "label",
+                "value": "survive"
+              },
+              {
+                "__class__": "Typer",
+                "typing": {
+                  "__class__": "Signature",
+                  "source": {
+                    "__class__": "Subject",
+                    "coordinates": []
+                  },
+                  "source_types": [],
+                  "target": {
+                    "__class__": "Subject",
+                    "coordinates": [
+                      {
+                        "__class__": "Coordinate",
+                        "stem": "z_2",
+                        "at": null,
+                        "classifiers": [
+                          {
+                            "__class__": "Domain",
+                            "space": {
+                              "__class__": "Named",
+                              "name": "Z"
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "__class__": "Coordinate",
+                        "stem": "a_2",
+                        "at": null,
+                        "classifiers": [
+                          {
+                            "__class__": "Domain",
+                            "space": {
+                              "__class__": "Named",
+                              "name": "Xa"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "target_types": [
+                    {
+                      "__class__": "Infoset",
+                      "side": {
+                        "__class__": "Continuation"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "body": [
+            {
+              "__class__": "Statement",
+              "core": {
+                "__class__": "Equation",
+                "lhs": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "z_2"
+                  }
+                },
+                "rhs": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "z_m"
+                  }
+                }
+              },
+              "annot": null
+            },
+            {
+              "__class__": "Statement",
+              "core": {
+                "__class__": "Equation",
+                "lhs": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "a_2"
+                  }
+                },
+                "rhs": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "a_m"
+                  }
+                }
+              },
+              "annot": null
+            }
+          ]
+        },
+        {
+          "__class__": "Block",
+          "tag": {
+            "__class__": "Annotation",
+            "entries": [
+              {
+                "__class__": "KeyValue",
+                "key": "label",
+                "value": "die"
+              },
+              {
+                "__class__": "Typer",
+                "typing": {
+                  "__class__": "Signature",
+                  "source": {
+                    "__class__": "Subject",
+                    "coordinates": []
+                  },
+                  "source_types": [],
+                  "target": {
+                    "__class__": "Subject",
+                    "coordinates": [
+                      {
+                        "__class__": "Coordinate",
+                        "stem": "a_b",
+                        "at": null,
+                        "classifiers": [
+                          {
+                            "__class__": "Domain",
+                            "space": {
+                              "__class__": "Named",
+                              "name": "Xa"
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "__class__": "Coordinate",
+                        "stem": "death",
+                        "at": null,
+                        "classifiers": [
+                          {
+                            "__class__": "Domain",
+                            "space": {
+                              "__class__": "FiniteSet",
+                              "members": [
+                                "survive",
+                                "die"
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "target_types": [
+                    {
+                      "__class__": "Infoset",
+                      "side": {
+                        "__class__": "Continuation"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "body": [
+            {
+              "__class__": "Statement",
+              "core": {
+                "__class__": "Equation",
+                "lhs": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "a_b"
+                  }
+                },
+                "rhs": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "a_m"
+                  }
+                }
+              },
+              "annot": null
+            },
+            {
+              "__class__": "Statement",
+              "core": {
+                "__class__": "Equation",
+                "lhs": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "death"
+                  }
+                },
+                "rhs": {
+                  "__class__": "Call",
+                  "fun": "s",
+                  "args": [
+                    {
+                      "__class__": "Sym",
+                      "symbol": {
+                        "__class__": "Constant",
+                        "name": "age"
+                      }
+                    }
+                  ]
+                }
+              },
+              "annot": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "__class__": "Block",
+      "tag": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "KeyValue",
+            "key": "id",
+            "value": "cntn_to_dcsn"
+          },
+          {
+            "__class__": "Typer",
+            "typing": {
+              "__class__": "Signature",
+              "source": {
+                "__class__": "Subject",
+                "coordinates": [
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "V",
+                    "at": {
+                      "__class__": "At",
+                      "side": {
+                        "__class__": "Continuation"
+                      }
+                    },
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "ℝ"
+                        }
+                      },
+                      {
+                        "__class__": "Role",
+                        "kind": {
+                          "__class__": "Value",
+                          "order": 0
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "age",
+                    "at": null,
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "Ages"
+                        }
+                      },
+                      {
+                        "__class__": "Role",
+                        "kind": {
+                          "__class__": "Value",
+                          "order": 0
+                        }
+                      },
+                      {
+                        "__class__": "Constancy"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "source_types": [
+                {
+                  "__class__": "Infoset",
+                  "side": {
+                    "__class__": "Continuation"
+                  }
+                }
+              ],
+              "target": {
+                "__class__": "Subject",
+                "coordinates": [
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "V",
+                    "at": null,
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "ℝ"
+                        }
+                      },
+                      {
+                        "__class__": "Role",
+                        "kind": {
+                          "__class__": "Value",
+                          "order": 0
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "age",
+                    "at": null,
+                    "classifiers": []
+                  }
+                ]
+              },
+              "target_types": [
+                {
+                  "__class__": "Infoset",
+                  "side": {
+                    "__class__": "Decision"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "body": [
+        {
+          "__class__": "Statement",
+          "core": {
+            "__class__": "Equation",
+            "lhs": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "V"
+              }
+            },
+            "rhs": {
+              "__class__": "Operator",
+              "head": "E",
+              "subs": [
+                {
+                  "__class__": "Var",
+                  "name": "s"
+                }
+              ],
+              "args": [
+                {
+                  "__class__": "Select",
+                  "family": {
+                    "__class__": "Tuple",
+                    "items": [
+                      {
+                        "__class__": "Sym",
+                        "symbol": {
+                          "__class__": "Variable",
+                          "name": "V",
+                          "when": {
+                            "__class__": "At",
+                            "side": {
+                              "__class__": "Continuation"
+                            }
+                          },
+                          "shift": 0
+                        }
+                      },
+                      {
+                        "__class__": "Call",
+                        "fun": "𝜙",
+                        "args": [
+                          {
+                            "__class__": "Sym",
+                            "symbol": {
+                              "__class__": "Constant",
+                              "name": "a_m"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "sel": {
+                    "__class__": "Key",
+                    "at": "s"
+                  }
+                }
+              ]
+            }
+          },
+          "annot": {
+            "__class__": "Annotation",
+            "entries": [
+              {
+                "__class__": "KeyValue",
+                "key": "id",
+                "value": "value"
+              }
+            ]
+          }
+        },
+        {
+          "__class__": "Statement",
+          "core": {
+            "__class__": "Equation",
+            "lhs": {
+              "__class__": "Operator",
+              "head": "D",
+              "subs": [
+                {
+                  "__class__": "Var",
+                  "name": "a_m"
+                }
+              ],
+              "args": [
+                {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "V"
+                  }
+                }
+              ]
+            },
+            "rhs": {
+              "__class__": "Operator",
+              "head": "E",
+              "subs": [
+                {
+                  "__class__": "Var",
+                  "name": "s"
+                }
+              ],
+              "args": [
+                {
+                  "__class__": "Select",
+                  "family": {
+                    "__class__": "Tuple",
+                    "items": [
+                      {
+                        "__class__": "Operator",
+                        "head": "D",
+                        "subs": [
+                          {
+                            "__class__": "Var",
+                            "name": "a_2"
+                          }
+                        ],
+                        "args": [
+                          {
+                            "__class__": "Sym",
+                            "symbol": {
+                              "__class__": "Variable",
+                              "name": "V",
+                              "when": {
+                                "__class__": "At",
+                                "side": {
+                                  "__class__": "Continuation"
+                                }
+                              },
+                              "shift": 0
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "__class__": "Mul",
+                        "left": {
+                          "__class__": "Sym",
+                          "symbol": {
+                            "__class__": "Constant",
+                            "name": "b"
+                          }
+                        },
+                        "right": {
+                          "__class__": "Pow",
+                          "base": {
+                            "__class__": "Add",
+                            "left": {
+                              "__class__": "Sym",
+                              "symbol": {
+                                "__class__": "Constant",
+                                "name": "a_m"
+                              }
+                            },
+                            "right": {
+                              "__class__": "Sym",
+                              "symbol": {
+                                "__class__": "Constant",
+                                "name": "ξ"
+                              }
+                            }
+                          },
+                          "exponent": {
+                            "__class__": "Neg",
+                            "operand": {
+                              "__class__": "Sym",
+                              "symbol": {
+                                "__class__": "Constant",
+                                "name": "ρ"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "sel": {
+                    "__class__": "Key",
+                    "at": "s"
+                  }
+                }
+              ]
+            }
+          },
+          "annot": {
+            "__class__": "Annotation",
+            "entries": [
+              {
+                "__class__": "KeyValue",
+                "key": "id",
+                "value": "marginal_decision"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "__class__": "Block",
+      "tag": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "KeyValue",
+            "key": "id",
+            "value": "dcsn_to_arvl"
+          },
+          {
+            "__class__": "Typer",
+            "typing": {
+              "__class__": "Signature",
+              "source": {
+                "__class__": "Subject",
+                "coordinates": [
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "V",
+                    "at": null,
+                    "classifiers": []
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "age",
+                    "at": null,
+                    "classifiers": []
+                  }
+                ]
+              },
+              "source_types": [
+                {
+                  "__class__": "Infoset",
+                  "side": {
+                    "__class__": "Decision"
+                  }
+                }
+              ],
+              "target": {
+                "__class__": "Subject",
+                "coordinates": [
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "V",
+                    "at": {
+                      "__class__": "At",
+                      "side": {
+                        "__class__": "Arrival"
+                      }
+                    },
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "ℝ"
+                        }
+                      },
+                      {
+                        "__class__": "Role",
+                        "kind": {
+                          "__class__": "Value",
+                          "order": 0
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "age",
+                    "at": null,
+                    "classifiers": []
+                  }
+                ]
+              },
+              "target_types": [
+                {
+                  "__class__": "Infoset",
+                  "side": {
+                    "__class__": "Arrival"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "body": [
+        {
+          "__class__": "Statement",
+          "core": {
+            "__class__": "Equation",
+            "lhs": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Variable",
+                "name": "V",
+                "when": {
+                  "__class__": "At",
+                  "side": {
+                    "__class__": "Arrival"
+                  }
+                },
+                "shift": 0
+              }
+            },
+            "rhs": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "V"
+              }
+            }
+          },
+          "annot": {
+            "__class__": "Annotation",
+            "entries": [
+              {
+                "__class__": "KeyValue",
+                "key": "id",
+                "value": "value"
+              }
+            ]
+          }
+        },
+        {
+          "__class__": "Statement",
+          "core": {
+            "__class__": "Equation",
+            "lhs": {
+              "__class__": "Operator",
+              "head": "D",
+              "subs": [
+                {
+                  "__class__": "Var",
+                  "name": "a_1"
+                }
+              ],
+              "args": [
+                {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Variable",
+                    "name": "V",
+                    "when": {
+                      "__class__": "At",
+                      "side": {
+                        "__class__": "Arrival"
+                      }
+                    },
+                    "shift": 0
+                  }
+                }
+              ]
+            },
+            "rhs": {
+              "__class__": "Operator",
+              "head": "D",
+              "subs": [
+                {
+                  "__class__": "Var",
+                  "name": "a_m"
+                }
+              ],
+              "args": [
+                {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "V"
+                  }
+                }
+              ]
+            }
+          },
+          "annot": {
+            "__class__": "Annotation",
+            "entries": [
+              {
+                "__class__": "KeyValue",
+                "key": "id",
+                "value": "marginal_arrival"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -96,17 +96,17 @@ print(at_rho_2.obligations())
 ```text
 ElaboratedStage('cons', specified) ρ = 2.0 : [1, inf)
 arithmetic-definedness               ¬(1 − ρ = 0)   [established]
-finite-real-arithmetic               The operands of Add at policy.optimality must be finite real numbers.
+finite-real-arithmetic               ¬(𝑢(cp) ∈ [∞, ∞] ∧ V[>] ∈ [−∞, −∞])
 aggregation-admissibility            V(m_d) ∈ [−∞, ∞)
 marginal-reading                     the right side of each derivative line equals the derivative, in the named coordinate, of the value the builder writes, under the envelope conditions: concavity of the continuation value, interiority of the maximizer or the multiplier's term at a binding constraint, differentiability of the reward in the control, a measurable selection of the policy, and differentiability of the value at the point read; listed and not checked
-aggregation-admissibility            V≺(m, l) ∈ ℝ
-finite-real-arithmetic               The operands of Add at policy must be finite real numbers.
-finite-real-arithmetic               The operands of Add at policy.grid must be finite real numbers.
+aggregation-admissibility            V≺(m) ∈ ℝ
 aggregation-admissibility            m_d≻(a) ∈ Xm
 range-compatibility                  m_d − c(m_d) ∈ Xa   [established]
+range-compatibility                  V≺(m, l) ∈ ℝ
 function-argument-domain-inclusion   The argument for x of cons:function:𝑑𝑢𝑖𝑛𝑣 at policy.InvEuler, from ℝ, must belong to ℝ₊₊.
-egm-eligibility                      the construction satisfies the declared line where the continuation value 𝑉≻ is concave and continuously differentiable on (0, ∞) with a finite positive right derivative at 0
+egm-eligibility                      the construction satisfies the declared line where the continuation value 𝑉≻ is concave and continuously differentiable above the savings bound, with a positive right derivative at the bound, finite or infinite; an infinite derivative gives zero consumption as the interpolation endpoint, outside a strictly positive consumption domain
 evaluation-domain                    The representation is evaluated inside the interval its nodes span, or outside it through an identified extension; the node interval does not replace the domain of the represented function.
+continuation-input                   The representing function for V[>] must be measurable on its declared domain, depend only on (a) in that order, and take values in [-inf, inf).
 ```
 
 ## 3 Methodization and configuration

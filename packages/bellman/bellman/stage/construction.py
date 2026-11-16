@@ -205,20 +205,17 @@ def stage_fields(term, spans, replaced=()):
             f"from term address to SourceSpan, or None for a decoded saved "
             f"term; got {type(spans).__name__}"
         )
-    items = item_addresses(term)
-    name = stage_name(term, items, spans)
-    declarations = Declarations(name, items, spans)
-    declarations.read(term)
-    declarations.check_identity_collisions()
-    declarations.check_names()
-    declarations.check_set_names()
-    fields, signatures = declarations.fields_and_header_sides()
+    declarations, fields, signatures = placed_declarations(term, spans)
+    name = declarations.stage
     declarations.check_one_builder_per_output()
+    declarations.classify_kept_fields(fields)
     declarations.check_distributions()
     declarations.resolve_definitions()
     declarations.check_branches()
     declarations.refuse_unconstructed()
+    declarations.field_dependences(fields)
     declarations.check_statements()
+    declarations.check_policy_objective()
     unread = declarations.unread_value_inputs()
     sorts = _field_sorts(declarations, fields)
     boxes = _builder_boxes(declarations, _read_signatures(signatures, unread), sorts, unread)
@@ -270,6 +267,24 @@ def stage_fields(term, spans, replaced=()):
         bindings=Bindings(None, None, None),
         provenance=freeze({}),
     )
+
+
+def placed_declarations(term, spans):
+    """The declaration pass of `term` up to the placing of its header
+    fields: the pass, which has read and checked every top-level item and
+    every block header, with the fields table and the two sides of each
+    block as wire types (`Declarations.fields_and_header_sides`).
+    `stage_fields` continues from it, and
+    `bellman.factory.elaboration.header_fields` answers the placed listings
+    alone, so that the two refuse a text under one rule up to this point."""
+    items = item_addresses(term)
+    declarations = Declarations(stage_name(term, items, spans), items, spans)
+    declarations.read(term)
+    declarations.check_identity_collisions()
+    declarations.check_names()
+    declarations.check_set_names()
+    fields, signatures = declarations.fields_and_header_sides()
+    return declarations, fields, signatures
 
 
 def _hint(term) -> str:
@@ -340,6 +355,8 @@ def _field_sorts(declarations, fields) -> dict:
             perch=field.perch,
             role=roles[field.stem],
             domain=sets.meet(field.domain_terms),
+            coordinates=declarations.dependence.get(wire_type, ()),
+            constant=wire_type in declarations.constants,
         )
         for wire_type, field in fields.items()
     }
@@ -393,6 +410,10 @@ def _builder_box(block_id, declarations, signatures, sorts, unread) -> Box:
         nodes=tuple(nodes),
         branch_labels=tuple(declarations.branch_labels.get(block_id, ())),
         unread_inputs=tuple(sorts[listing.wire_type] for listing in unread),
+        input_spellings=tuple(
+            listing.text for listing in declarations.side_entries(block_id, INPUT)
+            if listing.wire_type in inputs
+        ),
     )
     return with_identity(Box(block_id, dom, cod, data=data), Identity("block", address=block_id))
 
@@ -928,8 +949,9 @@ def _check_block_outputs(declarations, replaced=()):
     for block_id, block_address in declarations.blocks:
         read = _output_equations(declarations, block_id)
         _refuse_circular_outputs(declarations, read.dependencies)
+        kept = declarations.kept_fields(block_id).values()
         for output in declarations.side_entries(block_id, OUTPUT):
-            if output.wire_type in read.supplied:
+            if output.wire_type in read.supplied or output.wire_type in kept:
                 continue
             if block_id in replaced:
                 raise _output_unwritten_by_addition(
@@ -1051,19 +1073,30 @@ def _output_equations(declarations, block_id):
         # none of them, so it supplies its outputs as an implicit statement
         # does and is no step of the dependency order (AMD-SG-017 §1)
         candidate = isinstance(core, terms.Equation) and not names_fields(core.lhs)
-        for lhs in outputs_and_unknowns(
+        left_fields = outputs_and_unknowns(
             core.lhs,
             address,
             declarations,
             core.rhs,
             relation=not isinstance(core, terms.Equation),
-        ):
+        )
+        if not left_fields:
+            continue
+        choice_controls = frozenset(
+            lhs.stem for lhs in left_fields
+            if lhs.mark is None and declarations.field_roles.get(lhs.stem) == CONTROL
+            and listed_identity(lhs, outputs, declarations) is not None
+        )
+        reads = free_names_with_shocks(
+            core.rhs, address, declarations, aliases=aliases, choice_controls=choice_controls
+        )
+        for lhs in left_fields:
             output = listed_identity(lhs, outputs, declarations)
             implicit = candidate or _is_implicit(
                 core.rhs, output, aliases, block_id, declarations, address
             )
             dependencies = set()
-            for ref, _ in free_names_with_shocks(core.rhs, address, declarations, aliases=aliases):
+            for ref, _ in reads:
                 stem, mark = ref
                 known = declarations.declared_as(stem)
                 if mark is None and known in ("parameter", "function", "space", "shock"):

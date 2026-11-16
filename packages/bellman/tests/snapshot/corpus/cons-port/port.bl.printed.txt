@@ -1,0 +1,634 @@
+BELLMAN-SYM / STAGE port                                  [VERSION = SYMBOLIC]
+a stage occurrence of applications/cons-port/declaration/stages/port/port.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        none
+  ∼ decision       k state, ς control, V value
+  ≻ continuation   w≻ state, V≻ value
+  ∼ → ≻            Ψ, θ drawn after decision, before continuation
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           k at decision, w≻ at continuation
+  controls         ς at decision
+  values           V at the decision, continuation perches
+  shocks           Ψ, θ, drawn between decision and continuation
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → dcsn_to_cntn   (k, Ψ, θ) : !dcsn, at ς -> (w≻) : !cntn
+  ← cntn_to_dcsn   (V≻) : !cntn, at ς -> (V) : !dcsn
+  ← policy         (V≻) : !cntn -> (ς) : !dcsn
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  distributions            1   Ψ_θ
+  parameters               6   R : ℝ₊₊; μ_Ψ : ℝ; σ_Ψ : ℝ₊; μ_θ : ℝ; σ_θ : ℝ₊;
+                               ρ_ζ : [-1, 1]
+  correspondences          1   Γ_ς : ℝ₊ ⇉ [0, 1]
+  laws of motion           1   w = k*(ς*Ψ + (1 - ς)*R) + θ
+  value aggregators        1   V = E_{Ψ, θ}(V[>])
+  block lines              3   dcsn_to_cntn.1, cntn_to_dcsn.value,
+                               policy.objective
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   𝑉≻ ↦ 𝜍(k), 𝑉
+                    forward    μ ↦ μ≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ∼ k  → Ψ, θ drawn →  ≻ w≻
+  backward   ∼ V  ←  ≻ V≻
+  policy     ∼ ς  ←  ≻ V≻
+
+==== stage ====
+STAGE port
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑉≻  : ℝ₊₊ → ℝ
+         ──────────────────────────────────────
+    out  𝜍   : ℝ₊ → [0, 1],  𝜍(k) ∈ Γ_ς(k)
+         𝑉   : ℝ₊ → ℝ
+  forward
+    in   μ   : finite measure on ℝ₊
+         ──────────────────────────────────────
+    out  μ≻  : finite measure on ℝ₊₊
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉≻                           out: 𝑉
+
+    2  policy
+       in: 𝑉≻                           out: 𝜍
+
+  forward
+    1  dcsn_to_cntn
+       in: μ                            out: μ≻
+
+Conditions
+  cntn_to_dcsn:Aggregation  𝑉(k) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  13  (Ψ, θ) ~ LogNormal((μ_Ψ, μ_θ),
+                           ((σ_Ψ^2,       ρ_ζ*σ_Ψ*σ_θ),
+                            (ρ_ζ*σ_Ψ*σ_θ, σ_θ^2)))
+  18  w = k*(ς*Ψ + (1-ς)*R) + θ
+  22  V  = E_{Ψ,θ}(V[>])                      :: [id=value]
+  26  ς = argmax_{ς : Γ_ς(k)}(E_{Ψ,θ}(V[>]))  :: [id=objective]
+
+Definitions referenced
+  Γ_ς   port:correspondence:Γ_ς
+
+File
+  applications/cons-port/declaration/stages/port/port.bl
+
+Perches
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE port / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻}
+       ──────────
+  out  V   : {V}
+
+Conditions
+  𝑉(k) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  22  V  = E_{Ψ,θ}(V[>])  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward policy ====
+STAGE port / POLICY BLOCK policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V≻  : {V≻}
+       ──────────
+  out  ς   : {ς}
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  26  ς = argmax_{ς : Γ_ς(k)}(E_{Ψ,θ}(V[>]))  :: [id=objective]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE port / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   k   : {k}
+       Ψ   : {Ψ, θ}
+       θ   : {Ψ, θ}
+       ────────────
+  out  w≻  : {w≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  18  w = k*(ς*Ψ + (1-ς)*R) + θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE port / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊₊ → ℝ
+       ─────────────────────────────────────────────────────────
+  out  𝑉   : ℝ₊ → ℝ
+
+At
+  𝜍  : ℝ₊ → [0, 1],  𝜍(k) ∈ Γ_ς(k)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻(·, 𝜍, ·, ·)
+     ───────────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻(·, 𝜍, ·, ·))(k, Ψ, θ) = 𝑉≻(𝑔≻(k, 𝜍(k), Ψ, θ))
+
+  2  value:Expectation:1
+     in: (1)
+     out: k ↦ E_{Ψ, θ}[𝑉≻(𝑔≻(k, 𝜍(k), Ψ, θ))]
+     ───────────────────────────────────────────────────────────
+     rule: (2)(k) = E_{Ψ, θ}[𝑉≻(𝑔≻(k, 𝜍(k), Ψ, θ))]
+
+  3  Aggregation
+     in: (2)                            out: 𝑉
+     ───────────────────────────────────────────────────────────
+     rule: 𝑉(k) = E_{Ψ, θ}[𝑉≻(𝑔≻(k, 𝜍(k), Ψ, θ))]
+
+  4  Evaluation
+     in: 𝑉                              out: 𝑉
+     ───────────────────────────────────────────────────────────
+     rule: 𝑉 : ℝ₊ → ℝ
+
+Conditions
+  Aggregation  𝑉(k) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  22  V  = E_{Ψ,θ}(V[>])  :: [id=value]
+
+Definitions referenced
+  Γ_ς   port:correspondence:Γ_ς
+  Ψ     port:distribution:Ψ_θ
+  θ     port:distribution:Ψ_θ
+  𝑔≻    port:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback ====
+STAGE port / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊₊ → ℝ
+       ────────────────────────
+  out  𝑉≻ ∘ 𝑔≻(·, 𝜍, ·, ·)
+           : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻(·, 𝜍, ·, ·))(k, Ψ, θ) = 𝑉≻(𝑔≻(k, 𝜍(k), Ψ, θ))
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  18  w = k*(ς*Ψ + (1-ς)*R) + θ
+
+Definitions referenced
+  Ψ     port:distribution:Ψ_θ
+  θ     port:distribution:Ψ_θ
+  𝑔≻    port:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / value:Expectation:1 ====
+STAGE port / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / value:Expectation:1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻(·, 𝜍, ·, ·)
+         : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       ───────────────────────────────────
+  out  k ↦ E_{Ψ, θ}[𝑉≻(𝑔≻(k, 𝜍(k), Ψ, θ))]
+         : ℝ₊ → ℝ
+
+Rule
+  value:Expectation:1(k) = E_{Ψ, θ}[𝑉≻(𝑔≻(k, 𝜍(k), Ψ, θ))]
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  13  (Ψ, θ) ~ LogNormal((μ_Ψ, μ_θ),
+                           ((σ_Ψ^2,       ρ_ζ*σ_Ψ*σ_θ),
+                            (ρ_ζ*σ_Ψ*σ_θ, σ_θ^2)))
+  22  V  = E_{Ψ,θ}(V[>])  :: [id=value]
+
+Definitions referenced
+  Ψ     port:distribution:Ψ_θ
+  θ     port:distribution:Ψ_θ
+  𝑔≻    port:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE port / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   k ↦ E_{Ψ, θ}[𝑉≻(𝑔≻(k, 𝜍(k), Ψ, θ))]
+          : ℝ₊ → ℝ
+       ───────────────────────────────────
+  out  𝑉  : ℝ₊ → ℝ
+
+Rule
+  𝑉(k) = E_{Ψ, θ}[𝑉≻(𝑔≻(k, 𝜍(k), Ψ, θ))]
+
+Conditions
+  𝑉(k) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  22  V  = E_{Ψ,θ}(V[>])  :: [id=value]
+
+Definitions referenced
+  Ψ     port:distribution:Ψ_θ
+  θ     port:distribution:Ψ_θ
+  𝑔≻    port:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE port / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : ℝ₊ → ℝ
+       ───────────
+  out  𝑉  : ℝ₊ → ℝ
+
+Rule
+  𝑉(k) = E_{Ψ, θ}[𝑉≻(𝑔≻(k, 𝜍(k), Ψ, θ))]
+  𝑉 : ℝ₊ → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Ψ     port:distribution:Ψ_θ
+  θ     port:distribution:Ψ_θ
+  𝑔≻    port:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy ====
+STAGE port / POLICY BUILDER policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊₊ → ℝ
+       ─────────────────────────────────────────────
+  out  𝜍   : ℝ₊ → [0, 1],  𝜍(k) ∈ Γ_ς(k)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻
+     ───────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻)(k, ς, Ψ, θ) = 𝑉≻(𝑔≻(k, ς, Ψ, θ))
+
+  2  objective:Expectation:1
+     in: (1)
+     out: (k, ς) ↦ E_{Ψ, θ}[𝑉≻(𝑔≻(k, ς, Ψ, θ))]
+     ───────────────────────────────────────────────
+     rule: (2)(k, ς) = E_{Ψ, θ}[𝑉≻(𝑔≻(k, ς, Ψ, θ))]
+
+  3  objective:Argmax
+     in: (2)                            out: 𝜍
+     ───────────────────────────────────────────────
+     rule: 𝜍(k) ∈ argmax_{ς ∈ Γ_ς(k)} [E_{Ψ, θ}[𝑉≻(𝑔≻(k, ς, Ψ, θ))]]
+
+  4  Evaluation
+     in: 𝜍                              out: 𝜍
+     ───────────────────────────────────────────────
+     rule: 𝜍 : ℝ₊ → [0, 1],  𝜍(k) ∈ Γ_ς(k)
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  26  ς = argmax_{ς : Γ_ς(k)}(E_{Ψ,θ}(V[>]))  :: [id=objective]
+
+Definitions referenced
+  Γ_ς   port:correspondence:Γ_ς
+  Ψ     port:distribution:Ψ_θ
+  θ     port:distribution:Ψ_θ
+  𝑔≻    port:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback ====
+STAGE port / POLICY BUILDER policy / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊₊ → ℝ
+       ─────────────────────────────────────────────────────────────
+  out  𝑉≻ ∘ 𝑔≻
+           : {k, ς, Ψ, θ ∈ ℝ₊ × [0, 1] × ℝ₊₊ × ℝ₊₊ | ς ∈ Γ_ς(k)} → ℝ
+
+Rule
+  (𝑉≻ ∘ 𝑔≻)(k, ς, Ψ, θ) = 𝑉≻(𝑔≻(k, ς, Ψ, θ))
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  18  w = k*(ς*Ψ + (1-ς)*R) + θ
+
+Definitions referenced
+  Γ_ς   port:correspondence:Γ_ς
+  Ψ     port:distribution:Ψ_θ
+  θ     port:distribution:Ψ_θ
+  𝑔≻    port:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / objective:Expectation:1 ====
+STAGE port / POLICY BUILDER policy / objective:Expectation:1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻ ∘ 𝑔≻
+         : {k, ς, Ψ, θ ∈ ℝ₊ × [0, 1] × ℝ₊₊ × ℝ₊₊ | ς ∈ Γ_ς(k)} → ℝ
+       ───────────────────────────────────────────────────────────
+  out  (k, ς) ↦ E_{Ψ, θ}[𝑉≻(𝑔≻(k, ς, Ψ, θ))]
+         : {k, ς ∈ ℝ₊ × [0, 1] | ς ∈ Γ_ς(k)} → ℝ
+
+Rule
+  objective:Expectation:1(k, ς) = E_{Ψ, θ}[𝑉≻(𝑔≻(k, ς, Ψ, θ))]
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  13  (Ψ, θ) ~ LogNormal((μ_Ψ, μ_θ),
+                           ((σ_Ψ^2,       ρ_ζ*σ_Ψ*σ_θ),
+                            (ρ_ζ*σ_Ψ*σ_θ, σ_θ^2)))
+  26  ς = argmax_{ς : Γ_ς(k)}(E_{Ψ,θ}(V[>]))  :: [id=objective]
+
+Definitions referenced
+  Γ_ς   port:correspondence:Γ_ς
+  Ψ     port:distribution:Ψ_θ
+  θ     port:distribution:Ψ_θ
+  𝑔≻    port:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / objective:Argmax ====
+STAGE port / POLICY BUILDER policy / objective:Argmax
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (k, ς) ↦ E_{Ψ, θ}[𝑉≻(𝑔≻(k, ς, Ψ, θ))]
+          : {k, ς ∈ ℝ₊ × [0, 1] | ς ∈ Γ_ς(k)} → ℝ
+       ──────────────────────────────────────────
+  out  𝜍  : ℝ₊ → [0, 1],  𝜍(k) ∈ Γ_ς(k)
+
+Rule
+  𝜍(k) ∈ argmax_{ς ∈ Γ_ς(k)} [E_{Ψ, θ}[𝑉≻(𝑔≻(k, ς, Ψ, θ))]]
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  26  ς = argmax_{ς : Γ_ς(k)}(E_{Ψ,θ}(V[>]))  :: [id=objective]
+
+Definitions referenced
+  Γ_ς   port:correspondence:Γ_ς
+  Ψ     port:distribution:Ψ_θ
+  θ     port:distribution:Ψ_θ
+  𝑔≻    port:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Evaluation ====
+STAGE port / POLICY BUILDER policy / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝜍  : ℝ₊ → [0, 1],  𝜍(k) ∈ Γ_ς(k)
+       ────────────────────────────────
+  out  𝜍  : ℝ₊ → [0, 1],  𝜍(k) ∈ Γ_ς(k)
+
+Rule
+  𝜍(k) ∈ argmax_{ς ∈ Γ_ς(k)} [E_{Ψ, θ}[𝑉≻(𝑔≻(k, ς, Ψ, θ))]]
+  𝜍 : ℝ₊ → [0, 1],  𝜍(k) ∈ Γ_ς(k)
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  Γ_ς   port:correspondence:Γ_ς
+  Ψ     port:distribution:Ψ_θ
+  θ     port:distribution:Ψ_θ
+  𝑔≻    port:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE port / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on ℝ₊
+       ────────────────────────────────────────────────
+  out  μ≻  : finite measure on ℝ₊₊
+
+At
+  𝜍  : ℝ₊ → [0, 1],  𝜍(k) ∈ Γ_ς(k)
+
+Operations
+  1  DistributionExtension:Ψ_θ
+     in: μ                              out: μ⊗P_{Ψ, θ}
+     ──────────────────────────────────────────────────
+     rule: μ⊗P_{Ψ, θ}(B)
+             = ∫_{k ∈ ℝ₊} [P_{Ψ, θ}({Ψ, θ ∈ ℝ₊₊ × ℝ₊₊ | (k, Ψ, θ) ∈ B})] μ(dk)
+
+  2  Pushforward
+     in: (1)                            out: μ≻
+     ──────────────────────────────────────────────────
+     rule: μ≻(B)
+             = μ⊗P_{Ψ, θ}({k, Ψ, θ ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊ | 𝑔≻(k, 𝜍(k), Ψ, θ) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  18  w = k*(ς*Ψ + (1-ς)*R) + θ
+
+Definitions referenced
+  Γ_ς       port:correspondence:Γ_ς
+  P_{Ψ, θ}  port:distribution:Ψ_θ
+  Ψ         port:distribution:Ψ_θ
+  θ         port:distribution:Ψ_θ
+  𝑔≻        port:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / DistributionExtension:Ψ_θ ====
+STAGE port / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+  / DistributionExtension:Ψ_θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ  : finite measure on ℝ₊
+       ─────────────────────────────────────
+  out  μ⊗P_{Ψ, θ}
+          : finite measure on ℝ₊ × ℝ₊₊ × ℝ₊₊
+
+Rule
+  μ⊗P_{Ψ, θ}(B)
+    = ∫_{k ∈ ℝ₊} [P_{Ψ, θ}({Ψ, θ ∈ ℝ₊₊ × ℝ₊₊ | (k, Ψ, θ) ∈ B})] μ(dk)
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  13  (Ψ, θ) ~ LogNormal((μ_Ψ, μ_θ),
+                           ((σ_Ψ^2,       ρ_ζ*σ_Ψ*σ_θ),
+                            (ρ_ζ*σ_Ψ*σ_θ, σ_θ^2)))
+
+Definitions referenced
+  P_{Ψ, θ}  port:distribution:Ψ_θ
+  Ψ         port:distribution:Ψ_θ
+  θ         port:distribution:Ψ_θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE port / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ⊗P_{Ψ, θ}
+           : finite measure on ℝ₊ × ℝ₊₊ × ℝ₊₊
+       ──────────────────────────────────────
+  out  μ≻  : finite measure on ℝ₊₊
+
+Rule
+  μ≻(B) = μ⊗P_{Ψ, θ}({k, Ψ, θ ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊ | 𝑔≻(k, 𝜍(k), Ψ, θ) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  18  w = k*(ς*Ψ + (1-ς)*R) + θ
+
+Definitions referenced
+  P_{Ψ, θ}  port:distribution:Ψ_θ
+  Ψ         port:distribution:Ψ_θ
+  θ         port:distribution:Ψ_θ
+  𝑔≻        port:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== port:parameter:R ====
+STAGE port / PARAMETER R
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  R  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  3  R   : ℝ₊₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== port:parameter:μ_Ψ ====
+STAGE port / PARAMETER μ_Ψ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  μ_Ψ  ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  4  μ_Ψ : ℝ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== port:parameter:σ_Ψ ====
+STAGE port / PARAMETER σ_Ψ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  σ_Ψ  ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  5  σ_Ψ : ℝ₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== port:parameter:μ_θ ====
+STAGE port / PARAMETER μ_θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  μ_θ  ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  6  μ_θ : ℝ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== port:parameter:σ_θ ====
+STAGE port / PARAMETER σ_θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  σ_θ  ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  7  σ_θ : ℝ₊
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== port:parameter:ρ_ζ ====
+STAGE port / PARAMETER ρ_ζ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  ρ_ζ  ∈ [−1, 1]
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  8  ρ_ζ : [-1,1]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== port:correspondence:Γ_ς ====
+STAGE port / CORRESPONDENCE Γ_ς
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  Γ_ς  : ℝ₊ ⇉ [0, 1],  k ↦ [0, 1]
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  10  Γ_ς(k : ℝ₊) := [0,1]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== port:distribution:Ψ_θ ====
+STAGE port / DISTRIBUTION Ψ_θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  (Ψ, θ)  ~ LogNormal((μ_Ψ, μ_θ),
+                      ((σ_Ψ², ρ_ζ · σ_Ψ · σ_θ), (ρ_ζ · σ_Ψ · σ_θ, σ_θ²)))
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  13  (Ψ, θ) ~ LogNormal((μ_Ψ, μ_θ),
+                           ((σ_Ψ^2,       ρ_ζ*σ_Ψ*σ_θ),
+                            (ρ_ζ*σ_Ψ*σ_θ, σ_θ^2)))
+
+Definitions referenced
+  μ_Ψ   port:parameter:μ_Ψ
+  σ_Ψ   port:parameter:σ_Ψ
+  μ_θ   port:parameter:μ_θ
+  σ_θ   port:parameter:σ_θ
+  ρ_ζ   port:parameter:ρ_ζ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.1 ====
+STAGE port / FORWARD BLOCK dcsn_to_cntn / 1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  port.bl
+  18  w = k*(ς*Ψ + (1-ς)*R) + θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.value ====
+STAGE port / BACKWARD BLOCK cntn_to_dcsn / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(k) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  22  V  = E_{Ψ,θ}(V[>])  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== policy.objective ====
+STAGE port / POLICY BLOCK policy / objective
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  port.bl
+  26  ς = argmax_{ς : Γ_ς(k)}(E_{Ψ,θ}(V[>]))  :: [id=objective]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== port:g:dcsn_to_cntn ====
+STAGE port / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : {k, ς, Ψ, θ ∈ ℝ₊ × [0, 1] × ℝ₊₊ × ℝ₊₊ | ς ∈ Γ_ς(k)} → ℝ₊₊,
+        (k, ς, Ψ, θ) ↦ k · (ς · Ψ + (1 − ς) · R) + θ
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  18  w = k*(ς*Ψ + (1-ς)*R) + θ
+
+Definitions referenced
+  R     port:parameter:R
+  Γ_ς   port:correspondence:Γ_ς
+  Ψ     port:distribution:Ψ_θ
+  θ     port:distribution:Ψ_θ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== port:G:cntn_to_dcsn ====
+STAGE port / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {cntn_to_dcsn.value:Expectation:1, k, ς ∈ ℝ × ℝ₊ × [0, 1] |
+          ς ∈ Γ_ς(k)} → ℝ,
+        (w, k, ς) ↦ w
+
+Conditions
+  𝑉(k) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  22  V  = E_{Ψ,θ}(V[>])  :: [id=value]
+
+Definitions referenced
+  Γ_ς   port:correspondence:Γ_ς
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

@@ -88,6 +88,10 @@ This differs from a pair of simultaneous asset holdings. Even where alternatives
 
 Ordinary brackets select a collection entry: the `[d]` in §1 selects a tuple component. The `[>]` in `V_w[>]` identifies the continuation information set. These uses of brackets have different meanings; see [Equation parsing rules](appendices/12-equation-parsing-rules.md#3-functions-and-collections).
 
+Each branch may supply several value-type fields. A selection tuple associates a field with the branch of its entry. After this association is established, other equations may also read the field outside the tuple. For example, `L = min(L_w[>], L_r[>])` can combine the bounds from the two branches. The bounds and other branch fields may have different values. The ordering of a selection tuple follows the declared labels.
+
+A nonconstant continuation field needs a position in a selection tuple so the package can identify the law of motion that supplies its state. A constant read only outside a tuple can instead be paired by a connector. If several stages could supply it, write the pair explicitly. The spelling of a suffix does not supply a branch association. See [Periods](06-period.md#2-connectors).
+
 ## 3 Choosing an alternative
 
 The value equation gives the payoff conditional on `d`. The `argmax` equation constrains `d` to an alternative attaining the largest payoff. The block identifiers `cntn_to_dcsn` and `policy` are descriptive addresses; the selection and maximization expressions specify the mathematical operations.

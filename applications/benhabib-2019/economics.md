@@ -32,7 +32,7 @@ A household has an earnings type $\tau$, one of ten deciles, and a return type
 $r$, one of five rates. Both are "drawn at birth, fixed within life". At age
 $24 + t$, for $t = 1, \dots, T$ with $T = 36$, it arrives with wealth $a$,
 consumes $c \in [0, a]$, earns the return $r$ on its saving, and then receives
-the earnings $w_t(\tau)$ of its age bracket:
+the earnings $w_t(\tau)$ of its age bracket. The stage reads earnings at the age it takes in from the next period minus one:
 
 $$
 a' = (1 + r)(a - c) + w_t(\tau).
@@ -57,8 +57,8 @@ entered at its decision perch.
 
 | Stage | File | What happens in it |
 |---|---|---|
-| `benhabib_bellman` (stage name `bellman`) | `declaration/stages/benhabib_bellman/benhabib_bellman.bl` | The household enters the stage with wealth `m` at the decision perch, chooses `c` in `[0, m]` and continues with `a = R_vec[r_type]*(m - c) + wage_fn[tau]`. |
-| `bequest` | `declaration/stages/bequest/bequest.bl` | Only in the terminal period. The stage arrives with `a_pre`, the wealth left after the last decision, and writes `V = (A/β)*a^(1-μ)/(1-μ) + V[>]`; its methods file, `declaration/stages/bequest/methods.bl`, states its derivative, `D_{a}V = (A/β)*a^(-μ)`, as a line of the same block. It makes no choice. |
+| `benhabib_bellman` (stage name `bellman`) | `declaration/stages/benhabib_bellman/benhabib_bellman.bl` | The household enters the stage with wealth `m` at the decision perch, chooses `c` in `[0, m]` and continues with `a = R_vec[r_type]*(m - c) + wage_fn[age[>]][tau]`. |
+| `bequest` | `declaration/stages/bequest/bequest.bl` | Only in the terminal period. The stage arrives with `a_pre`, the wealth left after the last decision, keeps the supplied terminal age and writes `V = (A/β)*a^(1-μ)/(1-μ) + V[>]`; its methods file, `declaration/stages/bequest/methods.bl`, states its derivative, `D_{a}V = (A/β)*a^(-μ)`, as a line of the same block. It makes no choice. |
 
 In the equation above, $a$ is the stage's `m`, and $a'$ is its `a`.
 
@@ -76,38 +76,31 @@ for the bequest of the durables model.
 A period holds one stage. `period.yml` lists both stages, and the recipe,
 `spec.yml`, places each: `bequest` in the terminal period alone, `periods: [0, 0]`, and
 `benhabib_bellman` in the others, `periods: [1, 36]`. `trellis.yml` repeats the
-template 37 times. `periods[h]` is age $61 - h$: `periods[0]` is the terminal
+template 37 times. Starting from terminal age 61, the backward age transition gives age $61 - h$ at `periods[h]`: `periods[0]` is the terminal
 period, the paper's period $T + 1$ (age 61 under the paper's own count, age
 $24 + t$); `periods[1]`, age 60, is the last decision; `periods[36]`, age 25,
 is the first. `trellis.yml` writes one inter-period mapping for each adjacent
 pair: `inter_connectors[h]` joins the wealth `a` of `periods[h + 1]` to the
 wealth with which `periods[h]` is entered, the bequest's arrival wealth
 `a_pre` for `h = 0`, `{a: a_pre}`, and the within-life stage's decision
-wealth `m` for every other `h`, `{a: m}`.
+wealth `m` for every other `h`, `{a: m}`. Both value fields, the continuation value and the age, pair by name.
 
 ## The age brackets
 
-Earnings are constant within six age brackets of six years (Table 1), so the
-recipe gives each bracket's file, `declaration/calibration/wage/bracket_k.yml`, to a range
-of periods. The legacy counted in two ways. Its recipe counted periods from 1 at
-age 25 (period $t$ is age $24 + t$). Its trellis file counted from 0 at age 25,
-with the terminal entry at index 36. Here $h$ counts from the terminal period,
-so $h = 37 - t$.
+Earnings are constant within six age brackets of six years (Table 1).
+One table in `declaration/calibration/wage.yml` holds the wage for each decile
+at the incoming age minus one. For example, incoming age 61 selects the
+age-60 wage. Incoming ages 26 through 61 select the 36 working-year rows.
+The zero row at 25 completes the table's declared age set, 25 through 61.
 
-| Bracket | Ages | Legacy recipe key | Legacy trellis indices | Key here |
-|---|---|---|---|---|
-| 1 | 25–30 | `"1-6"` | 0–5 | `"31-36"` |
-| 2 | 31–36 | `"7-12"` | 6–11 | `"25-30"` |
-| 3 | 37–42 | `"13-18"` | 12–17 | `"19-24"` |
-| 4 | 43–48 | `"19-24"` | 18–23 | `"13-18"` |
-| 5 | 49–54 | `"25-30"` | 24–29 | `"7-12"` |
-| 6 | 55–60 | `"31-36"` | 30–35 | `"1-6"` |
-
-The legacy never assembled its trellis. Read against its trellis indices, as a
-factory reads a range, each of its ranges falls one period late: no range
-covers age 25 (index 0), and bracket 6 covers ages 56 to 60 and the terminal
-entry. Counted from the terminal period, the keys are the same six strings, the
-brackets run in the reverse order, and each range covers its bracket's ages.
+| Working ages | Incoming ages | Earnings bracket |
+|---|---|---|
+| 25–30 | 26–31 | 1 |
+| 31–36 | 32–37 | 2 |
+| 37–42 | 38–43 | 3 |
+| 43–48 | 44–49 | 4 |
+| 49–54 | 50–55 | 5 |
+| 55–60 | 56–61 | 6 |
 
 ## The instances
 
@@ -144,19 +137,18 @@ $\beta = 0.97$ and $\sigma = 2$, fixed; $\mu = 0.5993$ and $A = 0.0006$,
 estimated; and the five gross returns $1 + r$ as `R_vec`. Both stages read this
 file, and each binds the parameters it declares. The earnings of Table 1 of the
 AER edition, in thousands of dollars a year for each bracket and decile, are in
-`declaration/calibration/wage/`; the paper takes them from the PSID as computed by
+`declaration/calibration/wage.yml`; the paper takes them from the PSID as computed by
 Heathcote, Perri and Violante (2010).
-`declaration/calibration/horizon.yml` holds $T = 36$, `first_age` 25 and `last_age` 61. No
-stage declares these three names, and they set neither the number of periods,
-which `trellis.yml` writes, nor any stage: the recipe's `registry` block admits
-them, the trellis holds them, and its drawing reads `last_age` to label each
-period with its age.
+At realization, the bequest takes in age 61 and the zero continuation
+function as `{"age": 61, "V[>]": lambda a: 0.0}`. It keeps the age through
+both backward blocks. Each working stage sends back `age[>] - 1`, so the
+36 age transitions end at age 25. The trellis file specifies 37 periods.
 
 The working paper, NBER Working Paper 21721 (2015), which `reference/README.md`
 cites, reports different earnings in its Table 1. Its first decile is negative,
 −2.689 at ages 25 to 30, and its top decile at those ages is 87.90, where the AER
 edition gives 100.3. The working paper therefore does not support the values of
-`declaration/calibration/wage/`. Nor does it support those of `declaration/calibration/main.yml`: its
+`declaration/calibration/wage.yml`. Nor does it support those of `declaration/calibration/main.yml`: its
 estimates, in its Table 2, include $\mu = 1.1860$ and $A = 0.0312$, and its
 Table 4 is a transition matrix.
 
@@ -165,7 +157,7 @@ Table 4 is a transition matrix.
 1. **The dynasty.** The intergenerational Markov chains over $(\tau, r)$ and
    the passing of the bequest to a child join lives, not ages, and lie outside
    the within-life problem.
-2. **The initial wealth** with which a household starts at age 25.
+2. **The initial wealth** with which a household starts at age 25. The backward age transition gives age 25 in the first forward period, and that period's forward block reads the wage row of the age it takes in, 26.
 3. **The family of instances as one object.** It is the set of fills of `tau`
    and `r_type`.
 

@@ -1,5 +1,6 @@
 @stage: keeper_cons_pa
 
+Age := {17, …, 101}
 Plan := {DB, DC}
 
 γ   : (1, inf)     :: ["curvature of utility, equation (1)"]
@@ -38,15 +39,16 @@ Plan := {DB, DC}
     plan_nxt_kp = plan_d
 }
 
-[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu, c) -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu, c, age : Age @ !vlu @ !cnst) : !cntn -> (V : [-inf, inf) @ !vlu, age) : !dcsn] {
     V        = 𝑢(c, h_d, α_d) + β_d*V[>]                  :: [id=value]
     D_{w_d}V = 𝑢_c(c, h_d, α_d)                           :: [id=marginal_cash]
     D_{h_d}V = 𝑢_S(c, h_d, α_d) + β_d*D_{h_nxt_kp}V[>]    :: [id=marginal_housing]
     D_{m_d}V = -𝑢_c(c, h_d, α_d)                          :: [id=marginal_mortgage]
 }
 
-[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl] {
+[id=dcsn_to_arvl, (V, age) : !dcsn -> (V[<] : [-inf, inf) @ !vlu, age_kp[<] : Age @ !vlu @ !cnst) : !arvl] {
     V[<] = V                                             :: [id=value]
+    age_kp[<] = age :: [id=age]
 }
 
 [id=policy, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (m_nxt : ℝ₊ @ !ctrl, c : ℝ₊₊ @ !ctrl) : !dcsn] {

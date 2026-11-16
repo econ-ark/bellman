@@ -1,5 +1,6 @@
 @stage: bequest_pa
 
+Age := {17, …, 101}
 θ : ℝ₊₊          :: ["strength of the bequest motive, equation (2)"]
 k : ℝ₊           :: ["shift of the bequest utility, the extent to which bequests are luxury goods, equation (2)"]
 γ : (1, inf)     :: ["curvature of utility, equation (1)"]
@@ -10,12 +11,12 @@ k : ℝ₊           :: ["shift of the bequest utility, the extent to which bequ
 }
 
 # V[>] is the boundary datum zero, as in the durables bequest
-[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu) -> (V : ℝ @ !vlu) : !dcsn] {
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, age : Age @ !vlu @ !cnst) : !cntn -> (V : ℝ @ !vlu, age) : !dcsn] {
     V      = θ*(B + k)^(1 - γ)/(1 - γ) + V[>]            :: [id=value]
     D_{B}V = θ*(B + k)^(-γ)                              :: [id=marginal_wealth]
 }
 
-[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+[id=dcsn_to_arvl, (V, age) : !dcsn -> (V[<] : ℝ @ !vlu, age) : !arvl] {
     V[<]         = V                                     :: [id=value]
     D_{a_bq}V[<] = D_{B}V                                :: [id=marginal_liquid]
     D_{h_bq}V[<] = P_bq*D_{B}V                           :: [id=marginal_housing]

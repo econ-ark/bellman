@@ -1,32 +1,32 @@
 @methods: retiree
-# Deliberate refusals (aspect A24) on the stage retiree, whose stage file
-# applications/cagetti-denardi-2006/declaration/stages/retiree/retiree.bl
-# elaborates today. No block of this file belongs to the application's
-# methods; each is written as an author might write it by mistake, and each
-# comment names the rule of the union (the proposal's §4) that refuses it.
-# Each block carries one admissible derivative line or the stage's own line,
-# since a block body may not be empty.
+# Deliberate refusals on the stage retiree, whose stage file is
+# applications/cagetti-denardi-2006/declaration/stages/retiree/retiree.bl.
+# No block of this file belongs to the application's methods; each is written
+# as an author might write it by mistake. The comment above each block says
+# why the package refuses the union of that block with the stage file, and
+# names the refusal rule. Each block carries one admissible derivative line or
+# the stage's own line, since the package refuses a block with an empty body.
 
 n_a : ℕ        :: ["number of points of the grids"]
 a_min : Xa     :: ["lowest point of the grids, the borrowing limit"]
 a_max : Xa     :: ["highest point of the grids"]
 tol_v : ℝ₊₊    :: ["tolerance of value function iteration"]
 
-# Refused: two sets on one coordinate. The partial signature gives the
-# decision value V the set ℝ₊, where the stage's signature of cntn_to_dcsn
-# gives it ℝ (rule 4, a coordinate of one name with different content). The
-# block's own method, written by its relative subject, its grid entry and the
-# envelope line are admissible.
+# Refused: two sets on one coordinate. The signature that the block writes
+# gives the decision value V the set ℝ₊, where the stage's signature of
+# cntn_to_dcsn gives it ℝ, and a coordinate keeps the stage's set
+# (`type-conflict`). The block's own method, written by its relative path, its
+# grid entry and the envelope line are admitted.
 [id=cntn_to_dcsn, method : !vfi(tol=tol_v), () -> (V : ℝ₊ @ !vlu) : !dcsn
     | grid : !Cartesian(m=(a_min, a_max, n_a))] {
     D_{m}V = c^(-σ)                          :: [id=marginal]
 }
 
-# Refused: the same slot twice. Two groups fill the method slot of the
-# Evaluation of dcsn_to_arvl with different methods; the box of §4 admits at
-# most one entry on a slot, and rule 4 refuses two entries of one key with
-# different content, naming both. The grid entry and the derivative line of
-# the arrival value are admissible.
+# Refused: one component written twice. Two entries give the method of the
+# Evaluation of dcsn_to_arvl two different methods. A component holds one
+# entry over the files of a stage, so the package refuses the second entry and
+# names both (`declared-twice`). The grid entry and the derivative line of the
+# arrival value are admitted.
 [id=dcsn_to_arvl
     | evaluate.method : !Linear
     | evaluate.method : !pchip
@@ -34,11 +34,11 @@ tol_v : ℝ₊₊    :: ["tolerance of value function iteration"]
     D_{a_rt}V[<] = (1 + r)*D_{m}V            :: [id=marginal]
 }
 
-# Refused twice. First, a subject naming another block: the group's subject
-# begins with cntn_to_dcsn, a block other than the enclosing policy (rule 7).
-# Second, a line id twice: the line restates the stage's maximization under
-# its id choice, which the stage's block policy already holds (rule 5), and
-# would be refused by defined-once besides (F1).
+# Refused for two reasons. First, a path that names another block: the path
+# of the entry begins with cntn_to_dcsn, a block other than the enclosing
+# policy (`label-not-in-parent`). Second, one line id twice: the line restates
+# the maximization of the block policy under its id choice (`declared-twice`);
+# under another id, it would define c a second time (`defined-once`).
 [id=policy
     | cntn_to_dcsn.evaluate.method : !Linear] {
     c = argmax_{c : Γ(m)}(𝑢(c) + V[>])       :: [id=choice]

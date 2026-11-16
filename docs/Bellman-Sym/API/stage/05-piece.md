@@ -185,6 +185,7 @@ print(pushforward.methods)
 ```text
 Operator('cons', 'dcsn_to_cntn:Pushforward')
 range-compatibility   m_d − c(m_d) ∈ Xa   [established]
+continuation-input    The representing function for V[>] must be measurable on its declared domain, depend only on (a) in that order, and take values in [-inf, inf).
 none
 ```
 
@@ -204,8 +205,14 @@ print(optimality.denote())
 Line('cons', 'policy.optimality')
 STAGE cons / POLICY BLOCK policy / optimality
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  ¬(𝑢(cp) ∈ [∞, ∞] ∧ V[>] ∈ [−∞, −∞])
+──────────────────────────────────────────────────────────────────────────────
 Source  cons.bl
   30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]
+
+Definitions referenced
+  𝑢     cons:function:𝑢
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 

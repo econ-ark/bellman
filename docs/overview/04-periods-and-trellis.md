@@ -19,7 +19,7 @@ type: overview
 # Periods and trellis
 
 > [!summary]
-> A period connects stage fields; a trellis connects periods. We introduce the consumption, discounting and investment stages, then inspect a runnable reference variant with investment and discounting in each of six periods.
+> A period connects stage fields; a trellis is a diagram of periods joined by connections. We introduce the consumption, discounting and investment stages, then inspect a runnable reference variant with investment and discounting in each of six periods.
 
 A model with more than one decision is several stage files joined by connectors. The repository's portfolio application has three.
 
@@ -32,6 +32,8 @@ A model with more than one decision is several stage files joined by connectors.
 Within a period, field names belong to their own stage. Consumption's continuation assets `a` and discounting's arrival assets `a` are distinct fields, selected as one connection only if they are the unique compatible, globally consistent same-name pair. An authored **connector** selects fields whether their names agree or differ: `{"disc.a": "k"}` specifies discounting's continuation assets and investment's arrival capital. The stage-key prefix identifies the source when several stages have an outgoing `a`; it does not rename the field. [Periods](../Bellman-Sym/06-period.md#2-connectors) gives the complete rule.
 
 Between periods, `inter_connectors[h]` joins the outgoing fields of period `h+1` to the incoming fields of period `h`, where `h` counts backwards from the terminal period, `h = 0`.
+
+The position `h` is an address in that diagram. It is not an input to a stage and supplies no age or parameter value. A model that needs age declares it as a field and computes it from supplied terminal data. Repeating the same declarations and calibration sources follows [modularity](../bellman-calculus/APPX-H-MODULARITY.md); positional recipe bindings remain available without imposing that condition.
 
 The checked reference variant below contains a portfolio stage and a discount stage in each of six periods. It shows one connection within the terminal period and one from the period before it. Its trellis file carries each stage's source and bindings, so `load_trellis` reads the model as written and `specify_trellis` elaborates, calibrates, methodizes and configures every occurrence. `connection_report` reads the selected connections; `periods=[0]` keeps pairs touching the terminal period. Run this listing from the repository root:
 
@@ -55,4 +57,4 @@ periods[1].disc.a -> periods[0].port.k (authored, compatible)
 
 The first pair joins the portfolio stage to discounting inside the terminal period. The second joins the preceding period's discount stage to the terminal period's portfolio stage. The stage keys and period indices identify the fields; the pair changes neither stage's local name. The report also checks complete state and value routes, including the forward joint law, as [Periods](../Bellman-Sym/06-period.md#2-connectors) explains. The four numbers and two pair lines above were checked against the package in this checkout.
 
-A trellis is also built one period at a time. `bellman.trellis.accrete(trellis, period, inter_connector=None)` appends a period, the one earlier in time, to a trellis that starts as `{"periods": [], "inter_connectors": []}`, the terminal period first. A hand-written trellis can use `accrete` once for the terminal period and again for each earlier period, passing that pair's inter-period connector with the later call. [Periods](../Bellman-Sym/06-period.md) and [Trellises](../Bellman-Sym/07-trellis.md) explain the period boundary and the terminal continuation value that the trellis needs.
+A trellis is also built one period at a time. `bellman.trellis.accrete(trellis, period, inter_connector=None)` appends a period, the one earlier in time, to a trellis that starts as `{"periods": [], "inter_connectors": []}`, the terminal period first. A hand-written trellis can use `accrete` once for the terminal period and again for each earlier period, passing that pair's inter-period connector with the later call. [Periods](../Bellman-Sym/06-period.md) and [Trellises](../Bellman-Sym/07-trellis.md) explain the unjoined inputs and outputs of a period and the terminal data the user supplies for every backward field when realizing the model.

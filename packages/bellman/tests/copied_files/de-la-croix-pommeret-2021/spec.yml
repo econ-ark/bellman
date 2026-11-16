@@ -1,0 +1,21 @@
+# The recipe of the childbearing model of de la Croix and Pommeret (2021): the
+# trellis file and each stage's file, by their paths from this folder, and for
+# each stage and each kind the ordered sources; `$fill` is bound by keyword of
+# `load_recipe`. The paper reports no numerical scheme, grid, tolerance or
+# horizon length, so no stage names a settings or a methods source. The
+# calibration binds no value for ω, the taste for children,
+# which the paper gives as a distribution across women (p. 20): a trellis is
+# assembled for one woman with fill={"calibration": {"ω": ...}}, and the
+# paper's population of women is a sweep, one fill per value of ω. The three
+# terminal stages declare no parameter and stand in the terminal period alone,
+# periods: [0, 0].
+trellis: trellis.yml
+stages:
+  cons_wait:          {stage: stages/cons_wait.bl,          calibration: {all: [calibration/childbearing, $fill]}}
+  attempt:            {stage: stages/attempt.bl,            calibration: {all: [calibration/childbearing, $fill]}}
+  fecundity:          {stage: stages/fecundity.bl,          calibration: {all: [calibration/childbearing, $fill]}}
+  cons_mother:        {stage: stages/cons_mother.bl,        calibration: {all: [calibration/childbearing, $fill]}}
+  cons_childless:     {stage: stages/cons_childless.bl,     calibration: {all: [calibration/childbearing, $fill]}}
+  terminal_wait:      {stage: stages/terminal_wait.bl,      periods: [0, 0]}
+  terminal_mother:    {stage: stages/terminal_mother.bl,    periods: [0, 0]}
+  terminal_childless: {stage: stages/terminal_childless.bl, periods: [0, 0]}

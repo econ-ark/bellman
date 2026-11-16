@@ -88,7 +88,7 @@ object it realizes, or a dash where E.3 defines no such object; and
 `read from`, the module, the table and the key. The section is found by the
 name E.3 gives the object, in the first cell of one of its table rows or else
 in a heading (`calculus_term`); a name E.3 does not give leaves the cell a
-dash and is reported, and the tests of `tests/cat/test_docs_shape.py` fail on
+dash and is reported, and the tests of `tests/test_documentation_structure.py` fail on
 it where the row must link.
 
 Run from the repository root with the project interpreter:
@@ -135,11 +135,11 @@ from markdown.extensions.toc import slugify  # noqa: E402  (the anchors MkDocs g
 from stage_object_page import ROOT, settle  # noqa: E402  (the printer beside this script)
 
 # the one listing of the stage files of the applications, `STAGE_FILES` of the
-# package tests' conftest.py
+# package tests' module application_files.py
 TESTS = ROOT / "packages/bellman/tests"
 if str(TESTS) not in sys.path:
     sys.path.append(str(TESTS))
-from conftest import STAGE_FILES  # noqa: E402
+from application_files import STAGE_FILES  # noqa: E402
 
 import bellman.period  # noqa: E402
 import bellman.stage  # noqa: E402
@@ -162,6 +162,7 @@ from bellman.stage import (  # noqa: E402
     elaborate_stage,
     elaborate_text,
     graph_refusal,
+    header_fields,
     header_line,
     header_of,
     layers_to_open,
@@ -292,9 +293,8 @@ SETTINGS = "applications/portfolio-choice/declaration/settings/cons.yml"
 PORT = "applications/portfolio-choice/declaration/stages/port/port.bl"
 # the trellis file on which the API index prints the functions of a trellis and
 # of a period, and the registry and the recipe on which it prints the two
-# functions that read a recipe: on the recipe spec.yml the package
-# refuses assemble_trellis, since the model's code/wage_schedule.py writes the
-# tenure stage's income `Y` into each period after load_recipe
+# functions that read a recipe. These examples use the variant without
+# the tenure stage.
 TRELLIS = "applications/cons-port/declaration/trellis.port-cons-vfi.yml"
 REGISTRY = "applications/durables/declaration"
 RECIPE = "spec.two-stages.yml"
@@ -871,9 +871,14 @@ def grammar_signs():
     grammar = (PACKAGE / "syntax/grammars/stage.lark").read_text(encoding="utf-8")
     signs, named = [], []
     for rule in ("?sum", "?product", "?molecule", "_POW"):
-        body = re.search(
-            r"^" + re.escape(rule) + r"\s*:(.*?)(?=^\S|\Z)", grammar, re.M | re.S
-        ).group(1)
+        matched = re.search(
+            r"^" + re.escape(rule) + r"(?:\{[^\n{}]+\})?\s*:(.*?)(?=^\S|\Z)",
+            grammar,
+            re.M | re.S,
+        )
+        if matched is None:
+            raise SystemExit(f"syntax/grammars/stage.lark has no arithmetic rule {rule}")
+        body = matched.group(1)
         for sign in re.findall(r'"([^"]+)"', body):
             if sign not in signs:
                 signs.append(sign)
@@ -2038,6 +2043,7 @@ BINDING_VERBS = {"calibrate": CALIBRATION, "methodize": METHODS_FILE, "configure
 # builders graph being read by the name of a forward builder and the block by
 # the name of a line
 EXAMPLE_ARGUMENTS = {
+    ("ElaboratedStage", "check_inputs"): ({"V[>]": abs},),
     ("Definitions", "denote"): ("cons:g:dcsn_to_cntn",),
     ("Definitions", "__getitem__"): ("cons:g:dcsn_to_cntn",),
     ("GraphHandle", "__getitem__"): ("cntn_to_dcsn",),
@@ -2240,6 +2246,11 @@ def members(handle):
 
 def quoted(argument):
     """An argument as a call writes it, a string in double quotes."""
+    if isinstance(argument, dict):
+        entries = ", ".join(f"{quoted(key)}: {quoted(value)}" for key, value in argument.items())
+        return "{" + entries + "}"
+    if inspect.isbuiltin(argument) and argument.__module__ == "builtins":
+        return argument.__name__
     return repr(argument).replace("'", '"')
 
 
@@ -2652,6 +2663,10 @@ FUNCTION_EXAMPLES = {
     "stage.header_of": (
         'header_of(stage.initial.backward["cntn_to_dcsn"].box)',
         lambda: header_of(symbolic_cons().initial.backward["cntn_to_dcsn"].box),
+    ),
+    "stage.header_fields": (
+        f'header_fields(text, "{CONS}")',
+        lambda: header_fields((ROOT / CONS).read_text(encoding="utf-8"), CONS),
     ),
     "stage.branches": (
         "branches(elaborate_stage(record))",

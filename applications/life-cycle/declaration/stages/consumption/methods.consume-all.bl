@@ -1,0 +1,6 @@
+@methods: consumption
+
+# For a continuation value independent of assets, utility increases with consumption.
+[id=policy, policy.method : !explicit] {
+    c = m                                             :: [id=consume_all]
+}

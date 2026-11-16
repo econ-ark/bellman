@@ -10,7 +10,7 @@ Use the [semantic graph](../wiki/semgraph.md) to trace how a stage uses its inpu
 
 ## 1 Choose a stage and period
 
-Open **Trellis** to see the model’s periods and stages together. A [trellis](../wiki/trellis.md) describes the stages in each period and the connections between them. In a long model, use the period selector above the graph to restrict the view. Choose **all** to show every period again.
+Open **Trellis** to see the model’s periods and stages together. A [trellis](../wiki/trellis.md) is a diagram of periods joined by connections. The period labels show positions, not ages; the viewer is not given terminal age. In a long model, use the period selector above the graph to restrict the view. Choose **all** to show every period again.
 
 Double-click a stage card in the trellis, or select it and choose **Open the stage** in **Details**. This opens the stage file and its graph for that occurrence, meaning that stage at that position in the trellis. Check the path in the main bar for the recipe, period and stage.
 
@@ -32,8 +32,10 @@ Use **Zoom in**, **Zoom out** and **Fit** at the foot of the graph. Drag the bac
 2. Select a connection in the trellis to see the stages it joins, its branch where applicable, and the paired fields. Follow a source link when the pairing is written in a file. Check that the quantities agree in economic meaning and units, as when end-of-period saving supplies the next period’s opening wealth. Widen the period selection if a route ends at a marker for a stage outside the view.
 3. Under the stage editor, open **Inspector** and choose **Fields**, **Parameters**, **Settings** or **Methods**. **Fields** lists the declarations at each information set. The other tabs show the parameter values, numerical settings and attached methods for the selected occurrence. Where a row links to a source, follow it to see the file that supplies the value or method.
 
-## 4 Check what the model still needs
+<a id="4-check-what-the-model-still-needs"></a>
+
+## 4 Required inputs and checks
 
 Open **Problems** at the upper right of the graph. The list separates errors from checks. **Unjoined fields** identifies internal arrivals that still need a connection. **Headers to check** flags value inputs listed in a header that no equation reads. Follow the file and line link when one is available. Expand **More** in the status line to see the file or buffer Workbench read, the occurrence it used, and the fingerprints of its source files. A fingerprint identifies the specific text Workbench read.
 
-Inspect the terminal period, indexed 0, in **Backward**. If a backward block reads the terminal continuation value `V[>]`, the model needs a function on that block’s continuation-state domain when it is made numerical. Supply any derivatives that the block reads as well. A bequest equation and a successfully constructed graph leave this input explicit. A zero terminal function is a choice you supply. [Inter-period connectors and terminal data](../Bellman-Sym/07-trellis.md#2-inter-period-connectors)
+Inspect the terminal period, indexed 0, in **Backward**. Supply data for every value-type field the terminal stage takes in when you make the model numerical. The value field `V[>]` needs its representing function and any derivatives the block reads; a constant such as age or a borrowing bound needs its own value. These data are supplied by the user, not stored in the trellis file. A bequest equation and a successfully constructed graph leave those inputs explicit. A zero terminal value is a choice you supply. [Inter-period connectors and terminal data](../Bellman-Sym/07-trellis.md#2-inter-period-connectors)

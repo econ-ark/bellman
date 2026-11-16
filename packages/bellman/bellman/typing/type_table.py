@@ -24,8 +24,10 @@ not copied here. `bellman.syntax.vocabulary` holds them, in `ROLE_WORD` and
 
 The page `docs/Bellman-Sym/reference/types.md` is printed from the three
 tables and from those of the vocabulary by `docs/_hooks/reference_pages.py`
-(`types_table`). `tests/test_type_table.py` runs every row through the
-package, so that a row which no longer holds fails. The module imports
+(`types_table`). `packages/bellman/tests/test_types.py` runs every row
+through the package, so that a row which no longer holds fails, and
+`tests/test_package_documentation.py` checks that the page holds the
+tables that the script prints. The module imports
 nothing of the package: a row names a record and an expression as text, and
 the test resolves the one and evaluates the other.
 """
@@ -83,7 +85,9 @@ OBJECTS = (
         file=_STAGE_FILE,
         written=(
             "`ℝ₊₊ @ !ctrl` for `c`: a set and a role word. The word `!dcsn` after the side "
-            "gives the perch. A field listed with a set and no role word, `a : Xa`, is a state."
+            "gives the perch. A field listed with a set and no role word, `a : Xa`, is a state. "
+            "For a value-type field, `!vlu @ !cnst` specifies independence from states, "
+            "shocks and choices."
         ),
         record=_SORT,
         read_by='stage.fields()["perfect_foresight:dcsn:c"]',
@@ -118,18 +122,15 @@ OBJECTS = (
             "A constant that the file defines from parameters, numbers and other derived "
             "parameters; the calibration supplies no value for it."
         ),
-        line="h := 1/(1 - Γ/R)",
+        line="q : (0,1) := (β*R)^(1/ρ)/R",
         file=_STAGE_FILE,
         written=(
-            "No type on this line. A definition may declare a set before `:=`, "
-            "`q : (0,1) := (β*R)^(1/ρ)/R`, and calibration holds the value to that set. The "
-            "declared set is the set written there, or `ℝ` where none is written; a definition "
-            "by cases that writes the branch `inf` or `-inf` declares a set that can hold that "
-            "infinity, as its form decides, as in "
-            "`h : ℝ_{+∞} := if Γ < R then 1/(1 - Γ/R) else inf`."
+            "A declared set goes before `:=`. Calibration checks the computed value in that "
+            "set. With no declared set it checks membership in `ℝ`. A definition by cases "
+            "that writes `inf` or `-inf` declares a set that can hold that infinity."
         ),
         record=_DEFINITION,
-        read_by='stage.par["h"]',
+        read_by='stage.par["q"]',
     ),
     StageObject(
         name="setting",
@@ -161,12 +162,14 @@ OBJECTS = (
             "The operator that a block denotes, called a builder: it takes the functions, or "
             "the measures, at one perch to those at another."
         ),
-        line="[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {",
+        line=(
+            "[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, h[>] : ℝ₊ @ !vlu @ !cnst, c) : !cntn "
+            "-> (V : ℝ @ !vlu, h : ℝ₊ @ !vlu @ !cnst) : !dcsn] {"
+        ),
         file=_STAGE_FILE,
         written=(
-            "The two sides of the header: the fields that the block reads, "
-            "`(V[>] : ℝ @ !vlu, c) : !cntn`, and the fields that it writes, "
-            "`(V : ℝ @ !vlu) : !dcsn`."
+            "The header lists the continuation fields `V[>]` and `h[>]` and the decision "
+            "control `c` as inputs. Its outputs are the decision fields `V` and `h`."
         ),
         record="bellman.native.hypergraphs:Builder",
         read_by='stage.builder["cntn", "dcsn"]',
@@ -323,7 +326,7 @@ SET_FORMS = (
         example="δ : {1, …, 5} → ℝ",
         denotes=(
             "The collections that hold one entry of the second set for each member of the "
-            "first, which is a finite index set."
+            "finite index set. A function-valued constant may also have a continuous domain."
         ),
         read_in=_BUT_THE_DERIVED_PARAMETER,
     ),
@@ -437,9 +440,9 @@ LIMITS = (
     ),
     Limit(
         limit=(
-            "A conditional, `if … then … else …`, stands as the whole right side of a "
-            "definition without arguments or as a branch of another conditional, and inside no "
-            "formula, no function's body, no line of a block and no endpoint of a set."
+            "A formula by cases may stand on the right side of an equation or of a derived "
+            "parameter definition, including as a nested branch. A declared set endpoint "
+            "admits no formula by cases."
         ),
         line="x : (0, if 1 < 2 then 1 else 2)",
         rule="syntax",

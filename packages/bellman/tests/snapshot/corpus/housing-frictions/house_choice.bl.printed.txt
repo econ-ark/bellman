@@ -1,0 +1,999 @@
+BELLMAN-SYM / STAGE house_choice                          [VERSION = SYMBOLIC]
+a stage occurrence of applications/housing-frictions/declaration/stages/
+house_choice/house_choice.bl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PERCHES ──────────────────────────────────────────────────────────────────────
+  ≺ arrival        y_f≺ state, y_h≺ state, V≺ value
+  ∼ decision       m_f state, m_h state, d control, V value
+  ≻ continuation   w_kp≻ state, h_kp≻ state, w_adj≻ state, V_kp≻ value, V_adj≻
+                   value
+  ≺ → ∼            η drawn after arrival, before decision
+
+FIELDS ───────────────────────────────────────────────────────────────────────
+  states           y_f≺ at arrival, y_h≺ at arrival, m_f at decision, m_h at
+                   decision, w_kp≻ at continuation, h_kp≻ at continuation,
+                   w_adj≻ at continuation
+  controls         d at decision
+  values           V at the arrival, decision perches; V_kp at the
+                   continuation perch; V_adj at the continuation perch
+  shocks           η, drawn between arrival and decision
+
+BLOCKS ───────────────────────────────────────────────────────────────────────
+  → arvl_to_dcsn   (y_f≺, y_h≺, η) : !arvl -> (m_f, m_h) : !dcsn
+  → dcsn_to_cntn   (m_f, m_h) : !dcsn, at d -> (w_kp≻, h_kp≻, w_adj≻) : !cntn
+  ← cntn_to_dcsn   (V_kp≻, V_adj≻) : !cntn, at d -> (V) : !dcsn
+  ← dcsn_to_arvl   (V) : !dcsn -> (V≺) : !arvl
+  ← policy         (V_kp≻, V_adj≻) : !cntn -> (d) : !dcsn
+
+DEFINITIONS ──────────────────────────────────────────────────────────────────
+  kind                 count   in file order
+  ───────────────────  ─────   ─────────────────────────────────────────────
+  distributions            1   η
+  parameters               4   r : ℝ₊; W : ℝ₊₊; η_lo : ℝ₊₊; η_hi : ℝ₊₊
+  laws of motion           2   m_f = (1 + r)*y_f + W*η; m_h = y_h;
+                               w_kp = m_f; h_kp = m_h; w_adj = m_f + m_h
+  value aggregators        3   V = (V_kp[>], V_adj[>])[d]; V[<] = E_{η}(V);
+                               d = argmax_{d}(V_kp[>], V_adj[>])
+  block lines              8   arvl_to_dcsn.financial_assets,
+                               arvl_to_dcsn.housing,
+                               dcsn_to_cntn.keep.cash_on_hand,
+                               dcsn_to_cntn.keep.housing_kept,
+                               dcsn_to_cntn.adjust.total_resources,
+                               cntn_to_dcsn.choice_value, dcsn_to_arvl.value,
+                               policy.choice
+
+GRAPHS ───────────────────────────────────────────────────────────────────────
+  initial diagrams  backward present, forward present
+  builders          backward   (𝑉_kp≻, 𝑉_adj≻) ↦ 𝑉≺, 𝑑(m_f, m_h)
+                    forward    μ≺ ↦ μ_keep≻, μ_adjust≻
+
+BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  calibration      none   calibrate(stage, source)
+  methods          none   methodize(stage, source)
+  settings         none   configure(stage, source)
+
+DIRECTIONS ───────────────────────────────────────────────────────────────────
+  forward    ≺ y_f≺, y_h≺  → η drawn →  ∼ m_f, m_h  →  ≻ w_kp≻, h_kp≻, w_adj≻
+  backward   ≺ V≺  ←  ∼ V  ←  ≻ V_kp≻, V_adj≻
+  policy     ∼ d  ←  ≻ V_kp≻, V_adj≻
+
+==== stage ====
+STAGE house_choice
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  backward
+    in   𝑉_kp≻      : ℝ₊₊ × ℝ₊₊ → ℝ
+         𝑉_adj≻     : ℝ₊₊ → ℝ
+         ──────────────────────────────────────────────────────
+    out  𝑉≺         : ℝ₊ × ℝ₊₊ → ℝ
+         𝑑          : ℝ₊₊ × ℝ₊₊ → {keep, adjust}
+  forward
+    in   μ≺         : finite measure on ℝ₊ × ℝ₊₊
+         ──────────────────────────────────────────────────────
+    out  μ_keep≻    : finite measure on ℝ₊₊ × ℝ₊₊
+         μ_adjust≻  : finite measure on ℝ₊₊
+
+Where
+  (m_f, m_h) = 𝑔≺(y_f, y_h, η)
+
+Operations
+  backward
+    1  cntn_to_dcsn
+       in: 𝑉_kp≻, 𝑉_adj≻                out: 𝑉
+
+    2  dcsn_to_arvl
+       in: 𝑉                            out: 𝑉≺
+
+    3  policy
+       in: 𝑉_kp≻, 𝑉_adj≻                out: 𝑑
+
+  forward
+    1  arvl_to_dcsn
+       in: μ≺                           out: μ
+
+    2  dcsn_to_cntn
+       in: μ                            out: μ_keep≻, μ_adjust≻
+
+Conditions
+  cntn_to_dcsn:Aggregation  𝑉(m_f, m_h) ∈ ℝ
+  dcsn_to_arvl:Aggregation  𝑉≺(y_f, y_h) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  9   η ~ Mixture((0.5, η_lo), (0.5, η_hi))
+  12  m_f = (1 + r)*y_f + W*η            :: [id=financial_assets]
+  13  m_h = y_h                          :: [id=housing]
+  18  w_kp = m_f                         :: [id=cash_on_hand]
+  19  h_kp = m_h                         :: [id=housing_kept]
+  22  w_adj = m_f + m_h                  :: [id=total_resources]
+  27  V = (V_kp[>], V_adj[>])[d]         :: [id=choice_value]
+  31  V[<] = E_{η}(V)                    :: [id=value]
+  35  d = argmax_{d}(V_kp[>], V_adj[>])  :: [id=choice]
+
+Definitions referenced
+  η     house_choice:distribution:η
+  𝑔≺    house_choice:g:arvl_to_dcsn
+
+File
+  applications/housing-frictions/declaration/stages/house_choice/
+  house_choice.bl
+
+Perches
+  ≺  arrival, written [<]
+  ≻  continuation, written [>]
+     unmarked: decision
+
+Appendix
+  Bellman-SYM, Appendix C
+  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward cntn_to_dcsn ====
+STAGE house_choice / BACKWARD BLOCK cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V_kp≻   : {V_kp≻, V_adj≻}
+       V_adj≻  : {V_kp≻, V_adj≻}
+       ─────────────────────────
+  out  V       : {V}
+
+Conditions
+  𝑉(m_f, m_h) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  27  V = (V_kp[>], V_adj[>])[d]  :: [id=choice_value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward dcsn_to_arvl ====
+STAGE house_choice / BACKWARD BLOCK dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V   : {V}
+       ──────────
+  out  V≺  : {V≺}
+
+Conditions
+  𝑉≺(y_f, y_h) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  31  V[<] = E_{η}(V)  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial backward policy ====
+STAGE house_choice / POLICY BLOCK policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   V_kp≻   : {V_kp≻, V_adj≻}
+       V_adj≻  : {V_kp≻, V_adj≻}
+       ─────────────────────────
+  out  d       : {d}
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  35  d = argmax_{d}(V_kp[>], V_adj[>])  :: [id=choice]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward arvl_to_dcsn ====
+STAGE house_choice / FORWARD BLOCK arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   y_f≺  : {y_f≺, y_h≺}
+       y_h≺  : {y_h≺}
+       η     : {η}
+       ────────────────────
+  out  m_f   : {m_f, m_h}
+       m_h   : {m_f, m_h}
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  12  m_f = (1 + r)*y_f + W*η  :: [id=financial_assets]
+  13  m_h = y_h                :: [id=housing]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn ====
+STAGE house_choice / FORWARD BLOCK dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   m_f     : {m_f, m_h}
+       m_h     : {m_f, m_h}
+       ────────────────────────────────
+  out  w_kp≻   : {w_kp≻, h_kp≻, w_adj≻}
+       h_kp≻   : {w_kp≻, h_kp≻, w_adj≻}
+       w_adj≻  : {w_kp≻, h_kp≻, w_adj≻}
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  18  w_kp = m_f         :: [id=cash_on_hand]
+  19  h_kp = m_h         :: [id=housing_kept]
+  22  w_adj = m_f + m_h  :: [id=total_resources]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn / keep ====
+STAGE house_choice / FORWARD BLOCK dcsn_to_cntn / keep
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   m_f    : {m_f, m_h}
+       m_h    : {m_f, m_h}
+       ───────────────────────────────
+  out  w_kp≻  : {w_kp≻, h_kp≻, w_adj≻}
+       h_kp≻  : {w_kp≻, h_kp≻, w_adj≻}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== initial forward dcsn_to_cntn / adjust ====
+STAGE house_choice / FORWARD BLOCK dcsn_to_cntn / adjust
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   m_f     : {m_f, m_h}
+       m_h     : {m_f, m_h}
+       ────────────────────────────────
+  out  w_adj≻  : {w_kp≻, h_kp≻, w_adj≻}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn ====
+STAGE house_choice / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_kp≻   : ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑉_adj≻  : ℝ₊₊ → ℝ
+       ────────────────────────────────────────────────────────
+  out  𝑉       : ℝ₊₊ × ℝ₊₊ → ℝ
+
+At
+  𝑑  : ℝ₊₊ × ℝ₊₊ → {keep, adjust}
+
+Where
+  𝑔_keep≻    : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,  𝑔_keep≻(m_f, m_h) = 𝑔≻(m_f, m_h, keep)
+  𝑔_adjust≻  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊,  𝑔_adjust≻(m_f, m_h) = 𝑔≻(m_f, m_h, adjust)
+
+Operations
+  1  Pullback:keep
+     in: 𝑉_kp≻                          out: 𝑉_kp≻ ∘ 𝑔_keep≻
+     ──────────────────────────────────────────────────────────
+     rule: (𝑉_kp≻ ∘ 𝑔_keep≻)(m_f, m_h) = 𝑉_kp≻(𝑔_keep≻(m_f, m_h))
+
+  2  Pullback:adjust
+     in: 𝑉_adj≻                         out: 𝑉_adj≻ ∘ 𝑔_adjust≻
+     ──────────────────────────────────────────────────────────
+     rule: (𝑉_adj≻ ∘ 𝑔_adjust≻)(m_f, m_h) = 𝑉_adj≻(𝑔_adjust≻(m_f, m_h))
+
+  3  Aggregation
+     in: (1), (2)                       out: 𝑉
+     ──────────────────────────────────────────────────────────
+     rule: 𝑉 = (𝑉_kp≻(𝑔_keep≻(m_f, m_h)), 𝑉_adj≻(𝑔_adjust≻(m_f, m_h)))[𝑑]
+           on (m_f, m_h) ∈ ℝ₊₊ × ℝ₊₊
+
+  4  Evaluation
+     in: 𝑉                              out: 𝑉
+     ──────────────────────────────────────────────────────────
+     rule: 𝑉 : ℝ₊₊ × ℝ₊₊ → ℝ
+
+Conditions
+  Aggregation  𝑉(m_f, m_h) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  27  V = (V_kp[>], V_adj[>])[d]  :: [id=choice_value]
+
+Definitions referenced
+  𝑔≻    house_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback:keep ====
+STAGE house_choice / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Pullback:keep
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_kp≻  : ℝ₊₊ × ℝ₊₊ → ℝ
+       ──────────────────────
+  out  𝑉_kp≻ ∘ 𝑔_keep≻
+              : ℝ₊₊ × ℝ₊₊ → ℝ
+
+Where
+  𝑔_keep≻  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,  𝑔_keep≻(m_f, m_h) = 𝑔≻(m_f, m_h, keep)
+
+Rule
+  (𝑉_kp≻ ∘ 𝑔_keep≻)(m_f, m_h) = 𝑉_kp≻(𝑔_keep≻(m_f, m_h))
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  18  w_kp = m_f         :: [id=cash_on_hand]
+  19  h_kp = m_h         :: [id=housing_kept]
+  22  w_adj = m_f + m_h  :: [id=total_resources]
+
+Definitions referenced
+  𝑔≻    house_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Pullback:adjust ====
+STAGE house_choice / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+  / Pullback:adjust
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_adj≻  : ℝ₊₊ → ℝ
+       ───────────────────────
+  out  𝑉_adj≻ ∘ 𝑔_adjust≻
+               : ℝ₊₊ × ℝ₊₊ → ℝ
+
+Where
+  𝑔_adjust≻  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊,  𝑔_adjust≻(m_f, m_h) = 𝑔≻(m_f, m_h, adjust)
+
+Rule
+  (𝑉_adj≻ ∘ 𝑔_adjust≻)(m_f, m_h) = 𝑉_adj≻(𝑔_adjust≻(m_f, m_h))
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  18  w_kp = m_f         :: [id=cash_on_hand]
+  19  h_kp = m_h         :: [id=housing_kept]
+  22  w_adj = m_f + m_h  :: [id=total_resources]
+
+Definitions referenced
+  𝑔≻    house_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Aggregation ====
+STAGE house_choice / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_kp≻ ∘ 𝑔_keep≻
+          : ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑉_adj≻ ∘ 𝑔_adjust≻
+          : ℝ₊₊ × ℝ₊₊ → ℝ
+       ──────────────────
+  out  𝑉  : ℝ₊₊ × ℝ₊₊ → ℝ
+
+Where
+  𝑔_keep≻    : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,  𝑔_keep≻(m_f, m_h) = 𝑔≻(m_f, m_h, keep)
+  𝑔_adjust≻  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊,  𝑔_adjust≻(m_f, m_h) = 𝑔≻(m_f, m_h, adjust)
+
+Rule
+  𝑉 = (𝑉_kp≻(𝑔_keep≻(m_f, m_h)), 𝑉_adj≻(𝑔_adjust≻(m_f, m_h)))[𝑑]
+  on (m_f, m_h) ∈ ℝ₊₊ × ℝ₊₊
+
+Conditions
+  𝑉(m_f, m_h) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  27  V = (V_kp[>], V_adj[>])[d]  :: [id=choice_value]
+
+Definitions referenced
+  𝑔≻    house_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward cntn_to_dcsn / Evaluation ====
+STAGE house_choice / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : ℝ₊₊ × ℝ₊₊ → ℝ
+       ──────────────────
+  out  𝑉  : ℝ₊₊ × ℝ₊₊ → ℝ
+
+Where
+  𝑔_keep≻    : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,  𝑔_keep≻(m_f, m_h) = 𝑔≻(m_f, m_h, keep)
+  𝑔_adjust≻  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊,  𝑔_adjust≻(m_f, m_h) = 𝑔≻(m_f, m_h, adjust)
+
+Rule
+  𝑉 = (𝑉_kp≻(𝑔_keep≻(m_f, m_h)), 𝑉_adj≻(𝑔_adjust≻(m_f, m_h)))[𝑑]
+  on (m_f, m_h) ∈ ℝ₊₊ × ℝ₊₊
+  𝑉 : ℝ₊₊ × ℝ₊₊ → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  𝑔≻    house_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl ====
+STAGE house_choice / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉   : ℝ₊₊ × ℝ₊₊ → ℝ
+       ────────────────────────────────────────────
+  out  𝑉≺  : ℝ₊ × ℝ₊₊ → ℝ
+
+Operations
+  1  Pullback
+     in: 𝑉                              out: 𝑉 ∘ 𝑔≺
+     ──────────────────────────────────────────────
+     rule: (𝑉 ∘ 𝑔≺)(y_f, y_h, η) = 𝑉(𝑔≺(y_f, y_h, η))
+
+  2  value:Expectation:1
+     in: (1)
+     out: (y_f, y_h) ↦ E_{η}[𝑉(𝑔≺(y_f, y_h, η))]
+     ──────────────────────────────────────────────
+     rule: (2)(y_f, y_h) = E_{η}[𝑉(𝑔≺(y_f, y_h, η))]
+
+  3  Aggregation
+     in: (2)                            out: 𝑉≺
+     ──────────────────────────────────────────────
+     rule: 𝑉≺ = E_{η}[𝑉(𝑔≺(y_f, y_h, η))]             on (y_f, y_h) ∈ ℝ₊ × ℝ₊₊
+
+  4  Evaluation
+     in: 𝑉≺                             out: 𝑉≺
+     ──────────────────────────────────────────────
+     rule: 𝑉≺ : ℝ₊ × ℝ₊₊ → ℝ
+
+Conditions
+  Aggregation  𝑉≺(y_f, y_h) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  31  V[<] = E_{η}(V)  :: [id=value]
+
+Definitions referenced
+  η     house_choice:distribution:η
+  𝑔≺    house_choice:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Pullback ====
+STAGE house_choice / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Pullback
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉  : ℝ₊₊ × ℝ₊₊ → ℝ
+       ───────────────────────
+  out  𝑉 ∘ 𝑔≺
+          : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+
+Rule
+  (𝑉 ∘ 𝑔≺)(y_f, y_h, η) = 𝑉(𝑔≺(y_f, y_h, η))
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  12  m_f = (1 + r)*y_f + W*η  :: [id=financial_assets]
+  13  m_h = y_h                :: [id=housing]
+
+Definitions referenced
+  η     house_choice:distribution:η
+  𝑔≺    house_choice:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / value:Expectation:1 ====
+STAGE house_choice / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)
+  / value:Expectation:1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉 ∘ 𝑔≺
+         : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ
+       ──────────────────────────────────────
+  out  (y_f, y_h) ↦ E_{η}[𝑉(𝑔≺(y_f, y_h, η))]
+         : ℝ₊ × ℝ₊₊ → ℝ
+
+Rule
+  value:Expectation:1(y_f, y_h) = E_{η}[𝑉(𝑔≺(y_f, y_h, η))]
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  9   η ~ Mixture((0.5, η_lo), (0.5, η_hi))
+  31  V[<] = E_{η}(V)  :: [id=value]
+
+Definitions referenced
+  η     house_choice:distribution:η
+  𝑔≺    house_choice:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Aggregation ====
+STAGE house_choice / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (y_f, y_h) ↦ E_{η}[𝑉(𝑔≺(y_f, y_h, η))]
+           : ℝ₊ × ℝ₊₊ → ℝ
+       ──────────────────────────────────────
+  out  𝑉≺  : ℝ₊ × ℝ₊₊ → ℝ
+
+Rule
+  𝑉≺ = E_{η}[𝑉(𝑔≺(y_f, y_h, η))]                      on (y_f, y_h) ∈ ℝ₊ × ℝ₊₊
+
+Conditions
+  𝑉≺(y_f, y_h) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  31  V[<] = E_{η}(V)  :: [id=value]
+
+Definitions referenced
+  η     house_choice:distribution:η
+  𝑔≺    house_choice:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward dcsn_to_arvl / Evaluation ====
+STAGE house_choice / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≺  : ℝ₊ × ℝ₊₊ → ℝ
+       ──────────────────
+  out  𝑉≺  : ℝ₊ × ℝ₊₊ → ℝ
+
+Rule
+  𝑉≺ = E_{η}[𝑉(𝑔≺(y_f, y_h, η))]                      on (y_f, y_h) ∈ ℝ₊ × ℝ₊₊
+  𝑉≺ : ℝ₊ × ℝ₊₊ → ℝ
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  η     house_choice:distribution:η
+  𝑔≺    house_choice:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy ====
+STAGE house_choice / POLICY BUILDER policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_kp≻   : ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑉_adj≻  : ℝ₊₊ → ℝ
+       ─────────────────────────────────────────────────────────────────
+  out  𝑑       : ℝ₊₊ × ℝ₊₊ → {keep, adjust}
+
+Where
+  𝑔_keep≻    : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,  𝑔_keep≻(m_f, m_h) = 𝑔≻(m_f, m_h, keep)
+  𝑔_adjust≻  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊,  𝑔_adjust≻(m_f, m_h) = 𝑔≻(m_f, m_h, adjust)
+
+Operations
+  1  Pullback:keep
+     in: 𝑉_kp≻                          out: 𝑉_kp≻ ∘ 𝑔_keep≻
+     ───────────────────────────────────────────────────────────────────
+     rule: (𝑉_kp≻ ∘ 𝑔_keep≻)(m_f, m_h) = 𝑉_kp≻(𝑔_keep≻(m_f, m_h))
+
+  2  Pullback:adjust
+     in: 𝑉_adj≻                         out: 𝑉_adj≻ ∘ 𝑔_adjust≻
+     ───────────────────────────────────────────────────────────────────
+     rule: (𝑉_adj≻ ∘ 𝑔_adjust≻)(m_f, m_h) = 𝑉_adj≻(𝑔_adjust≻(m_f, m_h))
+
+  3  choice:Aggregation
+     in: (1), (2)
+     out: (m_f, m_h, d)
+            ↦ (𝑉_kp≻(𝑔_keep≻(m_f, m_h)), 𝑉_adj≻(𝑔_adjust≻(m_f, m_h)))[d]
+     ───────────────────────────────────────────────────────────────────
+     rule: (m_f, m_h, d)
+             ↦ (𝑉_kp≻(𝑔_keep≻(m_f, m_h)), 𝑉_adj≻(𝑔_adjust≻(m_f, m_h)))[d]
+
+  4  choice:Argmax
+     in: (3)                            out: 𝑑
+     ───────────────────────────────────────────────────────────────────
+     rule: 𝑑(m_f, m_h)
+             ∈ argmax_{d ∈ {keep, adjust}}
+                 [(𝑉_kp≻(𝑔_keep≻(m_f, m_h)), 𝑉_adj≻(𝑔_adjust≻(m_f, m_h)))[d]]
+
+  5  Evaluation
+     in: 𝑑                              out: 𝑑
+     ───────────────────────────────────────────────────────────────────
+     rule: 𝑑 : ℝ₊₊ × ℝ₊₊ → {keep, adjust}
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  35  d = argmax_{d}(V_kp[>], V_adj[>])  :: [id=choice]
+
+Definitions referenced
+  𝑔≻    house_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback:keep ====
+STAGE house_choice / POLICY BUILDER policy / Pullback:keep
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_kp≻  : ℝ₊₊ × ℝ₊₊ → ℝ
+       ──────────────────────
+  out  𝑉_kp≻ ∘ 𝑔_keep≻
+              : ℝ₊₊ × ℝ₊₊ → ℝ
+
+Where
+  𝑔_keep≻  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,  𝑔_keep≻(m_f, m_h) = 𝑔≻(m_f, m_h, keep)
+
+Rule
+  (𝑉_kp≻ ∘ 𝑔_keep≻)(m_f, m_h) = 𝑉_kp≻(𝑔_keep≻(m_f, m_h))
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  18  w_kp = m_f         :: [id=cash_on_hand]
+  19  h_kp = m_h         :: [id=housing_kept]
+  22  w_adj = m_f + m_h  :: [id=total_resources]
+
+Definitions referenced
+  𝑔≻    house_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Pullback:adjust ====
+STAGE house_choice / POLICY BUILDER policy / Pullback:adjust
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_adj≻  : ℝ₊₊ → ℝ
+       ───────────────────────
+  out  𝑉_adj≻ ∘ 𝑔_adjust≻
+               : ℝ₊₊ × ℝ₊₊ → ℝ
+
+Where
+  𝑔_adjust≻  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊,  𝑔_adjust≻(m_f, m_h) = 𝑔≻(m_f, m_h, adjust)
+
+Rule
+  (𝑉_adj≻ ∘ 𝑔_adjust≻)(m_f, m_h) = 𝑉_adj≻(𝑔_adjust≻(m_f, m_h))
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  18  w_kp = m_f         :: [id=cash_on_hand]
+  19  h_kp = m_h         :: [id=housing_kept]
+  22  w_adj = m_f + m_h  :: [id=total_resources]
+
+Definitions referenced
+  𝑔≻    house_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / choice:Aggregation ====
+STAGE house_choice / POLICY BUILDER policy / choice:Aggregation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉_kp≻ ∘ 𝑔_keep≻
+         : ℝ₊₊ × ℝ₊₊ → ℝ
+       𝑉_adj≻ ∘ 𝑔_adjust≻
+         : ℝ₊₊ × ℝ₊₊ → ℝ
+       ──────────────────────────────────────────────────────────────
+  out  (m_f, m_h, d)
+         ↦ (𝑉_kp≻(𝑔_keep≻(m_f, m_h)), 𝑉_adj≻(𝑔_adjust≻(m_f, m_h)))[d]
+         : ℝ₊₊ × ℝ₊₊ × {keep, adjust} → ℝ
+
+Where
+  𝑔_keep≻    : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,  𝑔_keep≻(m_f, m_h) = 𝑔≻(m_f, m_h, keep)
+  𝑔_adjust≻  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊,  𝑔_adjust≻(m_f, m_h) = 𝑔≻(m_f, m_h, adjust)
+
+Rule
+  (m_f, m_h, d) ↦ (𝑉_kp≻(𝑔_keep≻(m_f, m_h)), 𝑉_adj≻(𝑔_adjust≻(m_f, m_h)))[d]
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  35  d = argmax_{d}(V_kp[>], V_adj[>])  :: [id=choice]
+
+Definitions referenced
+  𝑔≻    house_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / choice:Argmax ====
+STAGE house_choice / POLICY BUILDER policy / choice:Argmax
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   (m_f, m_h, d)
+         ↦ (𝑉_kp≻(𝑔_keep≻(m_f, m_h)), 𝑉_adj≻(𝑔_adjust≻(m_f, m_h)))[d]
+          : ℝ₊₊ × ℝ₊₊ × {keep, adjust} → ℝ
+       ──────────────────────────────────────────────────────────────
+  out  𝑑  : ℝ₊₊ × ℝ₊₊ → {keep, adjust}
+
+Where
+  𝑔_keep≻    : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,  𝑔_keep≻(m_f, m_h) = 𝑔≻(m_f, m_h, keep)
+  𝑔_adjust≻  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊,  𝑔_adjust≻(m_f, m_h) = 𝑔≻(m_f, m_h, adjust)
+
+Rule
+  𝑑(m_f, m_h)
+    ∈ argmax_{d ∈ {keep, adjust}}
+        [(𝑉_kp≻(𝑔_keep≻(m_f, m_h)), 𝑉_adj≻(𝑔_adjust≻(m_f, m_h)))[d]]
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  35  d = argmax_{d}(V_kp[>], V_adj[>])  :: [id=choice]
+
+Definitions referenced
+  𝑔≻    house_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== backward policy / Evaluation ====
+STAGE house_choice / POLICY BUILDER policy / Evaluation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑑  : ℝ₊₊ × ℝ₊₊ → {keep, adjust}
+       ───────────────────────────────
+  out  𝑑  : ℝ₊₊ × ℝ₊₊ → {keep, adjust}
+
+Where
+  𝑔_keep≻    : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,  𝑔_keep≻(m_f, m_h) = 𝑔≻(m_f, m_h, keep)
+  𝑔_adjust≻  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊,  𝑔_adjust≻(m_f, m_h) = 𝑔≻(m_f, m_h, adjust)
+
+Rule
+  𝑑(m_f, m_h)
+    ∈ argmax_{d ∈ {keep, adjust}}
+        [(𝑉_kp≻(𝑔_keep≻(m_f, m_h)), 𝑉_adj≻(𝑔_adjust≻(m_f, m_h)))[d]]
+  𝑑 : ℝ₊₊ × ℝ₊₊ → {keep, adjust}
+──────────────────────────────────────────────────────────────────────────────
+Definitions referenced
+  𝑔≻    house_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn ====
+STAGE house_choice / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on ℝ₊ × ℝ₊₊
+       ────────────────────────────────────────────
+  out  μ   : finite measure on ℝ₊₊ × ℝ₊₊
+
+Operations
+  1  DistributionExtension:η
+     in: μ≺                             out: μ≺⊗P_η
+     ──────────────────────────────────────────────
+     rule: μ≺⊗P_η(B)
+             = ∫_{(y_f, y_h) ∈ ℝ₊ × ℝ₊₊} [P_η({η ∈ ℝ₊₊ | (y_f, y_h, η) ∈ B})]
+               μ≺(d(y_f, y_h))
+
+  2  Pushforward
+     in: (1)                            out: μ
+     ──────────────────────────────────────────────
+     rule: μ(B) =
+             μ≺⊗P_η({y_f≺, y_h≺, η ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊ | 𝑔≺(y_f≺, y_h≺, η) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  12  m_f = (1 + r)*y_f + W*η  :: [id=financial_assets]
+  13  m_h = y_h                :: [id=housing]
+
+Definitions referenced
+  η     house_choice:distribution:η
+  P_η   house_choice:distribution:η
+  𝑔≺    house_choice:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / DistributionExtension:η ====
+STAGE house_choice / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)
+  / DistributionExtension:η
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺  : finite measure on ℝ₊ × ℝ₊₊
+       ──────────────────────────────────────
+  out  μ≺⊗P_η
+           : finite measure on ℝ₊ × ℝ₊₊ × ℝ₊₊
+
+Rule
+  μ≺⊗P_η(B)
+    = ∫_{(y_f, y_h) ∈ ℝ₊ × ℝ₊₊} [P_η({η ∈ ℝ₊₊ | (y_f, y_h, η) ∈ B})]
+      μ≺(d(y_f, y_h))
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  9  η ~ Mixture((0.5, η_lo), (0.5, η_hi))
+
+Definitions referenced
+  η     house_choice:distribution:η
+  P_η   house_choice:distribution:η
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward arvl_to_dcsn / Pushforward ====
+STAGE house_choice / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ≺⊗P_η
+          : finite measure on ℝ₊ × ℝ₊₊ × ℝ₊₊
+       ─────────────────────────────────────
+  out  μ  : finite measure on ℝ₊₊ × ℝ₊₊
+
+Rule
+  μ(B) = μ≺⊗P_η({y_f≺, y_h≺, η ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊ | 𝑔≺(y_f≺, y_h≺, η) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  12  m_f = (1 + r)*y_f + W*η  :: [id=financial_assets]
+  13  m_h = y_h                :: [id=housing]
+
+Definitions referenced
+  η     house_choice:distribution:η
+  P_η   house_choice:distribution:η
+  𝑔≺    house_choice:g:arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn ====
+STAGE house_choice / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ          : finite measure on ℝ₊₊ × ℝ₊₊
+       ────────────────────────────────────────────────────────
+  out  μ_keep≻    : finite measure on ℝ₊₊ × ℝ₊₊
+       μ_adjust≻  : finite measure on ℝ₊₊
+
+At
+  𝑑  : ℝ₊₊ × ℝ₊₊ → {keep, adjust}
+
+Where
+  𝑔_keep≻    : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,  𝑔_keep≻(m_f, m_h) = 𝑔≻(m_f, m_h, keep)
+  𝑔_adjust≻  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊,  𝑔_adjust≻(m_f, m_h) = 𝑔≻(m_f, m_h, adjust)
+
+Operations
+  1  Pushforward
+     in: μ                              out: μ_keep≻, μ_adjust≻
+     ──────────────────────────────────────────────────────────
+     rule: μ_keep≻(B)
+             = μ({m_f, m_h ∈ ℝ₊₊ × ℝ₊₊ |
+                   𝑑(m_f, m_h) = keep ∧ 𝑔_keep≻(m_f, m_h) ∈ B})
+           μ_adjust≻(B)
+             = μ({m_f, m_h ∈ ℝ₊₊ × ℝ₊₊ |
+                   𝑑(m_f, m_h) = adjust ∧ 𝑔_adjust≻(m_f, m_h) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  18  w_kp = m_f         :: [id=cash_on_hand]
+  19  h_kp = m_h         :: [id=housing_kept]
+  22  w_adj = m_f + m_h  :: [id=total_resources]
+
+Definitions referenced
+  𝑔≻    house_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== forward dcsn_to_cntn / Pushforward ====
+STAGE house_choice / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ          : finite measure on ℝ₊₊ × ℝ₊₊
+       ────────────────────────────────────────
+  out  μ_keep≻    : finite measure on ℝ₊₊ × ℝ₊₊
+       μ_adjust≻  : finite measure on ℝ₊₊
+
+Where
+  𝑔_keep≻    : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,  𝑔_keep≻(m_f, m_h) = 𝑔≻(m_f, m_h, keep)
+  𝑔_adjust≻  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊,  𝑔_adjust≻(m_f, m_h) = 𝑔≻(m_f, m_h, adjust)
+
+Rule
+  μ_keep≻(B)
+    = μ({m_f, m_h ∈ ℝ₊₊ × ℝ₊₊ | 𝑑(m_f, m_h) = keep ∧ 𝑔_keep≻(m_f, m_h) ∈ B})
+  μ_adjust≻(B) =
+    μ({m_f, m_h ∈ ℝ₊₊ × ℝ₊₊ | 𝑑(m_f, m_h) = adjust ∧ 𝑔_adjust≻(m_f, m_h) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  18  w_kp = m_f         :: [id=cash_on_hand]
+  19  h_kp = m_h         :: [id=housing_kept]
+  22  w_adj = m_f + m_h  :: [id=total_resources]
+
+Definitions referenced
+  𝑔≻    house_choice:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== house_choice:parameter:r ====
+STAGE house_choice / PARAMETER r
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  r  ∈ ℝ₊
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  3  r    : ℝ₊  :: ["rate of return on financial assets"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== house_choice:parameter:W ====
+STAGE house_choice / PARAMETER W
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  W  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  4  W    : ℝ₊₊  :: ["earnings at the age of the period, before the shock"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== house_choice:parameter:η_lo ====
+STAGE house_choice / PARAMETER η_lo
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  η_lo  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  5  η_lo : ℝ₊₊  :: ["the low earnings shock"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== house_choice:parameter:η_hi ====
+STAGE house_choice / PARAMETER η_hi
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  η_hi  ∈ ℝ₊₊
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  6  η_hi : ℝ₊₊  :: ["the high earnings shock"]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== house_choice:distribution:η ====
+STAGE house_choice / DISTRIBUTION η
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  η  ~ Mixture((0.5, η_lo), (0.5, η_hi))
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  9  η ~ Mixture((0.5, η_lo), (0.5, η_hi))
+
+Definitions referenced
+  η_lo  house_choice:parameter:η_lo
+  η_hi  house_choice:parameter:η_hi
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.financial_assets ====
+STAGE house_choice / FORWARD BLOCK arvl_to_dcsn / financial_assets
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  house_choice.bl
+  12  m_f = (1 + r)*y_f + W*η  :: [id=financial_assets]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== arvl_to_dcsn.housing ====
+STAGE house_choice / FORWARD BLOCK arvl_to_dcsn / housing
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  house_choice.bl
+  13  m_h = y_h  :: [id=housing]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.keep.cash_on_hand ====
+STAGE house_choice / FORWARD BLOCK dcsn_to_cntn / keep.cash_on_hand
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  house_choice.bl
+  18  w_kp = m_f  :: [id=cash_on_hand]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.keep.housing_kept ====
+STAGE house_choice / FORWARD BLOCK dcsn_to_cntn / keep.housing_kept
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  house_choice.bl
+  19  h_kp = m_h  :: [id=housing_kept]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_cntn.adjust.total_resources ====
+STAGE house_choice / FORWARD BLOCK dcsn_to_cntn / adjust.total_resources
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  house_choice.bl
+  22  w_adj = m_f + m_h  :: [id=total_resources]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== cntn_to_dcsn.choice_value ====
+STAGE house_choice / BACKWARD BLOCK cntn_to_dcsn / choice_value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉(m_f, m_h) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  27  V = (V_kp[>], V_adj[>])[d]  :: [id=choice_value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== dcsn_to_arvl.value ====
+STAGE house_choice / BACKWARD BLOCK dcsn_to_arvl / value
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Conditions
+  𝑉≺(y_f, y_h) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  31  V[<] = E_{η}(V)  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== policy.choice ====
+STAGE house_choice / POLICY BLOCK policy / choice
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Source  house_choice.bl
+  35  d = argmax_{d}(V_kp[>], V_adj[>])  :: [id=choice]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== house_choice:g:arvl_to_dcsn ====
+STAGE house_choice / LAW OF MOTION arvl_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≺  : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
+        (y_f, y_h, η) ↦ ((1 + r) · y_f + W · η, y_h)
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  12  m_f = (1 + r)*y_f + W*η  :: [id=financial_assets]
+  13  m_h = y_h                :: [id=housing]
+
+Definitions referenced
+  r     house_choice:parameter:r
+  W     house_choice:parameter:W
+  η     house_choice:distribution:η
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== house_choice:g:dcsn_to_cntn ====
+STAGE house_choice / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : ℝ₊₊ × ℝ₊₊ × {keep, adjust} → (ℝ₊₊ × ℝ₊₊, ℝ₊₊)[d],
+        (m_f, m_h, d) ↦ ((m_f, m_h), m_f + m_h)[d]
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  18  w_kp = m_f         :: [id=cash_on_hand]
+  19  h_kp = m_h         :: [id=housing_kept]
+  22  w_adj = m_f + m_h  :: [id=total_resources]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== house_choice:G:cntn_to_dcsn ====
+STAGE house_choice / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : ℝ × ℝ × ℝ₊₊ × ℝ₊₊ × {keep, adjust} → ℝ,
+        (V_kp≻, V_adj≻, m_f, m_h, d) ↦ (V_kp≻, V_adj≻)[d]
+
+Conditions
+  𝑉(m_f, m_h) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  27  V = (V_kp[>], V_adj[>])[d]  :: [id=choice_value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== house_choice:G:dcsn_to_arvl ====
+STAGE house_choice / VALUE AGGREGATOR dcsn_to_arvl
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≺  : ℝ × ℝ₊ × ℝ₊₊ → ℝ,  (w, y_f, y_h) ↦ w
+
+Conditions
+  𝑉≺(y_f, y_h) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  31  V[<] = E_{η}(V)  :: [id=value]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==== house_choice:G:policy ====
+STAGE house_choice / VALUE AGGREGATOR policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : ℝ × ℝ × ℝ₊₊ × ℝ₊₊ × {keep, adjust} → ℝ,
+        (V_kp≻, V_adj≻, m_f, m_h, d) ↦ (V_kp≻, V_adj≻)[d]
+──────────────────────────────────────────────────────────────────────────────
+Source  house_choice.bl
+  35  d = argmax_{d}(V_kp[>], V_adj[>])  :: [id=choice]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

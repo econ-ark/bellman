@@ -10,7 +10,7 @@
 ν_p0 : ℝ     :: ["constant of the plan switching cost (equation 5)"]
 ν_p1 : ℝ     :: ["age coefficient of the plan switching cost"]
 ν_p2 : ℝ     :: ["squared-age coefficient of the plan switching cost"]
-t_0  : ℝ₊₊   :: ["enrolment age; this stage occurs only in the period whose age is t_0"]
+t_0  : ℝ₊₊   :: ["fixed enrolment age for this once-only choice; the trellis selects its occurrence"]
 
 𝑢p(x : ℝ₊₊) := ψ + exp(ν_p0 + ν_p1*x + ν_p2*x^2)                  :: [id=plan_cost, "the utility cost of leaving the default DB plan, equation 5"]
 𝑙𝑠𝑢𝑚2(x : ℝ, y : ℝ, σ : ℝ₊₊) := σ*log(exp(x/σ) + exp(y/σ))        :: [id=logsum, "the expected maximum of two alternatives under type I extreme value taste shocks of scale σ"]
