@@ -1,6 +1,7 @@
 # Project Bellman
 
-Project Bellman provides a declarative, modular and expressive language system for recursive dynamic programming, in economics and in other fields. 
+Project Bellman provides a modular and highly expressive language system and AI-interface for recursive dynamic programming in economics and finance. 
+
 ## Install
 
 Python 3.12 or later and git are required.
