@@ -646,16 +646,27 @@ def _installed_versions() -> dict:
     """Python's major and minor version under `python`, and the installed
     version of the distribution `bellman` and of each distribution its
     metadata requires outside an extra, by name, as `importlib.metadata`
-    reads them. A distribution that is not installed raises
-    `PackageNotFoundError`."""
-    names = ["bellman"]
+    reads them. A requirement that carries a marker of the system, as
+    `pygraphviz` does, holds on some systems alone: where its distribution
+    is not installed, its version is None. Any other distribution that is
+    not installed raises `PackageNotFoundError`."""
+    names, under_a_marker = ["bellman"], set()
     for requirement in importlib.metadata.requires("bellman") or []:
         written, _, marker = requirement.partition(";")
-        if not _EXTRA.search(marker):
-            names.append(_DISTRIBUTION.match(written.strip())[0])
+        if _EXTRA.search(marker):
+            continue
+        name = _DISTRIBUTION.match(written.strip())[0]
+        names.append(name)
+        if marker.strip():
+            under_a_marker.add(name)
     versions = {"python": f"{sys.version_info.major}.{sys.version_info.minor}"}
     for name in names:
-        versions[name] = importlib.metadata.version(name)
+        try:
+            versions[name] = importlib.metadata.version(name)
+        except importlib.metadata.PackageNotFoundError:
+            if name not in under_a_marker:
+                raise
+            versions[name] = None
     return versions
 
 

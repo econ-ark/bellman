@@ -1,8 +1,0 @@
-{
-  "name": "bellman-graphviz-layout",
-  "private": true,
-  "description": "The WebAssembly build of Graphviz that lays the package's drawings out where Graphviz's dot is not installed (bellman/display/graphviz_layout.py); `npm install` in this folder writes node_modules/, which git ignores.",
-  "dependencies": {
-    "@viz-js/viz": "3.25.0"
-  }
-}

@@ -798,7 +798,9 @@ def test_the_cons_port_tool_builds_its_step_by_one_call_of_egm_on_two_records_an
         for name, value in list(vars(module).items()):
             if value is original:
                 monkeypatch.setattr(module, name, counted)
-    tool.stage_operator(stage)
+    # the complete mapping of the fields that the stage takes in at its
+    # continuation perch: the value zero after the terminal decision
+    tool.stage_operator(stage, {"V[>]": tool.zero_value})
     assert len(calls) == 1, calls
     policy, decision, savings, evaluation = list(calls[0].arguments.values())[:4]
     stops = stage_objects(stage)
@@ -810,8 +812,8 @@ def test_the_cons_port_tool_builds_its_step_by_one_call_of_egm_on_two_records_an
         pieces=tuple(piece for piece in kernels.pieces if piece.kind != "Derivative")
     )
     assert sorted(functions_of(decision, stops)) == sorted(functions_of(operators, stops))
-    numpy.testing.assert_array_equal(savings, tool.savings_grid(stage))
-    numpy.testing.assert_array_equal(evaluation, tool.evaluation_grid(stage))
+    numpy.testing.assert_array_equal(savings, tool.savings_grid(stage.builder.policy.kernels()))
+    numpy.testing.assert_array_equal(evaluation, tool.evaluation_grid(kernels))
 
 
 def step_composed_from_the_kernels(stage, tool, continuation):
@@ -823,7 +825,8 @@ def step_composed_from_the_kernels(stage, tool, continuation):
     (1e-10, m_d - 1e-10); savings follow from the law of motion, held to
     the savings grid; the value from the aggregation, and the marginal value
     c^(-ρ)."""
-    resources, savings = tool.evaluation_grid(stage), tool.savings_grid(stage)
+    resources = tool.evaluation_grid(stage.dcsn.builder.bwd.kernels())
+    savings = tool.savings_grid(stage.builder.policy.kernels())
     bound = {
         key: (
             operation(stage, builder, key).compile_kernel(),
@@ -867,11 +870,11 @@ def test_the_step_of_the_cons_port_tool_reads_no_stage_and_gives_the_step_of_its
     adapter, tool = cons_port_tool.adapter, cons_port_tool.tool
     assert Path(adapter.__file__).resolve().is_relative_to(ROOT.resolve()), adapter.__file__
     stage = cons_port_stages[binding]
-    operator = tool.stage_operator(stage)
     # the continuation's grid: twice the points of the savings grid, up to
     # its upper bound
     grid = tool.expmult_grid(stage.settings["a_max"].value, 2 * stage.settings["n_a"].value)
     continuation = tool.terminal_value(stage, grid)
+    operator = tool.stage_operator(stage, {"V[>]": continuation})
     before = step_composed_from_the_kernels(stage, tool, continuation)
 
     def refuse(self, name):

@@ -1058,11 +1058,12 @@ def test_a_field_listed_without_a_set_or_a_role_word_has_no_span_of_either():
     assert not {"cntn_to_dcsn.in.c.domain", "cntn_to_dcsn.in.c.role"} & set(spans)
 
 
-def test_the_span_table_of_every_stage_file_lists_its_items_then_header_components_on_one_line():
+def test_the_span_table_of_every_stage_file_lists_its_items_then_the_components_of_its_headers():
     """The span table of each stage file of the applications lists its
     authored items in their order, then entries that are each a side of a
-    header, a field, a set, a role word or a perch word, each on one line
-    and covering the text written for it."""
+    header, a field, a set, a role word, the word `!cnst` of a constant or a
+    perch word, each covering the text written for it and each but a side on
+    one line."""
     roles = {"!" + word for word in ROLE_WORD.values()}
     assert len(STAGE_FILES) > 30
     for path in STAGE_FILES:
@@ -1073,14 +1074,19 @@ def test_the_span_table_of_every_stage_file_lists_its_items_then_header_componen
         for address in list(spans)[len(items) :]:
             parts = address.split(".")
             span = spans[address]
-            assert span.line == span.end_line, (path, address)
             text_written = text_at(text, span)
             assert {"in", "out"} & set(parts), (path, address)
+            # a stage file may write a side of a header over several lines,
+            # as tenure.bl of the durables application does
+            side = parts[-1] in ("in", "out")
+            assert side or span.line == span.end_line, (path, address)
             if parts[-1] == "domain":
                 assert text_written and not text_written.startswith("!"), (path, address)
             elif parts[-1] == "role":
                 assert text_written in roles, (path, address)
+            elif parts[-1] == "constancy":
+                assert text_written == "!cnst", (path, address)
             elif parts[-1] == "perch":
                 assert text_written in {"!arvl", "!dcsn", "!cntn"}, (path, address)
-            elif parts[-1] not in ("in", "out"):
+            elif not side:
                 assert text_written.startswith(parts[-1]), (path, address)

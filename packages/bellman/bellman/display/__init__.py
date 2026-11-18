@@ -10,9 +10,8 @@ says, and this folder sets it.
   is set by `bellman.syntax.layout`.
 - `drawing`: the drawing of one graph in Graphviz's DOT language, from the
   names the stage gives its wires, which the piece's `diagram()` supplies.
-- `graphviz_layout`: the layout of a drawing as SVG, by Graphviz's `dot` or,
-  without it, by the WebAssembly build of Graphviz that Node runs through the
-  script `graphviz_layout.mjs` beside it.
+  `Drawing.svg()` lays the drawing out as SVG with the Graphviz libraries
+  inside the Python package `pygraphviz`.
 - `printed_records`: the records that print their own lines: the fields, the
   diagnostics and the methods, and the listings, signatures, obligations
   and tables of rows the pieces answer.

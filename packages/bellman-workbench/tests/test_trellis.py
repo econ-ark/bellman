@@ -45,6 +45,7 @@ from __future__ import annotations
 
 import dataclasses
 import hashlib
+import importlib.metadata
 import importlib.util
 import json
 import os
@@ -2143,6 +2144,27 @@ def test_an_entry_whose_folder_its_group_can_write_is_not_read(pension_folder):
     assert entry.is_file()
     entry.parent.chmod(0o700)
     assert isinstance(trellis.read_binding(shown.syntactic), trellis.TrellisBinding)
+
+
+def test_a_requirement_under_a_marker_that_is_not_installed_has_the_version_none(monkeypatch):
+    """`_installed_versions` answers None as the version of a distribution
+    that `bellman` requires under a marker of the system and that is not
+    installed, as `pygraphviz` on a system that its marker does not name. A
+    requirement inside an extra is left out, and a distribution required
+    with no marker that is not installed raises `PackageNotFoundError`."""
+    lines = [
+        "numpy==2.3.5",
+        "no-such-distribution==1.0; sys_platform == 'no-such-system'",
+        'coverage==7.17.3; extra == "dev"',
+    ]
+    monkeypatch.setattr(importlib.metadata, "requires", lambda name: lines)
+    versions = trellis._installed_versions()
+    assert versions["no-such-distribution"] is None
+    assert versions["numpy"] == importlib.metadata.version("numpy")
+    assert "coverage" not in versions
+    lines.append("another-missing-distribution==1.0")
+    with pytest.raises(importlib.metadata.PackageNotFoundError):
+        trellis._installed_versions()
 
 
 def test_the_code_version_digests_the_sources_of_both_packages_and_the_versions(tmp_path):

@@ -6,10 +6,10 @@ periods of one branching stage placed by hand."""
 
 import copy
 import hashlib
-import importlib.util
 from collections import Counter
 
 import pytest
+import yaml
 from application_files import (
     BRANCHING_EXAMPLES_FOLDER,
     COPIED_FILES_FOLDER,
@@ -59,18 +59,6 @@ def arrow(join):
     return f"{join['from'][0]}:{join['from'][1]} → {join['to'][0]}:{join['to'][1]}"
 
 
-def wage_schedule_writer():
-    """The function of the durables application that writes the wage schedule
-    of each period into a recipe, read from the code folder of the
-    application."""
-    spec = importlib.util.spec_from_file_location(
-        "durables_wage_schedule", DURABLES.parent / "code/wage_schedule.py"
-    )
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module.write_wage_schedule
-
-
 # the joins within each period other than the terminal period, in each
 # registry: the branches of tenure and of house_choice join the decision
 # states of the stages they enter, which declare no arrival perch
@@ -102,7 +90,7 @@ HOUSING_WITHIN = [
 # each pair of periods
 REGISTRIES = [
     pytest.param(
-        "durables_trellis_with_wage_schedule",
+        "durables_trellis_configured",
         dict(
             n=51,
             occurrences=154,
@@ -268,11 +256,10 @@ def whole_trellis(key):
 
 
 @pytest.fixture(scope="module")
-def durables_trellis_with_wage_schedule():
-    """The trellis of the durables application of 51 periods, the wage schedule
-    written into its recipe between load_recipe and the verbs, then
-    calibrated, methodized and configured."""
-    syntactic = wage_schedule_writer()(load_recipe(DURABLES, "spec.yml"))
+def durables_trellis_configured():
+    """The trellis of the durables application of 51 periods, its recipe
+    loaded, then elaborated, calibrated, methodized and configured."""
+    syntactic = load_recipe(DURABLES, "spec.yml")
     return configure_trellis(
         methodize_trellis(calibrate_trellis(elaborate_trellis(syntactic), syntactic), syntactic),
         syntactic,
@@ -454,15 +441,19 @@ def test_each_continuation_state_of_a_registry_joins_exactly_one_arrival_field(
 
 
 @pytest.mark.complete_set
-def test_the_durables_recipe_is_refused_without_its_wage_schedule_and_elaborates_with_it(
-    durables_trellis_with_wage_schedule,
-):
-    """assemble_trellis refuses the recipe of the durables application without
-    the wage schedule that its code writes, naming the income level Y, and
-    with the schedule written the recipe gives its 51 periods."""
-    with pytest.raises(ValueError, match="'Y'"):
-        assemble_trellis(DURABLES, "spec.yml")
-    assert len(durables_trellis_with_wage_schedule["periods"]) == 51
+def test_the_durables_recipe_assembles_with_the_income_tables_of_its_calibration():
+    """assemble_trellis gives the recipe of the durables application its 51
+    periods, and each tenure occurrence binds the income level Y and the
+    retirement income y_R of the calibration file `wage_schedule.yml`."""
+    tables = yaml.safe_load(
+        (DURABLES / "calibration/wage_schedule.yml").read_text(encoding="utf-8")
+    )["calibration"]
+    periods = assemble_trellis(DURABLES, "spec.yml")["periods"]
+    assert len(periods) == 51
+    assert {
+        (period["stages"]["tenure"].par["Y"].value, period["stages"]["tenure"].par["y_R"].value)
+        for period in periods
+    } == {(tuple(tables["Y"]), tuple(tables["y_R"]))}
 
 
 # the value of the taste for children, which the paper gives as a distribution

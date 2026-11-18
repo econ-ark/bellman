@@ -2,6 +2,11 @@
 
 Project Bellman provides a modular and highly expressive language system and AI-interface for recursive dynamic programming in economics and finance. 
 
+The project is in pre-release. The core of the language and of the package is in place, 
+and the syntax and the interfaces may still change between versions, with no promise of 
+backward compatibility. The documentation and the applications are under active development. 
+Feedback and contributions are welcome.
+
 ## Install
 
 Python 3.12 or later and git are required.
@@ -13,7 +18,8 @@ cd bellman
 source venv/bin/activate
 ```
 
-`install-dev.sh` creates `venv/`, installs `requirements.txt`, and installs `bellman`, `asva` and `bellman-workbench` in editable mode. If `python3` is older than 3.12, run the script's commands by hand with a newer interpreter, for example `python3.13 -m venv venv`.
+`install-dev.sh` creates `venv/`, installs `requirements.txt`, and installs 
+`bellman` and `bellman-workbench` in editable mode.
 
 To check the install:
 
@@ -23,7 +29,10 @@ python -m bellman applications/cons-port/declaration/stages/cons/cons.bl
 
 This prints the consumption stage of the portfolio–consumption model.
 
-Drawings use Graphviz's `dot` if it is installed (`brew install graphviz` on macOS). Otherwise they use Node.js after `npm install` in `packages/bellman/`. Without either, everything except drawing works.
+<!-- AAS to AI: can we do this wihtout an extra step? these are drawings in the denotatiosn I assume? any other way to frame this? also "Node.js after `npm ci`" makes no sense to me. -->
+
+
+### Installing workbench 
 
 For the Workbench and the desktop application, see [Install Bellman Workbench](docs/overview/00-install.md).
 
@@ -40,7 +49,7 @@ For the Workbench and the desktop application, see [Install Bellman Workbench](d
 | `docs/` | The documentation site: the language reference, the API, the Bellman calculus, the examples, the concept wiki and the changelog. |
 | [`tutorials/`](tutorials/README.md) | Jupyter notebook lessons; the folder's README gives the reading order. |
 | [`editor/`](editor/README.md) | A VS Code and Cursor extension for stage files. |
-| `tests/` | Repository-level tests. |
+| [`tests/`](tests/README.md) | Repository-level tests, and the instructions for running every test. |
 
 ## A first model
 
@@ -51,14 +60,6 @@ python -m ipykernel install --user --name bellman-ddsl
 ```
 
 `bellman` does not solve or simulate a model itself. An application solves its model with its own numerical code, which calls the functions the package compiles and the routines of `asva`. Simulation is not implemented yet.
-
-## Tests
-
-```bash
-pytest packages/bellman -n auto               # the default set: every case not marked complete_set
-pytest packages/bellman -n auto --complete    # the complete set: every case, run before a merge
-pytest tests applications tutorials packages/asva/tests -n auto
-```
 
 ## Documentation
 

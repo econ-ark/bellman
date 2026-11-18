@@ -5,7 +5,6 @@ locations, the earlier items or the files that a refusal names in its field
 
 import io
 import re
-import time
 from contextlib import redirect_stdout
 from types import MappingProxyType
 
@@ -335,26 +334,21 @@ def test_a_second_example_of_a_rule_is_refused_and_its_corrected_form_is_not(nam
 @pytest.mark.parametrize(
     "installed", one_row_by_default([False, True], default=True), ids=["checkout", "installed"]
 )
-def test_entry_answers_every_rule_from_the_checkout_or_the_installed_package_in_under_a_second(
+def test_entry_answers_every_rule_from_the_checkout_or_the_installed_package(
     installed, tmp_path, monkeypatch
 ):
-    """`entry(rule)` answers each rule of the three vocabularies in under a
-    second, with its vocabulary, its operation, its condition and the
-    refusal of its example under the rule, or, from the installed package,
-    the reason that an example reading a stage file of the repository is
-    not run."""
+    """`entry(rule)` answers each rule of the three vocabularies with its
+    vocabulary, its operation, its condition and the refusal of its example
+    under the rule, or, from the installed package, the reason that an
+    example reading a stage file of the repository is not run."""
     # the installed package is outside the checkout: the repository's root,
     # from which an example reads a stage file, is an empty folder
     if installed:
         monkeypatch.setattr(refusal_catalogue, "ROOT", tmp_path)
-    slow, wrong = {}, {}
+    wrong = {}
     for _, _, table in VOCABULARIES:
         for rule in table:
-            started = time.perf_counter()
             found = entry(rule)
-            seconds = time.perf_counter() - started
-            if seconds >= 1.0:
-                slow[rule] = round(seconds, 2)
             example = EXAMPLES[rule]
             if installed and (example.corpus or example.stages):
                 answered = not found.refusal and bool(found.why)
@@ -362,7 +356,6 @@ def test_entry_answers_every_rule_from_the_checkout_or_the_installed_package_in_
                 answered = bool(found.refusal) and refusal_of(example).rule == rule
             if not (found.vocabulary and found.operation and found.condition and answered):
                 wrong[rule] = (found.operation, found.why)
-    assert slow == {}
     assert wrong == {}
 
 

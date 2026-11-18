@@ -6,11 +6,14 @@
 # packages of the repository, packages/bellman, packages/asva and
 # packages/bellman-workbench.
 
-# bellman (packages/bellman)
+# bellman (packages/bellman); pygraphviz holds the Graphviz libraries that
+# lay out a drawing, and is installed on the systems for which it publishes
+# an install file, as packages/bellman/pyproject.toml has it
 discopy==1.2.2
 jsonschema==4.26.0
 lark==1.3.1
 numpy==2.3.5
+pygraphviz==2.0.4; sys_platform == 'darwin' or (sys_platform == 'linux' and (platform_machine == 'x86_64' or platform_machine == 'aarch64')) or (sys_platform == 'win32' and platform_machine == 'AMD64')
 PyYAML==6.0.3
 
 # asva (packages/asva): its endogenous grid factories are compiled by Numba,

@@ -461,13 +461,17 @@ def test_a_compiled_kernel_does_not_check_the_declared_shape_of_a_product_contro
 
 # the headers and the value lines of the blocks cntn_to_dcsn and dcsn_to_arvl
 # of the buffer-stock stage file
-DECISION_VALUE_HEADER = "(V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn]"
+DECISION_VALUE_HEADER = (
+    "(V[>] : ℝ @ !vlu, L : (-inf, 0] @ !vlu @ !cnst, c) : !cntn -> (V : ℝ @ !vlu, L) : !dcsn]"
+)
 
 
 DECISION_VALUE_LINE = "    V = 𝑢(c) + β*V[>]               :: [id=value]\n"
 
 
-ARRIVAL_VALUE_HEADER = "(V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl]"
+ARRIVAL_VALUE_HEADER = (
+    "(V, L) : !dcsn -> (V[<] : ℝ @ !vlu, L[<] : (-inf, 0] @ !vlu @ !cnst) : !arvl]"
+)
 
 
 ARRIVAL_VALUE_LINE = "    V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)     :: [id=value]\n"
@@ -475,20 +479,25 @@ ARRIVAL_VALUE_LINE = "    V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)     :: [id=value]
 
 def aggregation_with_a_second_field(line, declarations="b : ℝ\n"):
     """The aggregation of the backward decision builder of the buffer-stock
-    stage with a second value field L: `line` writes L in the block
-    cntn_to_dcsn, and the block dcsn_to_arvl writes L[<] = E_{ψ,ξ}(L). The
-    stage adds `declarations`, the parameter b : ℝ by default, and is
-    calibrated at b = -1."""
+    stage with a second value field Θ after the value and before the bound
+    L that the stage keeps: `line` writes Θ in the block cntn_to_dcsn, and
+    the block dcsn_to_arvl writes Θ[<] = E_{ψ,ξ}(Θ). The stage adds
+    `declarations`, the parameter b : ℝ by default, and is calibrated at
+    b = -1."""
     text = buffer_stock_text_with_changes(
         (BUFFER_STOCK_XA_DEFINITION, BUFFER_STOCK_XA_DEFINITION + declarations),
         (
             DECISION_VALUE_HEADER,
-            "(V[>] : ℝ @ !vlu, L[>] : ℝ @ !vlu, c) : !cntn"
-            " -> (V : ℝ @ !vlu, L : ℝ @ !vlu) : !dcsn]",
+            "(V[>] : ℝ @ !vlu, Θ[>] : ℝ @ !vlu, L : (-inf, 0] @ !vlu @ !cnst, c) : !cntn"
+            " -> (V : ℝ @ !vlu, Θ : ℝ @ !vlu, L) : !dcsn]",
         ),
         (DECISION_VALUE_LINE, f"{DECISION_VALUE_LINE}    {line}\n"),
-        (ARRIVAL_VALUE_HEADER, "(V, L) : !dcsn -> (V[<] : ℝ @ !vlu, L[<] : ℝ @ !vlu) : !arvl]"),
-        (ARRIVAL_VALUE_LINE, f"{ARRIVAL_VALUE_LINE}    L[<] = E_{{ψ,ξ}}(L)\n"),
+        (
+            ARRIVAL_VALUE_HEADER,
+            "(V, Θ, L) : !dcsn"
+            " -> (V[<] : ℝ @ !vlu, Θ[<] : ℝ @ !vlu, L[<] : (-inf, 0] @ !vlu @ !cnst) : !arvl]",
+        ),
+        (ARRIVAL_VALUE_LINE, f"{ARRIVAL_VALUE_LINE}    Θ[<] = E_{{ψ,ξ}}(Θ)\n"),
     )
     stage = stage_from_text(text, "buffer_stock.bl")
     stage.calibrate({"calibration": {**BUFFER_STOCK_BASELINE_CALIBRATION, "b": -1.0}})
@@ -498,26 +507,28 @@ def aggregation_with_a_second_field(line, declarations="b : ℝ\n"):
 @pytest.fixture(scope="module")
 def aggregation_with_the_greater_of_two():
     """The aggregation of the buffer-stock stage whose second field is
-    L = max(L[>], b)."""
-    return aggregation_with_a_second_field("L = max(L[>], b)")
+    Θ = max(Θ[>], b)."""
+    return aggregation_with_a_second_field("Θ = max(Θ[>], b)")
 
 
 @pytest.fixture(scope="module")
 def aggregation_with_the_lesser_of_two():
     """The aggregation of the buffer-stock stage whose second field is
-    L = min(L[>], b)."""
-    return aggregation_with_a_second_field("L = min(L[>], b)")
+    Θ = min(Θ[>], b)."""
+    return aggregation_with_a_second_field("Θ = min(Θ[>], b)")
 
 
 def values_at_one_point(aggregation, second_field):
     """What the compiled kernel of `aggregation` gives at the continuation
-    values 1, 2 and 3 of V and `second_field` of L, resources 2 and
-    consumption 0.5, with the calibrated values of its parameters: the
-    value V and the second field L, each as a list."""
+    values 1, 2 and 3 of V and `second_field` of Θ, the bound L = 0,
+    resources 2 and consumption 0.5, with the calibrated values of its
+    parameters: the value V and the second field Θ, each as a list."""
     function = aggregation.compile_kernel()
-    value, second = function(
+    # the third output is the bound L, which the block keeps
+    value, second, _ = function(
         numpy.array([1.0, 2.0, 3.0]),
         numpy.array(second_field),
+        0.0,
         2.0,
         0.5,
         *aggregation.kernel().parameter_values,
@@ -525,17 +536,19 @@ def values_at_one_point(aggregation, second_field):
     return value.tolist(), second.tolist()
 
 
+# the kernel reads the bound L, which the block keeps, by the name that its
+# header lists and writes it as its last output
 @pytest.mark.parametrize(
     ("aggregation", "printed"),
     [
         pytest.param(
             "aggregation_with_the_greater_of_two",
-            "𝐺 of cntn_to_dcsn: 𝐺(V≻, L≻, m, c) = (𝑢(c) + β*V≻, max(L≻, b))",
+            "𝐺 of cntn_to_dcsn: 𝐺(V≻, Θ≻, L, m, c) = (𝑢(c) + β*V≻, max(Θ≻, b), L)",
             id="max",
         ),
         pytest.param(
             "aggregation_with_the_lesser_of_two",
-            "𝐺 of cntn_to_dcsn: 𝐺(V≻, L≻, m, c) = (𝑢(c) + β*V≻, min(L≻, b))",
+            "𝐺 of cntn_to_dcsn: 𝐺(V≻, Θ≻, L, m, c) = (𝑢(c) + β*V≻, min(Θ≻, b), L)",
             id="min",
         ),
     ],
@@ -552,7 +565,7 @@ def test_the_kernel_of_a_line_that_writes_max_or_min_prints_the_call(
 @pytest.mark.parametrize(
     ("aggregation", "second_field"),
     [
-        # the greater of L≻ = -2, -1 and 0.5 and b = -1
+        # the greater of Θ≻ = -2, -1 and 0.5 and b = -1
         pytest.param("aggregation_with_the_greater_of_two", [-1.0, -1.0, 0.5], id="max"),
         # the lesser of the same
         pytest.param("aggregation_with_the_lesser_of_two", [-2.0, -1.0, -1.0], id="min"),
@@ -582,20 +595,20 @@ def test_an_aggregation_with_max_or_min_gives_its_value_and_the_greater_or_lesse
 )
 def test_max_or_min_on_a_line_is_written_as_numpys_maximum_or_minimum(request, aggregation, call):
     """The Python text of an aggregation whose line writes `max` or `min`
-    computes L by NumPy's `maximum` or `minimum` of L≻ and b."""
+    computes Θ by NumPy's `maximum` or `minimum` of Θ≻ and b."""
     text = request.getfixturevalue(aggregation).kernel().python
-    assert f"L = {call}(1.0*L_cntn, b)" in text
+    assert f"Θ = {call}(1.0*Θ_cntn, b)" in text
 
 
 def test_a_function_named_max_that_the_stage_defines_is_the_function_called():
-    """Where the stage defines a function `max`, the line L = max(L[>], b)
+    """Where the stage defines a function `max`, the line Θ = max(Θ[>], b)
     calls that function, and not the greater of two values."""
     piece = aggregation_with_a_second_field(
-        "L = max(L[>], b)", "b : ℝ\nmax(x : ℝ, y : ℝ) := x + y\n"
+        "Θ = max(Θ[>], b)", "b : ℝ\nmax(x : ℝ, y : ℝ) := x + y\n"
     )
     assert piece.kernel().parameters == ("b", "β", "ρ")
     assert piece.kernel().parameter_values == (-1.0, 0.96, 2.0)
-    # max(x, y) := x + y at L≻ = -2, -1 and 0.5 and b = -1
+    # max(x, y) := x + y at Θ≻ = -2, -1 and 0.5 and b = -1
     assert values_at_one_point(piece, [-2.0, -1.0, 0.5])[1] == [-3.0, -2.0, -0.5]
 
 
@@ -634,20 +647,12 @@ def test_the_decision_aggregation_reads_the_policy_function_and_the_evaluation_d
 def two_nodes_with_a_shock_law_of_the_control():
     """The small stage `two_nodes` of the tests, whose shock y has here
     the law N(c, 1), which reads the control c, and whose policy maximizes
-    -c^2."""
+    the right side of its value line."""
     text = two_nodes_text_with_changes(
         declarations="y ~ N(c,1)\nz : ℝ\nz ~ N(0,1)\n",
         header="(V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn]",
     )
-    return stage_from_text(
-        changed(
-            text,
-            (
-                "argmax_{c : Γ(k_d)}(E_{y,z}(β*V[>]) + E_{y,z}(β*V[>]))",
-                "argmax_{c : Γ(k_d)}(-c^2)",
-            ),
-        )
-    )
+    return stage_from_text(text)
 
 
 def records_of_kind(graph, kind):

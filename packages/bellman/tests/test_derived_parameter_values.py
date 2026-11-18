@@ -26,12 +26,14 @@ from stage_builders import (
     undecided_memberships,
 )
 from stage_texts import (
+    BUFFER_STOCK_FEASIBLE_SET_LINE,
     GROWTH_LINE,
     HUMAN_WEALTH_DEFINITION,
     HUMAN_WEALTH_RIGHT_SIDE_BY_CASES,
     RESOURCES_LINE,
     ZERO_DRAW_PROBABILITY_LINE,
     buffer_stock_text,
+    changed,
     perfect_foresight_text,
 )
 
@@ -944,15 +946,16 @@ def test_a_line_that_reads_a_derived_parameter_whose_set_holds_no_infinity_owns_
     assert conditions_of_the_resources_line(resources_line_stage(definition)) == []
 
 
-def test_a_line_that_reads_human_wealth_by_cases_owns_the_conditions_of_finite_arithmetic(
+def test_a_line_that_reads_human_wealth_by_cases_owns_the_conditions_of_defined_arithmetic(
     resources_line_stage,
 ):
     """A line that computes with human wealth by cases on ℝ_{+∞} owns the
-    conditions that its operands are finite and that the set is numeric."""
+    conditions that its difference has a defined result and that the set is
+    numeric."""
     owned = conditions_of_the_resources_line(resources_line_stage(BY_CASES))
     assert (
         "finite-real-arithmetic",
-        "The operands of Sub at arvl_to_dcsn.market_resources must be finite real numbers.",
+        "The operands of Sub at arvl_to_dcsn.market_resources must have a defined result.",
     ) in owned
     assert (
         "numeric-domain-compatibility",
@@ -1380,7 +1383,7 @@ STAGE_PARTS = [
 def natural_limit_stage():
     """`natural_limit_stage(first_block_alone)`: the buffer-stock stage with
     `NATURAL_LIMIT`, where unemployment may be absent, whole or its first
-    block."""
+    block without the feasible set."""
 
     @functools.cache
     def make(first_block_alone):
@@ -1388,7 +1391,13 @@ def natural_limit_stage():
         stated = buffer_stock_text().replace(
             ZERO_DRAW_PROBABILITY_LINE, absent + "".join(line + "\n" for line in NATURAL_LIMIT)
         )
-        text = declarations_and_first_block(stated) if first_block_alone else stated
+        text = stated
+        if first_block_alone:
+            # the feasible set reads the bound L, which only the later blocks
+            # declare, so the text cut after the first block leaves it out
+            text = declarations_and_first_block(
+                changed(stated, (BUFFER_STOCK_FEASIBLE_SET_LINE, ""))
+            )
         return stage_from_text(text, "buffer_stock.bl")
 
     return make

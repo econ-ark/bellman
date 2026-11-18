@@ -240,22 +240,31 @@ def _above(points, limit, coordinate, function):
     return points
 
 
+def _continuation(p, taken):
+    """An initial CRRA continuation value at the human wealth `taken`:
+    utility of total wealth on a > -`taken`, a measurable initial value
+    function, which no route evaluates as a solved continuation value."""
+    def continuation(a):
+        wealth = _above(a, -taken, "a", "initial continuation value") + taken
+        return _finite("initial continuation value", wealth ** (1 - p["ρ"]) / (1 - p["ρ"]))
+    return continuation
+
+
 def stationary_inputs(stage):
     """Finite stationary human wealth and an initial CRRA continuation value.
 
     The value is utility of total wealth on a > -h[>], a measurable initial
-    value function. The stationary grid iteration evolves marginal values;
-    it does not evaluate this initial value as a solved continuation value.
+    value function. The human wealth is the limit 1/(1 - Γ/R) - 1, which the
+    closed form, its value kernels and the grid's checks read; the gridded
+    route reads it only to refuse a grid of savings that starts at or below
+    the natural borrowing limit, and computes human wealth step by step.
     """
     p = parameters(stage)
     ratio = p["Γ"] / p["R"]
     if not ratio < 1:
         raise ValueError("Stationary finite human wealth requires Γ < R; use gridded_step with supplied finite inputs.")
     taken = 1 / (1 - ratio) - 1
-    def continuation(a):
-        wealth = _above(a, -taken, "a", "initial continuation value") + taken
-        return _finite("initial continuation value", wealth ** (1 - p["ρ"]) / (1 - p["ρ"]))
-    return {"V[>]": continuation, "h[>]": taken}
+    return {"V[>]": _continuation(p, taken), "h[>]": taken}
 
 
 def gridded_step(stage, inputs, continuation_marginal):
@@ -985,18 +994,35 @@ def gridded_route(stage, tolerance=1e-12, iterations=10_000, initial=None):
     interpolant of its pairs with the endpoint-secant extension, which the
     route reports at each use.
 
-    The first iterate consumes half of total wealth, c = (m - L)/2, feasible
-    at every level of resources above the limit, unless `initial` gives its
-    pairs (knots, consumption). The pairs of each iterate are feasible,
-    0 < c < m - L, ordered, since the endogenous grid of this model is
-    strictly increasing and needs no selection among branches, and finite.
-    The route is refused where the return impatience condition q < 1 fails,
-    where the natural borrowing limit L is not finite, where the exact first
-    node of the grid of savings lies at or below L, where two distinct exact
-    nodes of that grid have one nearest floating-point number (`_realized`),
-    where an intermediate value is not finite, where the extension leaves
-    the feasible set, and where `iterations` iterations end without the
-    largest change of the consumption function falling below `tolerance`.
+    Human wealth is iterated with the consumption function, as a solution
+    computed by backward steps requires (CDC's scope of DR-0981, 14 November
+    2026): each step uses only what the step after it provides. The step
+    after hands back h[<] = h*Γ/R, with h = 1 + h[>] there, through the
+    compiled lines `human_wealth` of the stage's two value builders, and that
+    value is the step's own h[>]; the first iterate takes in h[>] = 0, the
+    value that the last period takes in. Each step's natural borrowing limit
+    is L = -h[>], and it solves at the savings of the grid above its own L,
+    which map into resources above the limit of the step after it; the
+    lower savings join as h[>] rises. The limit of human wealth,
+    1/(1 - Γ/R) - 1, is read only to refuse a grid of savings that starts at
+    or below the limit of the infinite horizon.
+
+    The first iterate consumes half of total wealth, c = (m - L)/2 with
+    L = 0, feasible at every level of resources above that limit, unless
+    `initial` gives its pairs (knots, consumption). The pairs of each iterate
+    are feasible, 0 < c < m - L, ordered, since the endogenous grid of this
+    model is strictly increasing and needs no selection among branches, and
+    finite. The change of an iteration is read at its resources above the
+    limit of the iterate before it. The route is refused where the return
+    impatience condition q < 1 fails, where the natural borrowing limit L is
+    not finite, where the exact first node of the grid of savings lies at or
+    below the limit of the infinite horizon, where a step has fewer than two
+    savings above its limit, where two distinct exact nodes of the grid have
+    one nearest floating-point number (`_realized`), where an intermediate
+    value is not finite, where the extension leaves the feasible set, and
+    where `iterations` iterations end before the largest change of the
+    consumption function and the change of human wealth both fall below
+    `tolerance` with every saving of the grid in use.
     The stage file declares the return impatience condition as the upper
     bound of the discount factor and as the set (0, 1) of q, and `calibrate`
     refuses a calibration that breaks either; the route checks q all the
@@ -1006,43 +1032,66 @@ def gridded_route(stage, tolerance=1e-12, iterations=10_000, initial=None):
 
     Returns the pairs of the fixed point, `knots` and `consumption`, their
     Linear evaluator `policy`, the number of iterations, the last change,
-    `extended`, the number of extended points at each iteration, and
+    `extended`, the number of extended points at each iteration, the last
+    step's inputs, its human wealth `human_wealth` (its h[>]) and its limit
+    `limit`, and
     `evaluate(m, extrapolate=False)`, the consumption function at `m`: the
     linear interpolant between the pairs; a point outside them is refused
     unless `extrapolate` is true, and then the endpoint-secant extension
     gives it, restricted to m > L, each extended value checked finite and
     feasible, and each use reported by a warning that counts the
     interpolated and the extended points."""
-    inputs = stationary_inputs(stage)
-    conditions = stage.check_inputs(inputs)
-    q, L = stage.par["q"].value, -inputs["h[>]"]
+    limiting = stationary_inputs(stage)
+    q, limit = stage.par["q"].value, -limiting["h[>]"]
     if not q < 1:
         raise ValueError(
             f"the return patience factor q = (βR)^(1/ρ)/R is {q!r} at the calibration, and the "
             "endogenous grid iteration has an infinite-horizon fixed point only under the "
             "return impatience condition q < 1"
         )
-    _finite("the natural borrowing limit L at the calibration", L)
-    grid, savings = _realized(stage, "policy", inputs=inputs)
-    if grid.points[0][0] <= _exact(L):
+    _finite("the natural borrowing limit L at the calibration", limit)
+    grid, every_saving = _realized(stage, "policy", inputs=limiting)
+    if grid.points[0][0] <= _exact(limit):
         raise ValueError(
-            f"the grid of savings starts at a_min = {_shown(savings[0])}, at or below the natural "
-            f"borrowing limit on savings, L = {L!r}: from such a saving the law of motion gives "
-            "resources at which no consumption is feasible, and the iteration would stop at "
-            f"its tolerance on pairs that solve nothing; set a_min above {L!r}"
+            f"the grid of savings starts at a_min = {_shown(every_saving[0])}, at or below the "
+            f"natural borrowing limit on savings, L = {limit!r}: from such a saving the law of "
+            "motion gives resources at which no consumption is feasible, and the iteration "
+            f"would stop at its tolerance on pairs that solve nothing; set a_min above {limit!r}"
         )
+    # the last period takes in no human wealth; each step after the first
+    # takes in what the step after it hands back
+    p, taken = parameters(stage), 0.0
+    inputs = {"V[>]": _continuation(p, taken), "h[>]": taken}
+    conditions = stage.check_inputs(inputs)
     candidate = kernel_function(stage.builder.policy.kernels(inputs=inputs), "g_cntn_to_dcsn:Aggregation")
-    envelope = kernel_function(stage.builder["cntn", "dcsn"].kernels(inputs=inputs), "marginal:Derivative:1")
+    decision = stage.builder["cntn", "dcsn"].kernels(inputs=inputs)
+    envelope = kernel_function(decision, "marginal:Derivative:1")
+    human = output_function(decision, "Aggregation", "h")
     arrival = stage.builder["dcsn", "arvl"].kernels(inputs=inputs)
     marginal = kernel_function(arrival, "marginal:Derivative:1")
     resources = kernel_function(arrival, "Pullback")
-    extension = EndpointSecant(L)
-    knots, consumption = (2 * savings - L, savings - L) if initial is None else initial
+    handing = output_function(arrival, "Aggregation", "h")
+    L = -taken
+    first = every_saving[every_saving > L]
+    knots, consumption = (2 * first - L, first - L) if initial is None else initial
     policy = Linear(knots, consumption, "m")
-    extended, change = [], math.inf
+    extended, change, moved = [], math.inf, math.inf
     for count in range(1, iterations + 1):
+        # the step after this one has h = 1 + h[>] and hands back
+        # h[<] = h*Γ/R, by the stage's compiled lines; that is this step's
+        # h[>], and its natural borrowing limit is L = -h[>]
+        handed = float(handing(h=float(human(**{"h≻": taken}))))
+        moved, taken = abs(handed - taken), handed
+        before, L = L, -taken
+        _finite(f"the natural borrowing limit L at iteration {count}", L)
+        savings = every_saving[every_saving > L]
+        if savings.size < 2:
+            raise ValueError(
+                f"at iteration {count} the natural borrowing limit is L = {L!r}, and "
+                f"{savings.size} saving(s) of the grid lie above it; the step needs two"
+            )
         m_next = resources(k=savings)
-        found = policy.extend(m_next, extension)
+        found = policy.extend(m_next, EndpointSecant(before))
         # every intermediate value is checked below and refused where it is
         # not finite, so NumPy's warnings of overflow and of division by zero
         # are silenced here
@@ -1060,18 +1109,27 @@ def gridded_route(stage, tolerance=1e-12, iterations=10_000, initial=None):
                 "this model"
             )
         following = Linear(m_end, c_end, "m")
-        previous = policy.extend(m_end, extension)
-        change = float(np.max(np.abs(previous.values - c_end)))
+        # the iterate before this one is read only above its own limit
+        comparable = m_end > before
+        previous = policy.extend(m_end[comparable], EndpointSecant(before))
+        change = (
+            float(np.max(np.abs(previous.values - c_end[comparable])))
+            if comparable.any()
+            else math.inf
+        )
         extended.append(found.extrapolated + previous.extrapolated)
         policy = following
-        if change < tolerance:
+        if change < tolerance and moved < tolerance and savings.size == every_saving.size:
             break
     else:
         raise ValueError(
             f"the endogenous grid iteration stopped at its limit of iterations, {iterations}, "
-            f"with the largest change of the consumption function {change!r}, above the "
-            f"tolerance {tolerance!r}; the pairs are not a fixed point"
+            f"with the largest change of the consumption function {change!r} and the change "
+            f"of human wealth {moved!r}, one or both above the tolerance {tolerance!r}; the "
+            "pairs are not a fixed point"
         )
+    extension = EndpointSecant(L)
+    inputs = {"V[>]": _continuation(p, taken), "h[>]": taken}
 
     def evaluate(m, extrapolate=False):
         m = np.asarray(m, dtype=float)
@@ -1108,6 +1166,7 @@ def gridded_route(stage, tolerance=1e-12, iterations=10_000, initial=None):
         iterations=count,
         change=change,
         extended=tuple(extended),
+        human_wealth=taken,
         limit=L,
     )
 

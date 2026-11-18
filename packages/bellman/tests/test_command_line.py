@@ -58,8 +58,6 @@ FILES_WITH_CONDITIONS_UNDER_BUILDERS = [
     for relative in (
         "benhabib-2019/declaration/stages/benhabib_bellman/benhabib_bellman.bl",
         "benhabib-2019/declaration/stages/bequest/bequest.bl",
-        "consumption-perfect-foresight-crra/declaration/stages/perfect_foresight/"
-        "perfect_foresight.bl",
         "epstein-zin-savings/declaration/stages/ez_savings/ez_savings.bl",
         "smooth-ambiguity-savings/declaration/stages/sa_savings/sa_savings.bl",
     )

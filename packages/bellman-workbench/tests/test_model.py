@@ -45,7 +45,7 @@ from workbench_support import (
     tree_entries,
 )
 
-from bellman.display import graphviz_layout
+from bellman.display import drawing as drawing_module
 from bellman.stage import (
     ROLE_WORD,
     box_attributes,
@@ -1897,6 +1897,10 @@ def test_r_write_paper_writes_the_cards_the_drawing_and_the_digests_once(scratch
     SHA-256 digest of the stage file and of each binding file. A second
     call, with the text changed, answers the empty tuple and leaves both
     files as they were written."""
+    pytest.importorskip(
+        "pygraphviz",
+        reason='the package pygraphviz is not installed; install it with "pip install pygraphviz"',
+    )
     folder = model.open_folder(scratch_folder)
     text = (scratch_folder / CONS).read_text(encoding="utf-8")
     stage = bound_as_the_recipe_binds(scratch_folder, text, CONS)
@@ -1932,23 +1936,16 @@ def test_r_write_paper_writes_the_cards_the_drawing_and_the_digests_once(scratch
 
 
 def test_r_paper_writes_nothing_where_the_drawing_is_refused(
-    scratch_folder, cons, cons_text, tmp_path, monkeypatch
+    scratch_folder, cons, cons_text, monkeypatch
 ):
-    """Where no layout program is found, `write_paper` raises the package's
-    refusal, the sentence of `layout_refusal()` whole, and writes nothing:
-    `paper/` does not exist (spec 0.4 §5.5; review 2). The search path
-    names an empty folder, and the other places `layout_command` reads,
-    nvm's and Homebrew's Node and the repository's Node package, are set
-    aside."""
+    """Where the Python package `pygraphviz` is not installed, `write_paper`
+    raises the package's refusal with its message `NO_LAYOUT` unchanged, and
+    writes nothing: `paper/` does not exist (spec 0.4 §5.5; review 2). The
+    test sets the name `pygraphviz` of the drawing module to None, the value
+    it has where the package is absent."""
     folder = model.open_folder(scratch_folder)
-    empty = tmp_path / "empty"
-    empty.mkdir()
-    monkeypatch.setenv("PATH", str(empty))
-    monkeypatch.setattr(graphviz_layout, "NVM_NODES", empty)
-    monkeypatch.setattr(graphviz_layout, "HOMEBREW_NODES", ())
-    monkeypatch.setattr(graphviz_layout, "REPOSITORY_ROOT", empty)
-    assert graphviz_layout.layout_command() is None
+    monkeypatch.setattr(drawing_module, "pygraphviz", None)
     with pytest.raises(RuntimeError) as refused:
         model.write_paper(folder, cons, CONS, cons_text, {})
-    assert str(refused.value) == graphviz_layout.layout_refusal()
+    assert str(refused.value) == drawing_module.NO_LAYOUT
     assert not (scratch_folder / "paper").exists()

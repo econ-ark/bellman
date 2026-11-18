@@ -261,9 +261,9 @@ def test_the_record_of_a_parameter_prints_its_declared_set_and_its_definition(
             id="a definition by cases on an interval",
         ),
         pytest.param(
-            "patience_factor_stage",
-            "h",
-            "h     1/(1 - Γ/R)              unbound",
+            "patience_factor_without_a_set",
+            "q",
+            "q     (β*R)^(1/ρ)/R  unbound",
             id="a definition without a set",
         ),
     ],
@@ -279,20 +279,21 @@ def test_a_row_of_the_parameter_table_prints_the_declared_set_before_the_definit
 
 
 @pytest.mark.parametrize(
-    "name",
+    "stage, name",
     [
-        pytest.param("β", id="a declared parameter"),
-        pytest.param("q", id="a derived parameter on a set"),
-        pytest.param("h", id="a derived parameter without a set"),
+        pytest.param("patience_factor_stage", "β", id="a declared parameter"),
+        pytest.param("patience_factor_stage", "q", id="a derived parameter on a set"),
+        pytest.param("patience_factor_without_a_set", "q", id="a derived parameter without a set"),
     ],
 )
 def test_each_row_of_the_parameter_list_holds_the_set_and_the_definition_of_its_record(
-    name, patience_factor_stage
+    stage, name, request
 ):
     """A row of `stage.par.list()` holds the set of its record under
     `domain` and the definition under `definition`, each a term or None."""
-    rows = {row["name"]: row for row in patience_factor_stage.par.list()}
-    record = patience_factor_stage.par[name]
+    parameters = request.getfixturevalue(stage).par
+    rows = {row["name"]: row for row in parameters.list()}
+    record = parameters[name]
     assert (rows[name]["domain"], rows[name]["definition"]) == (record.domain, record.definition)
 
 
@@ -303,11 +304,13 @@ def test_a_row_of_the_parameter_list_holds_a_definition_as_a_term(patience_facto
     assert to_source(rows["q"]["definition"]) == "(β*R)^(1/ρ)/R"
 
 
-def test_a_derived_parameter_whose_definition_declares_no_set_has_none(patience_factor_stage):
+def test_a_derived_parameter_whose_definition_declares_no_set_has_none(
+    patience_factor_without_a_set,
+):
     """The record of a derived parameter whose definition declares no set
     holds no set and holds its definition."""
-    record = patience_factor_stage.par["h"]
-    assert record.domain is None and to_source(record.definition) == "1/(1 - Γ/R)"
+    record = patience_factor_without_a_set.par["q"]
+    assert record.domain is None and to_source(record.definition) == "(β*R)^(1/ρ)/R"
 
 
 def test_the_parameter_list_prints_as_the_parameter_table(patience_factor_stage):
@@ -391,8 +394,14 @@ def test_the_parameter_table_lists_the_parameters_in_the_order_of_the_file(cases
 def test_a_declared_set_is_no_argument_of_a_derived_parameter_that_a_line_differentiates():
     """A value line that differentiates q by c prints the same with and
     without a declared set on q, and writes q as no function of c."""
+    # the objective of the maximization takes the same added term as the
+    # value line, whose right side it is
+    lines = {
+        "    V = ": "    V = 𝑢(c) + β*V[>] + D_{c}(q)",
+        "    c = ": "    c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>] + D_{c}(q))",
+    }
     texts = [
-        perfect_foresight_file_text({"    V = ": "    V = 𝑢(c) + β*V[>] + D_{c}(q)", **definition})
+        perfect_foresight_file_text({**lines, **definition})
         for definition in (Q_WITHOUT_A_SET, {"q : ": "q : ℝ₊₊ := (β*R)^(1/ρ)/R"})
     ]
     differentiated = [
@@ -991,10 +1000,10 @@ CONDITIONALS_OUT_OF_PLACE = [
         id="in the body of a function",
     ),
     pytest.param(
-        (RESOURCES_LINE, "    m = if k < 0 then 1 else R_n*k + 1   :: [id=market_resources]"),
-        12,
+        (RESOURCES_LINE, "    m = R_n*k + if k < 0 then 1 else 0   :: [id=market_resources]"),
+        20,
         "the file writes `k` here",
-        id="in a line of a block",
+        id="in a formula of a line of a block",
     ),
     # a conditional always has both branches
     pytest.param(

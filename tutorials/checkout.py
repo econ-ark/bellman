@@ -16,10 +16,8 @@ folder once, for items 3 and 6 below.
 Importing this module does the first five things below and prints nothing; the
 sixth is the one name it defines for a lesson, the function ``explore``, which
 a lesson calls as ``checkout.explore(stage)``. It sets no display for a
-drawing: the package's ``Drawing`` lays itself out, with Graphviz's ``dot`` or
-with the WebAssembly build of Graphviz (``bellman.display.graphviz_layout``),
-so a cell holding ``draw()`` alone shows the picture wherever one of the two
-is installed.
+drawing: the package's ``Drawing`` lays itself out, so a cell holding
+``diagram()`` alone shows the picture.
 
 1. It finds the checkout. That is the folder named by the environment variable
    ``BELLMAN_DDSL_ROOT`` when it is set, which is how a tool that executes a

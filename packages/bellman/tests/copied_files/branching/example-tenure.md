@@ -132,10 +132,16 @@ At
   𝑑  : ℝ₊ × ℝ₊₊ × ℝ₊₊ → {keep, adjust}
 
 Where
-  𝑔_keep≻    : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊ × ℝ₊₊,
-               𝑔_keep≻(a_d, h_d, z_d) = 𝑔≻(a_d, h_d, z_d, keep)
-  𝑔_adjust≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,
-               𝑔_adjust≻(a_d, h_d, z_d) = 𝑔≻(a_d, h_d, z_d, adjust)
+  𝑔_keep≻    : ℝ₊ × ℝ₊₊ × ℝ₊₊ × Age → ℝ₊₊ × ℝ₊₊ × ℝ₊₊,
+               𝑔_keep≻(a_d, h_d, z_d, age_kp) =
+                 (R · a_d + Y[age_kp] · z_d + y_R[age_kp], (1 − δ) · h_d, z_d)
+  𝑔_adjust≻  : ℝ₊ × ℝ₊₊ × ℝ₊₊ × Age → ℝ₊₊ × ℝ₊₊,
+               𝑔_adjust≻(a_d, h_d, z_d, age_adj)
+                 = (R · a_d
+                      + R_H · (1 − δ) · h_d
+                      + Y[age_adj] · z_d
+                      + y_R[age_adj],
+                    z_d)
 
 Operations
   1  Pushforward
@@ -143,25 +149,33 @@ Operations
      ──────────────────────────────────────────────────────────
      rule: μ_keep≻(B)
              = μ({a_d, h_d, z_d ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊ |
-                   𝑑(a_d, h_d, z_d) = keep ∧ 𝑔_keep≻(a_d, h_d, z_d) ∈ B})
+                   𝑑(a_d, h_d, z_d) = keep
+                     ∧ 𝑔_keep≻(a_d, h_d, z_d, 𝑎𝑔𝑒_kp≻()) ∈ B})
            μ_adjust≻(B)
              = μ({a_d, h_d, z_d ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊ |
-                   𝑑(a_d, h_d, z_d) = adjust ∧ 𝑔_adjust≻(a_d, h_d, z_d) ∈ B})
+                   𝑑(a_d, h_d, z_d) = adjust
+                     ∧ 𝑔_adjust≻(a_d, h_d, z_d, 𝑎𝑔𝑒_adj≻()) ∈ B})
 
 Conditions
-  Pushforward  R · a_d + 𝑦(z_d) ∈ ℝ₊₊
+  Pushforward  R · a_d + Y[age_kp] · z_d + y_R[age_kp] ∈ ℝ₊₊
 ──────────────────────────────────────────────────────────────────────────────
 Source  tenure.bl
-  24  w_kp = R*a_d + 𝑦(z_d)                     :: [id=cash_on_hand]
-  25  h_kp = (1 - δ)*h_d                        :: [id=housing_kept]
+  24  w_kp = R*a_d + Y[age_kp[>]]*z_d + y_R[age_kp[>]]
+        :: [id=cash_on_hand]
+  25  h_kp = (1 - δ)*h_d
+        :: [id=housing_kept]
   26  z_kp = z_d
-  29  w_adj = R*a_d + R_H*(1 - δ)*h_d + 𝑦(z_d)  :: [id=total_wealth]
+  29  w_adj = R*a_d + R_H*(1 - δ)*h_d + Y[age_adj[>]]*z_d + y_R[age_adj[>]]
+        :: [id=total_wealth]
   30  z_adj = z_d
 
 Definitions referenced
+  Age   tenure:set:Age
   R     tenure:parameter:R
-  𝑦     tenure:function:𝑦
-  𝑔≻    tenure:g:dcsn_to_cntn
+  R_H   tenure:parameter:R_H
+  δ     tenure:parameter:δ
+  Y     tenure:parameter:Y
+  y_R   tenure:parameter:y_R
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 

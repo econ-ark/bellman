@@ -561,7 +561,7 @@ def perfect_foresight_solutions():
     closed = check.closed_form_stage()
     resources = np.linspace(*PERFECT_FORESIGHT_RESOURCES)
     alternative = {"calibration": PERFECT_FORESIGHT_ALTERNATIVE_CALIBRATION}
-    limit = closed.par["L"].value
+    limit = closed.par["L_lim"].value
     lower, upper, count = PERFECT_FORESIGHT_NEAR_LIMIT_GRID
     near = check.gridded_stage(count, limit + lower, limit + upper)
     return types.SimpleNamespace(
@@ -584,7 +584,16 @@ def perfect_foresight_solutions():
             50, -33.0, 60.0, resources, calibration=alternative
         ),
         # the gridded stage whose grid of savings starts just above the
-        # natural borrowing limit, and its gridded solution
+        # natural borrowing limit
         near=near,
-        near_route=check.gridded_route(near),
     )
+
+
+@pytest.fixture(scope="session")
+def perfect_foresight_near_route(perfect_foresight_solutions):
+    """The gridded solution of the gridded stage of the perfect-foresight
+    application whose grid of savings starts just above the natural borrowing
+    limit, computed once. It is a fixture of its own, so that a refusal of
+    that grid stops the tests that read this solution and no other test."""
+    solutions = perfect_foresight_solutions
+    return solutions.check.gridded_route(solutions.near)

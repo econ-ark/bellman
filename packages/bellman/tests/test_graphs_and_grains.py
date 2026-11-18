@@ -9,7 +9,7 @@ from dataclasses import FrozenInstanceError
 from types import SimpleNamespace
 
 import pytest
-from application_files import COPIED_FILES_FOLDER, CORPUS, ROOT, stage_file_id
+from application_files import BUFFER_STOCK_FILE, COPIED_FILES_FOLDER, CORPUS, ROOT, stage_file_id
 from discopy.frobenius import Box, Bubble, Hypergraph, Spider, Ty
 from snapshot.record import ELABORATED_FILES
 from stage_builders import stage_from_file, stage_from_text
@@ -26,6 +26,7 @@ from stage_texts import (
     UNADMITTED_FAMILY_AT_ARRIVAL,
     Y_IDENTITY,
     bundles_text,
+    changed,
     corpus_text,
     two_nodes_text_with_changes,
 )
@@ -41,6 +42,7 @@ from bellman.stage import elaborate_stage, load_stage
 from bellman.stage.carriers import bound_variable_number
 from bellman.stage.grains import graph_of, kind_of, wire_table
 from bellman.syntax import terms
+from bellman.syntax.walk import nodes
 from bellman.typing import typed_expressions
 
 # The roles of the fields that a line of a backward initial diagram reads at
@@ -121,17 +123,28 @@ def wires_at_no_port(graph, name):
     return violations
 
 
-def wires_read_and_not_written(graph, name, roles_read_without_a_writer=()):
+def wires_read_and_not_written(
+    graph,
+    name,
+    roles_read_without_a_writer=(),
+    *,
+    fields_without_a_writer=None,
+    perches_of_lines=None,
+):
     """Each wire that a box reads, that no box writes and that the graph does
     not take as an input, in the graph or in a graph inside one of its
     bubbles. A field whose role is among `roles_read_without_a_writer` and
-    that stands at the perch of one of the reading box's outputs is no
-    violation: it is a coordinate of the function that the box writes. The
-    package gives a builder, a builders graph and a group of lines marked
-    `!node` as inputs their declared inputs and each wire that their boxes
-    read and none of them writes (`captures` and `group_inputs_outputs` of
-    `bellman/graphs/wire_sorts.py`), and gives an initial diagram and its
-    blocks the inputs that the headers of the blocks declare."""
+    that stands at the perch of one of the reading box's outputs, or at a
+    perch that `perches_of_lines` gives the line of the box, is no
+    violation: it is a coordinate of the function that the box writes. A
+    field that `fields_without_a_writer` gives the block of the box, the
+    first segment of the box's name, or gives the box by its name, is no
+    violation either. The package gives a builder, a builders graph and a
+    group of lines marked `!node` as inputs their declared inputs and each
+    wire that their boxes read and none of them writes (`captures` and
+    `group_inputs_outputs` of `bellman/graphs/wire_sorts.py`), and gives an
+    initial diagram and its blocks the inputs that the headers of the blocks
+    declare."""
     violations = []
     for where, held in graphs_inside(graph, name):
         sorts = wire_sorts(held)
@@ -140,14 +153,87 @@ def wires_read_and_not_written(graph, name, roles_read_without_a_writer=()):
         written = set(inputs).union(*(outputs for _, _, outputs in boxes))
         for box, read, outputs in boxes:
             perches = {sorts[wire].perch for wire in outputs}
+            perches |= (perches_of_lines or {}).get(box.name, set())
             for wire in read:
                 sort = sorts[wire]
                 excused = sort.role in roles_read_without_a_writer and sort.perch in perches
+                allowed = fields_without_a_writer or {}
+                excused = excused or sort.identity in allowed.get(box.name.split(".")[0], ())
+                excused = excused or sort.identity in allowed.get(box.name, ())
                 if wire not in written and not excused:
                     violations.append(
                         f"{where}: {box.name} reads {sort.identity}, which no box writes"
                     )
     return violations
+
+
+def left_sides_of_lines(stage):
+    """`(address, block, left side)` for each line of `stage` that is an
+    equation, read from the definitions table of the stage."""
+    for address, definition in stage.definitions.items():
+        equations = definition.equations if definition.kind == "line" else ()
+        left = getattr(equations[0], "lhs", None) if equations else None
+        if left is not None:
+            yield address, definition.identity.block, left
+
+
+def fields_read_without_a_writer(stage):
+    """The identities of the fields that the lines of the backward initial
+    diagram of `stage` may read although no box writes them: by the name of
+    a block, each field that another block keeps, an output of that block
+    whose name stands on the left side of no line of it, where the reading
+    block lists the field on its input side; and by the address of a line
+    that takes an expectation, each constant that the diagram takes in,
+    which the law of the shock may read."""
+    graph = stage.initial.backward.graph
+    sorts = wire_sorts(graph)
+    inputs, _ = port_wires(graph)
+    constants = {sorts[wire].identity for wire in inputs if sorts[wire].constant}
+    written = defaultdict(set)
+    for _, block, left in left_sides_of_lines(stage):
+        if not isinstance(left, terms.Operator):
+            written[block] |= {
+                node.symbol.name for node in nodes(left) if isinstance(node, terms.Sym)
+            }
+    boxes = boxes_with_wires(graph)
+    kept = {
+        sorts[wire].identity
+        for block, _, outputs in boxes
+        for wire in outputs
+        if sorts[wire].identity.field not in written[block.name]
+    }
+    allowed = {
+        block.name: {sorts[wire].identity for wire in read} & kept for block, read, _ in boxes
+    }
+    for address, definition in stage.definitions.items():
+        equations = definition.equations if definition.kind == "line" else ()
+        right = getattr(equations[0], "rhs", None) if equations else None
+        # covers the law of a shock, not a law of motion, which no file needs
+        if right is not None and any(
+            isinstance(node, terms.Operator) and str(node.head).startswith("E")
+            for node in nodes(right)
+        ):
+            allowed[address] = set(constants)
+    return allowed
+
+
+def perches_of_derivative_lines(stage):
+    """The perches of the outputs of the block of each derivative line of
+    `stage`, a line whose left side is a derivative, `D_{a_2}V[<]`, by the
+    address of the line. A derivative line writes no wire of the backward
+    initial diagram, and the value that it differentiates stands at those
+    perches."""
+    graph = stage.initial.backward.graph
+    sorts = wire_sorts(graph)
+    perches = {
+        block.name: {sorts[wire].perch for wire in written}
+        for block, _, written in boxes_with_wires(graph)
+    }
+    return {
+        address: perches[block]
+        for address, block, left in left_sides_of_lines(stage)
+        if isinstance(left, terms.Operator) and left.head == "D" and block in perches
+    }
 
 
 def grains_with_other_inputs_or_outputs(graphs):
@@ -588,13 +674,25 @@ def test_a_shock_law_of_an_external_family_records_an_obligation_on_the_family(
     assert [item.entries for item in external] == [("external:Density", Y_IDENTITY)]
 
 
+@pytest.fixture(scope="module")
+def buffer_stock_with_an_inverse():
+    """The buffer-stock stage with its inverse marginal utility `𝑑𝑢𝑖𝑛𝑣`
+    declared as `Inv(𝑑𝑢)`, in place of the closed form that the stage file
+    writes."""
+    text = (ROOT / BUFFER_STOCK_FILE).read_text(encoding="utf-8")
+    inverse = changed(text, ("𝑑𝑢𝑖𝑛𝑣(v : ℝ₊₊) := v^(-1/ρ)", "𝑑𝑢𝑖𝑛𝑣 := Inv(𝑑𝑢)"))
+    return stage_from_text(inverse, "buffer_stock.bl")
+
+
 @pytest.mark.parametrize(
     "stage_name",
     [
         pytest.param(
             "stage_with_a_shock_of_an_external_family", id="a-distribution-and-its-two-shocks"
         ),
-        pytest.param("buffer_stock", id="a-derived-parameter-and-an-inverse-function"),
+        pytest.param(
+            "buffer_stock_with_an_inverse", id="a-derived-parameter-and-an-inverse-function"
+        ),
     ],
 )
 def test_an_obligation_placed_in_the_stage_names_a_definition_or_a_field_of_it(
@@ -649,12 +747,15 @@ def test_no_function_that_the_stage_defines_is_held_as_an_external_callable(bund
 
 
 def test_the_obligation_on_the_domain_of_an_inverse_names_the_function_by_its_identity(
-    buffer_stock,
+    buffer_stock_with_an_inverse,
 ):
-    """The obligation on the domain of the inverse that `buffer_stock.bl`
-    declares as `Inv(𝑑𝑢)` names the function `𝑑𝑢𝑖𝑛𝑣` by its identity."""
+    """The obligation on the domain of the inverse `𝑑𝑢𝑖𝑛𝑣`, declared as
+    `Inv(𝑑𝑢)` in a copy of the buffer-stock stage, names the function by its
+    identity."""
     inverse = [
-        item for item in buffer_stock.obligations() if item.condition == "inverse-function-domain"
+        item
+        for item in buffer_stock_with_an_inverse.obligations()
+        if item.condition == "inverse-function-domain"
     ]
     assert [item.entries[0] for item in inverse] == ["buffer_stock:function:𝑑𝑢𝑖𝑛𝑣"]
 
@@ -1015,16 +1116,29 @@ def test_a_box_of_the_wiring_gives_the_perch_of_its_field_as_its_kind(cons):
 def test_every_wire_that_a_box_reads_is_written_in_its_graph(read_only_stage_from_file, src):
     """Every wire that a box reads is written by a box of the same graph or
     is an input of the graph, at every grain and inside every bubble, apart
-    from a field of `ROLES_READ_WITHOUT_A_WRITER` that a line of a backward
-    initial diagram reads at the perch of its own output, which is a
-    coordinate of the function that the line writes."""
+    from three reads by a line of a backward initial diagram: a field of
+    `ROLES_READ_WITHOUT_A_WRITER` at the perch of the line's own output, or,
+    for a derivative line, of the value that it differentiates, which is a
+    coordinate of that function; a field that another block keeps, which no
+    line writes, and which the block of the line lists on its input side;
+    and a constant that the diagram takes in, read by a line that takes an
+    expectation, since the law of the shock may read it."""
+    stage = read_only_stage_from_file(src)
+    allowed = {
+        "fields_without_a_writer": fields_read_without_a_writer(stage),
+        "perches_of_lines": perches_of_derivative_lines(stage),
+    }
     violations = []
-    for level, direction, grain, graph in graphs_of(read_only_stage_from_file(src)):
+    for level, direction, grain, graph in graphs_of(stage):
         if isinstance(graph, NotConstructed):
             continue
-        initial_backward = (level, direction) == ("initial", "backward")
-        roles = ROLES_READ_WITHOUT_A_WRITER if initial_backward else ()
-        violations += wires_read_and_not_written(graph, f"{level} {direction} {grain}", roles)
+        name = f"{level} {direction} {grain}"
+        if (level, direction) == ("initial", "backward"):
+            violations += wires_read_and_not_written(
+                graph, name, ROLES_READ_WITHOUT_A_WRITER, **allowed
+            )
+        else:
+            violations += wires_read_and_not_written(graph, name)
     assert violations == []
 
 

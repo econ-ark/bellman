@@ -13,10 +13,12 @@ from bellman.syntax.decode import from_json
 from bellman.syntax.lower import parse_with_spans, to_json
 from bellman.syntax.walk import nodes
 
-# the constructors that the typing entries add to the parsed term
+# the constructors that the typing entries alone add to the parsed term;
+# `Term`, which a typing entry also makes, is not among them, since a stage
+# file makes it for the key of a table read at a marked field,
+# `wage_fn[age[>]][tau]`
 TYPING_ENTRY_CONSTRUCTORS = (
     terms.Path,
-    terms.Term,
     terms.Handler,
     terms.Method,
     terms.Grid,

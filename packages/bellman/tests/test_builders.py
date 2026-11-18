@@ -34,7 +34,9 @@ RET_CHOICE = ROOT / CONTROL_BRANCHING_STAGE_FILES["ret_choice"]
 
 # a stage of two controls with its policy written as one block for each
 # control, `policy_c` and `policy_l`: two backward builders write the
-# controls, so that the key `policy` names no one builder
+# controls, so that the key `policy` names no one builder. Each block
+# maximizes the right side of the value V over its own control, read at the
+# other control, which its header lists
 TWO_POLICY_BLOCKS = """@stage: joint_choice
 [id=arvl_to_dcsn, (x : ℝ) : !arvl -> (x_d : ℝ) : !dcsn] {
  x_d = x
@@ -48,11 +50,11 @@ TWO_POLICY_BLOCKS = """@stage: joint_choice
 [id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
  V[<] = V
 }
-[id=policy_c, (V[>] : ℝ @ !vlu) -> (c : ℝ @ !ctrl) : !dcsn] {
- c = argmax_{c}(-c^2+V[>]) :: [id=choice]
+[id=policy_c, (V[>] : ℝ @ !vlu, l) -> (c : ℝ @ !ctrl) : !dcsn] {
+ c = argmax_{c}(-c^2-4*l^2+V[>]) :: [id=choice]
 }
-[id=policy_l, (V[>] : ℝ @ !vlu) -> (l : ℝ @ !ctrl) : !dcsn] {
- l = argmax_{l}(-4*l^2+V[>]) :: [id=choice]
+[id=policy_l, (V[>] : ℝ @ !vlu, c) -> (l : ℝ @ !ctrl) : !dcsn] {
+ l = argmax_{l}(-c^2-4*l^2+V[>]) :: [id=choice]
 }
 """
 

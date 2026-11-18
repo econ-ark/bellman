@@ -1048,9 +1048,11 @@ def test_each_page_of_the_language_that_points_to_the_table_of_rules_not_yet_che
 
 # --- the refusals ---
 
-# the five rules whose sentence addresses a Python caller and keeps the names
+# the seven rules whose sentence addresses a Python caller and keeps the names
 # of the calls that raise it
 PUBLIC_API = (
+    "continuation-input",
+    "law-requirement",
     "kernel-form",
     "kernel-target",
     "target-not-found",
@@ -1134,8 +1136,8 @@ def test_the_refusals_page_anchors_every_rule_by_its_name_in_the_order_of_the_vo
     assert re.findall(r'<a id="([^"]+)"></a>', page) == rules_in_order()
 
 
-def test_the_rules_that_a_python_caller_meets_are_the_five_whose_sentence_names_a_call():
+def test_the_rules_that_a_python_caller_meets_are_the_seven_whose_sentence_names_a_call():
     """The rules of the class `public-API`, which a Python caller meets, are
-    the five whose sentences may name a call of Python."""
+    the seven whose sentences may name a call of Python."""
     classes = {rule: class_of(rule) for rule in rules_in_order()}
     assert {rule for rule, held in classes.items() if held == "public-API"} == set(PUBLIC_API)

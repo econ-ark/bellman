@@ -325,7 +325,7 @@ The module compares the solution with the declared Bellman equation and arrival 
 3. **Endogenous grid** (`g_cntn_to_dcsn`): $m_i = a_i + c_i$.
 4. **Envelope** (the derivative line of `cntn_to_dcsn`): $dV_i = c_i^{-\rho}$.
 5. **Arrival marginal** (the derivative line of `dcsn_to_arvl`): $dV^{<}(k) = R\,\Gamma^{-\rho}\, dV(Rk/\Gamma + 1)$, which is the next iteration's continuation marginal value at $k = a$.
-6. **Iterate** until convergence.
+6. **Iterate** until convergence. Human wealth is iterated with the policy: each step takes in the `h[>]` that the step after it hands back, `h = 1 + h[>]` and `h[<] = h*Γ/R`, starting from `h[>] = 0`, and uses the savings above its own limit `-h[>]`.
 
 Calibration refuses a calibration at which $q \ge 1$, by the declared set of the discount factor and by the set that the definition of $q$ declares. The module refuses savings grids that start at or below $L$ and intermediate values that are not finite. It also refuses infeasible extrapolation and iterations that exhaust their limit without convergence. The consumption function is linear in $m$, and the linear interpolant of a linear function is exact, so the gridded route reaches the closed form on a grid of five points as on one of five hundred. The test of interpolation accuracy is therefore the comparison of the value function's interpolation by the module's linear and PCHIP (piecewise cubic Hermite) evaluators on 5, 50 and 500 nodes. The notebook `code/closed-form-and-grid.ipynb` shows each step and each comparison.
 

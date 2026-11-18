@@ -83,12 +83,14 @@ def pullback_laws(backward, name):
     """`(where, box, perches, law)` for each law of motion that a pullback of
     the backward builders graph `backward`, named `name`, refers to, the
     boxes inside bubbles included: the graph that holds the pullback, the
-    pullback, the perches of the wires that it reads and the law."""
+    pullback, the perches of the wires that it reads and the law. A constant
+    that the law of motion reads is left out of the perches, since a constant
+    is the same at every state of its perch."""
     for where, held in graphs_inside(backward, name):
         sorts = wire_sorts(held)
         for box, read, _ in boxes_with_wires(held):
             if kind_of(box) == "Pullback":
-                perches = sorted({sorts[wire].perch for wire in read})
+                perches = sorted({sorts[wire].perch for wire in read if not sorts[wire].constant})
                 for law in laws_of_motion(box):
                     yield where, box, perches, law
 
@@ -145,8 +147,10 @@ def stage_without_documentary_line(cons_with_egm_lines_text):
 @pytest.fixture(scope="module")
 def stage_with_a_node_chain():
     """The stage text of `two_nodes_text_with_changes` with the backward lines
-    `NODE_CHAIN`."""
-    return stage_from_text(two_nodes_text_with_changes(backward=NODE_CHAIN))
+    `NODE_CHAIN`, whose value the policy maximizes."""
+    return stage_from_text(
+        two_nodes_text_with_changes(backward=NODE_CHAIN, objective="E_{y,z}(V[>])")
+    )
 
 
 def test_without_a_documentary_line_the_domain_of_the_law_of_motion_is_its_image_in_its_target(
@@ -459,9 +463,12 @@ def test_a_pullback_refers_to_the_law_of_motion_of_the_push_forward_into_its_per
         if isinstance(backward, NotConstructed) or isinstance(forward, NotConstructed):
             continue
         name = f"builders backward {grain}"
-        compared += list(pullback_laws(backward, name))
+        compared += [
+            perch for _, _, perches, _ in pullback_laws(backward, name) for perch in perches
+        ]
         violations += laws_without_a_push_forward(backward, forward, name)
-    # some pullback refers to a law of motion, so that the row compares one
+    # some pullback refers to a law of motion and reads a function at a perch,
+    # so that the row compares one perch
     assert compared != []
     assert violations == []
 

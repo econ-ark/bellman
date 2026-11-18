@@ -60,15 +60,17 @@ SOURCE_OF = {"methodize": "methods", "configure": "settings", "calibrate": "cali
 
 
 # a calibration of the tenure stage of the durables application, at values
-# inside its declared sets taken from the durables calibration
+# inside its declared sets taken from the durables calibration; the income
+# level Y and the retirement income y_R are tables with one entry for each of
+# the 52 ages of the set {20, …, 71} that the stage declares
 TENURE_CALIBRATION = {
     "R": 1.045,
     "R_H": 1.0,
     "δ": 0.0,
     "ρ_z": 0.82,
     "σ_z": 0.11,
-    "Y": 1.0,
-    "y_R": 0.0,
+    "Y": [1.0] * 52,
+    "y_R": [0.0] * 52,
 }
 
 

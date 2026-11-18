@@ -220,13 +220,15 @@ def long_aggregation():
     """The aggregation of the backward builder `cntn_to_dcsn` of the two-node
     stage `TWO_NODES` of `bellman/refusal_examples.py`, whose state is k,
     whose control c lies in [0, 1] and whose shocks y and z are normal, here
-    with the one value line `V = E_{y,z}(β*V[>]*(c*y + (1-c)*R + z))`. The
-    line reads the control, so that the input and the output of the
-    signature of the aggregation are too wide for one line of its card."""
+    with the one value line `V = E_{y,z}(β*V[>]*(c*y + (1-c)*R + z))`, whose
+    right side the policy maximizes. The line reads the control, so that the
+    input and the output of the signature of the aggregation are too wide for
+    one line of its card."""
     stage = stage_from_text(
         two_nodes_text_with_changes(
             backward="    V = E_{y,z}(β*V[>]*(c*y + (1-c)*R + z)) :: [id=value]\n",
             header="(V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn]",
+            objective="E_{y,z}(β*V[>]*(c*y + (1-c)*R + z))",
         ),
         "t.bl",
     )

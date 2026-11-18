@@ -509,26 +509,24 @@ def test_the_durables_forward_graph_starts_at_the_first_tenure_and_ends_at_beque
 
 @DURABLES_ROWS
 @needs_viewer
-def test_the_durables_backward_graph_starts_at_the_terminal_value_and_ends_at_the_first_tenure(
+def test_the_durables_backward_graph_runs_from_the_terminal_value_and_age_to_the_first_tenure(
     durables_life_cycle, durables_view
 ):
     """The backward graph of the whole durables trellis starts at the
-    terminal value of `bequest` and ends at the arrival value of the first
-    `tenure` in time, each at a boundary node with its edge."""
+    terminal value and the terminal age of `bequest` and ends at the arrival
+    value and the age of the first `tenure` in time, each at a boundary node
+    with its edge, since a join pairs each of the other ages."""
     first, last = (
         f"periods[{len(durables_life_cycle['periods']) - 1}]/tenure",
         "periods[0]/bequest",
     )
     backward = graph_named(durables_view, "backward")
     terminal = f"{last}/bequest:function:cntn:V"
+    terminal_age = f"{last}/bequest:function:cntn:age"
     result = f"{first}/tenure:function:arvl:V"
-    # the terminal value's node, whose edge leaves for bequest's aggregation
-    terminal_node = (
-        f"start:{terminal}",
-        {"kind": "start", "label": "terminal condition 𝑉≻()"},
-        [terminal],
-        [],
-    )
+    result_age = f"{first}/tenure:function:arvl:age"
+    # the age is a constant, which depends on no state; the nodes stand in the
+    # order of their ids, `V` before `age`
     assert boundary_nodes(backward) == [
         (
             f"end:{result}",
@@ -536,8 +534,26 @@ def test_the_durables_backward_graph_starts_at_the_terminal_value_and_ends_at_th
             [result],
             [(f"{first}/dcsn_to_arvl:Evaluation", result, result)],
         ),
-        terminal_node,
+        (
+            f"end:{result_age}",
+            {"kind": "end", "label": "result 𝑎𝑔𝑒≺()"},
+            [result_age],
+            [(f"{first}/dcsn_to_arvl:Evaluation", result_age, result_age)],
+        ),
+        (
+            f"start:{terminal}",
+            {"kind": "start", "label": "terminal condition 𝑉≻()"},
+            [terminal],
+            [],
+        ),
+        (
+            f"start:{terminal_age}",
+            {"kind": "start", "label": "terminal condition 𝑎𝑔𝑒≻()"},
+            [terminal_age],
+            [],
+        ),
     ]
+    # the terminal value's node, whose edge leaves for bequest's aggregation
     assert edges_from(backward, f"start:{terminal}") == [
         (f"{last}/cntn_to_dcsn:Aggregation", terminal, terminal)
     ]
@@ -587,19 +603,28 @@ def test_the_backward_graph_of_a_restricted_durables_view_marks_each_occurrence_
 ):
     """Restricted to periods 0 to 2, the backward graph of the durables
     trellis marks with one `outside` node each occurrence of `periods[3]`
-    that the connection report joins to `tenure` of `periods[2]`, its one
-    port the value that the evaluation of that `tenure` writes."""
+    that the connection report joins to `tenure` of `periods[2]`, its two
+    ports the value and the age that the evaluation of that `tenure` writes,
+    and starts at the terminal value and the terminal age of `bequest`."""
     assert durables_reached == ["periods[3]/adjuster_cons", "periods[3]/keeper_cons"]
     backward = graph_named(durables_view_of_three_periods, "backward")
-    terminal = "periods[0]/bequest/bequest:function:cntn:V"
-    terminal_node = (
-        f"start:{terminal}",
-        {"kind": "start", "label": "terminal condition 𝑉≻()"},
-        [terminal],
-        [],
-    )
+    terminal = "periods[0]/bequest/bequest:function:cntn"
+    terminal_nodes = [
+        (
+            f"start:{terminal}:{field}",
+            {"kind": "start", "label": label},
+            [f"{terminal}:{field}"],
+            [],
+        )
+        for field, label in (
+            ("V", "terminal condition 𝑉≻()"),
+            ("age", "terminal condition 𝑎𝑔𝑒≻()"),
+        )
+    ]
     tenure = "periods[2]/tenure"
-    leaving = [f"{tenure}/tenure:function:arvl:V"]
+    # the join carries the age, a constant that its route pairs, beside the
+    # value
+    leaving = [f"{tenure}/tenure:function:arvl:V", f"{tenure}/tenure:function:arvl:age"]
     assert boundary_nodes(backward) == sorted(
         [
             (
@@ -610,7 +635,7 @@ def test_the_backward_graph_of_a_restricted_durables_view_marks_each_occurrence_
             )
             for where in durables_reached
         ]
-        + [terminal_node]
+        + terminal_nodes
     )
 
 

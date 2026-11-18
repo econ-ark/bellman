@@ -267,7 +267,7 @@ def test_the_methods_file_of_the_buffer_stock_application_binds_its_four_methods
     assert [(str(place), str(method)) for place, method in stage.methods.items()] == [
         ("dcsn_to_arvl.E_ψ_ξ", "!gauss_hermite(n_ψ=n_ψ_nodes, n_ξ=n_ξ_nodes)"),
         ("dcsn_to_arvl.evaluate", "!Linear   !Cartesian(k=(k_min, k_max, n_k))"),
-        ("policy", "!egm   !Cartesian(a=(a_min, a_max, n_a))"),
+        ("policy", "!egm   !Cartesian(a=(L + extra_grid, a_max, n_a))"),
         ("policy.evaluate", "!Linear"),
     ]
 
@@ -358,12 +358,15 @@ def test_the_path_constants_of_the_perfect_foresight_module_name_the_files_of_it
     )
 
 
-def test_the_closed_form_record_of_the_perfect_foresight_module_holds_its_nine_fields():
+def test_the_closed_form_record_of_the_perfect_foresight_module_holds_its_eleven_fields():
     """The record of the closed form of the perfect-foresight stage holds
-    exactly its nine fields."""
+    exactly its eleven fields: the continuation inputs that it supplies, their
+    conditions, and the nine fields of the closed form."""
     check = closed_form_check()
     form = check.closed_form(check.closed_form_stage())
     assert set(vars(form)) == {
+        "inputs",
+        "input_conditions",
         "return_patience",
         "κ",
         "h",
@@ -405,10 +408,10 @@ INTENDED_REFUSALS = {
         "ValueError",
         "does not satisfy the condition β < R^(ρ - 1)",
     ),
-    "growth-factor-outside-its-declared-set": (
+    "growth-factor-equal-to-the-interest-factor": (
         "3c9d3030",
-        "ValueError",
-        "lies outside the declared set (0, R)",
+        "ConstructionError",
+        "the derived parameter h_lim, defined as `1/(1 - Γ/R)`, has no value",
     ),
     "consumption-at-the-natural-borrowing-limit": (
         "66c54820",

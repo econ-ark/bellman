@@ -165,8 +165,8 @@ def cons_argmax(cons_argmax_text):
 @pytest.fixture(scope="session")
 def buffer_stock():
     """The symbolic stage of the buffer-stock stage file, whose parameter
-    declarations carry the author's descriptions and whose inverse marginal
-    utility is declared as `Inv(𝑑𝑢)`."""
+    declarations carry the author's descriptions and whose marginal utility
+    `𝑑𝑢` and its inverse `𝑑𝑢𝑖𝑛𝑣` are written in closed form."""
     # not one of the eight corpus stages of `CORPUS`, so no stored text of its
     # graphs describes it
     return stage_from_file(BUFFER_STOCK_FILE)

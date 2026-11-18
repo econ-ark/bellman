@@ -352,19 +352,24 @@ def test_the_provenance_of_a_record_holds_its_calibration_sources_and_the_digest
     assert record["provenance"]["sha256"] == hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-def test_load_recipe_reads_the_eight_values_of_the_calibration_of_the_registry(durables_recipe):
-    """load_recipe reads the registry's calibration of the durables
-    application as eight named values."""
-    assert set(durables_recipe["registry"]["calibration"]) == {
-        "wage_coefficients",
-        "tenure_cap",
-        "tenure_origin",
-        "earnings_scale",
-        "retirement_income",
-        "first_age",
-        "retirement_age",
-        "last_age",
-    }
+def test_load_recipe_reads_the_two_income_tables_into_the_calibration_of_each_tenure_record(
+    durables_recipe,
+):
+    """load_recipe reads the income level Y and the retirement income y_R of
+    the durables application into the calibration of each tenure record, as
+    tables of 52 entries, one for each age, from the source that the recipe
+    lists after the calibration file of the application."""
+    records = [period["stages"]["tenure"] for period in durables_recipe["periods"]]
+    assert {
+        (len(record["calibration"]["Y"]), len(record["calibration"]["y_R"])) for record in records
+    } == {(52, 52)}
+    assert {
+        tuple(
+            item.get("source", item.get("slot"))
+            for item in record["provenance"]["source_lists"]["calibration"]
+        )
+        for record in records
+    } == {("calibration/durables", "calibration/wage_schedule", "fill")}
 
 
 def test_load_trellis_of_the_two_stage_model_written_out_equals_load_recipe_of_its_recipe(

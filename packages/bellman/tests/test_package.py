@@ -77,10 +77,13 @@ def test_dir_of_a_stage_lists_its_attributes_perch_handles_queries_and_verbs_as_
 ):
     """The names that `dir` lists of a stage and that do not begin with an
     underscore are its six public attributes, `builder`, the three perch
-    handles, its queries, its own verbs and tables and its binding verbs."""
+    handles, its queries, the check of its continuation inputs, its own verbs
+    and tables and its binding verbs."""
     # `builder` and the three perch handles `arvl`, `dcsn` and `cntn` are
     # properties, as `par` and `settings` are, and not among the seven
-    # attributes; the seventh, the stored record `_builders`, is private
+    # attributes; the seventh, the stored record `_builders`, is private;
+    # `check_inputs` checks the values supplied for the fields that the stage
+    # takes in at its continuation perch
     assert [entry for entry in dir(cons) if not entry.startswith("_")] == sorted(
         {
             "name",
@@ -93,6 +96,7 @@ def test_dir_of_a_stage_lists_its_attributes_perch_handles_queries_and_verbs_as_
             "arvl",
             "dcsn",
             "cntn",
+            "check_inputs",
         }
         | set(QUERY_METHODS)
         | set(BINDING_VERBS)

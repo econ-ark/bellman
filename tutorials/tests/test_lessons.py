@@ -268,6 +268,39 @@ def lesson(tmp_path, monkeypatch):
     return import_set_up_module(tmp_path, monkeypatch, stand_in_viewer())
 
 
+def notebook_showing(data):
+    """A notebook of one code cell whose one output shows `data`."""
+    cell = nbformat.v4.new_code_cell('drawing', id='shown')
+    cell.outputs = [nbformat.v4.new_output('execute_result', data=data, execution_count=1)]
+    return nbformat.v4.new_notebook(cells=[cell])
+
+
+def test_a_drawing_shown_without_its_picture_is_a_failure_of_the_lesson():
+    """`cell_failures` reports a cell whose output is the short form of a
+    drawing with no SVG picture, the form a cell shows where the kernel's
+    environment cannot lay the drawing out; the same output with its picture
+    is no failure, and neither is another text."""
+    short_form = {'text/plain': 'Drawing of 3 boxes'}
+    failures = execute_lessons.cell_failures(notebook_showing(short_form))
+    assert len(failures) == 1 and failures[0].startswith('cell shown: a drawing is shown without')
+    with_picture = {**short_form, 'image/svg+xml': '<svg></svg>'}
+    assert execute_lessons.cell_failures(notebook_showing(with_picture)) == []
+    assert execute_lessons.cell_failures(notebook_showing({'text/plain': "'Drawing of 3 boxes'"})) == []
+
+
+def test_the_tool_stops_before_a_recording_where_pygraphviz_is_not_installed(monkeypatch):
+    """`verify_layout_program` raises the package's message `NO_LAYOUT` where
+    the drawing module holds no `pygraphviz`, and returns where it holds one."""
+    from bellman.display import drawing
+    if drawing.pygraphviz is not None:
+        execute_lessons.verify_layout_program()
+    monkeypatch.setattr(drawing, 'pygraphviz', None)
+    monkeypatch.setattr(drawing, '_IMPORT_FAULT', None)
+    with pytest.raises(RuntimeError) as stopped:
+        execute_lessons.verify_layout_program()
+    assert str(stopped.value) == drawing.NO_LAYOUT
+
+
 def test_importing_the_set_up_module_imports_no_module_of_the_view(tmp_path, monkeypatch):
     """The set-up module imports the package's module of the view only when
     explore is called: its import succeeds where that module cannot be

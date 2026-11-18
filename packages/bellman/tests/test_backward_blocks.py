@@ -601,10 +601,12 @@ def discounting_with_an_unread_value():
             "in   𝑉≻ : Xa → [−∞, ∞)\nout  𝑉 : Xm → [−∞, ∞)",
             id="the value builder of cons",
         ),
+        # the value `V = β` depends on no state, so its type is a function on
+        # the set with one element, the empty tuple of states
         pytest.param(
             "discounting_reading_no_value",
             "cntn_to_dcsn",
-            "in   𝑉≻ : ℝ₊ → ℝ\nout  𝑉 : ℝ₊ → ℝ",
+            "in   𝑉≻ : ℝ₊ → ℝ\nout  𝑉 : {()} → ℝ",
             id="a value line that reads no value input",
         ),
     ],

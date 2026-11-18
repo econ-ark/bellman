@@ -7,9 +7,9 @@ markdown cell of a lesson lists the files the lesson reads, each as a code
 span holding its path from the repository root. These files are the lesson's
 inputs, with one file every lesson executes without listing it: the set-up
 module ``tutorials/checkout.py``, which its first code cell imports. The
-package lays a drawing out itself, with Graphviz's ``dot`` or with the
-WebAssembly build of Graphviz (``bellman.display.graphviz_layout``); the tool
-stops before executing when neither is installed.
+package lays a drawing out itself, with the Graphviz libraries inside the
+Python package ``pygraphviz``; the tool stops before executing where that
+package is not installed.
 
 The record is ``tutorials/lessons.json``. For each lesson it holds the
 lesson's path, the SHA-256 digest of the notebook after its last execution,
@@ -64,6 +64,9 @@ SETUP = 'tutorials/checkout.py'
 # a code span: text between two single backticks on one line
 CODE_SPAN = re.compile(r'(?<!`)`([^`\n]+)`(?!`)')
 TIME_LIMIT_SECONDS = 600
+# the short form of a drawing, which a cell shows alone where the kernel's
+# environment cannot lay the drawing out
+SHORT_FORM_OF_A_DRAWING = re.compile(r'Drawing of \d+ boxes')
 
 
 def digest(path):
@@ -139,20 +142,22 @@ def set_headless_variable():
 
 
 def verify_layout_program():
-    """Stop unless a drawing can be laid out: either Graphviz's dot is on the
-    PATH, or Node runs the WebAssembly build of Graphviz that `npm install` at
-    the repository root installs. Without either, a cell holding a drawing
-    would show its short form and no picture, and no failure would be
-    recorded. The package's layout module answers, read from this checkout."""
+    """Stop unless a drawing can be laid out, with the message the package
+    gives where the Python package pygraphviz is not installed. Without it a
+    cell holding a drawing would show its short form and no picture. The
+    package's drawing module answers, read from this checkout in the
+    environment that runs the tool; `cell_failures` reads what the kernel's
+    environment gave."""
     sys.path.insert(0, str(ROOT / 'packages/bellman'))
-    from bellman.display.graphviz_layout import layout_command, layout_refusal
-    if layout_command() is None:
-        raise RuntimeError(layout_refusal())
+    from bellman.display import drawing
+    if drawing.pygraphviz is None:
+        raise RuntimeError(drawing.NO_LAYOUT)
 
 
 def cell_failures(notebook):
     """The failures an executed notebook shows: an error output in a cell not
-    tagged raises-exception, and a cell so tagged without an error output."""
+    tagged raises-exception, a cell so tagged without an error output, and a
+    drawing that a cell shows as its short form with no picture."""
     failures = []
     for cell in notebook.cells:
         if cell.cell_type != 'code':
@@ -163,6 +168,12 @@ def cell_failures(notebook):
             failures += [f'cell {cell.get("id")}: {error.ename}: {error.evalue}' for error in errors]
         if tagged and not errors:
             failures.append(f'cell {cell.get("id")}: tagged raises-exception but raised no error')
+        for output in cell.outputs:
+            data = output.get('data', {})
+            shown = ''.join(data.get('text/plain', '')).strip()
+            if SHORT_FORM_OF_A_DRAWING.fullmatch(shown) and 'image/svg+xml' not in data:
+                failures.append(f'cell {cell.get("id")}: a drawing is shown without its picture; '
+                                'install the Python package pygraphviz in the environment of the kernel')
     return failures
 
 

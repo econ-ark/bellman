@@ -8,7 +8,41 @@ search:
 
 The one changelog of the project, published as the Changelog page of the documentation site. Each entry is a dated heading followed by bullets that state what changed and where; the newest entry stands first. An entry of the release names the lane whose work it records, and an entry of the work before the release names its subject. The entries of the release 0.01 stand under its heading, and the entries of the work before it under the heading "Before the release".
 
-## After the release 0.04
+## After the release 0.05
+
+## 0.05, the internal developer release
+
+- The fifth internal release gathers the work on `main` since the tag `internal-dev-0.04`, whose dated entries stand below. Its principal parts are a field that a stage keeps unchanged, the constant field typed `!cnst`, and supplied fields such as an age profile; the definition of modularity in Appendix H of the calculus; eleven corrections where a stage writes a second value-type field; the forward record of a period, with one period's forward map and its fixed point; the tests of the language package in a default set and a complete set, with the workflow that runs them on GitHub; drawings laid out by the Graphviz libraries inside `pygraphviz`, with no extra install step; and the statement that the project is in pre-release.
+- The release is the tag `internal-dev-0.05` of 18 November 2026 on `main`, at the commit that records it. On that commit, checked in a clean copy of the repository, the complete set of the package's tests gave 7,584 tests passed, 20 skipped and 15 expected failures, and the checks of the documentation gave 266 passed and 3 expected failures; no test failed. `mkdocs build --strict` reported no warning. The check of the package's imports reported five imports that read a later folder, in `distributions/families.py` and `fold/conditions.py`, against none at the release 0.04. The checks of the document properties and of the decision records reported 14 and 62 faults, against 67 and 65 at the release 0.04.
+
+### 2026-11-18 — The pre-release status, the instructions for the tests and the About page
+
+- The root `README.md`, the About page and the page Install state that the project is in pre-release: the syntax of the language and the interfaces of the packages may still change between versions, with no promise of backward compatibility.
+- The instructions for running the tests stand in `tests/README.md`. The section "Tests" of the root `README.md` is removed, and the table of contents of that file links the new page.
+- The About page gives the credits of the homepage media in one footnote, to which the homepage's link "Media credits" points. The sections on the homepage media and on the typefaces are removed, and the license text of each typeface stays beside its files.
+
+### 2026-11-18 — Drawings laid out with no extra install step
+
+- A drawing of a graph, of a period or of a trellis is laid out by the Graphviz libraries inside the Python package `pygraphviz`. `bellman` requires `pygraphviz` at version 2.0.4, so `pip` installs it with `bellman`. A user installs no other program for a drawing: a drawing needs neither Graphviz's program `dot` nor Node.js with `npm ci`.
+- `bellman` requires `pygraphviz` on the systems for which `pygraphviz` publishes an install file: macOS, Linux on x86-64 and on ARM, and Windows on x86-64. On a system that this list does not name, `bellman` installs without it, and `Drawing.svg()` refuses with a message that says what to install. On a listed system for which no install file fits, such as a Linux that uses the musl C library, `pip` builds `pygraphviz` from its source, which needs Graphviz with its development files; the README of the package lists the cases.
+- `Drawing.svg()` answers the picture wherever `pygraphviz` is installed, and a notebook cell that holds a drawing shows it. The module `bellman.display.graphviz_layout`, with `layout_svg`, `layout_command` and `layout_refusal`, is deleted, as are its Node script and `packages/bellman/package.json`.
+- Graphviz measures a label with the fonts of the machine, so the size of a picture differs a little between machines. The thirteen lessons are recorded again with the new layout.
+- Each frame of a drawing has an identifier of its own in the drawing's DOT text, the description of the drawing that Graphviz reads. Before, the frame of a builder whose last box was a sub-builder had the same identifier as that sub-builder's frame. Graphviz warns of two frames with one identifier, and the former layout discarded the warning. The name printed on each frame is unchanged, and no picture changes.
+- The workflow `.github/workflows/tests.yml` installs neither Node.js nor a Node package.
+- The root README, the README of the package, the README of the lessons and the install page of the Workbench no longer name Graphviz's program or Node.js as a requirement of a drawing.
+
+### 2026-11-18 — The workflow of the tests: time limit and filter
+
+- The job of the workflow `.github/workflows/tests.yml` may run for 90 minutes; its limit was 45. On GitHub's machine a run of the complete set took 20 to 36 minutes on 18 November 2026.
+- In the development repository a push or a pull request that changes files of the internal folder alone starts no run. The public repository has no such folder, so each push and each pull request there starts a run as before.
+- The test of the catalogue entries of the refusal rules, `test_entry_answers_every_rule_from_the_checkout_or_the_installed_package` in `packages/bellman/tests/test_refusals.py`, asserts no time. It bounded each call of `entry` by one second, which GitHub's machine did not meet in two of three runs.
+
+### 2026-11-17 — The workflow of the tests of the language package
+
+- The tests of `packages/bellman` form two sets. From the root of the repository, `python -m pytest packages/bellman/tests -n logical -rfEsxX` runs the default set, and the same command with `--complete` runs the complete set. The default set leaves out each case marked `complete_set`: all rows but one of some tests that run over a table, such as the list of the stage files of the applications, and a few tests that run only in the complete set, such as the elaboration of whole registries. The complete set runs every case.
+- The workflow `.github/workflows/tests.yml` runs these tests on GitHub, on Ubuntu 24.04 with Python 3.12, and then, in the same set, the checks of the documentation, which stand in files of the folder `tests/` that the workflow names one by one. It runs the default set on a push to a branch other than `main`, and the complete set on a pull request and on a push to `main`. Its token can only read the repository, and it reads no secret of the repository, so the code of a pull request from a fork can change nothing in it.
+- A contributor installs what the workflow installs: the package with its extras `dev`, `docs` and `explore`, the package `asva`, and the Node package that `packages/bellman/package.json` names, which lays the drawings out. The section "Tests" of `README.md` gives the install lines and the commands. The workflow does not install JAX. The tests that need JAX are skipped, and pytest gives the reason.
+- The tests that fail for known faults, in the package and in the checks of the documentation, are marked as expected failures. A run reports them as `xfailed` and passes.
 
 ### 2026-11-16 — Supplied fields and age profiles
 

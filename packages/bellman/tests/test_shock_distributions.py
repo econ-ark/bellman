@@ -13,6 +13,7 @@ import pytest
 from application_files import BUFFER_STOCK_CALIBRATION_AT_R_1_04, COPIED_FILES_FOLDER, ROOT
 from stage_builders import DEFAULT_ORIGIN, stage_from_text
 from stage_texts import (
+    BUFFER_STOCK_FEASIBLE_SET_LINE,
     CHAIN_CALIBRATION_J1,
     CHAIN_TEXT,
     PSI_IDENTITY,
@@ -256,6 +257,14 @@ def definition_lists(value):
 def truncated_psi_text(buffer_stock_file_text):
     """The buffer-stock stage text with `ψ ~ TRUNCATED_PSI`."""
     return text_with_psi_law(buffer_stock_file_text, TRUNCATED_PSI_LAW)
+
+
+@pytest.fixture(scope="module")
+def truncated_psi_text_without_the_feasible_set(truncated_psi_text):
+    """`truncated_psi_text` without the definition of the feasible set, which
+    reads the bound L that only the blocks after the first declare, so that
+    the text cut after its first block is a stage."""
+    return changed(truncated_psi_text, (BUFFER_STOCK_FEASIBLE_SET_LINE, ""))
 
 
 @pytest.fixture(scope="module")
@@ -620,7 +629,7 @@ def test_the_measure_of_a_scalar_declaration_prints_its_definition_at_the_writte
     [
         # the block arvl_to_dcsn of the buffer-stock stage reads ψ
         pytest.param(
-            "truncated_psi_text",
+            "truncated_psi_text_without_the_feasible_set",
             "buffer_stock.bl",
             "dcsn_to_cntn",
             PSI_IDENTITY,

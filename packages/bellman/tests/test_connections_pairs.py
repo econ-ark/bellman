@@ -1310,10 +1310,11 @@ def test_the_backward_value_port_of_a_crossed_route_names_its_joins_and_its_pair
     crossed_view,
 ):
     """The port of `S`'s continuation value in the backward graph names the
-    two crossed joins and the rule that pairs one wire for each role, and no
-    compatibility, since the route is compatible."""
+    two crossed joins and the rule of equal names, which pairs `V` before
+    any wire is paired as the one left on each side, and no compatibility,
+    since the route is compatible."""
     backward = port_attributes(crossed_view, "backward")["periods[0]/S/two_fields:function:cntn:V"]
-    assert (backward["join"], backward["paired by"]) == ("a → b; b → a", "one wire per role")
+    assert (backward["join"], backward["paired by"]) == ("a → b; b → a", "equal name")
     assert "compatibility" not in backward
 
 

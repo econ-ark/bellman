@@ -16,6 +16,7 @@ from stage_texts import (
     GROWTH_LINE,
     RESOURCES_LINE,
     TWO_STATE_GRID_STAGE,
+    changed,
     explicit_policy_with_entries,
     perfect_foresight_text,
 )
@@ -101,13 +102,18 @@ FORWARD_NODE_TEXT = perfect_foresight_text(
 )
 
 
-def stage_with_a_node(lines):
-    """The perfect-foresight stage with the parameters K and Y of a table, and
-    with `lines` in place of the value line of its decision builder."""
+def stage_with_a_node(lines, objective):
+    """The perfect-foresight stage with the parameters K and Y of a table,
+    with `lines` in place of the value line of its decision builder, and
+    with `objective` in place of the objective of its maximization, the right
+    side of the decision value that `lines` define, which the objective
+    equals."""
     value = "    V = 𝑢(c) + β*V[>]               :: [id=value]\n"
     return stage_from_text(
         perfect_foresight_text(
-            (GROWTH_LINE, GROWTH_LINE + "K : ℝ × ℝ × ℝ\nY : ℝ × ℝ × ℝ\n"), (value, lines)
+            (GROWTH_LINE, GROWTH_LINE + "K : ℝ × ℝ × ℝ\nY : ℝ × ℝ × ℝ\n"),
+            (value, lines),
+            ("(𝑢(cp) + β*V[>])", f"({objective})"),
         ),
         "perfect_foresight.bl",
     )
@@ -127,18 +133,46 @@ def configured_then_calibrated(stage, settings, calibration):
     return version
 
 
+# the representation of the authored table of the arrival block by `!Linear`
+# on the grid `KN` of its knots
+LINEAR_ON_THE_KNOTS = (
+    "KN : ℝ × ℝ × ℝ\n"
+    "dcsn_to_arvl.table.evaluate.method : !Linear\n"
+    "dcsn_to_arvl.table.evaluate.grid : !Cartesian(k=KN)\n"
+)
+
+
+def application_stage_with_a_table(entries):
+    """The stage file of the perfect-foresight application, which takes in
+    the human wealth h[>] that the application's module supplies, with the
+    parameters K and Y of a table of three knots and the line
+    `W = evaluate(K, Y, k)` of its arrival block, methodized by `entries`."""
+    check = closed_form_check()
+    source = check.source(check.STAGE)
+    value = "    V[<] = Γ^(1-ρ) * V              :: [id=value]\n"
+    text = changed(
+        source["text"],
+        ("Xa := ℝ\n", "Xa := ℝ\nK : ℝ × ℝ × ℝ\nY : ℝ × ℝ × ℝ\n"),
+        (value, value + "    W = evaluate(K, Y, k)            :: [id=table]\n"),
+    )
+    return methodized_copy(stage_from_text(text, source["origin"]), entries)
+
+
 @pytest.fixture(scope="module")
 def authored_table_stage():
     """The perfect-foresight stage whose arrival block reads the authored
     table `W = evaluate(K, Y, k)`, represented by `!Linear` on the grid `KN`
     of its knots."""
     table = stage_from_text(perfect_foresight_text(table=True), PERFECT_FORESIGHT_ORIGIN)
-    return methodized_copy(
-        table,
-        "KN : ℝ × ℝ × ℝ\n"
-        "dcsn_to_arvl.table.evaluate.method : !Linear\n"
-        "dcsn_to_arvl.table.evaluate.grid : !Cartesian(k=KN)\n",
-    )
+    return methodized_copy(table, LINEAR_ON_THE_KNOTS)
+
+
+@pytest.fixture(scope="module")
+def application_table_stage():
+    """The stage file of the perfect-foresight application whose arrival
+    block reads the authored table `W = evaluate(K, Y, k)`, represented by
+    `!Linear` on the grid `KN` of its knots."""
+    return application_stage_with_a_table(LINEAR_ON_THE_KNOTS)
 
 
 @pytest.fixture(scope="module")
@@ -188,7 +222,9 @@ def forward_node_stage():
 def table_node_stage():
     """The perfect-foresight stage whose decision value is defined by the
     authored table alone, on the `!node` line `table`."""
-    return stage_with_a_node("    V = evaluate(K, Y, m)    :: [id=table, !node]\n")
+    return stage_with_a_node(
+        "    V = evaluate(K, Y, m)    :: [id=table, !node]\n", "evaluate(K, Y, m)"
+    )
 
 
 @pytest.fixture(scope="module")
@@ -197,7 +233,8 @@ def summand_node_stage():
     authored table to the discounted continuation value."""
     return stage_with_a_node(
         "    W = β*V[>] + evaluate(K, Y, m)    :: [id=table, !node]\n"
-        "    V = 𝑢(c) + W                      :: [id=value]\n"
+        "    V = 𝑢(c) + W                      :: [id=value]\n",
+        "𝑢(cp) + (β*V[>] + evaluate(K, Y, m))",
     )
 
 
@@ -1040,7 +1077,7 @@ def test_a_family_of_own_nodes_owes_its_evaluation_inside_its_interval_or_an_ext
 
 
 def test_preparation_compares_a_table_with_a_grid_configured_before_its_calibration_exactly(
-    authored_table_stage,
+    application_table_stage,
 ):
     """Where the grid is configured before the calibration that values the
     table's knots, preparation refuses a different support and builds the
@@ -1048,13 +1085,13 @@ def test_preparation_compares_a_table_with_a_grid_configured_before_its_calibrat
     one point."""
     check = closed_form_check()
     different = configured_then_calibrated(
-        authored_table_stage, {"KN": [0.0, 1.0, 3.0]}, TABLE_CALIBRATION
+        application_table_stage, {"KN": [0.0, 1.0, 3.0]}, TABLE_CALIBRATION
     )
     with pytest.raises(ValueError) as refused:
         check.prepare_table(different, "dcsn_to_arvl.table.evaluate", "K", "Y")
     assert "exactly the table's finite support" in str(refused.value)
     equal = configured_then_calibrated(
-        authored_table_stage, {"KN": [-0.0, 1.0, 2.0]}, TABLE_CALIBRATION
+        application_table_stage, {"KN": [-0.0, 1.0, 2.0]}, TABLE_CALIBRATION
     )
     prepared = check.prepare_table(equal, "dcsn_to_arvl.table.evaluate", "K", "Y")
     assert (prepared.word, prepared.source) == ("!Linear", "table")
@@ -1067,8 +1104,7 @@ def test_preparation_compares_a_spaced_grid_with_a_table_through_the_exact_nodes
     floating-point number of a node of a spaced grid, and prepares an equal
     table where the nodes are floating-point numbers."""
     check = closed_form_check()
-    spaced = methodized_copy(
-        stage_from_text(perfect_foresight_text(table=True), PERFECT_FORESIGHT_ORIGIN),
+    spaced = application_stage_with_a_table(
         "k_lo : ℝ\nk_hi : ℝ\nn_k : ℕ\n"
         "dcsn_to_arvl.table.evaluate.method : !Linear\n"
         "dcsn_to_arvl.table.evaluate.grid : "
@@ -1131,11 +1167,11 @@ def test_preparation_of_a_closed_form_gives_the_compiled_kernel_of_its_expressio
         "expression",
         None,
     )
-    # the consumption is κ·(m − L), with L = 1 − h the natural borrowing limit,
-    # so κ·h at m = 1; at the application's calibration, R = 1.04, Γ = 1.02 and
-    # Rβ = 1 with ρ = 2, the marginal propensity to consume is
-    # κ = 1 − (Rβ)^(1/ρ)/R = 1 − 1/1.04 and human wealth h = 1/(1 − Γ/R) = 52,
-    # so κ·h = (0.04/1.04)·52 = 2
+    # the consumption is κ·(m − L_lim), with L_lim = 1 − h_lim the natural
+    # borrowing limit, so κ·h_lim at m = 1; at the application's calibration,
+    # R = 1.04, Γ = 1.02 and Rβ = 1 with ρ = 2, the marginal propensity to
+    # consume is κ = 1 − (Rβ)^(1/ρ)/R = 1 − 1/1.04 and human wealth
+    # h_lim = 1/(1 − Γ/R) = 52, so κ·h_lim = (0.04/1.04)·52 = 2
     assert expression.evaluator(np.array([1.0])).tolist() == pytest.approx([2.0])
 
 

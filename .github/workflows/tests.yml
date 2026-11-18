@@ -1,0 +1,72 @@
+name: Tests
+
+# The tests of the language package, packages/bellman, and the checks of the documentation.
+# The public export carries this file unchanged, so it runs in both repositories alike.
+on:
+  # every push to a branch; the push of a tag alone starts no run
+  push:
+    branches: ['**']
+    # the development repository keeps its internal records in the folder AI, which the public repository does not have;
+    # a push that changes files of that folder alone starts no run
+    paths-ignore: ['AI/**']
+  pull_request:
+    # nor does a pull request whose changes all lie in that folder
+    paths-ignore: ['AI/**']
+  # a run started by hand from the page of the workflow on GitHub
+  workflow_dispatch:
+
+# The job's token can only read the repository, and the job reads no secret of the repository, so the code of a pull request from a fork can change nothing in it.
+permissions:
+  contents: read
+
+# A newer commit on a pull request stops the run of the older one; no run of a push is stopped.
+concurrency:
+  group: tests-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    # a fixed image, so that a move to a newer Ubuntu is a decision
+    runs-on: ubuntu-24.04
+    # stops a run that hangs; a run of the complete set took 20 to 36 minutes on 18 November 2026
+    timeout-minutes: 90
+    env:
+      # files are read as UTF-8 whatever the locale of the runner
+      PYTHONUTF8: '1'
+      # the complete set also on a push to main, since a merge made on a local machine and pushed has no pull request
+      SET: ${{ (github.event_name == 'pull_request' || github.ref == 'refs/heads/main') && '--complete' || '' }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # the token of the run is not kept in the checkout, where the code under test could read it
+          persist-credentials: false
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+          # the downloaded Python packages are kept between runs, renewed when either list of them changes
+          cache: pip
+          cache-dependency-path: |
+            packages/bellman/pyproject.toml
+            packages/asva/pyproject.toml
+
+      # editable, so that the tests import bellman from the checkout; JAX, which no extra lists, is not installed
+      - name: Install the package and its test dependencies
+        run: |
+          # the extras docs and explore hold the packages of the documentation site and of the viewer
+          python -m pip install -e "packages/bellman[dev,docs,explore]"
+          python -m pip install -e packages/asva
+
+      # from the root, one process for each logical processor, with the reason of each skip and expected failure
+      - name: Run the tests of the package
+        id: package
+        run: python -m pytest packages/bellman/tests -n logical $SET -rfEsxX
+
+      # the files of the checks of the documentation, named one by one, in the same set
+      - name: Run the checks of the documentation
+        # also after a failure of the package's tests, so that a contributor sees both results in one run
+        if: ${{ !cancelled() && steps.package.outcome != 'skipped' }}
+        run: >-
+          python -m pytest tests/test_documentation_structure.py tests/test_method_types_page.py
+          tests/test_package_documentation.py tests/test_documented_applications_and_lessons.py
+          tests/test_documentation_content.py tests/test_application_layout.py -n logical $SET -rfEsxX

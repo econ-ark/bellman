@@ -35,29 +35,36 @@ BUFFER_STOCK_ARRIVAL_BLOCK = (
 
 # the headers of the value block and of the arrival block of the stage with
 # two fields: the buffer-stock stage whose two backward blocks also list and
-# write a second value field `L`
+# write a second value field `Θ` after the value, beside the borrowing bound
+# `L` that the stage takes in and keeps
 VALUE_HEADER_OF_TWO_FIELDS = (
-    "[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, L[>] : ℝ @ !vlu, c) : !cntn"
-    " -> (V : ℝ @ !vlu, L : ℝ @ !vlu) : !dcsn] {\n"
+    "[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, Θ[>] : ℝ @ !vlu, L : (-inf, 0] @ !vlu @ !cnst, c)"
+    " : !cntn -> (V : ℝ @ !vlu, Θ : ℝ @ !vlu, L) : !dcsn] {\n"
 )
 
 
 ARRIVAL_HEADER_OF_TWO_FIELDS = (
-    "[id=dcsn_to_arvl, (V, L) : !dcsn -> (V[<] : ℝ @ !vlu, L[<] : ℝ @ !vlu) : !arvl] {\n"
+    "[id=dcsn_to_arvl, (V, Θ, L) : !dcsn"
+    " -> (V[<] : ℝ @ !vlu, Θ[<] : ℝ @ !vlu, L[<] : (-inf, 0] @ !vlu @ !cnst) : !arvl] {\n"
 )
+
+
+# the line of the arrival block that writes the bound `L[<]`
+ARRIVAL_LINE_OF_THE_BOUND = "L[<] = if σ_ψ > 0 then 0 else Γ*L/R"
 
 
 # the two blocks of the stage with two fields, their lines carrying ids
 VALUE_BLOCK_OF_TWO_FIELDS = (
     VALUE_HEADER_OF_TWO_FIELDS + "    V = 𝑢(c) + β*V[>]               :: [id=value]\n"
-    "    L = L[>]                        :: [id=limit]\n"
+    "    Θ = Θ[>]                        :: [id=limit]\n"
     "}"
 )
 
 
 ARRIVAL_BLOCK_OF_TWO_FIELDS = (
     ARRIVAL_HEADER_OF_TWO_FIELDS + "    V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)     :: [id=value]\n"
-    "    L[<] = E_{ψ,ξ}(L)               :: [id=limit]\n"
+    "    Θ[<] = E_{ψ,ξ}(Θ)               :: [id=limit]\n"
+    f"    {ARRIVAL_LINE_OF_THE_BOUND} :: [id=borrowing_bound]\n"
     "}"
 )
 
@@ -80,14 +87,14 @@ def two_fields_text(*changes):
     )
 
 
-def two_fields_writing(*value_lines, arrival="L[<] = E_{ψ,ξ}(L)"):
+def two_fields_writing(*value_lines, arrival="Θ[<] = E_{ψ,ξ}(Θ)"):
     """The text of the stage with two fields whose value block writes
-    `value_lines` in the order given and whose arrival block writes `L[<]` by
+    `value_lines` in the order given and whose arrival block writes `Θ[<]` by
     the line `arrival`, no line carrying an id."""
     value_block = (
         VALUE_HEADER_OF_TWO_FIELDS + "".join(f"    {line}\n" for line in value_lines) + "}"
     )
-    arrival_lines = ["V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)", arrival]
+    arrival_lines = ["V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)", arrival, ARRIVAL_LINE_OF_THE_BOUND]
     arrival_block = (
         ARRIVAL_HEADER_OF_TWO_FIELDS + "".join(f"    {line}\n" for line in arrival_lines) + "}"
     )
@@ -101,9 +108,9 @@ def two_fields_writing(*value_lines, arrival="L[<] = E_{ψ,ξ}(L)"):
 @pytest.fixture(scope="module")
 def stating_the_derivative_of_the_value():
     """The stage with two fields whose value block also states the derivative
-    `D_{m}V = 𝑑𝑢(c)` and whose arrival line reads the derivative of `L`."""
+    `D_{m}V = 𝑑𝑢(c)` and whose arrival line reads the derivative of `Θ`."""
     text = two_fields_writing(
-        "V = 𝑢(c) + β*V[>]", "L = L[>]", "D_{m}V = 𝑑𝑢(c)", arrival="L[<] = E_{ψ,ξ}(D_{m}L)"
+        "V = 𝑢(c) + β*V[>]", "Θ = Θ[>]", "D_{m}V = 𝑑𝑢(c)", arrival="Θ[<] = E_{ψ,ξ}(D_{m}Θ)"
     )
     return stage_from_text(text, "two_fields.bl")
 
@@ -111,19 +118,21 @@ def stating_the_derivative_of_the_value():
 @pytest.fixture(scope="module")
 def stating_the_derivative_of_the_second_field():
     """The stage with two fields whose value block also states the derivative
-    `D_{m}L = 0`."""
-    text = two_fields_writing("V = 𝑢(c) + β*V[>]", "L = L[>]", "D_{m}L = 0")
+    `D_{m}Θ = 0`."""
+    text = two_fields_writing("V = 𝑢(c) + β*V[>]", "Θ = Θ[>]", "D_{m}Θ = 0")
     return stage_from_text(text, "two_fields.bl")
 
 
 def test_the_card_of_a_value_builder_prints_each_rule_under_the_output_that_it_writes():
     """The card of the value builder of the stage with two fields, whose
-    block writes `L = L[>]` before the line of `V`, prints the rule of `𝑉`
-    first and the rule of `𝐿` under it."""
-    stage = stage_from_text(two_fields_writing("L = L[>]", "V = 𝑢(c) + β*V[>]"), "two_fields.bl")
+    block writes `Θ = Θ[>]` before the line of `V`, prints the rule of `𝑉`
+    first, the rule of `𝛩` under it and the rule of the kept bound `𝐿`
+    last."""
+    stage = stage_from_text(two_fields_writing("Θ = Θ[>]", "V = 𝑢(c) + β*V[>]"), "two_fields.bl")
     card = str(stage.builder["cntn", "dcsn"].denote())
     assert (
-        "     rule: 𝑉(m) = 𝑢(𝑐(m)) + β · 𝑉≻(𝑔≻(m, 𝑐(m)))\n           𝐿(m) = 𝐿≻(𝑔≻(m, 𝑐(m)))\n"
+        "     rule: 𝑉(m) = 𝑢(𝑐(m)) + β · 𝑉≻(𝑔≻(m, 𝑐(m)))\n           𝛩(m) = 𝛩≻(𝑔≻(m, 𝑐(m)))\n"
+        "           𝐿(m) = 𝐿≻()\n\n"
     ) in card
 
 
@@ -148,13 +157,15 @@ def test_the_rule_on_the_card_of_an_aggregation_is_the_value_line_and_not_a_loca
     [
         pytest.param(
             "stating_the_derivative_of_the_value",
-            "     rule: 𝑉 : Xm → ℝ\n           D_{m}𝑉(m) = 𝑑𝑢(𝑐(m))\n           𝐿 : Xm → ℝ\n\n",
+            "     rule: 𝑉 : Xm → ℝ\n           D_{m}𝑉(m) = 𝑑𝑢(𝑐(m))\n"
+            "           𝛩 : Xm → ℝ\n           𝐿 : {()} → (−∞, 0]\n\n",
             id="the derivative of V",
         ),
         pytest.param(
             "stating_the_derivative_of_the_second_field",
-            "     rule: 𝑉 : Xm → ℝ\n           𝐿 : Xm → ℝ\n           D_{m}𝐿(m) = 0\n\n",
-            id="the derivative of L",
+            "     rule: 𝑉 : Xm → ℝ\n           𝛩 : Xm → ℝ\n           D_{m}𝛩(m) = 0\n"
+            "           𝐿 : {()} → (−∞, 0]\n\n",
+            id="the derivative of Θ",
         ),
     ],
 )
@@ -180,7 +191,7 @@ def test_the_card_prints_a_derivative_line_under_the_value_that_its_left_side_na
             "stating_the_derivative_of_the_second_field",
             [],
             ["buffer_stock:dcsn:m"],
-            id="the derivative of L",
+            id="the derivative of Θ",
         ),
     ],
 )
@@ -191,7 +202,8 @@ def test_the_sort_of_a_value_holds_the_coordinate_of_a_derivative_that_a_line_st
     two fields holds the coordinate of the derivative that a line states of
     that value, and no other."""
     builder = request.getfixturevalue(stage_name).builder["cntn", "dcsn"]
-    value, second = builder.signature().outputs
+    # the third output is the bound L, which the stage keeps
+    value, second, _ = builder.signature().outputs
     assert [str(coordinate) for coordinate in value.sort.derivatives] == value_coordinates
     assert [str(coordinate) for coordinate in second.sort.derivatives] == second_coordinates
 
@@ -199,12 +211,12 @@ def test_the_sort_of_a_value_holds_the_coordinate_of_a_derivative_that_a_line_st
 def test_a_derivative_read_of_a_value_whose_derivative_no_line_states_is_a_diagnostic(
     stating_the_derivative_of_the_value,
 ):
-    """The arrival line `L[<] = E_{ψ,ξ}(D_{m}L)` of the stage with two fields,
-    which reads the derivative of `L` where no line states that derivative,
+    """The arrival line `Θ[<] = E_{ψ,ξ}(D_{m}Θ)` of the stage with two fields,
+    which reads the derivative of `Θ` where no line states that derivative,
     is recorded under `derivative-missing`."""
     (missing,) = stating_the_derivative_of_the_value.diagnostics()["derivative_missing"]
     assert (
-        "the block 'dcsn_to_arvl' reads `D_{m}L`, and the value `L` carries no derivative in m"
+        "the block 'dcsn_to_arvl' reads `D_{m}Θ`, and the value `Θ` carries no derivative in m"
     ) in missing.message
 
 
@@ -213,7 +225,7 @@ def test_a_derivative_read_of_a_value_whose_derivative_no_line_states_is_a_diagn
     [
         pytest.param("stating_the_derivative_of_the_value", ("D_{m}V",), id="the derivative of V"),
         pytest.param(
-            "stating_the_derivative_of_the_second_field", ("D_{m}L",), id="the derivative of L"
+            "stating_the_derivative_of_the_second_field", ("D_{m}Θ",), id="the derivative of Θ"
         ),
     ],
 )
@@ -341,20 +353,21 @@ def test_the_value_line_of_a_choice_is_the_line_whose_tuple_the_policy_maximizes
         pytest.param(
             "dcsn_to_arvl",
             ARRIVAL_BLOCK_OF_TWO_FIELDS,
-            "[id=dcsn_to_arvl, (V, L) : !dcsn -> (V[<] : ℝ @ !vlu, L : ℝ @ !vlu) : !arvl] {\n"
-            "    V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)     :: [id=value]\n"
-            "    L = L                           :: [id=limit]\n"
-            "}",
+            changed(
+                ARRIVAL_BLOCK_OF_TWO_FIELDS,
+                ("Θ[<] : ℝ @ !vlu", "Θ : ℝ @ !vlu"),
+                ("    Θ[<] = E_{ψ,ξ}(Θ)    ", "    Θ = Θ                "),
+            ),
             id="the arrival block",
         ),
         pytest.param(
             "cntn_to_dcsn",
             VALUE_BLOCK_OF_TWO_FIELDS,
-            "[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, L : ℝ @ !vlu, c) : !cntn"
-            " -> (V : ℝ @ !vlu, L : ℝ @ !vlu) : !dcsn] {\n"
-            "    V = 𝑢(c) + β*V[>]               :: [id=value]\n"
-            "    L = L                           :: [id=limit]\n"
-            "}",
+            changed(
+                VALUE_BLOCK_OF_TWO_FIELDS,
+                ("Θ[>] : ℝ @ !vlu", "Θ : ℝ @ !vlu"),
+                ("    Θ = Θ[>]   ", "    Θ = Θ      "),
+            ),
             id="the value block",
         ),
     ],
@@ -362,24 +375,24 @@ def test_the_value_line_of_a_choice_is_the_line_whose_tuple_the_policy_maximizes
 def test_a_backward_line_whose_two_sides_are_one_bare_name_is_refused_as_a_cycle(
     block, written, bare
 ):
-    """A backward block of the stage with two fields that lists `L` without a
-    mark and writes `L = L` is refused under `definition-order` at that line,
-    with a sentence that names the two marked spellings of `L`."""
+    """A backward block of the stage with two fields that lists `Θ` without a
+    mark and writes `Θ = Θ` is refused under `definition-order` at that line,
+    with a sentence that names the two marked spellings of `Θ`."""
     text = two_fields_text((written, bare))
     with pytest.raises(ConstructionError) as refused:
         stage_from_text(text, BUFFER_STOCK_ORIGIN)
     refusal = refused.value
     assert (refusal.rule, refusal.address) == ("definition-order", f"{block}.limit")
-    assert (refusal.file, refusal.line) == (BUFFER_STOCK_ORIGIN, line_of(text, "L = L "))
+    assert (refusal.file, refusal.line) == (BUFFER_STOCK_ORIGIN, line_of(text, "Θ = Θ "))
     advice = (
-        "Write `L = L[>]` where the line reads the field at the continuation perch, or "
-        "`L[<] = …` where it writes the field at the arrival perch, and list the field with "
+        "Write `Θ = Θ[>]` where the line reads the field at the continuation perch, or "
+        "`Θ[<] = …` where it writes the field at the arrival perch, and list the field with "
         "that mark in the header of the block"
     )
     assert refusal.message == (
-        f"the two sides of this line of block {block!r} are the one name L, so the line "
-        "defines L by itself, the cycle L → L; a mark tells the fields of one name at two "
-        "perches apart: `L[>]` is the field at the continuation perch and `L[<]` the field "
+        f"the two sides of this line of block {block!r} are the one name Θ, so the line "
+        "defines Θ by itself, the cycle Θ → Θ; a mark tells the fields of one name at two "
+        "perches apart: `Θ[>]` is the field at the continuation perch and `Θ[<]` the field "
         f"at the arrival perch. {advice}"
     )
     assert refusal.write == advice
@@ -423,12 +436,12 @@ def tenure_text():
 
 
 @pytest.fixture(scope="module")
-def buffer_stock_listing_l_with_a_mark():
+def buffer_stock_listing_theta_with_a_mark():
     """The text of the buffer-stock stage whose value block also lists the
-    field `L[>]`."""
+    field `Θ[>]`."""
     return changed(
         buffer_stock_text(),
-        ("(V[>] : ℝ @ !vlu, c) : !cntn", "(V[>] : ℝ @ !vlu, L[>] : ℝ @ !vlu, c) : !cntn"),
+        ("(V[>] : ℝ @ !vlu, L : (-inf", "(V[>] : ℝ @ !vlu, Θ[>] : ℝ @ !vlu, L : (-inf"),
     )
 
 
@@ -450,26 +463,26 @@ BARE_READS = [
         id="a set of tenure",
     ),
     pytest.param(
-        "buffer_stock_listing_l_with_a_mark",
+        "buffer_stock_listing_theta_with_a_mark",
         "buffer_stock",
         "Xm := ℝ",
-        "Xm := {x : ℝ | x > L}",
-        "Xm := {x : ℝ | x > L}",
-        "the definition of the set 'Xm' reads the name 'L' in the set `{x : ℝ | x > L}`, "
-        "and the headers of the stage list the field L with a mark alone, as `L[>]`; a "
-        "bare name reads the field that a header lists without a mark. Write `L[>]` in "
-        "place of `L`",
+        "Xm := {x : ℝ | x > Θ}",
+        "Xm := {x : ℝ | x > Θ}",
+        "the definition of the set 'Xm' reads the name 'Θ' in the set `{x : ℝ | x > Θ}`, "
+        "and the headers of the stage list the field Θ with a mark alone, as `Θ[>]`; a "
+        "bare name reads the field that a header lists without a mark. Write `Θ[>]` in "
+        "place of `Θ`",
         id="the set of resources of buffer_stock",
     ),
     pytest.param(
-        "buffer_stock_listing_l_with_a_mark",
+        "buffer_stock_listing_theta_with_a_mark",
         "buffer_stock",
         "@stage: buffer_stock\n",
-        "@stage: buffer_stock\n𝑓(x : ℝ) := x - L\n",
-        "𝑓(x : ℝ) := x - L",
-        "the definition of '𝑓' mentions 'L', and the headers of the stage list the field "
-        "L with a mark alone, as `L[>]`; a bare name reads the field that a header lists "
-        "without a mark. Write `L[>]` in place of `L`",
+        "@stage: buffer_stock\n𝑓(x : ℝ) := x - Θ\n",
+        "𝑓(x : ℝ) := x - Θ",
+        "the definition of '𝑓' mentions 'Θ', and the headers of the stage list the field "
+        "Θ with a mark alone, as `Θ[>]`; a bare name reads the field that a header lists "
+        "without a mark. Write `Θ[>]` in place of `Θ`",
         id="a function of buffer_stock",
     ),
 ]
@@ -498,19 +511,19 @@ def test_a_set_or_a_function_that_reads_bare_a_field_listed_with_a_mark_alone_is
 
 
 def test_the_refusal_of_an_arrival_line_with_no_expectation_names_every_shock_of_its_edge():
-    """The arrival line `L[<] = L` of the stage with two fields is refused
+    """The arrival line `Θ[<] = Θ` of the stage with two fields is refused
     under `shock-observed` with the advice to write the expectation over ψ
     and ξ, the shocks of its edge, and the line written so is read."""
-    as_written = "    L[<] = E_{ψ,ξ}(L)               :: [id=limit]\n"
-    text = two_fields_text((as_written, "    L[<] = L                        :: [id=limit]\n"))
+    as_written = "    Θ[<] = E_{ψ,ξ}(Θ)               :: [id=limit]\n"
+    text = two_fields_text((as_written, "    Θ[<] = Θ                        :: [id=limit]\n"))
     with pytest.raises(ConstructionError) as refused:
         stage_from_text(text, BUFFER_STOCK_ORIGIN)
     refusal = refused.value
     assert (refusal.rule, refusal.address) == ("shock-observed", "dcsn_to_arvl.limit")
     advice = "Write the expectation over every shock of that edge, `E_{ψ,ξ}(…)`"
     assert refusal.message == (
-        "the line is read at the arvl perch and mentions L, a field at the dcsn perch; the "
-        "edge from the arvl perch to the dcsn perch draws the shock ξ, ψ, so the value of L "
+        "the line is read at the arvl perch and mentions Θ, a field at the dcsn perch; the "
+        "edge from the arvl perch to the dcsn perch draws the shock ξ, ψ, so the value of Θ "
         f"is not known at the arvl perch. {advice}"
     )
     assert refusal.write == advice

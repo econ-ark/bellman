@@ -22,7 +22,7 @@ from application_files import (
     ROOT,
 )
 from stage_builders import differing_graph_triples, without_addresses
-from stage_texts import corpus_text
+from stage_texts import changed, corpus_text
 from trellises import ADDED_REGISTRY_FILES, BEQUEST_CONNECTOR
 
 import bellman.factory.trellis as trellis_module
@@ -85,8 +85,8 @@ CUT_REGISTRIES = {
     # at the terminal period
     "retirement-choice": (RETIREMENT, "spec.yml", 3 * PERIODS + 1),
     # the bequest at the terminal period and the within-life stage at each of
-    # the two other periods, whose ages both fall in the last of the six age
-    # brackets of earnings, so the cut binds the wage of one bracket alone
+    # the two other periods, each of which binds the one wage table on the ages
+    # that the calibration file calibration/wage holds
     "benhabib-2019": (BENHABIB, "spec.yml", PERIODS),
 }
 
@@ -636,17 +636,19 @@ def test_a_fill_changes_the_parameter_values_of_a_kernel_and_neither_its_code_no
     adjuster = specified["periods"][0]["stages"]["adjuster_cons"]
     aggregation = compile_kernel(adjuster, "cntn_to_dcsn:Aggregation")
     values = kernel(adjuster, "cntn_to_dcsn:Aggregation").parameter_values
-    # the arguments of the kernel in the order of its block's header, V[>] =
-    # 1.0, m = 1.0, z_d = 1.0, c = 0.5 and h_choice = 0.5, then the
-    # parameters that it reads
-    before = float(aggregation(1.0, 1.0, 1.0, 0.5, 0.5, *values))
+    # the arguments of the kernel: the inputs of its block's header, V[>] =
+    # 1.0 and the age 50, the decision states m = 1.0 and z_d = 1.0, and the
+    # controls c = 0.5 and h_choice = 0.5, then the parameters that it reads;
+    # the kernel returns the value V and the age, and the test reads V
+    point = (1.0, 50, 1.0, 1.0, 0.5, 0.5)
+    before = float(aggregation(*point, *values)[0])
     fill = {"calibration": {"β": 0.93}, "settings": {"n_a": 500}}
     syntactic = load_recipe(cut_durables, DURABLES_RECIPE_WITHOUT_TENURE, fill=fill)
     refilled = configure_trellis(calibrate_trellis(specified, syntactic), syntactic)
-    assert float(aggregation(1.0, 1.0, 1.0, 0.5, 0.5, *values)) == before
+    assert float(aggregation(*point, *values)[0]) == before
     changed = kernel(refilled["periods"][0]["stages"]["adjuster_cons"], "cntn_to_dcsn:Aggregation")
     assert changed.python == kernel(adjuster, "cntn_to_dcsn:Aggregation").python
-    after = float(aggregation(1.0, 1.0, 1.0, 0.5, 0.5, *changed.parameter_values))
+    after = float(aggregation(*point, *changed.parameter_values)[0])
     assert after != before
 
 
@@ -894,23 +896,36 @@ def test_assemble_trellis_answers_specify_trellis_of_its_recipe_with_one_copy_of
 
 
 @pytest.mark.parametrize(
-    ("directory", "key"),
+    ("directory", "key", "recipe_change"),
     [
-        # the calibration of durables supplies no value for the tenure
-        # stage's parameter Y
-        pytest.param(DURABLES, "tenure", id="durables-without-y-of-the-tenure-stage"),
+        # the recipe of durables with the file of the income tables left out
+        # of the calibration list of the tenure stage, so that no source
+        # supplies a value for the tenure stage's parameter Y
+        pytest.param(
+            DURABLES,
+            "tenure",
+            (
+                "calibration: {all: [calibration/durables, calibration/wage_schedule, $fill]}",
+                "calibration: {all: [calibration/durables, $fill]}",
+            ),
+            id="durables-without-y-of-the-tenure-stage",
+        ),
         # the slots of the pension recipe are not filled, so its
         # worker_saving holds no β
-        pytest.param(PENSION, "worker_saving", id="pension-retirement-without-beta"),
+        pytest.param(PENSION, "worker_saving", None, id="pension-retirement-without-beta"),
     ],
 )
 def test_specify_trellis_raises_the_refusal_of_the_verbs_naming_the_occurrence_and_kind(
-    directory, key
+    directory, key, recipe_change
 ):
     """Where the verbs refuse a calibration, specify_trellis raises the same
     refusal, its notes naming the stage occurrence and the kind of the
     binding."""
-    syntactic = load_recipe(directory, "spec.yml", texts_of_cut_trellis(directory))
+    texts = texts_of_cut_trellis(directory)
+    if recipe_change is not None:
+        recipe = (directory / "spec.yml").resolve()
+        texts[str(recipe)] = changed(recipe.read_text(encoding="utf-8"), recipe_change)
+    syntactic = load_recipe(directory, "spec.yml", texts)
     with pytest.raises(ValueError) as by_the_verbs:
         trellis = elaborate_trellis(syntactic)
         for verb in TRELLIS_VERBS:
@@ -1255,7 +1270,7 @@ def test_a_version_bound_from_a_fill_records_which_of_its_slots_are_bound(
 def test_a_list_valued_parameter_is_held_as_a_tuple(list_valued_registry):
     """A parameter over a product of sets, written in the calibration file
     as a list, is held as a tuple."""
-    # the Benhabib registry's wage_fn and R_vec are parameters of this kind
+    # the parameter R_vec of the Benhabib stage is of this kind
     _, model = list_valued_registry
     assert model["periods"][0]["stages"]["two_nodes"].bindings.calibration["w"] == (1.0, 2.0)
 

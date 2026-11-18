@@ -87,18 +87,26 @@ DRAWN = DrawnCards()
 CARDS_KNOWN_FAILURES = {
     ("backward", "cntn_to_dcsn"): pytest.mark.xfail(
         strict=True,
-        reason="The test expects the signature of the printed card of the decision builder "
-        "`cntn_to_dcsn` of `tenure` to list the derivatives 𝑑𝑉 that the example page lists, "
-        "since the page was written for an earlier `tenure.bl` that stated them. Today "
-        "`tenure.bl` states the values alone, and the derivative lines of the builder stand in "
-        "its methods file, which the symbolic stage of the fixture `tenure` does not read.",
+        reason="The test expects the printed card of the decision builder `cntn_to_dcsn` of "
+        "`tenure` to state what the example page draws. The page was written for an earlier "
+        "`tenure.bl`, which stated the derivatives 𝑑𝑉 in this block: its signature lists those "
+        "derivatives and neither the ages `age_kp[>]` and `age_adj[>]` that the builder now "
+        "takes in nor the age `age` that it now writes, its sections `Where`, `Operations`, "
+        "`Conditions`, `Source` and `Definitions referenced` were written before the law read "
+        "those ages, and its sections `Operations`, `Conditions` and `Source` also state the "
+        "derivative lines. Today `tenure.bl` states the value and the age alone, and the "
+        "derivative lines of the builder stand in its methods file, which the symbolic stage "
+        "of the fixture `tenure` does not read.",
     ),
     ("backward", "policy"): pytest.mark.xfail(
         strict=True,
-        reason="The test expects the section `Source` of the printed card of the policy builder "
-        "of `tenure` to cite the line `d = argmax_{d}(V_kp[>], V_adj[>])` at the line number "
-        "that the example page gives. Today the card cites the line at which `tenure.bl` "
-        "writes it, and the page, written for an earlier `tenure.bl`, gives another number.",
+        reason="The test expects the printed card of the policy builder of `tenure` to state "
+        "what the example page draws. The page was written for an earlier `tenure.bl`: its "
+        "signature does not list the ages `age_kp[>]` and `age_adj[>]` that the builder now "
+        "takes in, its sections `Where`, `Operations` and `Definitions referenced` were written "
+        "before the law read those ages, and its section `Source` cites the line "
+        "`d = argmax_{d}(V_kp[>], V_adj[>])` at another number than the line at which "
+        "`tenure.bl` writes it today.",
     ),
 }
 
@@ -474,11 +482,11 @@ def test_combination_answers_how_the_branches_of_a_stage_combine(name, expected,
 
 
 def test_the_law_of_motion_of_tenure_is_defined_on_the_label_by_the_lines_of_both_branches(tenure):
-    """The definition of the law of motion of tenure takes the decision states
-    and then the label coordinate d, and its equations are the lines of the
-    branches keep and adjust in order."""
+    """The definition of the law of motion of tenure takes the decision states,
+    the incoming age of each branch and then the label coordinate d, and its
+    equations are the lines of the branches keep and adjust in order."""
     law = tenure.definitions["tenure:g:dcsn_to_cntn"]
-    assert [name for name, _ in law.coordinates] == ["a_d", "h_d", "z_d", "d"]
+    assert [name for name, _ in law.coordinates] == ["a_d", "h_d", "z_d", "age_kp", "age_adj", "d"]
     assert [str(line) for line in law.equations] == [
         "dcsn_to_cntn.keep.cash_on_hand",
         "dcsn_to_cntn.keep.housing_kept",
@@ -501,7 +509,8 @@ def test_the_label_shock_is_the_last_coordinate_of_the_law_of_motion_of_a_draw(n
     [
         pytest.param(
             "tenure",
-            "((R·a_d+𝑦(z_d),(1−δ)·h_d,z_d),(R·a_d+R_H·(1−δ)·h_d+𝑦(z_d),z_d))[d]",
+            "((R·a_d+Y[age_kp]·z_d+y_R[age_kp],(1−δ)·h_d,z_d),"
+            "(R·a_d+R_H·(1−δ)·h_d+Y[age_adj]·z_d+y_R[age_adj],z_d))[d]",
             id="tenure",
         ),
         *[pytest.param(name, law, id=name) for name, (_, law) in BRANCHES_OF_DRAWS.items()],
@@ -534,7 +543,9 @@ def test_the_label_shock_is_an_input_of_the_forward_block_and_not_of_cntn_to_dcs
             [
                 "in 𝑉_kp≻ : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ → ℝ",
                 "in 𝑉_adj≻ : ℝ₊₊ × ℝ₊₊ → ℝ",
+                "in (𝑎𝑔𝑒_kp≻, 𝑎𝑔𝑒_adj≻) : {()} → Age × Age",
                 "out 𝑉 : ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ",
+                "out 𝑎𝑔𝑒 : {()} → Age",
             ],
             id="tenure",
         ),
@@ -549,8 +560,8 @@ def test_the_decision_builder_takes_each_branch_value_on_the_fields_of_its_branc
     name, lines, request
 ):
     """The signature of the decision builder lists the value of each branch on
-    the sets of the fields of the branch, in the order of the header, then the
-    value at the decision perch."""
+    the sets of the fields of the branch and then the constants that it takes
+    in, in the order of the header, then the fields at the decision perch."""
     signature = request.getfixturevalue(name).builder.bwd["cntn_to_dcsn"].signature()
     # white space collapsed, since the printed signature aligns its columns
     assert [" ".join(line.split()) for line in str(signature).splitlines()] == lines
@@ -793,44 +804,49 @@ def test_the_conservation_of_mass_of_retiree_death_is_required_on_the_law_of_its
 
 
 @pytest.mark.parametrize(
-    ("name", "key", "text"),
+    ("name", "key", "text", "left_out"),
     [
         pytest.param(
             "tenure",
             "cntn_to_dcsn:Pullback:keep",
-            "𝑔 of dcsn_to_cntn: 𝑔_keep≻(a_d, h_d, z_d) = (R*a_d + 𝑦(z_d), (1 - δ)*h_d, z_d)\n"
-            "outputs (w_kp≻, h_kp≻, z_kp≻); w_kp≻ reads a_d, z_d; h_kp≻ reads h_d; "
+            "𝑔 of dcsn_to_cntn: 𝑔_keep≻(a_d, h_d, z_d, age_kp) = "
+            "(R*a_d + Y[age_kp]*z_d + y_R[age_kp], (1 - δ)*h_d, z_d)\n"
+            "outputs (w_kp≻, h_kp≻, z_kp≻); w_kp≻ reads a_d, z_d, age_kp; h_kp≻ reads h_d; "
             "z_kp≻ reads z_d",
+            ("d", "age_adj"),
             id="keep of tenure",
         ),
         pytest.param(
             "ret_choice",
             "policy:Pullback:work",
             "𝑔 of dcsn_to_cntn: 𝑔_work≻(a_d) = a_d",
+            ("d",),
             id="work of ret_choice",
         ),
         pytest.param(
             "old_choice",
             "cntn_to_dcsn:Pullback:retiree",
             "𝑔 of dcsn_to_cntn: 𝑔_retiree≻(a, θ) = a\nunused θ",
+            ("d",),
             id="retiree of old_choice",
         ),
     ],
 )
 def test_the_section_of_a_pullback_of_one_branch_is_the_law_read_at_its_label(
-    name, key, text, request
+    name, key, text, left_out, request
 ):
     """The kernel of a pullback of one branch holds under `section` the kernel
     of the law read at the label of the branch: the law's title, its arguments
-    but d, a part of its outputs and its origins, with no Python text, no
-    parameter and no section of its own."""
+    but d and a constant that another branch alone reads, a part of its
+    outputs and its origins, with no Python text, no parameter and no section
+    of its own."""
     piece = request.getfixturevalue(name).builder.bwd.primitives[key]
     whole, section_kernel = piece.kernel(), piece.kernel().section
     # the printed kernel of a section of one output has no line of outputs
     assert str(section_kernel) == text
     assert str(section_kernel).split(": ", 1)[0] == str(whole).split(": ", 1)[0]
     assert [argument for argument, _ in section_kernel.arguments] == [
-        argument for argument, _ in whole.arguments if argument != "d"
+        argument for argument, _ in whole.arguments if argument not in left_out
     ]
     assert set(section_kernel.outputs) < set(whole.outputs)
     assert section_kernel.origins == whole.origins

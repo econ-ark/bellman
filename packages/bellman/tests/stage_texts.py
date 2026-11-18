@@ -20,38 +20,45 @@ def changed(text, *changes):
 
 
 # the two changes of the buffer-stock stage file by which its feasible set
-# reads the continuation field L[>], which the header of its policy block
-# then lists. L is a second value field beside V, `L : ℝ @ !vlu`, and the
-# feasible set reads it as a lower bound on the saving x - c.
-CHANGES_TO_READ_L = (
-    ("Γ_c(x : Xm) := {c : ℝ₊₊ | c < x - L}", "Γ_c(x : Xm) := {c : ℝ₊₊ | x - c >= L[>]}"),
+# also reads the continuation field Θ[>], which the header of its policy
+# block then lists beside the borrowing bound L. Θ is a constant beside V,
+# `Θ[>] : ℝ @ !vlu @ !cnst`, since a feasible set reads only fields known
+# before the choice, and the feasible set reads it as a lower bound on the
+# saving x - c.
+CHANGES_TO_READ_THE_SECOND_FIELD = (
+    (
+        "Γ_c(x : Xm) := {c : ℝ₊₊ | c < x - L}",
+        "Γ_c(x : Xm) := {c : ℝ₊₊ | c < x - L, x - c >= Θ[>]}",
+    ),
     (
         "[id=policy, (V[>] : ℝ @ !vlu, L) : !cntn ->",
-        "[id=policy, (V[>] : ℝ @ !vlu, L[>] : ℝ @ !vlu) : !cntn ->",
+        "[id=policy, (V[>] : ℝ @ !vlu, Θ[>] : ℝ @ !vlu @ !cnst, L) : !cntn ->",
     ),
 )
 
 
 # the two changes of the buffer-stock stage file by which its value block
-# and its arrival block write the field L as they write the value
-CHANGES_TO_WRITE_L = (
+# and its arrival block write the constant Θ as they write the value
+CHANGES_TO_WRITE_THE_SECOND_FIELD = (
     (
         "[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, L : (-inf, 0] @ !vlu @ !cnst, c) : !cntn"
         " -> (V : ℝ @ !vlu, L) : !dcsn] {\n"
         "    V = 𝑢(c) + β*V[>]               :: [id=value]\n",
-        "[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, L[>] : ℝ @ !vlu, c) : !cntn"
-        " -> (V : ℝ @ !vlu, L : ℝ @ !vlu) : !dcsn] {\n"
+        "[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, Θ[>] : ℝ @ !vlu @ !cnst,"
+        " L : (-inf, 0] @ !vlu @ !cnst, c) : !cntn"
+        " -> (V : ℝ @ !vlu, Θ : ℝ @ !vlu @ !cnst, L) : !dcsn] {\n"
         "    V = 𝑢(c) + β*V[>]\n"
-        "    L = L[>]\n",
+        "    Θ = Θ[>]\n",
     ),
     (
         "[id=dcsn_to_arvl, (V, L) : !dcsn"
         " -> (V[<] : ℝ @ !vlu, L[<] : (-inf, 0] @ !vlu @ !cnst) : !arvl] {\n"
-        "    V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)     :: [id=value]\n"
-        "    L[<] = if σ_ψ > 0 then 0 else Γ*L/R :: [id=borrowing_bound]\n",
-        "[id=dcsn_to_arvl, (V, L) : !dcsn -> (V[<] : ℝ @ !vlu, L[<] : ℝ @ !vlu) : !arvl] {\n"
+        "    V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)     :: [id=value]\n",
+        "[id=dcsn_to_arvl, (V, Θ, L) : !dcsn"
+        " -> (V[<] : ℝ @ !vlu, Θ[<] : ℝ @ !vlu @ !cnst, L[<] : (-inf, 0] @ !vlu @ !cnst)"
+        " : !arvl] {\n"
         "    V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)\n"
-        "    L[<] = E_{ψ,ξ}(L)\n",
+        "    Θ[<] = E_{ψ,ξ}(Θ)\n",
     ),
 )
 
@@ -159,12 +166,16 @@ def buffer_stock_text_with_changes(*changes):
 
 
 # where a definition by cases stands, the advice of a refusal of the parser
-# at a line that writes the word `if`
+# at a line that writes the word `if`. The language fixes the three places
+# that it names: the whole right side of a definition without arguments, the
+# whole right side of a line of a block, and a branch of another conditional.
+# The words are those of the package's advice, which the tests compare whole
 CONDITIONAL_PLACE = (
     "a conditional, `if … then … else …`, stands as the whole right side of a definition "
-    "without arguments, `x := if a < b then 1 else 2`, with or without a declared set, "
-    "`x : (0, 3) := if a < b then 1 else 2`, or as a branch of another conditional; it stands "
-    f"inside no formula, no function's body and no line of a block; {IF_THEN_ELSE_REFUSAL}"
+    "without arguments, `x := if a < b then 1 else 2`, with or without a declared set. "
+    "It can also be the whole right side of a block equation, "
+    "`x = if a < b then 1 else 2`, or a branch of another conditional. "
+    f"{IF_THEN_ELSE_REFUSAL}"
 )
 
 
@@ -235,9 +246,16 @@ def methods_addition(stage, *lines):
     }
 
 
-def two_nodes_text_with_changes(backward=None, transition=None, declarations=None, header=None):
+def two_nodes_text_with_changes(
+    backward=None, transition=None, declarations=None, header=None, objective=None
+):
     """The two-node stage with its four backward lines, its transition line,
-    its two shock declarations or its backward header replaced."""
+    its two shock declarations, its backward header or the objective of its
+    maximization replaced.
+
+    The package refuses a maximization whose objective is not the right side
+    of the decision value V, with its nodes written out. A test that changes
+    that right side therefore passes the changed right side as `objective`."""
     lines = (
         (
             "    W = β*V[>]\n    N1 = E_{y,z}(W) :: [id=first, !node]\n"
@@ -247,6 +265,10 @@ def two_nodes_text_with_changes(backward=None, transition=None, declarations=Non
         ("    a = k_d*(c*y + (1-c)*R) + z\n", transition),
         ("y ~ N(0,1)\nz : ℝ\nz ~ N(0,1)\n", declarations),
         ("(V[>] : ℝ @ !vlu) : !cntn -> (V : ℝ @ !vlu) : !dcsn]", header),
+        (
+            "(E_{y,z}(β*V[>]) + E_{y,z}(β*V[>])) :: [id=objective]",
+            None if objective is None else f"({objective}) :: [id=objective]",
+        ),
     )
     return changed(TWO_NODES, *[(old, new) for old, new in lines if new is not None])
 
@@ -255,14 +277,18 @@ def two_nodes_text_with_joint_normal_law(
     covariance="((1,r),(r,1))",
     backward="    V = E_{z}(E_{y}(V[>])) :: [id=value]\n",
     r_set="[-1,1]",
+    objective="E_{z}(E_{y}(V[>]))",
 ):
     """The two-node stage with the joint normal law
     `(y,z) ~ N((0,0), covariance)`, the parameter `r` declared in `r_set`,
-    the transition `a = y` and the one backward line `backward`."""
+    the transition `a = y`, the one backward line `backward` and the
+    objective `objective` of its maximization, the right side of that
+    line."""
     return two_nodes_text_with_changes(
         backward=backward,
         transition="    a = y\n",
         declarations=f"z : ℝ\nr : {r_set}\n(y, z) ~ N((0,0),{covariance})\n",
+        objective=objective,
     )
 
 
@@ -708,12 +734,23 @@ def buffer_stock_text(scale="σ_ξ"):
 
 
 # the buffer-stock stage whose value block and arrival block write the
-# field L
-BUFFER_STOCK_WRITING_L = changed(buffer_stock_text(), *CHANGES_TO_WRITE_L)
+# constant Θ
+BUFFER_STOCK_WRITING_THE_SECOND_FIELD = changed(
+    buffer_stock_text(), *CHANGES_TO_WRITE_THE_SECOND_FIELD
+)
 
 
-# the buffer-stock stage whose feasible set alone reads the field L
-BUFFER_STOCK_READING_L = changed(buffer_stock_text(), *CHANGES_TO_READ_L)
+# the buffer-stock stage whose feasible set alone reads the constant Θ
+BUFFER_STOCK_READING_THE_SECOND_FIELD = changed(
+    buffer_stock_text(), *CHANGES_TO_READ_THE_SECOND_FIELD
+)
+
+
+# the definition of the feasible set in the buffer-stock stage file, which
+# reads the borrowing bound L that the backward blocks declare
+BUFFER_STOCK_FEASIBLE_SET_LINE = (
+    "Γ_c(x : Xm) := {c : ℝ₊₊ | c < x - L}   :: [id=feasible_consumption]\n"
+)
 
 
 # A stage whose arrival value integrates a Markov shock z, drawn from the row

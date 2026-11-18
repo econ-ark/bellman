@@ -249,15 +249,15 @@ NOPORT_GRID = {
 }
 
 
-# the declaration of the lower bound of the savings grid in the methods file
-# of the buffer-stock application, and the same declaration on the reals, a
-# set wider than the set of savings, so that the check of the grid alone
-# decides the bound; the two texts have one length, so that the columns of
-# the file stay aligned
-LOWER_BOUND_ON_XA = "a_min : Xa "
+# the declaration of the lower bound of the grid of assets in the methods
+# file of the buffer-stock application, on the set Xa of savings and assets,
+# and the same declaration on the reals, a wider set, so that the check of
+# the grid alone decides the bound; the two texts have one length, so that
+# the columns of the file stay aligned
+LOWER_BOUND_ON_XA = "k_min : Xa "
 
 
-LOWER_BOUND_ON_THE_REALS = "a_min : ℝ  "
+LOWER_BOUND_ON_THE_REALS = "k_min : ℝ  "
 
 
 # the grid stage on the set Xm := [m_Low, inf), whose lower end is a parameter,
@@ -314,7 +314,8 @@ def buffer_stock_methods():
 @pytest.fixture(scope="module")
 def buffer_stock_settings():
     """The settings file of the buffer-stock application as a mapping: 960
-    points from 0.001 to 20 for the savings a and for the assets k."""
+    points of the assets k from 0.001 to 20, and 960 points of the savings a
+    from the borrowing bound L plus 0.001 to 20."""
     return load_settings(ROOT / BUFFER_STOCK_SETTINGS)
 
 
@@ -1286,9 +1287,9 @@ def test_supports_equal_refuses_a_coordinate_that_is_not_a_finite_real_number(co
         pytest.param(0.0, {}, (0.001, 20.0), id="the recorded settings at a limit of zero"),
         pytest.param(
             -0.5,
-            {"a_min": -0.4, "k_min": -0.4},
+            {"k_min": -0.4},
             (-0.4, 20.0),
-            id="lower bounds between a negative limit and zero",
+            id="a lower bound of assets between a negative limit and zero",
         ),
     ],
 )
@@ -1309,39 +1310,37 @@ def test_a_grid_whose_bounds_lie_in_its_set_at_the_calibration_is_built_on_them(
 def test_a_bound_declared_on_the_set_of_savings_is_decided_by_its_own_check_at_the_calibration(
     buffer_stock_methods, buffer_stock_settings
 ):
-    """The check of the setting `a_min : Xa` refuses a lower bound of savings
-    of -1 at a borrowing limit of zero under `setting-outside-set`, and
-    admits it at a limit of -2."""
-    outside = {**buffer_stock_settings, "a_min": -1.0}
+    """The check of the setting `k_min : Xa`, declared on the set of savings
+    and assets, refuses a lower bound of assets of -1 at a borrowing limit of
+    zero under `setting-outside-set`, and admits it at a limit of -2."""
+    outside = {**buffer_stock_settings, "k_min": -1.0}
     stage = buffer_stock_with_a_borrowing_limit(buffer_stock_methods)
     with pytest.raises(ConstructionError) as refused:
         stage.calibrate(calibration_at(0.0)).configure({"settings": outside})
     assert refused.value.rule == "setting-outside-set"
     assert "the value -1.0 lies outside the declared set [a_Art, inf)" in refused.value.message
-    # at a limit below the lower bounds of savings and of assets
-    inside = {**outside, "k_min": -1.0}
-    stage.calibrate(calibration_at(-2.0)).configure({"settings": inside})
+    # at a limit below the lower bound of assets
+    stage.calibrate(calibration_at(-2.0)).configure({"settings": outside})
 
 
 def test_a_bound_declared_on_the_reals_is_decided_by_the_check_of_its_grid_at_the_calibration(
     buffer_stock_methods, buffer_stock_settings
 ):
-    """With `a_min` declared on ℝ, the check of the grid of savings refuses a
+    """With `k_min` declared on ℝ, the check of the grid of assets refuses a
     lower bound of -1 at a borrowing limit of zero under `grid-bounds`,
     naming the limit that it read, and admits it at a limit of -2."""
     wide = changed(buffer_stock_methods, (LOWER_BOUND_ON_XA, LOWER_BOUND_ON_THE_REALS))
-    outside = {**buffer_stock_settings, "a_min": -1.0}
+    outside = {**buffer_stock_settings, "k_min": -1.0}
     stage = buffer_stock_with_a_borrowing_limit(wide)
     with pytest.raises(ConstructionError) as refused:
         stage.calibrate(calibration_at(0.0)).configure({"settings": outside})
-    assert (refused.value.rule, refused.value.address) == ("grid-bounds", "policy")
+    assert (refused.value.rule, refused.value.address) == ("grid-bounds", "dcsn_to_arvl.evaluate")
     assert (
-        "the factor a=(a_min, a_max, n_a) writes the point -1.0, which lies outside the "
-        "declared set Xa of a at a_Art = 0.0"
+        "the factor k=(k_min, k_max, n_k) writes the point -1.0, which lies outside the "
+        "declared set Xa of k at a_Art = 0.0"
     ) in refused.value.message
-    # at a limit below the lower bounds of savings and of assets
-    inside = {**outside, "k_min": -1.0}
-    stage.calibrate(calibration_at(-2.0)).configure({"settings": inside})
+    # at a limit below the lower bound of assets
+    stage.calibrate(calibration_at(-2.0)).configure({"settings": outside})
 
 
 def test_before_a_calibration_a_bound_is_decided_only_on_a_set_that_reads_no_parameter(
@@ -1406,20 +1405,19 @@ def test_each_binding_decides_the_bounds_of_a_grid_at_the_calibration_bound_then
     buffer_stock_methods, buffer_stock_settings, bind
 ):
     """Once the borrowing limit is calibrated anew from -2 to -0.5, the
-    binding refuses the lower bound of savings of -1 under `grid-bounds` at
+    binding refuses the lower bound of assets of -1 under `grid-bounds` at
     the new limit, and the stage calibrated back at -2 is configured
     again."""
     wide = changed(buffer_stock_methods, (LOWER_BOUND_ON_XA, LOWER_BOUND_ON_THE_REALS))
-    settings = {"settings": {**buffer_stock_settings, "a_min": -1.0, "k_min": -0.4}}
+    settings = {"settings": {**buffer_stock_settings, "k_min": -1.0}}
     stage = buffer_stock_with_a_borrowing_limit(wide)
     stage.calibrate(calibration_at(-2.0)).configure(settings)
-    # the limit moves above the lower bound of savings, -1, and stays below
-    # the lower bound of assets, -0.4
+    # the limit moves above the lower bound of assets, -1
     stage.calibrate(calibration_at(-0.5))
     with pytest.raises(ConstructionError) as refused:
         bind(stage, wide, settings)
     assert refused.value.rule == "grid-bounds"
-    assert "lies outside the declared set Xa of a at a_Art = -0.5" in refused.value.message
+    assert "lies outside the declared set Xa of k at a_Art = -0.5" in refused.value.message
     # and back below it
     stage.calibrate(calibration_at(-2.0))
     stage.configure(settings)

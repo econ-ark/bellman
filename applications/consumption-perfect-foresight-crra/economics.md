@@ -234,7 +234,12 @@ Evaluation, read between the pairs the method computes, and the derivative
 lines of the two value builders, the envelope condition $D_mV = c^{-\rho}$ and
 the arrival marginal $D_kV_\prec = R\,\Gamma^{-\rho} D_mV$. The module iterates
 the method to its fixed point on the compiled kernels of those lines, from a
-first iterate that consumes half of total wealth. It refuses a calibration at
+first iterate that consumes half of total wealth, and iterates human wealth
+with it: each step takes in the $h_\succ$ that the step after it hands back,
+$h = 1 + h_\succ$ and $h_\prec = h\,\Gamma/R$ by the stage's lines, from
+$h_\succ = 0$, the value that the last period takes in, and solves at the
+savings above its own limit $-h_\succ$. The limit of human wealth is read only
+to refuse a grid of savings that starts at or below $L$. It refuses a calibration at
 which $q \ge 1$, a grid of savings that starts at or below $L$, an
 intermediate value that is not finite, an extrapolation that leaves the
 feasible set and an iteration that reaches its limit without converging.

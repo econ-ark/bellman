@@ -7,8 +7,8 @@ by the piece's `diagram()`, which composes them from the stage's queries
 `drawn_laws`). `wire_label` writes the label of a wire, `box_symbol` the
 symbol a box shows, and `dot_head` the first lines of a DOT source, which the
 drawings of a period and of a trellis write as well
-(`factory/trellis_drawings.py`). A `Drawing` is laid out by `graphviz_layout`
-beside this module, with `dot` or with the WebAssembly build of Graphviz.
+(`factory/trellis_drawings.py`). A `Drawing` lays itself out as SVG with
+Graphviz, whose libraries the Python package `pygraphviz` holds.
 """
 
 from __future__ import annotations
@@ -18,7 +18,6 @@ from collections import namedtuple
 
 from discopy.frobenius import Bubble, Hypergraph
 
-from bellman.display.graphviz_layout import layout_command, layout_svg
 from bellman.graphs.builders_graphs import bundles
 from bellman.native.hypergraphs import BellmanHypergraph
 from bellman.native.identity import box_identity
@@ -37,6 +36,39 @@ from bellman.native.labels import (
     wire_spelling,
 )
 from bellman.syntax.vocabulary import PERCH_MARK
+
+# The Python package that holds the Graphviz libraries, or None where it
+# cannot be imported. `bellman` requires it on each system for which
+# pygraphviz publishes an install file, which the marker in `pyproject.toml`
+# names; on a system that the marker does not name, pip would have to build
+# it, so `bellman` installs without it there. `_IMPORT_FAULT` is the error of
+# an installed pygraphviz that cannot be imported, and None where pygraphviz
+# is imported or is not installed.
+try:
+    import pygraphviz
+
+    _IMPORT_FAULT = None
+except ImportError as fault:
+    pygraphviz = None
+    if isinstance(fault, ModuleNotFoundError) and fault.name == "pygraphviz":
+        _IMPORT_FAULT = None
+    else:
+        _IMPORT_FAULT = f"{type(fault).__name__}: {fault}"
+
+# the message `Drawing.svg()` refuses with where pygraphviz is not installed
+NO_LAYOUT = (
+    "A drawing is laid out by Graphviz, which the Python package pygraphviz holds, and "
+    "pygraphviz is not installed here. `pip install pygraphviz` installs it. Where pip finds "
+    "no install file for the system, it builds pygraphviz, which needs Graphviz with its "
+    "development files and a C compiler."
+)
+
+# the opening of the message where an installed pygraphviz cannot be imported;
+# the error of the import follows it
+FAILED_IMPORT = (
+    "A drawing is laid out by Graphviz, which the Python package pygraphviz holds, and the "
+    "pygraphviz installed here cannot be imported: "
+)
 
 # --- the drawing of one graph ---
 #
@@ -302,8 +334,13 @@ def _draw_part(inputs, written, part, depth, lines):
 
 
 def _draw_bubble(inputs, written, box, depth, lines):
-    """A bubble as a cluster, numbered by the boxes labeled when its
-    interior is drawn, with its name at the top left."""
+    """A bubble as a cluster with its name at the top left. The cluster's
+    identifier is `cluster_<n>`, where n is the count of the boxes labeled so
+    far, the bubble among them. n is read before the interior is drawn. If n
+    were read after the interior is drawn, a bubble and the bubble that is
+    the last box of its interior would have the same identifier, and Graphviz
+    warns where two clusters have the same identifier."""
+    number = len(written.labels)
     for ob in box.dom.inside + box.cod.inside:
         _wire_node(inputs, written, ob, lines)
     inner = []
@@ -317,7 +354,7 @@ def _draw_bubble(inputs, written, box, depth, lines):
         if depth == 0
         else 'style="rounded,dashed" color="{0}" penwidth="0.8"'
     ).format(_LINE)
-    lines.append(f"  subgraph {dot_quoted(f'cluster_{len(written.labels)}')} {{")
+    lines.append(f"  subgraph {dot_quoted(f'cluster_{number}')} {{")
     label = _clipped(box_label(box, inputs.value_aggregations), _CLUSTER_LABEL_WIDTH, 3)
     lines.append(
         f"    graph [label={dot_quoted(label)} "
@@ -410,11 +447,12 @@ def _arrow_label_edges(arrow_labels):
 
 class Drawing:
     """A graph drawing with Graphviz DOT text in `source` and the box labels in
-    `labels`. `svg()` lays the source out with Graphviz's `dot`, or without it
-    with the WebAssembly build of Graphviz that Node runs (`graphviz_layout`),
-    and a notebook cell holding the drawing alone shows the picture. Where
-    neither program is installed, `svg()` refuses with the sentence that names
-    what to install, and the cell shows the short form.
+    `labels`. `svg()` lays the source out with Graphviz, and a notebook cell
+    holding the drawing alone shows the picture. The Graphviz libraries are
+    those inside the Python package `pygraphviz`, which `bellman` requires, so
+    a user installs no other program for a drawing. Where `pygraphviz` is not
+    installed, `svg()` refuses with the message `NO_LAYOUT`, and the cell
+    shows the short form.
 
     See `docs/Bellman-Sym/API/stage/02-initial.md` §2."""
 
@@ -428,17 +466,33 @@ class Drawing:
         return f"Drawing of {len(self.labels)} boxes"
 
     def svg(self) -> str:
-        """The drawing laid out as SVG text, by Graphviz's `dot` when it is on
-        the PATH and otherwise by the WebAssembly build of Graphviz
-        (`graphviz_layout.layout_svg`).
+        """The drawing laid out as SVG text by `dot`, Graphviz's layout
+        method for layered drawings of directed graphs. Graphviz measures a
+        label with the fonts of the machine, so the size of a picture differs
+        a little between machines. Refuses with a `RuntimeError` in three
+        cases: with `NO_LAYOUT` where `pygraphviz` is not installed, with the
+        error of the import where an installed `pygraphviz` cannot be
+        imported, and with Graphviz's answer where Graphviz does not lay the
+        source out.
 
         See `docs/Bellman-Sym/API/stage/02-initial.md` §2."""
-        return layout_svg(self.source)
+        if pygraphviz is None:
+            raise RuntimeError(
+                NO_LAYOUT if _IMPORT_FAULT is None else FAILED_IMPORT + _IMPORT_FAULT
+            )
+        try:
+            graph = pygraphviz.AGraph(string=self.source)
+            return graph.draw(format="svg", prog="dot").decode("utf-8")
+        except ValueError as refused:
+            # pygraphviz raises a ValueError for a source that Graphviz does
+            # not read or does not lay out
+            raise RuntimeError(f"Graphviz did not lay out the drawing: {refused}") from refused
 
     def _repr_svg_(self):
-        """The SVG a notebook shows for the drawing, and None where no layout
-        program is available, so that the cell shows the short form."""
-        return self.svg() if layout_command() is not None else None
+        """The SVG a notebook shows for the drawing, and None where
+        `pygraphviz` is not imported, so that the cell shows the short
+        form."""
+        return self.svg() if pygraphviz is not None else None
 
 
 def drawn_sorts(graph) -> dict:

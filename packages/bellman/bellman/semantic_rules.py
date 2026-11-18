@@ -1976,7 +1976,7 @@ SEMANTIC_RULES = (
         checks=("bellman.fold.backward:check_output_shocks",),
         refusals=("shock-observed",),
         test=(
-            f"{_SHOCK_EXPECTATIONS}test_a_term_whose_path_integrates_some_shocks_may_read_a_constant_but_not_a_shock"
+            f"{_SHOCK_EXPECTATIONS}test_a_term_whose_path_integrates_some_shocks_and_reads_a_shock_is_refused"
         ),
     ),
     SemanticRule(

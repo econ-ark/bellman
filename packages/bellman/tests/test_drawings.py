@@ -1,17 +1,19 @@
 """Drawings of graphs, periods and trellises."""
 
+import os
 import re
+import subprocess
+import sys
 
 import pytest
 from application_files import CORPUS, ROOT, stage_file_id
 from discopy.frobenius import Bubble, Cap, Cup, Hypergraph
+from skips import require_package
 from stage_builders import stage_from_text
 from stage_graphs import GRAINS
-from two_sets import one_row_by_default
 
-from bellman.display import graphviz_layout
-from bellman.display.drawing import to_drawing
-from bellman.display.graphviz_layout import layout_command, node_package_root, node_program
+from bellman.display import drawing as drawing_module
+from bellman.display.drawing import FAILED_IMPORT, NO_LAYOUT, Drawing, to_drawing
 from bellman.graphs.builders_graphs import bundles
 from bellman.native.identity import box_identity
 from bellman.native.labels import is_wiring
@@ -54,11 +56,11 @@ MODELS = ("cons", "cons_savings_iid", "sa_savings")
 WIDTH_LIMIT, HEIGHT_LIMIT = 7.0, 13.5
 
 
-# the drawings that stand taller than a page, each with the height in inches
-# that the WebAssembly build of Graphviz that package.json pins (Graphviz
-# 14.1.3) gives it. A listed drawing that grows taller fails as an unlisted
-# one does, and one that comes to fit fails until its entry is deleted. No
-# drawing is listed.
+# the drawings that stand taller than a page, each with its height in inches.
+# Graphviz measures a label with the fonts of the machine, so a height
+# differs a little between machines. A listed drawing that grows taller fails
+# as an unlisted one does, and one that comes to fit fails until its entry is
+# deleted. No drawing is listed.
 OVER_THE_PAGE_TODAY = {}
 
 
@@ -235,7 +237,7 @@ def trellis_of_three_periods(two_nodes_registry):
 
 
 @pytest.fixture(scope="module")
-def drawing_with_ages(trellis_of_three_periods):
+def drawing_with_a_last_age(trellis_of_three_periods):
     """The drawing of the trellis of three periods, with a registry that
     names the last age 65."""
     return diagram_trellis(
@@ -262,39 +264,135 @@ def primitive_drawing_of_port(port):
     return port.builder.bwd.primitives.diagram().source
 
 
-# each of the twelve drawings of a model starts a program that lays out its
-# graph; the consumption stage is in the default set and the other two
-# models are in the complete set
+# the three models are in the default set: a layout starts no program, and
+# the size of a picture depends on the fonts of the machine, so each machine
+# that runs the tests measures every drawing
 @pytest.fixture(
     scope="module",
-    params=one_row_by_default(ROOT / CORPUS[name] for name in MODELS),
+    params=[ROOT / CORPUS[name] for name in MODELS],
     ids=stage_file_id,
 )
 def drawings_of_a_model(request, read_only_stage_from_file):
     """(name, SVG text) of each of the twelve drawings of the stage file of
-    the case, laid out by the Node package that the root package.json of
-    packages/bellman/ pins where it is installed, and otherwise by a program
-    `dot` on the PATH."""
-    with pytest.MonkeyPatch.context() as patch:
-        # the version of a `dot` on the PATH is not fixed by the repository,
-        # so the Node package is preferred where it is installed, and every
-        # machine measures the drawings as the lessons are drawn
-        if node_program() is not None and node_package_root() is not None:
-            patch.setattr(graphviz_layout, "dot_program", lambda: None)
-        if layout_command() is None:
-            pytest.skip(
-                "neither a program dot on the PATH nor the Node package @viz-js/viz is "
-                'installed; install Graphviz, or install Node and run "npm ci" in the folder '
-                "packages/bellman"
-            )
-        stage = read_only_stage_from_file(request.param)
-        return [
-            (
-                f"{stage.name} {level} {direction} {grain}",
-                GraphHandle(stage, level, direction, grain).diagram().svg(),
-            )
-            for level, direction, grain in DRAWINGS
-        ]
+    the case, laid out by `Drawing.svg()`."""
+    require_package("pygraphviz")
+    stage = read_only_stage_from_file(request.param)
+    return [
+        (
+            f"{stage.name} {level} {direction} {grain}",
+            GraphHandle(stage, level, direction, grain).diagram().svg(),
+        )
+        for level, direction, grain in DRAWINGS
+    ]
+
+
+def test_a_drawing_is_laid_out_with_no_program_on_the_search_path(cons, tmp_path, monkeypatch):
+    """`svg()` answers the SVG text of a drawing where the search path of
+    programs names an empty folder, so the layout uses no program on that
+    path. `_repr_svg_()`, which a notebook calls, answers the same text."""
+    require_package("pygraphviz")
+    monkeypatch.setenv("PATH", str(tmp_path))
+    drawing = cons.builder.bwd.diagram()
+    svg = drawing.svg()
+    assert svg.startswith("<?xml") and svg.rstrip().endswith("</svg>")
+    assert "cntn_to_dcsn" in svg
+    assert drawing._repr_svg_() == svg
+
+
+def test_a_drawing_refuses_with_a_message_where_pygraphviz_is_not_installed(cons, monkeypatch):
+    """Where the Python package `pygraphviz` is not installed, `svg()` refuses
+    with the message `NO_LAYOUT`, and `_repr_svg_()` answers None, so that a
+    notebook shows the drawing's short form. The test sets the module's name
+    `pygraphviz` to None, the value it has where the package is absent."""
+    monkeypatch.setattr(drawing_module, "pygraphviz", None)
+    drawing = cons.builder.bwd.diagram()
+    with pytest.raises(RuntimeError) as refused:
+        drawing.svg()
+    assert str(refused.value) == NO_LAYOUT
+    assert drawing._repr_svg_() is None
+    assert repr(drawing).startswith("Drawing of ")
+
+
+# what a new interpreter runs to read how a drawing answers there: it imports
+# the module of the stage's pieces, which imports the drawing module, then
+# prints what `_repr_svg_()` answers and the message that `svg()` refuses with
+REFUSAL_IN_A_NEW_INTERPRETER = """
+import bellman.stage.pieces
+from bellman.display.drawing import Drawing
+drawing = Drawing("digraph { a -> b }", ("a", "b"))
+print(drawing._repr_svg_())
+try:
+    drawing.svg()
+except RuntimeError as refused:
+    print(refused)
+"""
+
+
+def answer_in_a_new_interpreter(set_up, search_path=()):
+    """The lines that `REFUSAL_IN_A_NEW_INTERPRETER` prints in a new
+    interpreter that first runs the statement `set_up` and that reads the
+    folders of `search_path` before its installed packages. The interpreter
+    starts in the folder of the package, so that it imports the package of
+    this checkout."""
+    folders = [str(folder) for folder in search_path] + [os.environ.get("PYTHONPATH", "")]
+    done = subprocess.run(
+        [sys.executable, "-c", set_up + REFUSAL_IN_A_NEW_INTERPRETER],
+        cwd=ROOT / "packages" / "bellman",
+        env={**os.environ, "PYTHONPATH": os.pathsep.join(filter(None, folders))},
+        capture_output=True,
+        encoding="utf-8",
+        check=True,
+    )
+    return done.stdout.splitlines()
+
+
+def test_the_drawing_module_is_imported_where_pygraphviz_is_not_installed():
+    """In an interpreter where the import of `pygraphviz` fails as that of a
+    package that is not installed, the drawing module is imported,
+    `_repr_svg_()` answers None and `svg()` refuses with the message
+    `NO_LAYOUT`. The test starts a new interpreter, since its own process
+    has imported the module."""
+    shown, refusal = answer_in_a_new_interpreter("import sys; sys.modules['pygraphviz'] = None")
+    assert shown == "None"
+    assert refusal == NO_LAYOUT
+
+
+def test_an_installed_pygraphviz_that_cannot_be_imported_is_reported_with_its_error(tmp_path):
+    """Where a `pygraphviz` stands on the import path and its import raises,
+    as an installed package whose Graphviz library cannot be loaded, the
+    drawing module is imported, `_repr_svg_()` answers None and `svg()`
+    refuses with the error of the import after the words of `FAILED_IMPORT`,
+    and not with the message of a package that is not installed."""
+    stand_in = 'raise ImportError("the library of Graphviz cannot be loaded")\n'
+    (tmp_path / "pygraphviz.py").write_text(stand_in, encoding="utf-8")
+    shown, refusal = answer_in_a_new_interpreter("", search_path=[tmp_path])
+    assert shown == "None"
+    assert refusal == FAILED_IMPORT + "ImportError: the library of Graphviz cannot be loaded"
+
+
+def test_svg_refuses_with_a_runtime_error_a_source_that_graphviz_does_not_read():
+    """`svg()` raises a `RuntimeError` for a source that Graphviz does not
+    read, here a DOT text that ends inside an arrow, so that a caller catches
+    one kind of error for every drawing that is not laid out."""
+    require_package("pygraphviz")
+    with pytest.raises(RuntimeError, match="Graphviz did not lay out the drawing"):
+        Drawing("digraph { a -> ", ()).svg()
+
+
+def test_each_cluster_of_a_drawing_has_an_identifier_of_its_own(
+    read_only_stage_from_file, corpus_path
+):
+    """No two clusters in the DOT text of a drawing have the same identifier.
+    The test reads the branching stage `tenure`: in its forward initial
+    diagram a builder's last box is a sub-builder. Graphviz warns where two
+    clusters have the same identifier."""
+    stage = read_only_stage_from_file(corpus_path("tenure"))
+    for level, direction, grain in DRAWINGS:
+        source = GraphHandle(stage, level, direction, grain).diagram().source
+        names = re.findall(r'subgraph "(cluster_\w+)"', source)
+        assert len(names) == len(set(names)), f"{level} {direction} {grain}: {names}"
+    nested = GraphHandle(stage, "initial", "forward", "builder").diagram().source
+    assert len(re.findall(r'subgraph "cluster_', nested)) > 2
 
 
 def test_diagram_period_draws_one_box_for_each_stage_in_forward_order(period_of_two_stages):
@@ -363,42 +461,43 @@ def test_diagram_period_draws_index_0_of_a_trellis_of_one_period_and_refuses_any
     assert refused.value.write == "an index between 0 and 0"
 
 
-def test_diagram_trellis_lists_its_boxes_as_the_trellis_lists_its_periods(drawing_with_ages):
+def test_diagram_trellis_lists_its_boxes_as_the_trellis_lists_its_periods(drawing_with_a_last_age):
     """`diagram_trellis` draws one box for each period and lists the boxes as
     the trellis lists its periods, the terminal period first."""
-    assert repr(drawing_with_ages) == "Drawing of 3 boxes"
-    assert drawing_with_ages.labels == (
+    assert repr(drawing_with_a_last_age) == "Drawing of 3 boxes"
+    assert drawing_with_a_last_age.labels == (
         "periods[0] two_nodes: two_nodes",
         "periods[1] two_nodes: two_nodes",
         "periods[2] two_nodes: two_nodes",
     )
 
 
-def test_diagram_trellis_labels_a_period_by_its_age_only_where_the_registry_names_the_last_age(
-    drawing_with_ages, drawing_of_periods_0_and_1
+def test_diagram_trellis_labels_a_period_by_its_index_alone_where_the_registry_names_a_last_age(
+    drawing_with_a_last_age, drawing_of_periods_0_and_1
 ):
     """`diagram_trellis` draws each period as a cluster labeled by its index
-    h and, where the registry names `last_age`, by its age, `last_age` minus
-    h."""
-    # with last_age 65, periods[h] is at the age 65 - h
+    h alone, also where the registry names `last_age`."""
+    # the registry names last_age 65, and no label states an age
     labels = [
-        "periods[0]: h = 0, age 65",
-        "periods[1]: h = 1, age 64",
-        "periods[2]: h = 2, age 63",
+        'label="periods[0]: h = 0"',
+        'label="periods[1]: h = 1"',
+        'label="periods[2]: h = 2"',
     ]
-    assert [label for label in labels if label not in drawing_with_ages.source] == []
-    # the registry of the trellis of three periods names no last_age, so each
-    # cluster is labeled by its index alone
+    assert [label for label in labels if label not in drawing_with_a_last_age.source] == []
+    # the registry of the trellis of three periods names no last_age, and each
+    # cluster is labeled by its index alone there as well
     assert ", age " not in drawing_of_periods_0_and_1.source
     alone = ['label="periods[0]: h = 0"', 'label="periods[1]: h = 1"']
     assert [label for label in alone if label not in drawing_of_periods_0_and_1.source] == []
 
 
-def test_diagram_trellis_writes_the_periods_in_economic_time_the_earliest_first(drawing_with_ages):
+def test_diagram_trellis_writes_the_periods_in_economic_time_the_earliest_first(
+    drawing_with_a_last_age,
+):
     """The DOT text of the drawing of a trellis writes its periods in the
     order of economic time, `periods[2]` first and the terminal period
     last."""
-    source = drawing_with_ages.source
+    source = drawing_with_a_last_age.source
     assert (
         source.index('"periods[2] two_nodes"')
         < source.index('"periods[1] two_nodes"')
@@ -407,12 +506,12 @@ def test_diagram_trellis_writes_the_periods_in_economic_time_the_earliest_first(
 
 
 def test_diagram_trellis_draws_each_inter_period_connector_with_its_index_and_its_two_fields(
-    drawing_with_ages,
+    drawing_with_a_last_age,
 ):
     """Each mapping `inter_connectors[h]` is a wire from the continuation
     field `a` of `periods[h + 1]` to the arrival field `k` of `periods[h]`,
     labeled with its index and its pair of fields."""
-    source = drawing_with_ages.source
+    source = drawing_with_a_last_age.source
     assert (
         '"periods[1] two_nodes" -> "periods[0] two_nodes" [label="inter_connectors[0]\\na → k"]'
         in source
@@ -424,11 +523,11 @@ def test_diagram_trellis_draws_each_inter_period_connector_with_its_index_and_it
 
 
 def test_diagram_trellis_states_the_direction_of_economic_time_and_of_the_computation(
-    drawing_with_ages,
+    drawing_with_a_last_age,
 ):
     """The drawing of a trellis states that economic time runs from left to
     right and the backward computation from right to left."""
-    source = drawing_with_ages.source
+    source = drawing_with_a_last_age.source
     assert (
         "economic time runs left to right" in source
         and "the backward computation right to left" in source
@@ -436,12 +535,12 @@ def test_diagram_trellis_states_the_direction_of_economic_time_and_of_the_comput
 
 
 def test_diagram_trellis_keeps_two_periods_that_no_wire_joins_in_order_by_an_invisible_edge(
-    drawing_with_ages, trellis_of_three_periods
+    drawing_with_a_last_age, trellis_of_three_periods
 ):
     """An invisible edge keeps the earlier of two drawn periods at the left
     where no inter-period connector joins them, and the drawing of three
     neighboring periods, which their wires order, holds no invisible edge."""
-    assert 'style="invis"' not in drawing_with_ages.source
+    assert 'style="invis"' not in drawing_with_a_last_age.source
     apart = diagram_trellis(trellis_of_three_periods, periods=[0, 2]).source
     assert "inter_connectors" not in apart and '-> "periods[0] two_nodes" [style="invis"]' in apart
 

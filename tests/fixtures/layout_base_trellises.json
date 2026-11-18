@@ -1,21 +1,21 @@
 {
  "applications/benhabib-2019/declaration/spec.yml": {
-  "*": "8ac3d4bce7b1a9f5e2219f71fab1990701f8ce2340067ab848a8ceb7aa41f89f",
-  "benhabib_bellman": "55e8b74f47df1cbd2982ee21fbe52250190b9468ee8f3ba4204fa7ccfd5e076c",
-  "bequest": "0e88151861156ac58e5ee07c79ffe5c9ba0c69c02bd2924d0bae4094061396db"
+  "*": "4bb6d6e5e05e03b18d64a3a9fbb9a472a03c74461938ce112e160ca2d0b8f461",
+  "benhabib_bellman": "f0b35943758e5090388a9d550d657e0fe633813974112cbbb977994cc9375d40",
+  "bequest": "78db355d0eb3fd62759e4c94357ecb09f911d3ac93a5ca9042c6e22bbf8878f6"
  },
  "applications/durables/declaration/spec.two-stages.yml": {
-  "*": "9253d12cf3f0c5e0bd9690f598b9e93c47e196b3c808589b800a308d523caed8",
-  "adjuster_cons": "48a2da2d95db62473586c41c1a984a79bd15d1abc7f73f0e85b9985248e83434",
-  "bequest": "2784fcc6523990c2add0de48f510ded02152d8f81fb116f381c46b1deba269af",
-  "keeper_cons": "2450325452a36e549814130235d7424d0b01ca85492342114278910700ebb692"
+  "*": "d7c94965637abee443bc17a6917c2307cea8677a558d7027ab5ca933df6143ab",
+  "adjuster_cons": "bded0f6660454129a1e8cd3ae68a9afe0cfcdad1f79ce4a11d2cc9dda159648a",
+  "bequest": "3b14533df8a723f06f36a7a1f5ce51bda9e19c64e6e09226c7619738074c9e82",
+  "keeper_cons": "320d3ef606ce47cf794b84dd0d9aa3757617ce66631207775169b99fc8b736ef"
  },
  "applications/durables/declaration/spec.yml": {
-  "*": "0277c854e7008e5d862a8f2eab81d6b56b8083a5457c95186ec3db8034289efc",
-  "adjuster_cons": "48a2da2d95db62473586c41c1a984a79bd15d1abc7f73f0e85b9985248e83434",
-  "bequest": "2784fcc6523990c2add0de48f510ded02152d8f81fb116f381c46b1deba269af",
-  "keeper_cons": "2450325452a36e549814130235d7424d0b01ca85492342114278910700ebb692",
-  "tenure": "892bd3ab5a342b08a7d3d63ce7f34be1978d3ea2168e08b6b786a99aa04f7867"
+  "*": "ca1d698cdda5d1e39ef3d635c076775d29c46e585e9f2a369b2c25aca2d65b8c",
+  "adjuster_cons": "bded0f6660454129a1e8cd3ae68a9afe0cfcdad1f79ce4a11d2cc9dda159648a",
+  "bequest": "3b14533df8a723f06f36a7a1f5ce51bda9e19c64e6e09226c7619738074c9e82",
+  "keeper_cons": "320d3ef606ce47cf794b84dd0d9aa3757617ce66631207775169b99fc8b736ef",
+  "tenure": "b6470f5d16d2f628ca9d2589ab55b2fb8fdbe02f44198bd155c675e28dc2b634"
  },
  "applications/housing-frictions/declaration/spec.yml": {
   "*": "c535fdff71ba67efdcba0bdb2d36d64f4e79edefe8ae2af1babbd01cbd85536b",

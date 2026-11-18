@@ -963,8 +963,11 @@ def test_a_view_with_unjoined_fields_writes_no_unjoined_port_into_the_cache_fold
 ):
     """A view with `unjoined=True` writes the text `unjoined` into no file of
     the cache folder, since which fields no join reaches is a fact of the
-    trellis and not of the stage version that keys a stage view."""
+    trellis and not of the stage version that keys a stage view. The files
+    are read as bytes: a library may keep a file of its own in the user's
+    cache folder that is no text, as fontconfig, with which Graphviz measures
+    a label on Linux, keeps its record of the fonts there."""
     assert to_model_explorer(port_cons_vfi_trellis, unjoined=True) != views_without_unjoined.plain
     files = [path for path in Path(cache_folder).rglob("*") if path.is_file()]
     assert files
-    assert not [path for path in files if "unjoined" in path.read_text(encoding="utf-8")]
+    assert not [path for path in files if b"unjoined" in path.read_bytes()]

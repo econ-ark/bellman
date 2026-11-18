@@ -67,8 +67,12 @@ def statuses_of(stage, condition):
 
 def text_dividing_by_beta(declared):
     """The two-node stage text with β declared in `declared`, whose law of
-    motion divides by β and whose value line applies 𝑓(x : ℝ₊₊) to β."""
-    text = two_nodes_text_with_changes(transition="    a = k_d/β + z\n")
+    motion divides by β and whose value line and policy objective apply
+    𝑓(x : ℝ₊₊) to β."""
+    text = two_nodes_text_with_changes(
+        transition="    a = k_d/β + z\n",
+        objective="E_{y,z}(𝑓(β)*V[>]) + E_{y,z}(𝑓(β)*V[>])",
+    )
     text = changed(text, (BETA, f"β : {declared}\n𝑓(x : ℝ₊₊) := x^2\n"))
     return changed(text, ("    W = β*V[>]\n", "    W = 𝑓(β)*V[>]\n"))
 

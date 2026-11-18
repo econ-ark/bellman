@@ -319,15 +319,17 @@ def test_finite_real_arithmetic_is_a_condition_of_the_policy_and_not_of_the_buil
     cons_with_egm_lines,
 ):
     """The explicit consumption stage records the condition
-    `finite-real-arithmetic` at the policy and records none at the builder
-    `cntn_to_dcsn`."""
+    `finite-real-arithmetic` at the maximization line of its policy and
+    records none at the value line of the builder `cntn_to_dcsn`."""
     conditions = tuple(cons_with_egm_lines.obligations())
+    # the condition of a line of a block stands at that line, where the
+    # declared sets of the operands of a sum allow `inf - inf`
     assert not any(
-        item.condition == "finite-real-arithmetic" and str(item.entries[0]) == "cntn_to_dcsn"
+        item.condition == "finite-real-arithmetic" and str(item.entries[0]) == "cntn_to_dcsn.value"
         for item in conditions
     )
     assert any(
-        item.condition == "finite-real-arithmetic" and str(item.entries[0]) == "policy"
+        item.condition == "finite-real-arithmetic" and str(item.entries[0]) == "policy.optimality"
         for item in conditions
     )
 
@@ -470,13 +472,16 @@ def test_no_condition_of_the_explicit_stage_states_an_inclusion_of_one_set_in_an
 def test_the_membership_of_the_arrival_value_in_the_reals_is_one_condition_of_its_aggregation(
     cons_with_egm_lines,
 ):
-    """The formula `V≺(m, l) ∈ ℝ` stands in one condition of the explicit
+    """The formula `V≺(m) ∈ ℝ` stands in one condition of the explicit
     consumption stage, the admissibility of the aggregation of
     `dcsn_to_arvl`, and in no separate range compatibility of its line
     `dcsn_to_arvl.value`."""
+    # the arrival value is a function of the arrival state m alone: the line
+    # `V[<] = V` reads the decision value, which the line `m_d = m` makes a
+    # function of m, and no line reads the second arrival state l
     assert [
         str(item.entries[0])
         for item in cons_with_egm_lines.obligations()
         if item.predicate is not None
-        and typed_expressions.format_expression(item.predicate, width=None) == "V≺(m, l) ∈ ℝ"
+        and typed_expressions.format_expression(item.predicate, width=None) == "V≺(m) ∈ ℝ"
     ] == ["dcsn_to_arvl:Aggregation"]

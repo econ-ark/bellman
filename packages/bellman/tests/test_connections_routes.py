@@ -13,8 +13,8 @@ import pytest
 from application_files import ROOT
 from stage_builders import stage_from_text
 from stage_texts import (
-    BUFFER_STOCK_READING_L,
-    BUFFER_STOCK_WRITING_L,
+    BUFFER_STOCK_READING_THE_SECOND_FIELD,
+    BUFFER_STOCK_WRITING_THE_SECOND_FIELD,
     UNADMITTED_FAMILY_AFTER_DECISION,
     buffer_stock_text,
 )
@@ -266,29 +266,33 @@ def no_law_route(no_law_selection):
 
 def test_a_route_into_a_period_without_a_field_that_the_earlier_reads_is_uncertified_naming_it():
     """The connection report prints the route into the buffer-stock stage
-    file, which writes `V[<]` alone, as uncertified, naming `L` as the
-    component that the later period does not supply."""
-    report = connection_between(BUFFER_STOCK_READING_L, buffer_stock_text())
+    file, which writes `V[<]` and `L[<]` and not `Θ[<]`, as uncertified,
+    naming `Θ` as the component that the later period does not supply."""
+    report = connection_between(BUFFER_STOCK_READING_THE_SECOND_FIELD, buffer_stock_text())
     (route,) = report.routes
     assert route.status == "uncertified"
     assert route_line(report) == (
         "route periods[1].bs → periods[0].bs: uncertified, (a) → (k); the backward component "
-        "buffer_stock:function:cntn:L is incompatible: every value periods[0].bs supplies "
+        "buffer_stock:function:cntn:Θ is incompatible: every value periods[0].bs supplies "
         "answers another requirement of periods[1].bs, and none is left for "
-        "buffer_stock:function:cntn:L"
+        "buffer_stock:function:cntn:Θ"
     )
 
 
 def test_a_route_into_a_period_that_writes_the_field_is_certified_with_each_field_paired_by_name():
     """The connection report prints the route into a later period that writes
-    `L[<]` beside `V[<]` as certified, the route pairing each of the two
-    fields that the earlier period requires with the field of its name."""
-    report = connection_between(BUFFER_STOCK_READING_L, BUFFER_STOCK_WRITING_L)
+    `Θ[<]` beside `V[<]` and `L[<]` as certified, the route pairing each of
+    the three fields that the earlier period requires, in the order in which
+    its headers list them, with the field of its name."""
+    report = connection_between(
+        BUFFER_STOCK_READING_THE_SECOND_FIELD, BUFFER_STOCK_WRITING_THE_SECOND_FIELD
+    )
     (route,) = report.routes
     assert route_line(report) == "route periods[1].bs → periods[0].bs: certified, (a) → (k)"
     assert [(part.required, part.supplied, part.rule) for part in route.components] == [
         ("buffer_stock:function:cntn:V", "buffer_stock:function:arvl:V", "equal name"),
         ("buffer_stock:function:cntn:L", "buffer_stock:function:arvl:L", "equal name"),
+        ("buffer_stock:function:cntn:Θ", "buffer_stock:function:arvl:Θ", "equal name"),
     ]
 
 
@@ -371,7 +375,7 @@ def test_every_route_of_the_durables_trellis_is_certified(durables_selection):
 # takes; the inverse gives, for each continuation field, the position of the
 # arrival field that takes it
 @pytest.mark.parametrize(
-    ("branch", "destination", "fields", "permutation", "law", "values"),
+    ("branch", "destination", "fields", "permutation", "law", "ages", "values"),
     [
         pytest.param(
             "keep",
@@ -379,6 +383,7 @@ def test_every_route_of_the_durables_trellis_is_certified(durables_selection):
             (("w_kp", "h_kp", "z_kp"), ("w_d", "h_d", "z_d")),
             (0, 1, 2),
             "tenure:measure:cntn:keep",
+            ("tenure:function:cntn:age_kp", "keeper_cons:function:dcsn:age"),
             ("tenure:function:cntn:V_kp", "keeper_cons:function:dcsn:V"),
             id="keep",
         ),
@@ -388,27 +393,30 @@ def test_every_route_of_the_durables_trellis_is_certified(durables_selection):
             (("w_adj", "z_adj"), ("m", "z_d")),
             (0, 1),
             "tenure:measure:cntn:adjust",
+            ("tenure:function:cntn:age_adj", "adjuster_cons:function:dcsn:age"),
             ("tenure:function:cntn:V_adj", "adjuster_cons:function:dcsn:V"),
             id="adjust",
         ),
     ],
 )
 def test_the_route_of_each_branch_of_the_tenure_stage_carries_its_fields_under_its_own_law(
-    durables_selection, branch, destination, fields, permutation, law, values
+    durables_selection, branch, destination, fields, permutation, law, ages, values
 ):
     """The route of each branch of the tenure stage takes the continuation
     fields that the branch writes, in their order and each through an
     authored pair, to the decision fields of the consumption stage of the
-    branch, under the joint law of the branch, and pairs the continuation
-    value of the branch with the value of that stage, one value for the one
-    role."""
+    branch, under the joint law of the branch; it pairs the age of the
+    branch with the age of that stage by the pair that the connector writes,
+    and then the continuation value of the branch with the value of that
+    stage, one value for the one role."""
     route = one_route(durables_selection, (0, "tenure"), branch, (0, destination))
     assert (route.source_fields, route.destination_fields) == fields
     assert route.permutation == permutation
     assert route.law == law
     assert [pair.origin for pair in route.pairs] == ["authored"] * len(permutation)
     assert [(part.required, part.supplied, part.rule) for part in route.components] == [
-        (*values, "one wire per role")
+        (*ages, "explicit connector"),
+        (*values, "one wire per role"),
     ]
 
 

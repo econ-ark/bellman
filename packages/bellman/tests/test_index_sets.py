@@ -950,11 +950,19 @@ def test_a_refused_calibration_of_a_copy_leaves_the_other_location_versions_as_t
     assert symbolic.bindings.calibration is None
 
 
-def test_a_parameter_on_a_product_of_ten_factors_takes_ten_entries_and_refuses_two(benhabib_stage):
-    """The wage of the stage file of the application benhabib-2019, a
-    parameter on a product of ten factors, takes ten entries, one for each
-    factor, and a calibration of two entries is refused with a message that
-    names the wage and its 10 coordinates."""
+def test_a_table_on_the_ages_and_ten_labels_takes_a_row_for_each_age_and_refuses_two_rows(
+    benhabib_stage,
+):
+    """The wage of the stage file of the application benhabib-2019, a table
+    on its 37 ages and the ten labels of Tau, takes one row of ten entries for
+    each age, and a calibration of two rows is refused with a message that
+    names the wage and the 37 members of its set of ages."""
+    # one row for each age from 25 to 61, each with one entry for each label
+    # q1 to q10: the row of the last age holds the earnings of the ten
+    # deciles, and every other row zeros
+    table = [[0.0] * 10] * 36 + [
+        [9.760, 19.95, 26.85, 33.05, 39.02, 45.05, 51.40, 59.16, 70.33, 100.3]
+    ]
     values = {
         "β": 0.96,
         "σ": 2.0,
@@ -963,10 +971,34 @@ def test_a_parameter_on_a_product_of_ten_factors_takes_ten_entries_and_refuses_t
         "tau": "q1",
         "r_type": "r1",
         "R_vec": [1.0, 1.02, 1.04, 1.06, 1.08],
-        "wage_fn": [9.760, 19.95, 26.85, 33.05, 39.02, 45.05, 51.40, 59.16, 70.33, 100.3],
+        "wage_fn": table,
     }
-    assert benhabib_stage.calibrate(values).par["wage_fn"].value[9] == 100.3
+    assert benhabib_stage.calibrate(values).par["wage_fn"].value[36][9] == 100.3
     with pytest.raises(ValueError) as short:
-        benhabib_stage.calibrate({**values, "wage_fn": [9.760, 19.95]})
+        benhabib_stage.calibrate({**values, "wage_fn": table[:2]})
     message = str(short.value)
-    assert "parameter 'wage_fn'" in message and "has 10 coordinates" in message
+    assert "parameter 'wage_fn'" in message and "has 37 members" in message
+
+
+def test_a_parameter_on_a_product_of_five_factors_takes_five_entries_and_refuses_two(
+    benhabib_stage,
+):
+    """The return vector of the stage file of the application benhabib-2019,
+    a parameter on a product of five factors, takes five entries, one for
+    each factor, and a calibration of two entries is refused with a message
+    that names the return vector and its 5 coordinates."""
+    values = {
+        "β": 0.96,
+        "σ": 2.0,
+        "μ": 0.0,
+        "A": 1.0,
+        "tau": "q1",
+        "r_type": "r1",
+        "R_vec": [1.0, 1.02, 1.04, 1.06, 1.08],
+        "wage_fn": [[0.0] * 10] * 37,
+    }
+    assert benhabib_stage.calibrate(values).par["R_vec"].value[4] == 1.08
+    with pytest.raises(ValueError) as short:
+        benhabib_stage.calibrate({**values, "R_vec": [1.0, 1.02]})
+    message = str(short.value)
+    assert "parameter 'R_vec'" in message and "has 5 coordinates" in message

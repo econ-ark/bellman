@@ -151,4 +151,4 @@ a_max : Xa           :: ["upper bound of the savings grid"]
 
 The module `code/closed_form_check.py` constructs each stage through `elaborate`, `methodize`, `calibrate`, and `configure`. It supplies both `V[>]` and `h[>]` to `check_inputs` before requesting kernels or grids, including under the explicit methods.
 
-The stationary routes use `h[>] = h_lim - 1`. `gridded_step` accepts a finite supplied continuation mapping and its marginal value. It remains usable when `Γ >= R`, where the stationary routes refuse finite human wealth. Each result retains unresolved callable conditions as `input_conditions`.
+The closed form and its value kernels use `h[>] = h_lim - 1`. The gridded route computes `h[>]` step by step from `0`, by the stage's lines, and reads `h_lim - 1` only to refuse a grid of savings that starts at or below the limit. `gridded_step` accepts a finite supplied continuation mapping and its marginal value. It remains usable when `Γ >= R`, where the stationary routes refuse finite human wealth. Each result retains unresolved callable conditions as `input_conditions`.

@@ -18,6 +18,6 @@ The calibration remains in `declaration/calibration/perfect_foresight.yml`. [The
 
 The module `code/closed_form_check.py` calls `elaborate`, `methodize`, `calibrate`, and `configure` separately. Every numerical route checks the complete continuation mapping before constructing kernels or grids. The returned `input_conditions` retain callable conditions that the package cannot decide.
 
-`closed_form` evaluates the compiled stationary solution. `gridded_route` iterates the endogenous grid method to its stationary solution. `gridded_step` computes one backward step for supplied continuation value, human wealth, and marginal value. The notebook `code/closed-form-and-grid.ipynb` shows these computations and the human-wealth recursion.
+`closed_form` evaluates the compiled stationary solution. `gridded_route` iterates the endogenous grid method to its stationary solution, with human wealth computed step by step from the zero that the last period takes in. `gridded_step` computes one backward step for supplied continuation value, human wealth, and marginal value. The notebook `code/closed-form-and-grid.ipynb` shows these computations and the human-wealth recursion.
 
 The command `bellman-workbench applications/consumption-perfect-foresight-crra` opens the model in the Workbench. Programs write output into `results/`, which git ignores.

@@ -118,11 +118,14 @@ EXPLICIT_REFUSALS = [
         id="a-derivative-operator",
     ),
     # an expectation integrates over a shock, so it writes no explicit
-    # function; the buffer-stock stage has two shocks
+    # function; the buffer-stock stage has two shocks. The block also writes
+    # the borrowing bound L[<], which the addition writes as zero, a line that
+    # an explicit block admits
     pytest.param(
         "buffer_stock",
         "[id=dcsn_to_arvl, dcsn_to_arvl.method : !explicit] {\n"
-        "    V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * 𝑢(R*k/(Γ*ψ) + ξ))    :: [id=closed]\n}\n",
+        "    V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * 𝑢(R*k/(Γ*ψ) + ξ))    :: [id=closed]\n"
+        "    L[<] = 0    :: [id=closed_bound]\n}\n",
         "dcsn_to_arvl",
         3,
         ("applies E, an operator", CONTINUATION_VALUE_METHODS),

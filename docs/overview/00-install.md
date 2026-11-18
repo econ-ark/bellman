@@ -7,6 +7,9 @@ type: user-guide
 
 Bellman Workbench lets you edit Bellman-SYM model files and inspect their diagrams. You can use it in a browser or in the **desktop application**, which opens the same interface in its own window.
 
+> [!note] Pre-release
+> Project Bellman is in pre-release. The syntax of the language and the interfaces of the packages may still change between versions, with no promise of backward compatibility. The documentation and the applications are under active development.
+
 **Installing the desktop application does not install Python or Bellman.** Both versions need the Python packages `bellman` and `bellman-workbench`, installed together as below. You do not need the desktop application to use the browser version.
 
 No ready-made desktop installer is currently published on the [download page](https://github.com/econ-ark/bellman/releases). You can use the browser version now, or build the desktop application in §3.
@@ -103,5 +106,3 @@ An installed desktop application uses updates from the Python environment select
 | The desktop application cannot start `bellman-workbench` | Select the executable from §3 in **Settings → Workbench command…**, then open the project again. |
 | Python reports that `bellman` is missing | Install both packages with the command in §1, using the same environment. |
 | The page says `No stage file.` | Open a model folder containing `.bl` files, such as the supplied example in §2. |
-
-For **paper** exports and other static diagrams, also install [Graphviz](https://graphviz.org/download/), or install Node.js and run `npm ci` in the repository root. This extra step is not needed for the interactive Workbench graph.

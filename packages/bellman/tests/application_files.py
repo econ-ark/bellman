@@ -408,8 +408,9 @@ BUFFER_STOCK_SETTINGS = "applications/buffer-stock/declaration/settings/buffer_s
 BUFFER_STOCK_PAGE = "docs/examples/buffer-stock/buffer_stock.md"
 
 
-# the stage file of the application benhabib-2019, whose wage is a parameter
-# on a product of ten factors that a label selects
+# the stage file of the application benhabib-2019, whose wage is a table on
+# its ages and the ten labels of Tau, read at the incoming age and the
+# label tau
 BENHABIB_STAGE_FILE = (
     "applications/benhabib-2019/declaration/stages/benhabib_bellman/benhabib_bellman.bl"
 )

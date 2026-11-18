@@ -146,10 +146,9 @@ def one_period_view(one_period_cons_trellis):
 
 
 @pytest.fixture(scope="module")
-def one_period_view_with_age(cons):
-    """The view of a trellis of one period whose registry's calibration
-    gives the last age, 64, as the registry of a trellis that a recipe
-    assembles does; `periods[0]` is the last period."""
+def one_period_view_with_a_last_age(cons):
+    """The view of a trellis of one period whose registry's calibration gives
+    the last age, 64; periods[0] is the last period."""
     trellis = accrete(
         {"periods": [], "inter_connectors": [], "registry": {"calibration": {"last_age": 64}}},
         {"stages": {"consumption": cons}, "connectors": []},
@@ -368,43 +367,40 @@ def test_the_viewer_lays_out_and_colors_each_layer_of_a_trellis_graph_by_its_dep
 
 @needs_viewer
 @pytest.mark.parametrize(
-    ("view", "graph_id", "period", "shown"),
+    ("view", "graph_id", "period"),
     [
         *[
             pytest.param(
                 "port_cons_view",
                 graph_id,
                 "periods[2]",
-                {},
                 id=f"cons-port-{graph_id.replace(' ', '-')}",
             )
             for graph_id in TRELLIS_GRAPHS
         ],
         *[
             pytest.param(
-                "one_period_view_with_age",
+                "one_period_view_with_a_last_age",
                 graph_id,
                 "periods[0]",
-                {"age": "64"},
                 id=f"last-age-64-{graph_id}",
             )
             for graph_id in ("backward", "forward")
         ],
         *[
-            pytest.param(
-                "one_period_view", graph_id, "periods[0]", {}, id=f"no-registry-{graph_id}"
-            )
+            pytest.param("one_period_view", graph_id, "periods[0]", id=f"no-registry-{graph_id}")
             for graph_id in ("backward", "forward")
         ],
     ],
 )
-def test_a_period_layer_shows_an_age_only_where_the_registry_gives_one(
-    request, view, graph_id, period, shown
+def test_a_period_layer_shows_no_age_even_where_the_registry_gives_the_last_age(
+    request, view, graph_id, period
 ):
-    """The layer of a period shows an age only where the calibration of the
-    trellis's registry gives one, the last age for the last period."""
+    """The layer of a period is named by the period's position alone and
+    shows no age, even where the calibration of the trellis's registry gives
+    the last age."""
     graph = graph_named(request.getfixturevalue(view), graph_id)
-    assert graph.groupNodeAttributes[period] == shown
+    assert graph.groupNodeAttributes[period] == {}
 
 
 @needs_viewer
@@ -423,7 +419,7 @@ def test_a_period_layer_shows_an_age_only_where_the_registry_gives_one(
         ],
         *[
             pytest.param(
-                "one_period_view_with_age",
+                "one_period_view_with_a_last_age",
                 graph_id,
                 "periods[0]/consumption",
                 {"stage": "cons"},
@@ -580,7 +576,8 @@ def test_each_backward_join_reads_the_value_at_the_entry_perch_of_the_later_occu
 def test_each_backward_join_names_the_rule_that_paired_its_wire(port_cons_view):
     """The reading port of each join of the backward graph names the rule
     that paired its wire, one of the package's two rules, one wire per role
-    and equal name, the value's rule being one wire per role."""
+    and equal name, the value's rule being equal name, which comes before
+    the pairing of the one wire left on each side."""
     rules = {}
     for node in graph_named(port_cons_view, "backward").nodes:
         for port in node.inputsMetadata:
@@ -589,7 +586,7 @@ def test_each_backward_join_names_the_rule_that_paired_its_wire(port_cons_view):
                 rules[port.id] = shown["paired by"]
     assert rules and set(rules.values()) <= set(PAIRING_RULES)
     assert PAIRING_RULES == ("one wire per role", "equal name")
-    assert rules["periods[1]/cons/cons:function:cntn:V"] == "one wire per role"
+    assert rules["periods[1]/cons/cons:function:cntn:V"] == "equal name"
 
 
 @needs_viewer

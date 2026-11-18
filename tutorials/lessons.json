@@ -1,38 +1,38 @@
 {
   "getting-started/01-the-stage": {
     "path": "tutorials/getting-started/01-the-stage.ipynb",
-    "sha256": "a5696a9c32821f9f54578b47c5f8eebabc9440d30dab01b7452d1e2d195795d7",
+    "sha256": "af9b9efbaf16471ff792ca1e71708003f066c42165005c83fc1cf8ee0a4e4ae7",
     "status": "completed",
     "failures": [],
     "inputs": {
       "applications/portfolio-choice/declaration/stages/cons/cons.bl": "e60110b0b964ce482812c558922bc7aa6eaaf14421e2e162b9f87cc7b120a667",
-      "tutorials/checkout.py": "b9efad275e0d457a6f53a6004c23d89dfaec62e8aa8bbf557a420b37eb666c2e"
+      "tutorials/checkout.py": "8ebaaf400631e967eed95ca79363b6645b3a0f6fec4624e03471c94ea3a9996b"
     }
   },
   "getting-started/02-value-functions": {
     "path": "tutorials/getting-started/02-value-functions.ipynb",
-    "sha256": "8e21c3f96adab04bb3544d989b49758ae5bbf56c058e0b9bd86076e9c155c38c",
+    "sha256": "153d4fe6cc84eaea430dec98fa8460b9a8003cf795d796f27b11cb023f32f341",
     "status": "completed",
     "failures": [],
     "inputs": {
       "applications/portfolio-choice/declaration/stages/cons/cons.bl": "e60110b0b964ce482812c558922bc7aa6eaaf14421e2e162b9f87cc7b120a667",
-      "tutorials/checkout.py": "b9efad275e0d457a6f53a6004c23d89dfaec62e8aa8bbf557a420b37eb666c2e"
+      "tutorials/checkout.py": "8ebaaf400631e967eed95ca79363b6645b3a0f6fec4624e03471c94ea3a9996b"
     }
   },
   "getting-started/03-distributions": {
     "path": "tutorials/getting-started/03-distributions.ipynb",
-    "sha256": "1440e9a98f4fa14a903fb0dece02daaedf546da88e88c5f15cc2842809ba2e6e",
+    "sha256": "59c376c6286ef3c75f05414e271a274408a6a518431201136b7ef120d6fcbaa2",
     "status": "completed",
     "failures": [],
     "inputs": {
       "applications/portfolio-choice/declaration/stages/port/port.bl": "5a57b41870fc53e8dbaa461e5a1ec78bee04b125610b5c59d1c16ad964cc1697",
       "applications/portfolio-choice/declaration/stages/noport/noport.bl": "7f73c092983841f6f0c232da9b9f0b25f1378658733e9ca62515b5cb82359a85",
-      "tutorials/checkout.py": "b9efad275e0d457a6f53a6004c23d89dfaec62e8aa8bbf557a420b37eb666c2e"
+      "tutorials/checkout.py": "8ebaaf400631e967eed95ca79363b6645b3a0f6fec4624e03471c94ea3a9996b"
     }
   },
   "getting-started/04-parameters-methods-and-settings": {
     "path": "tutorials/getting-started/04-parameters-methods-and-settings.ipynb",
-    "sha256": "39805db23ad0688808d5dd83a61cf1680303037919e2540d9c6cb75ca34c998a",
+    "sha256": "11470422e586338c1b574c46be83f3c61c52599321267f917e57f042b2939e01",
     "status": "completed",
     "failures": [],
     "inputs": {
@@ -41,12 +41,12 @@
       "applications/cons-port/declaration/stages/cons/methods.bl": "34ef3c54fc4cfbc2debcab2b0fea774051079101cb01b64c3b8a30f3476ba0fe",
       "applications/cons-port/declaration/stages/cons/methods.vfi.bl": "dddd1e3f4a1c24815b5975b48437c6f2856ba7d0f2d31e5fd45078a76c8df46d",
       "applications/cons-port/declaration/settings/cons.yml": "09dfdddc381ac63d8c0acf9f440ee0a4f127c5eaab863c6427ea9aa5c07d1f6c",
-      "tutorials/checkout.py": "b9efad275e0d457a6f53a6004c23d89dfaec62e8aa8bbf557a420b37eb666c2e"
+      "tutorials/checkout.py": "8ebaaf400631e967eed95ca79363b6645b3a0f6fec4624e03471c94ea3a9996b"
     }
   },
   "getting-started/05-periods-and-trellises": {
     "path": "tutorials/getting-started/05-periods-and-trellises.ipynb",
-    "sha256": "15b10e4d47190483ba0cd734dafec60c29445866d343dad5b5e2b06ec1268eba",
+    "sha256": "5b9c804b7ed0c86c8dc982e80370de85035ccdfe6c1b8070d9d348668b66a4dd",
     "status": "completed",
     "failures": [],
     "inputs": {
@@ -65,12 +65,12 @@
       "applications/cons-port/declaration/stages/disc/methods.bl": "38968c7d91b974e7328be64a0edde9e649c6c6ad3e78e86cc6b94e687b39db05",
       "applications/cons-port/declaration/settings/port_wide.yml": "42a2d818d5399113b9673f1e3fc62698d2e8188fd49494abad38a37fd601bc59",
       "applications/cons-port/declaration/settings/cons_wide.yml": "bdaf3b6673fac56b8de384da7435acfb62390b494df89370e360e4dd6ee07116",
-      "tutorials/checkout.py": "b9efad275e0d457a6f53a6004c23d89dfaec62e8aa8bbf557a420b37eb666c2e"
+      "tutorials/checkout.py": "8ebaaf400631e967eed95ca79363b6645b3a0f6fec4624e03471c94ea3a9996b"
     }
   },
   "models/benhabib-2019/the-factory-on-benhabib": {
     "path": "tutorials/models/benhabib-2019/the-factory-on-benhabib.ipynb",
-    "sha256": "252f4ef1b0f6a7e05acac6176f4431913681c34021f0ec7185a1decda4bd5427",
+    "sha256": "2be14f07e175cdb179071135ba81af39844515ae8987d35c376b432d9ef0eb7f",
     "status": "completed",
     "failures": [],
     "inputs": {
@@ -84,12 +84,12 @@
       "applications/benhabib-2019/declaration/stages/benhabib_bellman/methods.bl": "05267d29ff770b929c36e04f9e8ee6db7e6d3edba4fdbbe3532d41369c7928a9",
       "applications/benhabib-2019/declaration/stages/bequest/methods.bl": "084aeec1ddbd83e9ab93d0e2ba724e649938d136bfbff7961ea45f2412027da0",
       "applications/benhabib-2019/declaration/settings/default.yml": "14fd75d14cbe30a87859fa65a11494b0c58aedeb2ce863cc3202767186c89f94",
-      "tutorials/checkout.py": "b9efad275e0d457a6f53a6004c23d89dfaec62e8aa8bbf557a420b37eb666c2e"
+      "tutorials/checkout.py": "8ebaaf400631e967eed95ca79363b6645b3a0f6fec4624e03471c94ea3a9996b"
     }
   },
   "models/cons-port/01-two-stages-two-orders": {
     "path": "tutorials/models/cons-port/01-two-stages-two-orders.ipynb",
-    "sha256": "5d7c098897a23aefdf3b27685b6d62488666f1bbb7651cac4e43864400fb69a5",
+    "sha256": "c44aab59abf0c47e2a799dc1cf254c6a49d66ae28c20365b642924c7d5de55ff",
     "status": "completed",
     "failures": [],
     "inputs": {
@@ -97,12 +97,12 @@
       "applications/portfolio-choice/declaration/stages/port/port.bl": "5a57b41870fc53e8dbaa461e5a1ec78bee04b125610b5c59d1c16ad964cc1697",
       "applications/portfolio-choice/declaration/stages/noport/noport.bl": "7f73c092983841f6f0c232da9b9f0b25f1378658733e9ca62515b5cb82359a85",
       "applications/portfolio-choice/declaration/stages/disc/disc.bl": "c5aa02e1668b37f167a19a5c12d6ebbcbc5d66e61b854e82635c07f0dc18c09c",
-      "tutorials/checkout.py": "b9efad275e0d457a6f53a6004c23d89dfaec62e8aa8bbf557a420b37eb666c2e"
+      "tutorials/checkout.py": "8ebaaf400631e967eed95ca79363b6645b3a0f6fec4624e03471c94ea3a9996b"
     }
   },
   "models/cons-port/02-a-life-cycle-built-backwards": {
     "path": "tutorials/models/cons-port/02-a-life-cycle-built-backwards.ipynb",
-    "sha256": "572b3129cb8efa89dff614f921495548ad9c31d369cbb02c5acf7791f9d5e9e5",
+    "sha256": "6d02c8e402c49678432b9b24363c8d887c2f0958041d76bee4565cdc5a575b4f",
     "status": "completed",
     "failures": [],
     "inputs": {
@@ -118,12 +118,12 @@
       "applications/cons-port/declaration/spec.port-cons.yml": "913b9599063d9f6e5dee69da5fe2dc34a5791bd6cc7d9b29977fffa7ceaed86f",
       "applications/cons-port/declaration/trellis.port-cons.yml": "b7437cc815212f0ba5728510e057caab365297ef5270486d74a880c189541c35",
       "applications/cons-port/code/cons_port_tool.py": "ec64b96f97778467b4d4da577bc2280565578d85db97e40cf062abead0f84ebf",
-      "tutorials/checkout.py": "b9efad275e0d457a6f53a6004c23d89dfaec62e8aa8bbf557a420b37eb666c2e"
+      "tutorials/checkout.py": "8ebaaf400631e967eed95ca79363b6645b3a0f6fec4624e03471c94ea3a9996b"
     }
   },
   "models/cons-port/03-solving-the-two-orders": {
     "path": "tutorials/models/cons-port/03-solving-the-two-orders.ipynb",
-    "sha256": "b3dc101a0af637b41448dd0292e2c44c530611e3fe92b451c0280359c3d744e5",
+    "sha256": "e1a64143e0d169f53849bc395283309e824532f22fa81d4771dab9953086222a",
     "status": "completed",
     "failures": [],
     "inputs": {
@@ -144,12 +144,12 @@
       "applications/cons-port/declaration/settings/port_wide.yml": "42a2d818d5399113b9673f1e3fc62698d2e8188fd49494abad38a37fd601bc59",
       "applications/cons-port/declaration/settings/cons_vfi.yml": "a6d83aa9bb513aa582a50e8d23afd093f9c648e96fd7430195f2f9ec2c9427b8",
       "applications/cons-port/code/cons_port_tool.py": "ec64b96f97778467b4d4da577bc2280565578d85db97e40cf062abead0f84ebf",
-      "tutorials/checkout.py": "b9efad275e0d457a6f53a6004c23d89dfaec62e8aa8bbf557a420b37eb666c2e"
+      "tutorials/checkout.py": "8ebaaf400631e967eed95ca79363b6645b3a0f6fec4624e03471c94ea3a9996b"
     }
   },
   "topics/branching": {
     "path": "tutorials/topics/branching.ipynb",
-    "sha256": "1c6bb6532bd4bfa453a9b26411a561ae5b379aba842f5e47c9adc5abb411a7b9",
+    "sha256": "6a647fb31acebe2e32ac6d57c0ee5c6a79aa7f6ca1cd0e4add2b2e200bc4f6e2",
     "status": "completed",
     "failures": [],
     "inputs": {
@@ -169,40 +169,40 @@
       "applications/durables/declaration/stages/adjuster_cons/methods.bl": "5201257dccd839cf4ad8bbe65c5c4d8ae7d4fcc54b1156e0e2aa78f29af8012a",
       "applications/durables/declaration/stages/bequest/methods.bl": "36203593a2c6d569eff9e0412da097033c3e10b6a8a520869db7b4cb2ef1ca6d",
       "tutorials/topics/stages/plan_choice.bl": "be7d4bcb63c7db3e7e42cbcdb9bbc41e2214b22615c35bd57c12f57af92862f8",
-      "tutorials/checkout.py": "b9efad275e0d457a6f53a6004c23d89dfaec62e8aa8bbf557a420b37eb666c2e"
+      "tutorials/checkout.py": "8ebaaf400631e967eed95ca79363b6645b3a0f6fec4624e03471c94ea3a9996b"
     }
   },
   "topics/expectations": {
     "path": "tutorials/topics/expectations.ipynb",
-    "sha256": "5a19b7e9c9f4ca0f2695794c5195ede48a6eeb617a1533bb757805e744af1371",
+    "sha256": "224fd63e0a143d619aa9c5dc9554783d8f5d5c2aba99a043c1539475ec92aaf6",
     "status": "completed",
     "failures": [],
     "inputs": {
       "applications/smooth-ambiguity-savings/declaration/stages/sa_savings/sa_savings.bl": "7c26cb938255c42142f5bb98568dc1170b773b418a36b6321742bc0b25aef906",
       "applications/portfolio-choice/declaration/stages/port/port.bl": "5a57b41870fc53e8dbaa461e5a1ec78bee04b125610b5c59d1c16ad964cc1697",
-      "tutorials/checkout.py": "b9efad275e0d457a6f53a6004c23d89dfaec62e8aa8bbf557a420b37eb666c2e"
+      "tutorials/checkout.py": "8ebaaf400631e967eed95ca79363b6645b3a0f6fec4624e03471c94ea3a9996b"
     }
   },
   "topics/kernels": {
     "path": "tutorials/topics/kernels.ipynb",
-    "sha256": "7d76a0da72d22c5706f29689252214f33fa90dc9f38cd79366ee56e2251314b2",
+    "sha256": "7b8c8ef82e64c52006a6d951c343c322e3b69d1b4652d62c6083724780131c8f",
     "status": "completed",
     "failures": [],
     "inputs": {
       "applications/portfolio-choice/declaration/stages/cons/cons.bl": "e60110b0b964ce482812c558922bc7aa6eaaf14421e2e162b9f87cc7b120a667",
       "applications/cons-port/declaration/calibration/portfolio.yml": "939c9c4f380a5924a22634073e6989df99df35a511a23337ca25191cedbfef4a",
-      "tutorials/checkout.py": "b9efad275e0d457a6f53a6004c23d89dfaec62e8aa8bbf557a420b37eb666c2e"
+      "tutorials/checkout.py": "8ebaaf400631e967eed95ca79363b6645b3a0f6fec4624e03471c94ea3a9996b"
     }
   },
   "topics/the-native-mathematics": {
     "path": "tutorials/topics/the-native-mathematics.ipynb",
-    "sha256": "96ec4c51420fa444ce5c6d8f090dc2ed7792fa7d6c75e6cff26a99330433bcb9",
+    "sha256": "d7b81032197504c4dc488e4f336a3fa12c7378f93d16339a8aa8d5595f8186b8",
     "status": "completed",
     "failures": [],
     "inputs": {
       "applications/portfolio-choice/declaration/stages/cons/cons.bl": "e60110b0b964ce482812c558922bc7aa6eaaf14421e2e162b9f87cc7b120a667",
       "applications/portfolio-choice/declaration/stages/cons/methods.bl": "0f3bd220aeaa708b1a41b65239bdb1ef05435a6d984eeeab941a5ee2140cf0f9",
-      "tutorials/checkout.py": "b9efad275e0d457a6f53a6004c23d89dfaec62e8aa8bbf557a420b37eb666c2e"
+      "tutorials/checkout.py": "8ebaaf400631e967eed95ca79363b6645b3a0f6fec4624e03471c94ea3a9996b"
     }
   }
 }

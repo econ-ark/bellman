@@ -167,7 +167,7 @@ oracle of §6 reads this order from the first column of this table:
 | `typing` | `sets`, `category_codes`, `ranges`, `typed_expressions`, `line_unknowns`, `declarations`, `context`, `primitive_definitions`, `type_table` | why a declaration is refused; a line's operators, unknowns and type; the algebra of the declared sets; the category codes of a named set; how a formula is written; which objects a stage has, which forms a set is written in and which limits the language sets on a type |
 | `fold` | `block_lines`, `wire_terms`, `declared_sets`, `stage_names`, `table`, `value_bundles`, `backward`, `policy`, `derived_parameters`, `stage_fold`, `conditions` | how a stage's blocks and lines are read; how a block's lines become its builder's operator rows; the conditions the construction assumes; what a derived parameter reads and its value at a calibration |
 | `graphs` | `wire_sorts`, `initial_diagrams`, `builders_graphs` | how the four graphs and their grains are built |
-| `display` | `sheets`, `printed_records`, `cards`, `drawing`, `graphviz_layout` with its Node script `graphviz_layout.mjs`, `answer_encoding`, `encoding_checks`, the schema file | how an answer is set as text, a drawing or JSON; how a drawing is laid out |
+| `display` | `sheets`, `printed_records`, `cards`, `drawing`, `answer_encoding`, `encoding_checks`, the schema file | how an answer is set as text, a drawing or JSON; how a drawing is laid out |
 | `stage` | four groups (§4) | how a stage is built, what it answers, how it is printed and how it is bound |
 | `factory` | `loading`, `recipe`, `file_entries`, `elaboration`, `trellis`, `joins`, `trellis_drawings`, `model_explorer` | how files become records, stages and trellises; the joins of a period; the drawings of a period and of a trellis; the interactive view of a stage or a trellis in Google's Model Explorer; the entries of a model's YAML files read and replaced as text |
 | `period` | `__init__` alone: the table of the public names of a period (§1) | what a user imports for a period |
@@ -238,7 +238,7 @@ asked for and is stored nowhere.
 | the fields, the diagnostics, the methods | `stage.fields()`, `stage.diagnostics()`, `stage.methods` | `display/printed_records.py`, from `fold/block_lines.py` and `stage/stage_answers.py` | `display/printed_records.py` |
 | a **kernel**, with the source text of its function where it has one | `operator.kernel()` | `stage/kernels.py` | `stage/kernels.py` |
 | a builder's record of its kernels | `builder.kernels()` | `stage/pieces.py` (`builder_kernels`), in the records `BuilderKernels` and `PieceKernel` | `display/printed_records.py` |
-| a drawing | `graph.diagram()`, `diagram_period`, `diagram_trellis` | the names of the wires and the laws, `stage/defining_expressions.py`; the symbols of the boxes and the DOT text, `display/drawing.py`; `factory/trellis_drawings.py` | Graphviz, run by `display/graphviz_layout.py` |
+| a drawing | `graph.diagram()`, `diagram_period`, `diagram_trellis` | the names of the wires and the laws, `stage/defining_expressions.py`; the symbols of the boxes and the DOT text, `display/drawing.py`; `factory/trellis_drawings.py` | Graphviz, whose libraries the Python package `pygraphviz` holds (`Drawing.svg`, `display/drawing.py`) |
 | the **stage encoding** | `stage.encoding()`, `python -m bellman --encoding` | `stage/encoding.py`, with `display/answer_encoding.py` for the answer records, each node under a kind of the one table there | JSON, which the one schema file of `display/` describes |
 | the **interactive view** | `explore(stage)` and `write_model_explorer(stage, folder)` of `bellman`, and `serve(graph_path)` of `bellman.factory.model_explorer` | `factory/model_explorer.py`, from the stage's queries, the symbols and labels of `display/drawing.py` and the sections of a card, `display/cards.py` | two JSON files, which Google's Model Explorer, the extra `explore` of the package, draws in the browser |
 | the dossier | `python -m bellman --dossier` | `bellman/dossier.py`, from the public queries | `bellman/dossier.py` |
@@ -274,11 +274,24 @@ operators, each operator showing its kernel and the rows of its card, and
 the labels of its operators and ports those that the drawing prints
 ([The view in Model Explorer](../../docs/Bellman-Sym/API/stage/10-model-explorer.md)).
 
-A drawing is laid out by Graphviz, which the package does not install: either
-Graphviz's `dot` is on the PATH, or Node.js runs the WebAssembly build of
-Graphviz that `npm install` in this folder installs from its `package.json`
-into the gitignored `node_modules/`; with neither, `svg()`
-refuses and names both, and a notebook cell shows the drawing's short form.
+A drawing is laid out by Graphviz. The Graphviz libraries are those inside
+the Python package `pygraphviz`. `bellman` requires `pygraphviz`, so `pip`
+installs it with `bellman`, and a user installs no other program for a
+drawing. Graphviz measures a label with the fonts of the machine, so the size
+of a picture differs a little between machines.
+
+`bellman` requires `pygraphviz` on the systems for which `pygraphviz`
+publishes an install file: macOS, Linux on x86-64 and on ARM, and Windows on
+x86-64. On a system that this list does not name, such as Windows on ARM,
+`bellman` installs without it. `svg()` then refuses with a message that says
+what to install, and a notebook cell shows the drawing's short form.
+
+On a listed system `pip` may still find no install file that fits. The cases
+are a Linux that uses the musl C library, such as Alpine, a Linux whose C
+library is older than glibc 2.28, macOS before version 11, a 32-bit Python on
+Windows, and a free-threaded build of Python. `pip` then builds `pygraphviz`
+from its source, which needs Graphviz with its development files and a C
+compiler.
 
 ## 6 The order of the folders
 
@@ -330,8 +343,8 @@ The folder `tests/snapshot/` stores four kinds of file:
 - the printed text of the stage of each stage file that elaborates, at
   `corpus/<application>/<file>.bl.printed.txt`, and the printed text of the
   one fixture stage, under `corpus/fixtures/`;
-- for each of the eight corpus stages, which `CORPUS` of `tests/conftest.py`
-  lists, the text of its graphs, at
+- for each of the corpus stages, which the table `CORPUS` of the tests lists,
+  the text of its graphs, at
   `corpus/<application>/<file>.bl.graphs.txt`: the listing and the wiring
   of each graph at each grain, with the conditions and the sort of every
   wire;
@@ -339,28 +352,46 @@ The folder `tests/snapshot/` stores four kinds of file:
   schema of encodings and, for each stage file that elaborates, the digest
   of its encoding and of each section of that encoding.
 
-`tests/test_applications.py` compares each stored file with the live value: the
-parsed term, the printed text, the text of the graphs and the digests of the
-live encoding. It also checks that
-each stage file that the tables of `tests/snapshot/corpus_cases.py` hold as
-refused is refused under its recorded rule. `tests/test_graphs_and_grains.py`
-checks properties of the graphs of every stage file that elaborates, and
-`tests/test_cards_and_sheets.py` checks that each piece of such a stage prints
-one card whichever handle reaches it. Acceptance files check the current changes;
-`tests/test_refusals.py` checks diagnostics, and the other test files, each
-named for its subject, check public operations that a fixed recording cannot
-establish.
+The tests compare each stored file with the live value: the parsed term, the
+printed text, the text of the graphs and the digests of the live encoding.
+They also check that each stage file recorded as refused is refused under its
+recorded rule, check properties of the graphs of every stage file that
+elaborates, and check that each piece of such a stage prints one card
+whichever handle reaches it. The other tests, in files named for their
+subjects, check the diagnostics and the public operations that a fixed
+recording cannot establish.
 
-Run the package's tests from the repository root. The command
-`python -m pytest packages/bellman/tests` runs the default set: it skips
-each case marked `complete_set`. The command
-`python -m pytest packages/bellman/tests --complete` runs every case. In the
-default set, each test of `test_applications.py`, `test_cards_and_sheets.py`,
-`test_graphs_and_grains.py`, `test_field_equations.py` and `test_encoding.py`
-that runs over the stage files runs on one file of
-its list, in most of these tests the stage file of the consumption stage.
-The complete set runs each such test on every file of its list. The optional test dependency `pytest-xdist` permits
-parallel execution with `-n 4`.
+Run the tests from the root of the repository, in an environment that holds
+what the workflow `.github/workflows/tests.yml` installs:
+
+```bash
+python -m pip install -e "packages/bellman[dev,docs,explore]"
+python -m pip install -e packages/asva
+```
+
+These lines do not install JAX. The tests that need JAX are skipped, and
+pytest gives the reason. The workflow runs these commands, on Ubuntu with
+Python 3.12:
+
+```bash
+python -m pytest packages/bellman/tests -n logical -rfEsxX              # the default set
+python -m pytest packages/bellman/tests -n logical --complete -rfEsxX   # the complete set
+python -m pytest tests/test_documentation_structure.py tests/test_method_types_page.py \
+  tests/test_package_documentation.py tests/test_documented_applications_and_lessons.py \
+  tests/test_documentation_content.py tests/test_application_layout.py -n logical -rfEsxX   # the checks of the documentation
+```
+
+The default set leaves out each case marked `complete_set`: all rows but one
+of some tests that run over a table, such as the list of the stage files of
+the applications, and a few tests that run only in the complete set, such as
+the elaboration of whole registries. The complete
+set runs every case. The default set reports each case that it leaves out as
+skipped, with the reason. The checks of the documentation take `--complete`
+too, which adds the strict build of the site among other checks. `-n logical`
+starts one process for each logical processor, and `-rfEsxX` lists each
+failure, skip and expected failure with its reason. The workflow runs the
+complete set on a pull request and on a push to `main`, and the default set
+on a push to any other branch.
 
 Tests never write the stored files. After a change has been read, these
 commands, run from `packages/bellman`, write each kind again:
@@ -378,7 +409,7 @@ writes the encoding of each stage file that elaborates in FOLDER, which must
 lie outside the repository, so that the encodings of two commits can be
 compared. At a commit whose tests pass, the SHA-256 digest of each file it
 writes equals the digest under `encoding` in the table.
-`tests/test_encoding.py` checks that the schema refuses malformed encodings.
+The tests also check that the schema refuses malformed encodings.
 
 `applications/stage_ast.py` holds the helpers that the structural tests of the
 applications import.

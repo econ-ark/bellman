@@ -138,14 +138,18 @@ def test_egm_on_the_policy_builder_adds_the_condition_egm_eligibility_and_no_oth
     request, stage_name, bound_name
 ):
     """`!egm` typed on the policy builder adds the condition
-    `egm-eligibility` after the obligations of the stage file, and no other
-    condition."""
+    `egm-eligibility` to the obligations of the stage file, which keep their
+    order, and no other condition."""
     stage = request.getfixturevalue(stage_name)
     bound = request.getfixturevalue(bound_name)
-    assert [item.condition for item in bound.obligations()] == [
-        *[item.condition for item in stage.obligations()],
-        "egm-eligibility",
+    conditions = [item.condition for item in bound.obligations()]
+    # the place of the condition of the method in the list is not compared,
+    # since the conditions on the fields that the stage takes in at its
+    # continuation perch are listed after the conditions of a method
+    assert [name for name in conditions if name != "egm-eligibility"] == [
+        item.condition for item in stage.obligations()
     ]
+    assert conditions.count("egm-eligibility") == 1
 
 
 def test_a_quadrature_typed_at_an_expectation_adds_no_condition(port, port_with_one_node_count):
@@ -265,14 +269,18 @@ def test_a_method_choice_leaves_the_equation_and_the_types_of_each_primitive_unc
 def test_a_method_choice_adds_the_condition_of_its_method_and_of_its_representation(
     cons, configured_choice, choice, conditions
 ):
-    """A method choice adds to the obligations of `cons` the condition of its
-    solution method, if any, and `evaluation-domain`, that the
-    representation is evaluated where its nodes support the function."""
-    version = configured_choice(choice)
-    assert [item.condition for item in version.obligations()] == [
-        *[item.condition for item in cons.obligations()],
-        *conditions,
+    """A method choice adds to the obligations of `cons`, which keep their
+    order, the condition of its solution method, if any, and then
+    `evaluation-domain`, that the representation is evaluated where its
+    nodes support the function."""
+    held = [item.condition for item in configured_choice(choice).obligations()]
+    # the place of the added conditions among those of the stage file is not
+    # compared, since the conditions on the fields that the stage takes in at
+    # its continuation perch are listed after the conditions of a method
+    assert [name for name in held if name not in conditions] == [
+        item.condition for item in cons.obligations()
     ]
+    assert [name for name in held if name in conditions] == conditions
 
 
 def test_the_declared_decision_builder_answers_no_method_that_an_addition_types(cons):
